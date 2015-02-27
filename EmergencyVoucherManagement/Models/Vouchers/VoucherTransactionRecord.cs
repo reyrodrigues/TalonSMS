@@ -13,7 +13,6 @@ namespace EmergencyVoucherManagement.Models.Vouchers
             this.CreatedOn = DateTime.UtcNow;
         }
 
-        public virtual int VoucherId { get; set; }
         public virtual int BeneficiaryId { get; set; }
 
         public virtual int? VendorId { get; set; }
@@ -28,10 +27,10 @@ namespace EmergencyVoucherManagement.Models.Vouchers
         /// </summary>
         public virtual int Status { get; set; }
 
-        public virtual Voucher Voucher { get; set; }
         public virtual Beneficiary Beneficiary { get; set; }
 
         public virtual Vendor Vendor { get; set; }
+        public virtual Voucher Voucher { get; set; }
 
     }
 }

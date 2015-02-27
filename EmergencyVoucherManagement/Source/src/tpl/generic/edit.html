@@ -1,25 +1,11 @@
 <div class="bg-light lter b-b wrapper-md">
-    <h1 class="m-n font-thin h3">Distribution Information - <small>{{ entity.Title }}</small></h1>
+    <h1 class="m-n font-thin h3">{{ genericSettings.title }} - <small>{{ entity.Name }}</small></h1>
 </div>
 <div class="wrapper-md">
-    <form class="bs-example form-horizontal form-validation" ng-submit="save()" >
+    <form class="bs-example form-horizontal form-validation" ng-submit="save()">
         <div class="row">
-            <div class="col-sm-12" ng-include="'tpl/includes/distribution_form.html'" toggle-editing is-editing="isEditing">
+            <div class="col-sm-12" ng-include="genericSettings.formTemplate" toggle-editing is-editing="isEditing">
 
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <h1 class="m-n font-thin h4">Generated Vouchers</h1>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="panel panel-default">
-                    <div class="table-responsive">
-                        <div ng-grid="gridOptions" style="min-height:300px"></div>
-                    </div>
-                </div>
             </div>
         </div>
         <div class="row">
@@ -29,12 +15,11 @@
                         <div class="btn-group ">
                             <a href ng-click="delete()" class="btn btn-sm btn-danger">Delete</a>
                         </div>
-                        <a href ng-click="generateVouchers()" class="btn btn-sm btn-success">Generate Vouchers</a>
                     </div>
                     <div class=" col-lg-6">
                         <div class="btn-group pull-right" ng-if="!entity.Disabled">
                             <button ng-click="startEditing()" class="btn btn-primary">Edit</button>
-                            <button ui-sref="distributions.list" class="btn btn-info">Back</button>
+                            <button ui-sref="{{ genericSettings.listState }}" class="btn btn-info">Back</button>
                         </div>
                     </div>
                 </div>

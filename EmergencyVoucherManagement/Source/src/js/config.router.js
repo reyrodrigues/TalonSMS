@@ -15,7 +15,15 @@ angular.module('app')
   .config(
     ['$stateProvider', '$urlRouterProvider', 'JQ_CONFIG',
       function ($stateProvider, $urlRouterProvider, JQ_CONFIG) {
+          var fetchMetadata = ['serviceBase', 'backendService', '$q', function (serviceBase, backendService, $q) {
+              var defer = $q.defer();
+              backendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/EVM')
+                  .then(function() {  defer.resolve(); })
+                  .catch(function(){ defer.resolve();});
 
+              return defer.promise;
+          }];
+ 
 
           $urlRouterProvider.otherwise('/app/dashboard');
           $stateProvider
@@ -24,6 +32,7 @@ angular.module('app')
                   url: '/app',
                   templateUrl: 'tpl/app.html',
                   resolve: {
+                      metadata: fetchMetadata,
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
                       }],
@@ -72,12 +81,16 @@ angular.module('app')
                   abstract: true,
                   templateUrl: 'tpl/app.html',
                   resolve: {
+                      metadata: fetchMetadata,
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
                       }],
                       voucherTypes: ['controlledListService', function (controlledListService) {
                           return controlledListService.getVoucherTypes();
                       }],
+                      groups: ['controlledListService', function (controlledListService) {
+                          return controlledListService.getBeneficiaryGroups();
+                      }]
                   }
               })
               .state('beneficiaries.list', {
@@ -104,29 +117,114 @@ angular.module('app')
                   abstract: true,
                   templateUrl: 'tpl/app.html',
                   resolve: {
-                      locations: ['controlledListService', function (controlledListService) {
-                          return controlledListService.getLocations();
-                      }],
-                      voucherTypes: ['controlledListService', function (controlledListService) {
-                          return controlledListService.getVoucherTypes();
-                      }],
+                      metadata: fetchMetadata,
+                      settings: function () {
+                          return {
+                              entityType: 'BeneficiaryGroup',
+                              collectionType: 'BeneficiaryGroups',
+                              listState: 'groups.list',
+                              editState: 'groups.edit',
+                              createState: 'groups.create',
+                              title: 'Beneficiary Groups',
+                              formTemplate: 'tpl/groups/form.html'
+                          };
+                      }
                   }
               })
               .state('groups.list', {
                   url: '/list',
-                  templateUrl: 'tpl/groups/list.html',
-                  controller: 'BeneficiaryGroupGridCtrl'
+                  templateUrl: 'tpl/generic/list.html',
+                  controller: 'GenericGridCtrl'
               })
 
               .state('groups.edit', {
                   url: '/edit/:id',
-                  templateUrl: 'tpl/groups/edit.html',
-                  controller: 'BeneficiaryGroupEditCtrl'
+                  templateUrl: 'tpl/generic/edit.html',
+                  controller: 'GenericEditCtrl'
               })
               .state('groups.create', {
                   url: '/create',
-                  templateUrl: 'tpl/groups/create.html',
-                  controller: 'BeneficiaryGroupRegisterCtrl'
+                  templateUrl: 'tpl/generic/create.html',
+                  controller: 'GenericCreateCtrl'
+              })
+
+              .state('admin', {
+                  abstract: true,
+                  url: '/admin',
+                  templateUrl: 'tpl/app.html',
+                  resolve: {
+                      metadata: fetchMetadata
+                  }
+              })
+              .state('admin.locations', {
+                  url: '/locations',
+                  abstract: true,
+                  template: '<div ui-view class="fade-in-up"></div>',
+                  resolve: {
+                      settings: function () {
+                          return {
+                              entityType: 'Location',
+                              collectionType: 'Locations',
+                              listState: 'admin.locations.list',
+                              editState: 'admin.locations.edit',
+                              createState: 'admin.locations.create',
+                              title: 'Locations',
+                              formTemplate: 'tpl/admin/locations/form.html'
+                          };
+                      }
+                  }
+              })
+              .state('admin.locations.list', {
+                  url: '/list',
+                  templateUrl: 'tpl/generic/list.html',
+                  controller: 'GenericGridCtrl'
+              })
+
+              .state('admin.locations.edit', {
+                  url: '/edit/:id',
+                  templateUrl: 'tpl/generic/edit.html',
+                  controller: 'GenericEditCtrl'
+              })
+              .state('admin.locations.create', {
+                  url: '/create',
+                  templateUrl: 'tpl/generic/create.html',
+                  controller: 'GenericCreateCtrl'
+              })
+
+
+              .state('admin.voucherTypes', {
+                  url: '/voucher-types',
+                  abstract: true,
+                  template: '<div ui-view class="fade-in-up"></div>',
+                  resolve: {
+                      settings: function () {
+                          return {
+                              entityType: 'VoucherType',
+                              collectionType: 'VoucherTypes',
+                              listState: 'admin.voucherTypes.list',
+                              editState: 'admin.voucherTypes.edit',
+                              createState: 'admin.voucherTypes.create',
+                              title: 'Voucher Types',
+                              formTemplate: 'tpl/admin/voucherTypes/form.html'
+                          };
+                      }
+                  }
+              })
+              .state('admin.voucherTypes.list', {
+                  url: '/list',
+                  templateUrl: 'tpl/generic/list.html',
+                  controller: 'GenericGridCtrl'
+              })
+
+              .state('admin.voucherTypes.edit', {
+                  url: '/edit/:id',
+                  templateUrl: 'tpl/generic/edit.html',
+                  controller: 'GenericEditCtrl'
+              })
+              .state('admin.voucherTypes.create', {
+                  url: '/create',
+                  templateUrl: 'tpl/generic/create.html',
+                  controller: 'GenericCreateCtrl'
               })
 
               .state('vendors', {
@@ -134,6 +232,7 @@ angular.module('app')
                   abstract: true,
                   templateUrl: 'tpl/app.html',
                   resolve: {
+                      metadata: fetchMetadata,
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
                       }],
@@ -164,6 +263,7 @@ angular.module('app')
                   abstract: true,
                   templateUrl: 'tpl/app.html',
                   resolve: {
+                      metadata: fetchMetadata,
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
                       }],
@@ -187,6 +287,7 @@ angular.module('app')
                   abstract: true,
                   templateUrl: 'tpl/app.html',
                   resolve: {
+                      metadata: fetchMetadata,
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
                       }],

@@ -14,8 +14,8 @@ app.controller('BeneficiaryRegisterCtrl', ['breeze', 'backendService', '$scope',
     $scope.entity = backendService.createEntity("Beneficiary");
 }]);
 
-app.controller('BeneficiaryEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', 'dialogs',
-    function (breeze, backendService, $scope, $state, $q, locations, dialogs) {
+app.controller('BeneficiaryEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', 'dialogs', 'groups',
+    function (breeze, backendService, $scope, $state, $q, locations, dialogs, groups) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
@@ -80,9 +80,12 @@ app.controller('BeneficiaryEditCtrl', ['breeze', 'backendService', '$scope', '$s
 
                 var order = fields.join(',');
 
-                var entityQuery = new breeze.EntityQuery("VoucherVerificationItem")
-                    .expand("Voucher")
-                    .orderBy(order)
+                var entityQuery = new breeze.EntityQuery("VoucherTransactionRecords")
+                    .expand("Voucher");
+                if (order) {
+                    entityQuery = entityQuery.orderBy(order);
+                }
+                entityQuery = entityQuery
                     .skip($scope.pagingOptions.pageSize * ($scope.pagingOptions.currentPage - 1))
                     .take($scope.pagingOptions.pageSize)
                     .inlineCount(true)
@@ -110,6 +113,7 @@ app.controller('BeneficiaryEditCtrl', ['breeze', 'backendService', '$scope', '$s
         };
 
         $scope.locations = locations;
+        $scope.groups = groups;
         $scope.isEditing = false;
         $scope.vouchers = [];
         $scope.pagingOptions = {

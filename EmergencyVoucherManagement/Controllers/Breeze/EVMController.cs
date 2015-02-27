@@ -31,6 +31,12 @@ namespace EmergencyVoucherManagement.Controllers.Breeze
         }
 
         [HttpGet]
+        public IQueryable<Models.Vouchers.BeneficiaryGroup> BeneficiaryGroups()
+        {
+            return _contextProvider.Context.BeneficiaryGroups;
+        }
+
+        [HttpGet]
         public IQueryable<Models.Vouchers.Distribution> Distributions()
         {
             return _contextProvider.Context.Distributions;
@@ -73,7 +79,7 @@ namespace EmergencyVoucherManagement.Controllers.Breeze
         }
 
         [HttpGet]
-        public IQueryable<Models.Vouchers.VoucherTransactionRecord> VoucherVerificationItems()
+        public IQueryable<Models.Vouchers.VoucherTransactionRecord> VoucherTransactionRecords()
         {
             return _contextProvider.Context.VoucherTransactionRecords;
         }

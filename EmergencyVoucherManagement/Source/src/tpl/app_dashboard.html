@@ -18,13 +18,11 @@
         <!-- / main header -->
         <div class="wrapper-md" ng-controller="DashboardCtrl">
             <div ng-repeat="d in distributions">
-                <div class="row padder-v">
-                    <div class="col-sm-12">
-                        <h1 class="m-n font-thin h4 text-black">{{ d.Distribution.Title || "Distribution " + d.Location.Name }} - {{ d.Location.Name }}</h1>
-                    </div>
-                </div>
                 <!-- stats -->
                 <div class="panel">
+                    <div class="panel-heading no-border bg-primary">
+                        <h1 class="m-n h4 "><a class="text-black" ui-sref="distributions.edit({id: d.Distribution.Id})" href="">{{ d.Distribution.Title || "Distribution " + d.Location.Name }} - {{ d.Location.Name }}</a></h1>
+                    </div>
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-5">
@@ -59,18 +57,18 @@
                                 <div class="row row-sm text-center">
 
                                     <div class="col-xs-12 m-b-md">
-                                        <div class="r bg-light dker item hbox no-border">
+                                        <div class="r bg-dark item hbox no-border">
                                             <div class="col dk padder-v r-r">
-                                                <div class="text-primary-dk font-thin h1"><span>{{ d.IssuedAmount|currency }}</span></div>
-                                                <span class="text-black text-xs">Issued</span>
+                                                <div class="text-primary-lter font-thin h1"><span>{{ d.IssuedAmount|currency }}</span></div>
+                                                <span class="text-primary-lter text-xs">Issued</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-xs-12 m-b-md">
-                                        <div class="r bg-light dker item hbox no-border">
+                                        <div class="r bg-dark item hbox no-border">
                                             <div class="col dk padder-v r-r">
-                                                <div class="text-primary-dk font-thin h1"><span>{{ (d.ClaimedAmount || 0)|currency }}</span></div>
-                                                <span class="text-black text-xs">Claimed</span>
+                                                <div class="text-primary-lter font-thin h1"><span>{{ (d.ClaimedAmount || 0)|currency }}</span></div>
+                                                <span class="text-primary-lter text-xs">Claimed</span>
                                             </div>
                                         </div>
                                     </div>

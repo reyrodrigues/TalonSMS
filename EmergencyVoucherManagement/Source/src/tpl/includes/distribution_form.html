@@ -41,7 +41,7 @@
             </div>
             <label class="col-lg-2 control-label">Vouchers Issued</label>
             <div class="col-lg-4">
-                <input type="text" class="form-control" placeholder="IssuedVouchers" ng-model="category.IssuedVouchers" readonly>
+                <input type="text" class="form-control" placeholder="IssuedVouchers" ng-model="category.IssuedVouchers" disabled>
             </div>
         </div>
         <div class="line line-dashed b-b line-lg pull-in"></div>
@@ -51,7 +51,7 @@
                 <input type="text" class="form-control" placeholder="Value" ng-model="category.Value" required>
             </div>
         </div>
-        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="line line-dashed b-b line-lg pull-in" ng-if="isEditing"></div>
         <a href="#" ng-click="removeCategory(category)" class="btn btn-danger" ng-if="isEditing">Remove</a>
 
     </div>

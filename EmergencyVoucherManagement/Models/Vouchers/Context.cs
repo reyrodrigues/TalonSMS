@@ -22,13 +22,15 @@ namespace EmergencyVoucherManagement.Models.Vouchers
             base.OnModelCreating(modelBuilder);
             Database.SetInitializer(new System.Data.Entity.NullDatabaseInitializer<Context>());
 
-            modelBuilder.Entity<VoucherTransactionRecord>()
-                .HasRequired(p => p.Voucher)
-                .WithOptional(p => p.TransactionRecord);
 
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
                 .WithMany(p => p.Categories);
+
+            modelBuilder.Entity<Voucher>()
+                .HasOptional(p => p.TransactionRecord)
+                .WithOptionalDependent(p => p.Voucher)
+                .Map(p=>p.MapKey("TransactionRecordId"));
 
             modelBuilder.Entity<Voucher>()
                 .HasRequired(p => p.Distribution)
@@ -41,10 +43,15 @@ namespace EmergencyVoucherManagement.Models.Vouchers
             modelBuilder.Entity<BeneficiaryDistribution>()
                 .HasRequired(p => p.Distribution)
                 .WithMany(p => p.Beneficiaries);
+
+            modelBuilder.Entity<Beneficiary>()
+                .HasOptional(p => p.Group)
+                .WithMany(p => p.Beneficiaries);
         }
 
         public DbSet<Vendor> Vendors { get; set; }
         public DbSet<Beneficiary> Beneficiaries { get; set; }
+        public DbSet<BeneficiaryGroup> BeneficiaryGroups { get; set; }
         public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Distribution> Distributions { get; set; }

@@ -19,7 +19,8 @@ var app = angular.module('app', [
   'pascalprecht.translate',
   'LocalStorageModule',
   'dialogs.default-translations',
-  'dialogs.main'
+  'dialogs.main',
+  'toaster'
 ]);
 
 

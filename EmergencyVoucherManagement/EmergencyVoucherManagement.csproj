@@ -270,6 +270,7 @@
     <Compile Include="Models\Vouchers\Beneficiary.cs" />
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryDistribution.cs" />
+    <Compile Include="Models\Vouchers\BeneficiaryGroup.cs" />
     <Compile Include="Models\Vouchers\Context.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\Distribution.cs" />
@@ -345,6 +346,7 @@
     <Content Include="Source\src\css\app.css" />
     <Content Include="Source\src\css\font.css" />
     <Content Include="Source\src\js\controllers\vendor.js" />
+    <Content Include="Source\src\js\controllers\generic.js" />
     <Content Include="Source\src\js\controllers\vouchers.js" />
     <Content Include="Source\src\js\directives\chosen.js" />
     <Content Include="Source\src\js\directives\toggleEditing.js" />
@@ -457,8 +459,14 @@
     <Content Include="Source\src\lib\crypto\forge.min.js" />
     <Content Include="Source\src\lib\jquery.flot.spline.min.js" />
     <Content Include="Source\src\lib\jquery.sparkline.retina.js" />
+    <Content Include="Source\src\tpl\admin\voucherTypes\form.html" />
+    <Content Include="Source\src\tpl\admin\locations\form.html" />
     <Content Include="Source\src\tpl\app.html" />
+    <Content Include="Source\src\tpl\generic\create.html" />
+    <Content Include="Source\src\tpl\generic\edit.html" />
+    <Content Include="Source\src\tpl\generic\list.html" />
     <Content Include="Source\src\tpl\includes\vendors_form.html" />
+    <Content Include="Source\src\tpl\groups\form.html" />
     <Content Include="Source\src\tpl\vendors\create.html" />
     <Content Include="Source\src\tpl\vendors\edit.html" />
     <Content Include="Source\src\tpl\vendors\list.html" />
@@ -599,7 +607,6 @@
   <ItemGroup>
     <Folder Include="App\" />
     <Folder Include="App_Data\" />
-    <Folder Include="Source\src\tpl\admin\" />
     <Folder Include="Source\src\tpl\vouchers\" />
   </ItemGroup>
   <ItemGroup>

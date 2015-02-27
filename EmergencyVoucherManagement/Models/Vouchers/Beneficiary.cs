@@ -19,6 +19,9 @@ namespace EmergencyVoucherManagement.Models.Vouchers
 
         public virtual string PIN { get; set; }
 
+        public virtual int? GroupId { get; set; }
+        public virtual BeneficiaryGroup Group { get; set; }
+
         public virtual int? LocationId { get; set; }
         public virtual Location Location { get; set; }
 

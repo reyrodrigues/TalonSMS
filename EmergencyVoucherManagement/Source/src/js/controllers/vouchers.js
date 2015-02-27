@@ -12,11 +12,11 @@ app.controller('VoucherDistributionCreateCtrl', ['breeze', 'backendService', '$s
     $scope.locations = locations;
     $scope.isEditing = true;
     $scope.isNew = true;
-    $scope.entity = backendService.createEntity("Distribution");
+    $scope.entity = backendService.createEntity("Distribution", {VoucherCodeLength: 6});
 }]);
 
-app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', 'dialogs', 'voucherTypes',
-    function (breeze, backendService, $scope, $state, $q, locations, dialogs, voucherTypes) {
+app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'serviceBase', 'toaster',
+    function (breeze, backendService, $scope, $state, $q, $http, locations, dialogs, voucherTypes, serviceBase, toaster) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
@@ -98,14 +98,38 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
                 return c.Id != category.Id;
             });
         };
-
         $scope.addCategory = function () {
             var category = backendService.createEntity("DistributionVoucherCategory", {DistributionId: $scope.entity.Id});
             $scope.categories.push(category);
         };
+        $scope.generateVouchers = function () {
+            toaster.pop('success', 'Processing', 'Vouchers are being generated.');
+
+            $http.post(serviceBase + 'Api/VoucherWorkflow/GenerateVouchers', { DistributionId: $scope.entity.Id })
+                .then(function (res) {
+                    toaster.pop('success', 'Success!', 'Vouchers created successfully!');
+                    loadData();
+                })
+                .catch(function (res) {
+                    toaster.pop('error', 'Error', res.data.Message);
+                });
+        };
+
+        window.toaster = toaster;
 
         var watchFunction = function () {
             $scope.loadGridData();
+        };
+        var loadData = function () {
+            $q.when(query.where("Id", "==", $state.params.id).take(1).execute()).then(function (res) {
+                if (res.results) {
+                    var entity = res.results.pop();
+
+                    $scope.entity = entity;
+                    $scope.categories = entity.Categories;
+                    $scope.loadGridData();
+                }
+            });
         };
 
         $scope.locations = locations;
@@ -143,17 +167,8 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
             .expand('Beneficiaries')
             .expand('Categories')
             .using(backendService);
-        $q.when(query.where("Id", "==", $state.params.id).take(1).execute()).then(function (res) {
-            if (res.results) {
-                var entity = res.results.pop();
 
-                $scope.entity = entity;
-                $scope.categories = entity.Categories;
-                $scope.loadGridData();
-            }
-        });
-
-
+        loadData();
 
         $scope.$watch('pagingOptions', watchFunction, true);
         $scope.$watch('gridOptions.sortInfo', watchFunction, true);

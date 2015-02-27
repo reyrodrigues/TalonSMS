@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNet.Identity;
+﻿using EmergencyVoucherManagement.Models.BindingModels;
+using Microsoft.AspNet.Identity;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,7 @@ namespace EmergencyVoucherManagement.Controllers.Api
     {
         private static object syncObj = new Object();
 
+        [Route("GenerateVouchers")]
         public async Task<IHttpActionResult> GenerateVouchers(dynamic request)
         {
             int distributionId = request.DistributionId;
@@ -83,27 +85,70 @@ namespace EmergencyVoucherManagement.Controllers.Api
                 }
                 await ctx.SaveChangesAsync();
 
-                return Ok("");
+                return Ok();
             }
         }
 
+        [Route("AssignToGroup")]
+        public async Task<IHttpActionResult> AssignToGroup(dynamic request)
+        {
+            int distributionId = request.DistributionId;
+            int groupId = request.GroupId;
+
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                var beneficiaries = ctx.Beneficiaries
+                    .Where(b => b.GroupId == groupId && !b.Distributions.Where(d => d.DistributionId == distributionId).Any());
+                var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
+
+                foreach (var beneficiary in beneficiaries)
+                {
+                    foreach (var category in distribution.Categories)
+                    {
+                        var transactionRecord = new Models.Vouchers.VoucherTransactionRecord();
+                        var voucher = ctx.Vouchers.Where(v => v.DistributionId == distribution.Id &&
+                            v.TypeId == category.TypeId &&
+                            v.Value == category.Value &&
+                            v.TransactionRecord == null).First();
+
+                        transactionRecord.BeneficiaryId = beneficiary.Id;
+                        transactionRecord.Status = 0;
+                        voucher.TransactionRecord = transactionRecord;
+
+                        ctx.VoucherTransactionRecords.Add(transactionRecord);
+                    }
+
+                    ctx.BeneficiaryDistributions.Add(new Models.Vouchers.BeneficiaryDistribution { 
+                        BeneficiaryId = beneficiary.Id,
+                        DistributionId = distribution.Id
+                    });
+                }
+
+                await ctx.SaveChangesAsync();
+            }            
+
+
+            return Ok();
+        }
+
+
         [Route("ValidateTransactionSMS")]
         [OverrideAuthentication]
-        [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
         [AllowAnonymous]
-        public IHttpActionResult ValidateTransactionSMS(Models.BindingModels.IncomingSmsBindingModel smsMessage)
+        public IHttpActionResult ValidateTransactionSMS(IncomingSmsBindingModel request)
         {
-            var codes = smsMessage.Message.Split(' ');
+            string[] codes = request.Message.ToString().Split(' ');
+            string from = request.From;
             var voucherCode = 0L;
             var nationalId = "";
 
             if (codes.Length >= 2)
             {
-                voucherCode = Int64.Parse(codes[codes.Length - 1]);
+                voucherCode = Int64.Parse(codes[codes.Length - 2]);
                 nationalId = codes[codes.Length - 1];
             }
 
-            var phoneNumber = Regex.Replace(smsMessage.From, "[^\\d]", "").Trim();
+            var phoneNumber = Regex.Replace(from, "[^\\d]", "").Trim();
 
             lock (syncObj)
             {
@@ -119,7 +164,7 @@ namespace EmergencyVoucherManagement.Controllers.Api
                         var voucherQuery = from vc in db.Vouchers
                                            where vc.VoucherCode == voucherCode
                                            && vc.TransactionRecord != null
-                                           && vc.TransactionRecord.Status == 1
+                                           && vc.TransactionRecord.Status < 2
                                            select vc;
 
                         if (voucherQuery.Count() == 1)
@@ -127,6 +172,10 @@ namespace EmergencyVoucherManagement.Controllers.Api
                             var voucher = voucherQuery.First();
                             if (voucher.TransactionRecord.Beneficiary.NationalId == nationalId)
                             {
+                                voucher.TransactionRecord.VendorId = vendor.Id;
+                                voucher.TransactionRecord.Status = 2;
+                                db.SaveChanges();
+
                                 ConfirmTransaction();
                             }
                         }
@@ -168,7 +217,6 @@ namespace EmergencyVoucherManagement.Controllers.Api
                 var verificationItem = new Models.Vouchers.VoucherTransactionRecord
                 {
                     Beneficiary = beneficiary,
-                    Voucher = voucher,
                     Status = 1,
                 };
 

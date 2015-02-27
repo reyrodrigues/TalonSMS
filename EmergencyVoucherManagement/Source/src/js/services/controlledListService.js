@@ -14,8 +14,20 @@ app.factory('controlledListService', ['breeze', 'backendService', '$q', function
             return deferred.promise;
         },
         getVoucherTypes: function () {
-        var deferred  = $q.defer();
-        new breeze.EntityQuery("VoucherTypes")
+            var deferred = $q.defer();
+            new breeze.EntityQuery("VoucherTypes")
+               .using(backendService)
+               .noTracking()
+               .execute()
+               .then(function (res) {
+                   deferred.resolve(res.results);
+               });
+
+            return deferred.promise;
+        },
+        getBeneficiaryGroups: function () {
+            var deferred = $q.defer();
+            new breeze.EntityQuery("BeneficiaryGroups")
            .using(backendService)
            .noTracking()
            .execute()
@@ -23,8 +35,8 @@ app.factory('controlledListService', ['breeze', 'backendService', '$q', function
                deferred.resolve(res.results);
            });
 
-        return deferred.promise;
-    }
+            return deferred.promise;
+        }
 
     };
 }]);

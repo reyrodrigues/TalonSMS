@@ -20,6 +20,7 @@ namespace EmergencyVoucherManagement.Controllers
         {
 
             throw new HttpException(404, "Some description");
+            /*
             var files = Directory.EnumerateFiles(Server.MapPath("~/App"), "*.*", SearchOption.AllDirectories)
                                 .Select(f=> f.Replace(Server.MapPath("~"), ""))
                                 .Union(Directory.EnumerateFiles(Server.MapPath("~/Scripts"), "*.*", SearchOption.AllDirectories)
@@ -30,7 +31,7 @@ namespace EmergencyVoucherManagement.Controllers
             ViewBag.Files = files;
 
 
-            return View();
+            return View();*/
         }
     }
 }
