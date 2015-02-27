@@ -1,0 +1,654 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8800B9C7-8F74-4D19-A2F0-35EBE57143B5}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EmergencyVoucherManagement</RootNamespace>
+    <AssemblyName>EmergencyVoucherManagement</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>false</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <TypeScriptToolsVersion>1.0</TypeScriptToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Breeze.ContextProvider">
+      <HintPath>..\packages\Breeze.Server.ContextProvider.1.5.3\lib\Breeze.ContextProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Breeze.ContextProvider.EF6">
+      <HintPath>..\packages\Breeze.Server.ContextProvider.EF6.1.5.3\lib\Breeze.ContextProvider.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="Breeze.WebApi2">
+      <HintPath>..\packages\Breeze.Server.WebApi2.1.5.3\lib\Breeze.WebApi2.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Data.Edm, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Data.Edm.5.6.0\lib\net40\Microsoft.Data.Edm.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Data.OData, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Data.OData.5.6.0\lib\net40\Microsoft.Data.OData.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.OData.Core, Version=6.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.OData.Core.6.9.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.OData.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.OData.Edm, Version=6.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.OData.Edm.6.9.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.OData.Edm.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Spatial, Version=6.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Spatial.6.9.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.Spatial.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.2\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Spatial, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Spatial.5.6.0\lib\net40\System.Spatial.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Cors">
+      <HintPath>..\packages\Microsoft.AspNet.Cors.5.2.3\lib\net45\System.Web.Cors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Http, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.2\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.OData">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.OData.5.3.1\lib\net45\System.Web.Http.OData.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.2\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.OData, Version=5.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.OData.5.4.0\lib\net45\System.Web.OData.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http">
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest">
+    </Reference>
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.2\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=__MvcPagesVersion__, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.2\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.2\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.2\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.2\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.2\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="WebActivator">
+      <HintPath>..\packages\WebActivator.1.5.3\lib\net40\WebActivator.dll</HintPath>
+    </Reference>
+    <Reference Include="WebGrease">
+      <Private>True</Private>
+      <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr3.Runtime">
+      <Private>True</Private>
+      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNet.Identity.Core">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.1.0\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Owin">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Owin.2.1.0\lib\net45\Microsoft.AspNet.Identity.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.EntityFramework">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.EntityFramework.2.1.0\lib\net45\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin">
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin">
+      <HintPath>..\packages\Microsoft.Owin.3.0.0\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb">
+      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security">
+      <HintPath>..\packages\Microsoft.Owin.Security.3.0.0\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Facebook">
+      <HintPath>..\packages\Microsoft.Owin.Security.Facebook.3.0.0\lib\net45\Microsoft.Owin.Security.Facebook.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Cookies">
+      <HintPath>..\packages\Microsoft.Owin.Security.Cookies.3.0.0\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.OAuth">
+      <HintPath>..\packages\Microsoft.Owin.Security.OAuth.3.0.0\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Google">
+      <HintPath>..\packages\Microsoft.Owin.Security.Google.3.0.0\lib\net45\Microsoft.Owin.Security.Google.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Twitter">
+      <HintPath>..\packages\Microsoft.Owin.Security.Twitter.3.0.0\lib\net45\Microsoft.Owin.Security.Twitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.MicrosoftAccount">
+      <HintPath>..\packages\Microsoft.Owin.Security.MicrosoftAccount.3.0.0\lib\net45\Microsoft.Owin.Security.MicrosoftAccount.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.Owin">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.2\lib\net45\System.Web.Http.Owin.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\BreezeWebApiConfig.cs" />
+    <Compile Include="App_Start\BundleConfig.cs" />
+    <Compile Include="App_Start\EdmBuilder.cs" />
+    <Compile Include="App_Start\FilterConfig.cs" />
+    <Compile Include="App_Start\IdentityConfig.cs" />
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="App_Start\Startup.Auth.cs" />
+    <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.cs" />
+    <Compile Include="Areas\HelpPage\App_Start\HelpPageConfig.cs" />
+    <Compile Include="Areas\HelpPage\Controllers\HelpController.cs" />
+    <Compile Include="Areas\HelpPage\HelpPageAreaRegistration.cs" />
+    <Compile Include="Areas\HelpPage\HelpPageConfigurationExtensions.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\CollectionModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ComplexTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\DictionaryModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumValueDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\IModelDocumentationProvider.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\KeyValuePairModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescriptionGenerator.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameAttribute.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameHelper.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterAnnotation.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\SimpleTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\Models\HelpPageApiModel.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleGenerator.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleKey.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ImageSample.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\InvalidSample.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ObjectGenerator.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
+    <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Controllers\Api\DashboardController.cs" />
+    <Compile Include="Controllers\Breeze\EVMController.cs" />
+    <Compile Include="Controllers\OData\RolesController.cs" />
+    <Compile Include="Controllers\OData\UsersController.cs" />
+    <Compile Include="Controllers\OData\AbstractODataController.cs" />
+    <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Models\BindingModels\RemoveUserFromRoleBindingModel.cs" />
+    <Compile Include="Models\BindingModels\AddUserToRoleBindingModel.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\OData\ODataControllers.cs" />
+    <Compile Include="Controllers\OData\ValuesController.cs" />
+    <Compile Include="Controllers\Api\VendorWorkflowController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Models\BindingModels\AccountBindingModels.cs" />
+    <Compile Include="Models\BindingModels\AssignVoucherBidingModel.cs" />
+    <Compile Include="Models\ViewModels\AccountViewModels.cs" />
+    <Compile Include="Models\Vouchers\Beneficiary.cs" />
+    <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
+    <Compile Include="Models\Vouchers\BeneficiaryDistribution.cs" />
+    <Compile Include="Models\Vouchers\Context.cs" />
+    <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
+    <Compile Include="Models\Vouchers\Distribution.cs" />
+    <Compile Include="Models\Vouchers\VoucherType.cs" />
+    <Compile Include="Models\Vouchers\Entity.cs" />
+    <Compile Include="Models\IdentityModels.cs" />
+    <Compile Include="Models\Vouchers\Location.cs" />
+    <Compile Include="Models\Vouchers\Vendor.cs" />
+    <Compile Include="Models\BindingModels\VendorWorkflowBindingModels.cs" />
+    <Compile Include="Models\Vouchers\Voucher.cs" />
+    <Compile Include="Models\Vouchers\VoucherTransactionRecord.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Providers\ApplicationOAuthProvider.cs" />
+    <Compile Include="Results\ChallengeResult.cs" />
+    <Compile Include="Startup.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="Areas\HelpPage\HelpPage.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="favicon.ico" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Global.asax" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Areas\HelpPage\Views\Web.config" />
+    <Content Include="Areas\HelpPage\Views\Shared\_Layout.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\ResourceModel.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Index.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\TextSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\SimpleTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Samples.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Parameters.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ModelDescriptionLink.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\KeyValuePairModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\InvalidSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ImageSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\HelpPageApiModel.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\EnumTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\DictionaryModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ComplexTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
+    <Content Include="Scripts\datajs-1.1.3.js" />
+    <Content Include="Scripts\datajs-1.1.3.min.js" />
+    <Content Include="Scripts\datajs.js" />
+    <Content Include="Scripts\NavigationMenu.js" />
+    <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\jquery-1.10.2.js" />
+    <Content Include="Scripts\jquery-1.10.2.min.js" />
+    <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.validate.js" />
+    <Content Include="Scripts\jquery.validate.min.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\modernizr-2.6.2.js" />
+    <Content Include="Scripts\respond.js" />
+    <Content Include="Scripts\respond.min.js" />
+    <Content Include="Source\GruntFile.js" />
+    <Content Include="Source\grunt\bower-install-simple.js" />
+    <Content Include="Source\grunt\bump.js" />
+    <Content Include="Source\grunt\changelog.js" />
+    <Content Include="Source\grunt\clean.js" />
+    <Content Include="Source\grunt\concat.js" />
+    <Content Include="Source\grunt\copy.js" />
+    <Content Include="Source\grunt\htmlmin.js" />
+    <Content Include="Source\grunt\index.js" />
+    <Content Include="Source\grunt\recess.js" />
+    <Content Include="Source\grunt\swig.js" />
+    <Content Include="Source\grunt\uglify.js" />
+    <Content Include="Source\src\css\app.css" />
+    <Content Include="Source\src\css\font.css" />
+    <Content Include="Source\src\js\controllers\vendor.js" />
+    <Content Include="Source\src\js\controllers\vouchers.js" />
+    <Content Include="Source\src\js\directives\chosen.js" />
+    <Content Include="Source\src\js\directives\toggleEditing.js" />
+    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen.css" />
+    <Content Include="Source\src\lib\bootstrap-chosen\chosen-sprite%402x.png" />
+    <Content Include="Source\src\lib\bootstrap-chosen\chosen-sprite.png" />
+    <Content Include="Source\src\lib\ng-grid.bootstrap.css" />
+    <Content Include="Source\src\img\a0.jpg" />
+    <Content Include="Source\src\img\a1.jpg" />
+    <Content Include="Source\src\img\a10.jpg" />
+    <Content Include="Source\src\img\a2.jpg" />
+    <Content Include="Source\src\img\a3.jpg" />
+    <Content Include="Source\src\img\a4.jpg" />
+    <Content Include="Source\src\img\a5.jpg" />
+    <Content Include="Source\src\img\a6.jpg" />
+    <Content Include="Source\src\img\a7.jpg" />
+    <Content Include="Source\src\img\a8.jpg" />
+    <Content Include="Source\src\img\a9.jpg" />
+    <Content Include="Source\src\img\b0.jpg" />
+    <Content Include="Source\src\img\b1.jpg" />
+    <Content Include="Source\src\img\b10.jpg" />
+    <Content Include="Source\src\img\b11.jpg" />
+    <Content Include="Source\src\img\b12.jpg" />
+    <Content Include="Source\src\img\b13.jpg" />
+    <Content Include="Source\src\img\b14.jpg" />
+    <Content Include="Source\src\img\b15.jpg" />
+    <Content Include="Source\src\img\b16.jpg" />
+    <Content Include="Source\src\img\b17.jpg" />
+    <Content Include="Source\src\img\b18.jpg" />
+    <Content Include="Source\src\img\b19.jpg" />
+    <Content Include="Source\src\img\b2.jpg" />
+    <Content Include="Source\src\img\b20.jpg" />
+    <Content Include="Source\src\img\b3.jpg" />
+    <Content Include="Source\src\img\b4.jpg" />
+    <Content Include="Source\src\img\b5.jpg" />
+    <Content Include="Source\src\img\b6.jpg" />
+    <Content Include="Source\src\img\b7.jpg" />
+    <Content Include="Source\src\img\b8.jpg" />
+    <Content Include="Source\src\img\b9.jpg" />
+    <Content Include="Source\src\img\bg.jpg" />
+    <Content Include="Source\src\img\c0.jpg" />
+    <Content Include="Source\src\img\c1.jpg" />
+    <Content Include="Source\src\img\c2.jpg" />
+    <Content Include="Source\src\img\c3.jpg" />
+    <Content Include="Source\src\img\c4.jpg" />
+    <Content Include="Source\src\img\c5.jpg" />
+    <Content Include="Source\src\img\c6.jpg" />
+    <Content Include="Source\src\img\c7.jpg" />
+    <Content Include="Source\src\img\c8.jpg" />
+    <Content Include="Source\src\img\c9.jpg" />
+    <Content Include="Source\src\img\logo.png" />
+    <Content Include="Source\src\img\p0.jpg" />
+    <Content Include="Source\src\index.html" />
+    <Content Include="Source\src\index.min.html" />
+    <Content Include="Source\src\js\app.js" />
+    <Content Include="Source\src\js\app\calendar\calendar.js" />
+    <Content Include="Source\src\js\app\contact\contact.js" />
+    <Content Include="Source\src\js\app\mail\mail-service.js" />
+    <Content Include="Source\src\js\app\mail\mail.js" />
+    <Content Include="Source\src\js\app\map\load-google-maps.js" />
+    <Content Include="Source\src\js\app\map\map.js" />
+    <Content Include="Source\src\js\app\map\ui-map.js" />
+    <Content Include="Source\src\js\app\note\note.js" />
+    <Content Include="Source\src\js\app\todo\todo.js" />
+    <Content Include="Source\src\js\app\weather\angular-skycons.js" />
+    <Content Include="Source\src\js\app\weather\ctrl.js" />
+    <Content Include="Source\src\js\app\weather\skycons.js" />
+    <Content Include="Source\src\js\config.js" />
+    <Content Include="Source\src\js\config.lazyload.js" />
+    <Content Include="Source\src\js\config.router.js" />
+    <Content Include="Source\src\js\controllers\beneficiaries.js" />
+    <Content Include="Source\src\js\controllers\toremove\bootstrap.js" />
+    <Content Include="Source\src\js\controllers\toremove\chart.js" />
+    <Content Include="Source\src\js\controllers\dashboard.js" />
+    <Content Include="Source\src\js\controllers\toremove\editor.js" />
+    <Content Include="Source\src\js\controllers\toremove\file-upload.js" />
+    <Content Include="Source\src\js\controllers\toremove\form.js" />
+    <Content Include="Source\src\js\controllers\toremove\grid.js" />
+    <Content Include="Source\src\js\controllers\toremove\imgcrop.js" />
+    <Content Include="Source\src\js\controllers\toremove\scroll.js" />
+    <Content Include="Source\src\js\controllers\toremove\select.js" />
+    <Content Include="Source\src\js\controllers\signin.js" />
+    <Content Include="Source\src\js\controllers\toremove\signup.js" />
+    <Content Include="Source\src\js\controllers\toremove\slider.js" />
+    <Content Include="Source\src\js\controllers\toremove\tab.js" />
+    <Content Include="Source\src\js\controllers\toremove\table.js" />
+    <Content Include="Source\src\js\controllers\toremove\toaster.js" />
+    <Content Include="Source\src\js\controllers\toremove\tree.js" />
+    <Content Include="Source\src\js\controllers\toremove\uigrid.js" />
+    <Content Include="Source\src\js\controllers\toremove\vectormap.js" />
+    <Content Include="Source\src\js\controllers\toremove\xeditable.js" />
+    <Content Include="Source\src\js\directives\setnganimate.js" />
+    <Content Include="Source\src\js\directives\ui-butterbar.js" />
+    <Content Include="Source\src\js\directives\ui-focus.js" />
+    <Content Include="Source\src\js\directives\ui-fullscreen.js" />
+    <Content Include="Source\src\js\directives\ui-jq.js" />
+    <Content Include="Source\src\js\directives\ui-module.js" />
+    <Content Include="Source\src\js\directives\ui-nav.js" />
+    <Content Include="Source\src\js\directives\ui-scroll.js" />
+    <Content Include="Source\src\js\directives\ui-shift.js" />
+    <Content Include="Source\src\js\directives\ui-toggleclass.js" />
+    <Content Include="Source\src\js\filters\voucherFilters.js" />
+    <Content Include="Source\src\js\filters\fromNow.js" />
+    <Content Include="Source\src\js\main.js" />
+    <Content Include="Source\src\js\services\authInterceptorService.js" />
+    <Content Include="Source\src\js\services\authService.js" />
+    <Content Include="Source\src\js\services\backendService.js" />
+    <Content Include="Source\src\js\services\tokensManagerService.js" />
+    <Content Include="Source\src\js\services\ui-load.js" />
+    <Content Include="Source\src\lib\crypto\forge.min.js" />
+    <Content Include="Source\src\lib\jquery.flot.spline.min.js" />
+    <Content Include="Source\src\lib\jquery.sparkline.retina.js" />
+    <Content Include="Source\src\tpl\app.html" />
+    <Content Include="Source\src\tpl\includes\vendors_form.html" />
+    <Content Include="Source\src\tpl\vendors\create.html" />
+    <Content Include="Source\src\tpl\vendors\edit.html" />
+    <Content Include="Source\src\tpl\vendors\list.html" />
+    <Content Include="Source\src\tpl\includes\distribution_form.html" />
+    <Content Include="Source\src\tpl\todelete\apps_contact.html" />
+    <Content Include="Source\src\tpl\todelete\apps_note.html" />
+    <Content Include="Source\src\tpl\todelete\apps_todo.html" />
+    <Content Include="Source\src\tpl\todelete\apps_weather.html" />
+    <Content Include="Source\src\tpl\todelete\app_calendar.html" />
+    <Content Include="Source\src\tpl\app_dashboard.html" />
+    <Content Include="Source\src\tpl\todelete\app_dashboard_v1.html" />
+    <Content Include="Source\src\tpl\todelete\app_dashboard_v2.html" />
+    <Content Include="Source\src\tpl\distributions\create.html" />
+    <Content Include="Source\src\tpl\distributions\edit.html" />
+    <Content Include="Source\src\tpl\distributions\list.html" />
+    <Content Include="Source\src\tpl\beneficiaries\create.html" />
+    <Content Include="Source\src\tpl\blank.html" />
+    <Content Include="Source\src\tpl\blocks\aside.html" />
+    <Content Include="Source\src\tpl\blocks\header.html" />
+    <Content Include="Source\src\tpl\blocks\nav.html" />
+    <Content Include="Source\src\tpl\blocks\page_footer.html" />
+    <Content Include="Source\src\tpl\blocks\settings.html" />
+    <Content Include="Source\src\tpl\todelete\docs.html" />
+    <Content Include="Source\src\tpl\todelete\form_editor.html" />
+    <Content Include="Source\src\tpl\beneficiaries\edit.html" />
+    <Content Include="Source\src\tpl\todelete\form_elements.html" />
+    <Content Include="Source\src\tpl\todelete\form_fileupload.html" />
+    <Content Include="Source\src\tpl\todelete\form_imagecrop.html" />
+    <Content Include="Source\src\tpl\todelete\form_select.html" />
+    <Content Include="Source\src\tpl\todelete\form_slider.html" />
+    <Content Include="Source\src\tpl\todelete\form_validation.html" />
+    <Content Include="Source\src\tpl\todelete\form_wizard.html" />
+    <Content Include="Source\src\tpl\todelete\form_xeditable.html" />
+    <Content Include="Source\src\tpl\includes\beneficiaries_form.html" />
+    <Content Include="Source\src\tpl\todelete\layout.html" />
+    <Content Include="Source\src\tpl\todelete\layout_app.html" />
+    <Content Include="Source\src\tpl\todelete\layout_footer_fullwidth.html" />
+    <Content Include="Source\src\tpl\todelete\layout_footer_mobile.html" />
+    <Content Include="Source\src\tpl\todelete\layout_fullwidth.html" />
+    <Content Include="Source\src\tpl\todelete\layout_mobile.html" />
+    <Content Include="Source\src\tpl\todelete\mail.detail.html" />
+    <Content Include="Source\src\tpl\todelete\mail.html" />
+    <Content Include="Source\src\tpl\todelete\mail.list.html" />
+    <Content Include="Source\src\tpl\todelete\mail.new.html" />
+    <Content Include="Source\src\tpl\todelete\modal.form.html" />
+    <Content Include="Source\src\tpl\todelete\modal.html" />
+    <Content Include="Source\src\tpl\todelete\page_404.html" />
+    <Content Include="Source\src\tpl\todelete\page_forgotpwd.html" />
+    <Content Include="Source\src\tpl\todelete\page_invoice.html" />
+    <Content Include="Source\src\tpl\todelete\page_lockme.html" />
+    <Content Include="Source\src\tpl\todelete\page_post.html" />
+    <Content Include="Source\src\tpl\todelete\page_price.html" />
+    <Content Include="Source\src\tpl\todelete\page_profile.html" />
+    <Content Include="Source\src\tpl\todelete\page_search.html" />
+    <Content Include="Source\src\tpl\todelete\page_signin.html" />
+    <Content Include="Source\src\tpl\todelete\page_signup.html" />
+    <Content Include="Source\src\tpl\todelete\table_datatable.html" />
+    <Content Include="Source\src\tpl\todelete\table_editable.html" />
+    <Content Include="Source\src\tpl\todelete\table_footable.html" />
+    <Content Include="Source\src\tpl\beneficiaries\list.html" />
+    <Content Include="Source\src\tpl\todelete\table_grid.html" />
+    <Content Include="Source\src\tpl\todelete\table_smart.html" />
+    <Content Include="Source\src\tpl\todelete\table_static.html" />
+    <Content Include="Source\src\tpl\todelete\table_uigrid.html" />
+    <Content Include="Source\src\tpl\todelete\ui_bootstrap.html" />
+    <Content Include="Source\src\tpl\todelete\ui_buttons.html" />
+    <Content Include="Source\src\tpl\todelete\ui_chart.html" />
+    <Content Include="Source\src\tpl\todelete\ui_googlemap.html" />
+    <Content Include="Source\src\tpl\todelete\ui_grid.html" />
+    <Content Include="Source\src\tpl\todelete\ui_icons.html" />
+    <Content Include="Source\src\tpl\todelete\ui_jvectormap.html" />
+    <Content Include="Source\src\tpl\todelete\ui_portlet.html" />
+    <Content Include="Source\src\tpl\todelete\ui_scroll.html" />
+    <Content Include="Source\src\tpl\todelete\ui_sortable.html" />
+    <Content Include="Source\src\tpl\todelete\ui_timeline.html" />
+    <Content Include="Source\src\tpl\todelete\ui_toaster.html" />
+    <Content Include="Source\src\tpl\todelete\ui_tree.html" />
+    <Content Include="Source\src\tpl\todelete\ui_widgets.html" />
+    <Content Include="Web.config" />
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
+    <Content Include="Content\Site.css" />
+    <Content Include="Scripts\_references.js" />
+    <Content Include="Views\Web.config" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Shared\Error.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Scripts\jquery-1.10.2.min.map" />
+    <Content Include="Source\bower.json" />
+    <Content Include="Source\package.json" />
+    <Content Include="Source\src\.DS_Store" />
+    <Content Include="Source\src\css\less\app.arrow.less" />
+    <Content Include="Source\src\css\less\app.butterbar.less" />
+    <Content Include="Source\src\css\less\app.buttons.less" />
+    <Content Include="Source\src\css\less\app.colors.less" />
+    <Content Include="Source\src\css\less\app.components.less" />
+    <Content Include="Source\src\css\less\app.item.less" />
+    <Content Include="Source\src\css\less\app.layout.boxed.less" />
+    <Content Include="Source\src\css\less\app.layout.less" />
+    <Content Include="Source\src\css\less\app.less" />
+    <Content Include="Source\src\css\less\app.mixins.less" />
+    <Content Include="Source\src\css\less\app.nav.dock.less" />
+    <Content Include="Source\src\css\less\app.nav.less" />
+    <Content Include="Source\src\css\less\app.nav.offscreen.less" />
+    <Content Include="Source\src\css\less\app.ng.less" />
+    <Content Include="Source\src\css\less\app.plugin.less" />
+    <Content Include="Source\src\css\less\app.reset.less" />
+    <Content Include="Source\src\css\less\app.utilities.less" />
+    <Content Include="Source\src\css\less\app.variables.less" />
+    <Content Include="Source\src\css\less\app.widgets.less" />
+    <Content Include="Source\src\fonts\.DS_Store" />
+    <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro-bold.woff" />
+    <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro-light.woff" />
+    <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro.woff" />
+    <Content Include="Source\src\js\.DS_Store" />
+    <Content Include="Source\src\js\app\contact\contacts.json" />
+    <Content Include="Source\src\js\app\mail\mails.json" />
+    <Content Include="Source\src\js\app\note\notes.json" />
+    <Content Include="Source\src\js\controllers\toremove\largeLoad.json" />
+    <Content Include="Source\src\l10n\ua.yaml" />
+    <Content Include="Source\src\l10n\ru.yaml" />
+    <None Include="Source\src\l10n\en.yaml" />
+    <Content Include="Views\Home\OfflineManifest.cshtml" />
+    <Content Include="Source\src\lib\bootstrap-chosen\.bower.json" />
+    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen-variables.less" />
+    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen-variables.scss" />
+    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen.less" />
+    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen.scss" />
+    <Content Include="Source\src\lib\bootstrap-chosen\bower.json" />
+    <Content Include="Source\src\lib\bootstrap-chosen\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App\" />
+    <Folder Include="App_Data\" />
+    <Folder Include="Source\src\tpl\admin\" />
+    <Folder Include="Source\src\tpl\vouchers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="packages.config" />
+    <None Include="Project_Readme.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Source\src\js\services\controlledListService.js" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>1099</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost/EmergencyVoucherManagement</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <PropertyGroup>
+    <PostBuildEvent>rem cd $(ProjectDir)Source
+rem grunt build</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+</Project>

@@ -1,0 +1,59 @@
+<div class="panel panel-default">
+    <div class="panel-heading font-bold">Basic Information</div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-lg-2 control-label">Title</label>
+            <div class="col-lg-10">
+                <input type="text" class="form-control" placeholder="Title" ng-model="entity.Title" required>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Location</label>
+            <div class="col-sm-4">
+                <select chosen class="form-control" ng-model="entity.LocationId"
+                        ng-options="item.Id as item.Name for item in locations | orderBy:'item.Name'"></select>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-lg-2 control-label">Number of digits in voucher</label>
+            <div class="col-lg-4">
+                <input type="text" class="form-control" placeholder="Value" ng-model="entity.VoucherCodeLength">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="panel panel-default" ng-repeat="category in categories" toggle-editing is-editing="isEditing">
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Type of Voucher</label>
+            <div class="col-sm-4">
+                <select chosen class="form-control" ng-model="category.TypeId"
+                        ng-options="item.Id as item.Name for item in voucherTypes | orderBy:'item.Name'"></select>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-lg-2 control-label">Total Number of Vouchers</label>
+            <div class="col-lg-4">
+                <input type="text" class="form-control" placeholder="NumberOfVouchers" ng-model="category.NumberOfVouchers" ui-validate="'$value >= category.IssuedVouchers'" ui-validate-watch="category.IssuedVouchers" required>
+            </div>
+            <label class="col-lg-2 control-label">Vouchers Issued</label>
+            <div class="col-lg-4">
+                <input type="text" class="form-control" placeholder="IssuedVouchers" ng-model="category.IssuedVouchers" readonly>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-lg-2 control-label">Value of Vouchers</label>
+            <div class="col-lg-4">
+                <input type="text" class="form-control" placeholder="Value" ng-model="category.Value" required>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <a href="#" ng-click="removeCategory(category)" class="btn btn-danger" ng-if="isEditing">Remove</a>
+
+    </div>
+</div>
+<a href="#" ng-click="addCategory()" class="btn btn-info btn-dark pull-right" ng-if="isEditing && !isNew">Add</a>

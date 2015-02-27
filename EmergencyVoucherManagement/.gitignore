@@ -1,0 +1,6 @@
+App/
+bin/
+obj/
+Source/bower_components/
+Source/angular/
+Source/node_modules/

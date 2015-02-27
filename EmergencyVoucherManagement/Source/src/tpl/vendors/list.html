@@ -1,0 +1,32 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">Vendors</h1>
+</div>
+<div class="vbox">
+        <div class="col">
+        <div class="wrapper bg-light lter b-b">
+            <div class="btn-toolbar">
+                <div class="btn-group dropdown">
+                    <button class="btn btn-default btn-sm btn-bg dropdown-toggle" data-toggle="dropdown">
+                        <span class="dropdown-label">Filter</span>
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu text-left text-sm">
+                    </ul>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-bg btn-default" data-toggle="tooltip" data-placement="bottom" ng-click="loadGridData()" title="Refresh"><i class="fa fa-refresh"></i></button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="wrapper-md col">
+
+        <div class="panel panel-default">
+            <div class="table-responsive">
+                <div ng-grid="gridOptions" style="min-height:620px"></div>
+            </div>
+        </div>
+    </div>
+
+</div>

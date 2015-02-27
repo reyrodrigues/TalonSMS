@@ -1,0 +1,277 @@
+<!-- list -->
+<ul class="nav ng-scope">
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+        <span class="ng-scope">Voucher Management</span>
+    </li>
+
+    <li ui-sref-active="active">
+        <a href="" ui-sref="app.dashboard" class="auto">
+            <i class="glyphicon glyphicon-stats icon text-primary-dker"></i>
+            <span class="font-bold ng-scope">Dashboard</span>
+        </a>
+    </li><li ng-class="{active:$state.includes('vendors')}">
+    <a href="" class="auto">
+        <span class="pull-right text-muted">
+            <i class="fa fa-fw fa-angle-right text"></i>
+            <i class="fa fa-fw fa-angle-down text-active"></i>
+        </span>
+        <i class="fa fa-building-o text-success-lter"></i>
+        <span>Vendors</span>
+    </a>
+    <ul class="nav nav-sub dk">
+        <li class="nav-sub-header">
+            <a href="">
+                <span>Vendors</span>
+            </a>
+        </li>
+        <li ui-sref-active="active">
+            <a ui-sref="vendors.list" href="#">
+                <span>List</span>
+            </a>
+        </li>
+        <li ui-sref-active="active">
+            <a ui-sref="vendors.create" href="#">
+                <span>Register</span>
+            </a>
+        </li>
+        <li ui-sref-active="active">
+            <a ui-sref="vendors.bulkUpdate" href="#">
+                <span>Bulk Update</span>
+            </a>
+        </li>
+    </ul>
+</li>
+    <li ng-class="{active:$state.includes('beneficiaries')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="icon-users icon text-success-lter"></i>
+            <span>Beneficiaries</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Beneficiaries</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="beneficiaries.list" href="#">
+                    <span>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="beneficiaries.create" href="#">
+                    <span>Register</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="beneficiaries.bulkUpdate" href="#">
+                    <span>Bulk Update</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-class="{active:$state.includes('groups')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="icon-users icon text-success-lter"></i>
+            <span>Ben. Groups</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Beneficiary Groups</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="groups.list" href="#">
+                    <span>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="groups.create" href="#">
+                    <span>Create</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-class="{active:$state.includes('distributions')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="fa fa-truck text-primary-lter"></i>
+            <span>Distributions</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Distributions</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="distributions.list" href="#">
+                    <span>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="distributions.create" href="#">
+                    <span>Create</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="distributions.bulkUpdate" href="#">
+                    <span>Bulk Update</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-class="{active:$state.includes('vouchers')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="icon-wallet icon text-success-lter"></i>
+            <span>Vouchers</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Vouchers</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="vouchers.list" href="#">
+                    <span>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="vouchers.assign" href="#">
+                    <span>Assign</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+        <span class="ng-scope">Reporting</span>
+    </li>
+    <li ng-class="{active:$state.includes('reporting')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="icon-bar-chart icon text-success-lter"></i>
+            <span>Reporting</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="reporting.activeVouchers" href="#">
+                    <span>Active Vouchers</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="reporting.vendoreReceipt" href="#">
+                    <span>Vendor Receipt</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+        <span class="ng-scope">Administration</span>
+    </li>
+    <li ng-class="{active:$state.includes('admin.user')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="fa fa-users icon text-info-lter"></i>
+            <span>Users</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Users</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.users.list" href="#">
+                    <span>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.users.create" href="#">
+                    <span>Create</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-class="{active:$state.includes('admin.locations')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="icon icon-pin text-info-lter"></i>
+            <span>Locations</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Locations</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.locations.list" href="#">
+                    <span>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.locations.create" href="#">
+                    <span>Create</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-class="{active:$state.includes('admin.voucherTypes')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="fa fa-tags text-success-lter"></i>
+            <span>Voucher Types</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span>Voucher Types</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.voucherTypes.list" href="#">
+                    <span>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.voucherTypes.create" href="#">
+                    <span>Create</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+
+</ul>

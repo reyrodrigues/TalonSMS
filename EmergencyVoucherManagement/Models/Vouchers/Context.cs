@@ -1,0 +1,56 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
+using System.Data.Entity.Core.Objects;
+
+
+
+namespace EmergencyVoucherManagement.Models.Vouchers
+{
+    public class Context : DbContext
+    {
+        public Context()
+            : base("name=VoucherContext")
+        {
+        }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            Database.SetInitializer(new System.Data.Entity.NullDatabaseInitializer<Context>());
+
+            modelBuilder.Entity<VoucherTransactionRecord>()
+                .HasRequired(p => p.Voucher)
+                .WithOptional(p => p.TransactionRecord);
+
+            modelBuilder.Entity<DistributionVoucherCategory>()
+                .HasRequired(p => p.Distribution)
+                .WithMany(p => p.Categories);
+
+            modelBuilder.Entity<Voucher>()
+                .HasRequired(p => p.Distribution)
+                .WithMany(p => p.Vouchers);
+
+            modelBuilder.Entity<BeneficiaryDistribution>()
+                .HasRequired(p => p.Beneficiary)
+                .WithMany(p => p.Distributions);
+
+            modelBuilder.Entity<BeneficiaryDistribution>()
+                .HasRequired(p => p.Distribution)
+                .WithMany(p => p.Beneficiaries);
+        }
+
+        public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<Beneficiary> Beneficiaries { get; set; }
+        public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
+        public DbSet<Location> Locations { get; set; }
+        public DbSet<Distribution> Distributions { get; set; }
+        public DbSet<DistributionVoucherCategory> DistributionVoucherCategories { get; set; }
+        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<VoucherType> VoucherTypes { get; set; }
+        public DbSet<VoucherTransactionRecord> VoucherTransactionRecords { get; set; }
+    }
+}
