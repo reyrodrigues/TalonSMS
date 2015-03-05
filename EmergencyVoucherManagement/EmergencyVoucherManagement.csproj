@@ -50,6 +50,9 @@
     <Reference Include="Breeze.WebApi2">
       <HintPath>..\packages\Breeze.Server.WebApi2.1.5.3\lib\Breeze.WebApi2.dll</HintPath>
     </Reference>
+    <Reference Include="Common.Logging">
+      <HintPath>..\packages\Common.Logging.2.1.1\lib\net40\Common.Logging.dll</HintPath>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.dll</HintPath>
@@ -57,6 +60,15 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus">
+      <HintPath>..\packages\EPPlus.4.0.3\lib\net20\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Core">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.SystemWeb.2.2.0\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Data.Edm, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -255,6 +267,7 @@
     <Compile Include="Controllers\OData\UsersController.cs" />
     <Compile Include="Controllers\OData\AbstractODataController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Hubs\DashboardHub.cs" />
     <Compile Include="Models\BindingModels\RemoveUserFromRoleBindingModel.cs" />
     <Compile Include="Models\BindingModels\AddUserToRoleBindingModel.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -286,6 +299,7 @@
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Utils\RescueSMSClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
@@ -319,7 +333,11 @@
     <Content Include="Scripts\datajs-1.1.3.js" />
     <Content Include="Scripts\datajs-1.1.3.min.js" />
     <Content Include="Scripts\datajs.js" />
+    <Content Include="Scripts\jquery.signalR-2.2.0.js" />
+    <Content Include="Scripts\jquery.signalR-2.2.0.min.js" />
     <Content Include="Scripts\NavigationMenu.js" />
+    <Content Include="Source\src\tpl\dialogs\assignToGroup.html" />
+    <None Include="Properties\PublishProfiles\EVM.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -402,42 +420,12 @@
     <Content Include="Source\src\index.html" />
     <Content Include="Source\src\index.min.html" />
     <Content Include="Source\src\js\app.js" />
-    <Content Include="Source\src\js\app\calendar\calendar.js" />
-    <Content Include="Source\src\js\app\contact\contact.js" />
-    <Content Include="Source\src\js\app\mail\mail-service.js" />
-    <Content Include="Source\src\js\app\mail\mail.js" />
-    <Content Include="Source\src\js\app\map\load-google-maps.js" />
-    <Content Include="Source\src\js\app\map\map.js" />
-    <Content Include="Source\src\js\app\map\ui-map.js" />
-    <Content Include="Source\src\js\app\note\note.js" />
-    <Content Include="Source\src\js\app\todo\todo.js" />
-    <Content Include="Source\src\js\app\weather\angular-skycons.js" />
-    <Content Include="Source\src\js\app\weather\ctrl.js" />
-    <Content Include="Source\src\js\app\weather\skycons.js" />
     <Content Include="Source\src\js\config.js" />
     <Content Include="Source\src\js\config.lazyload.js" />
     <Content Include="Source\src\js\config.router.js" />
     <Content Include="Source\src\js\controllers\beneficiaries.js" />
-    <Content Include="Source\src\js\controllers\toremove\bootstrap.js" />
-    <Content Include="Source\src\js\controllers\toremove\chart.js" />
     <Content Include="Source\src\js\controllers\dashboard.js" />
-    <Content Include="Source\src\js\controllers\toremove\editor.js" />
-    <Content Include="Source\src\js\controllers\toremove\file-upload.js" />
-    <Content Include="Source\src\js\controllers\toremove\form.js" />
-    <Content Include="Source\src\js\controllers\toremove\grid.js" />
-    <Content Include="Source\src\js\controllers\toremove\imgcrop.js" />
-    <Content Include="Source\src\js\controllers\toremove\scroll.js" />
-    <Content Include="Source\src\js\controllers\toremove\select.js" />
     <Content Include="Source\src\js\controllers\signin.js" />
-    <Content Include="Source\src\js\controllers\toremove\signup.js" />
-    <Content Include="Source\src\js\controllers\toremove\slider.js" />
-    <Content Include="Source\src\js\controllers\toremove\tab.js" />
-    <Content Include="Source\src\js\controllers\toremove\table.js" />
-    <Content Include="Source\src\js\controllers\toremove\toaster.js" />
-    <Content Include="Source\src\js\controllers\toremove\tree.js" />
-    <Content Include="Source\src\js\controllers\toremove\uigrid.js" />
-    <Content Include="Source\src\js\controllers\toremove\vectormap.js" />
-    <Content Include="Source\src\js\controllers\toremove\xeditable.js" />
     <Content Include="Source\src\js\directives\setnganimate.js" />
     <Content Include="Source\src\js\directives\ui-butterbar.js" />
     <Content Include="Source\src\js\directives\ui-focus.js" />
@@ -588,10 +576,6 @@
     <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro-light.woff" />
     <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro.woff" />
     <Content Include="Source\src\js\.DS_Store" />
-    <Content Include="Source\src\js\app\contact\contacts.json" />
-    <Content Include="Source\src\js\app\mail\mails.json" />
-    <Content Include="Source\src\js\app\note\notes.json" />
-    <Content Include="Source\src\js\controllers\toremove\largeLoad.json" />
     <Content Include="Source\src\l10n\ua.yaml" />
     <Content Include="Source\src\l10n\ru.yaml" />
     <None Include="Source\src\l10n\en.yaml" />

@@ -21,6 +21,7 @@ namespace EmergencyVoucherManagement.Models.Vouchers
         public virtual DateTime? LastModifiedOn { get; set; }
         public virtual DateTime? FinalizedOn { get; set; }
 
+        public virtual long? ConfirmationCode { get; set; }
         /// <summary>
         /// 1. Valid
         /// 2. Invalid

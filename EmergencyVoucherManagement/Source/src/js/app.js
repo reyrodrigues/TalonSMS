@@ -20,7 +20,8 @@ var app = angular.module('app', [
   'LocalStorageModule',
   'dialogs.default-translations',
   'dialogs.main',
-  'toaster'
+  'toaster',
+  'SignalR'
 ]);
 
 

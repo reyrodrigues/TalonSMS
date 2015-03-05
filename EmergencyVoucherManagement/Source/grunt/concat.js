@@ -6,6 +6,7 @@ module.exports = {
         '../Scripts/datajs-1.1.3.js',
         '../Scripts/odatajs.js',
         '../Scripts/NavigationMenu.js',
+        '../Scripts/jquery.signalR-2.2.0.min.js',
         'bower_components/chosen/chosen.jquery.min.js',
         'bower_components/moment/moment.js',
 
@@ -22,6 +23,7 @@ module.exports = {
         'bower_components/angular-touch/angular-touch.js',
         'bower_components/angularjs-toaster/toaster.js',
         'bower_components/ng-grid/build/ng-grid.min.js',
+        'bower_components/angular-signalr-hub/signalr-hub.min.js',
 
         'bower_components/angular-ui-router/release/angular-ui-router.js',
         'bower_components/ngstorage/ngStorage.js',
