@@ -19,6 +19,7 @@ namespace EmergencyVoucherManagement.App_Start
             GlobalConfiguration.Configuration.Routes.MapHttpRoute(
                 name: "BreezeApi",
                 routeTemplate: "breeze/{controller}/{action}"
+                //routeTemplate: "breeze/{tenant}/{country}/{controller}/{action}"
             );
         }
     }

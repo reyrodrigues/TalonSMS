@@ -49,7 +49,7 @@
                 <i class="fa fa-fw fa-angle-right text"></i>
                 <i class="fa fa-fw fa-angle-down text-active"></i>
             </span>
-            <i class="icon-users icon text-success-lter"></i>
+            <i class="icon-user icon text-success-lter"></i>
             <span>Beneficiaries</span>
         </a>
         <ul class="nav nav-sub dk">
@@ -68,15 +68,12 @@
                     <span>Register</span>
                 </a>
             </li>
-        <!--
 
             <li ui-sref-active="active">
-                <a ui-sref="beneficiaries.bulkUpdate" href="#">
-                    <span>Bulk Update</span>
+                <a ui-sref="beneficiaries.bulkEdit" href="#">
+                    <span>Assign Group</span>
                 </a>
             </li>
-
-            -->
         </ul>
     </li>
     <li ng-class="{active:$state.includes('groups')}">
@@ -142,6 +139,8 @@
             -->
         </ul>
     </li>
+        <!--
+
     <li ng-class="{active:$state.includes('vouchers')}">
         <a href="" class="auto">
             <span class="pull-right text-muted">
@@ -162,16 +161,16 @@
                     <span>List</span>
                 </a>
             </li>
-        <!--
 
             <li ui-sref-active="active">
                 <a ui-sref="vouchers.assign" href="#">
                     <span>Assign</span>
                 </a>
             </li>
-            -->
         </ul>
     </li>
+            -->
+
     <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
         <span class="ng-scope">Reporting</span>
     </li>
@@ -204,33 +203,6 @@
     </li>
     <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
         <span class="ng-scope">Administration</span>
-    </li>
-    <li ng-class="{active:$state.includes('admin.user')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="fa fa-users icon text-info-lter"></i>
-            <span>Users</span>
-        </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span>Users</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.users.list" href="#">
-                    <span>List</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.users.create" href="#">
-                    <span>Create</span>
-                </a>
-            </li>
-        </ul>
     </li>
     <li ng-class="{active:$state.includes('admin.locations')}">
         <a href="" class="auto">

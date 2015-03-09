@@ -89,6 +89,34 @@ namespace EmergencyVoucherManagement.Controllers.Api
                 return Ok();
             }
         }
+        [Route("ResendSMS")]
+        public async Task<IHttpActionResult> ResendSMS(dynamic request)
+        {
+            int beneficiaryId = request.BeneficiaryId;
+            int voucherId = request.VoucherId;
+
+            using (var ctx = new Models.Vouchers.Context()) {
+                var beneficiary = ctx.Beneficiaries.Where(b => b.Id == beneficiaryId).First();
+                var voucher = ctx.Vouchers.Where(v => v.Id == voucherId).First();
+                await SendVoucherSms(beneficiary, voucher);
+            }
+
+            return Ok();
+        }
+        [Route("CancelVoucher")]
+        public async Task<IHttpActionResult> CancelVoucher(dynamic request)
+        {
+            int voucherId = request.VoucherId;
+
+            using (var ctx = new Models.Vouchers.Context()) {
+                var voucher = ctx.Vouchers.Where(v => v.Id == voucherId).First();
+                SendCancelledVoucher(voucher);
+            }
+
+            return Ok();
+        }
+
+        
 
         [Route("AssignToGroup")]
         public async Task<IHttpActionResult> AssignToGroup(dynamic request)
@@ -99,13 +127,21 @@ namespace EmergencyVoucherManagement.Controllers.Api
             using (var ctx = new Models.Vouchers.Context())
             {
                 var beneficiaries = ctx.Beneficiaries
-                    .Where(b => b.GroupId == groupId && !b.Distributions.Where(d => d.DistributionId == distributionId).Any());
+                    .Where(b => b.GroupId == groupId);
                 var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
 
                 foreach (var beneficiary in beneficiaries.ToList())
                 {
                     foreach (var category in distribution.Categories.ToList())
                     {
+                        if (ctx.Vouchers.Where(v => v.DistributionId == distribution.Id &&
+                            v.TypeId == category.TypeId &&
+                            v.Value == category.Value &&
+                            v.TransactionRecord != null &&
+                            v.TransactionRecord.BeneficiaryId == beneficiary.Id &&
+                            v.TransactionRecord.Status != 3).Any())
+                            continue;
+
                         var transactionRecord = new Models.Vouchers.VoucherTransactionRecord();
                         var voucher = ctx.Vouchers.Where(v => v.DistributionId == distribution.Id &&
                             v.TypeId == category.TypeId &&
@@ -165,6 +201,10 @@ namespace EmergencyVoucherManagement.Controllers.Api
 
                 nationalId = codes[codes.Length - 1];
             }
+            else
+            {
+                return BadRequest();
+            }
 
             var phoneNumber = Regex.Replace(from, "[^\\d]", "").Trim();
 
@@ -180,13 +220,26 @@ namespace EmergencyVoucherManagement.Controllers.Api
                     var voucherQuery = from vc in db.Vouchers
                                        where vc.VoucherCode == voucherCode
                                        && vc.TransactionRecord != null
-                                       && vc.TransactionRecord.Status < 2
                                        select vc;
 
                     if (voucherQuery.Count() == 1)
                     {
                         var voucher = voucherQuery.First();
-                        if (voucher.TransactionRecord.Beneficiary.NationalId == nationalId)
+
+                        if (voucher.Distribution.Vendors.Count() > 0 &&
+                            !voucher.Distribution.Vendors.Where(v => v.VendorId == vendor.Id).Any())
+                        {
+                            VendorCannotUseVoucher(voucher, vendor);
+                        }
+                        else if (voucher.TransactionRecord.Status == 2)
+                        {
+                            VoucherAlreadyUsed(voucher, vendor);
+                        }
+                        else if (voucher.TransactionRecord.Status == 3)
+                        {
+                            VoucherCancelled(voucher, vendor);
+                        }
+                        else if (voucher.TransactionRecord.Beneficiary.NationalId == nationalId)
                         {
                             voucher.TransactionRecord.VendorId = vendor.Id;
                             voucher.TransactionRecord.Status = 2;
@@ -209,6 +262,58 @@ namespace EmergencyVoucherManagement.Controllers.Api
             }
 
             return Ok();
+        }
+
+        private void VoucherCancelled(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
+        {
+            string voucherCode = voucher.VoucherCode.ToString();
+            string vendorName = vendor.OwnerName;
+            string vendorMobileNumber = vendor.MobileNumber;
+            ThreadPool.QueueUserWorkItem((state) =>
+            {
+                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                    vendorName,
+                    vendorMobileNumber,
+                    String.Format("This voucher ({0}) was cancelled.", voucherCode),
+                    "Vendors").Wait();
+            });
+
+            string beneficiaryName = voucher.TransactionRecord.Beneficiary.Name;
+            string beneficiaryMobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            ThreadPool.QueueUserWorkItem((state) =>
+            {
+                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                    beneficiaryName,
+                    beneficiaryMobileNumber,
+                    String.Format("This voucher ({0}) was cancelled.", voucherCode),
+                    "Beneficiaries").Wait();
+            });
+        }
+
+        private void VoucherAlreadyUsed(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
+        {
+            string voucherCode = voucher.VoucherCode.ToString();
+            string vendorName = vendor.OwnerName;
+            string vendorMobileNumber = vendor.MobileNumber;
+            ThreadPool.QueueUserWorkItem((state) =>
+            {
+                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                    vendorName,
+                    vendorMobileNumber,
+                    String.Format("This voucher ({0}) has already been used.", voucherCode),
+                    "Vendors").Wait();
+            });
+
+            string beneficiaryName = voucher.TransactionRecord.Beneficiary.Name;
+            string beneficiaryMobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            ThreadPool.QueueUserWorkItem((state) =>
+            {
+                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                    beneficiaryName,
+                    beneficiaryMobileNumber,
+                    String.Format("This voucher ({0}) has already been used.", voucherCode),
+                    "Beneficiaries").Wait();
+            });
         }
 
 
@@ -243,6 +348,34 @@ namespace EmergencyVoucherManagement.Controllers.Api
             }
         }
 
+        private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
+        {
+            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
+            context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0}, with the incorrect vocuher type ({1}).", vendor.Name, voucher.Type.Name));
+
+            string vendorName = vendor.OwnerName;
+            string vendorMobileNumber = vendor.MobileNumber;
+            ThreadPool.QueueUserWorkItem((state) =>
+            {
+                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                    vendorName,
+                    vendorMobileNumber,
+                    "You are not allowed to claim this voucher.",
+                    "Vendors").Wait();
+            });
+
+            string beneficiaryName = voucher.TransactionRecord.Beneficiary.Name;
+            string beneficiaryMobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            ThreadPool.QueueUserWorkItem((state) =>
+            {
+                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                    beneficiaryName,
+                    beneficiaryMobileNumber,
+                    "This vendor is not allowed to take this type of vouchers.",
+                    "Beneficiaries").Wait();
+            });
+        }
+
         private void UnauthorizedPhone(string from)
         {
             var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
@@ -252,6 +385,23 @@ namespace EmergencyVoucherManagement.Controllers.Api
             ThreadPool.QueueUserWorkItem((state) =>
             {
                 Utils.RescueSMSClient.CreateContactAndSendMessageAsync("Unknown", from, "This number is not authorized to claim vouchers").Wait();
+            });
+        }
+
+        private void SendCancelledVoucher(Models.Vouchers.Voucher voucher)
+        {
+            var name = voucher.TransactionRecord.Beneficiary.Name;
+            var voucherCode = voucher.VoucherCode;
+            var mobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+
+
+            ThreadPool.QueueUserWorkItem((state) =>
+            {
+                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                    name,
+                    mobileNumber,
+                    String.Format("This voucher ({0}) has been canceled.", voucherCode),
+                    "Beneficiaries").Wait();
             });
         }
 

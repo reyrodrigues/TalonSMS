@@ -17,7 +17,7 @@ namespace EmergencyVoucherManagement.Controllers.OData
 {
     public abstract class AbstractODataController<Context, Type> : System.Web.OData.ODataController
         where Context : DbContext, new()
-        where Type : Models.Entity, new()
+        where Type : Models.Vouchers.Entity, new()
     {
         protected abstract DbSet<Type> Collection
         {

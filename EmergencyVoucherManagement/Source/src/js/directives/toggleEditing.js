@@ -12,6 +12,11 @@ angular.module('app')
                 var isEditing = scope.isEditing || false;
 
                 $('input, select, textarea', element).prop('readonly', !isEditing);
+                if (!isEditing) {
+                    $('[type=checkbox]').attr('disabled', 'disabled');
+                } else {
+                    $('[type=checkbox]').removeAttr('disabled');
+                }
 
                 $('.isChosen').trigger('chosen:updated');
             };

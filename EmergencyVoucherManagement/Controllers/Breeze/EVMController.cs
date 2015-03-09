@@ -4,6 +4,7 @@ using Breeze.WebApi2;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
@@ -46,6 +47,12 @@ namespace EmergencyVoucherManagement.Controllers.Breeze
         public IQueryable<Models.Vouchers.BeneficiaryDistribution> BeneficiaryDistributions()
         {
             return _contextProvider.Context.BeneficiaryDistributions;
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.DistributionVendor> DistributionVendors()
+        {
+            return _contextProvider.Context.DistributionVendors;
         }
 
         [HttpGet]

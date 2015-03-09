@@ -25,7 +25,7 @@ var app = angular.module('app', [
 ]);
 
 
-var serviceBase = '/emergencyvouchermanagement/';
+var serviceBase = window.BaseUrl;
 app.constant('ngAuthSettings', {
     apiServiceBaseUri: serviceBase,
     clientId: 'ngAuthApp'

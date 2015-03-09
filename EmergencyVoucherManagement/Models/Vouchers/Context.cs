@@ -20,12 +20,17 @@ namespace EmergencyVoucherManagement.Models.Vouchers
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+#if DEBUG
             Database.SetInitializer(new System.Data.Entity.NullDatabaseInitializer<Context>());
-
+#endif
 
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
                 .WithMany(p => p.Categories);
+
+            modelBuilder.Entity<DistributionVendor>()
+                .HasRequired(p => p.Distribution)
+                .WithMany(p => p.Vendors);
 
             modelBuilder.Entity<Voucher>()
                 .HasOptional(p => p.TransactionRecord)
@@ -55,6 +60,7 @@ namespace EmergencyVoucherManagement.Models.Vouchers
         public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Distribution> Distributions { get; set; }
+        public DbSet<DistributionVendor> DistributionVendors { get; set; }
         public DbSet<DistributionVoucherCategory> DistributionVoucherCategories { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<VoucherType> VoucherTypes { get; set; }

@@ -15,15 +15,16 @@ angular.module('app')
   .config(
     ['$stateProvider', '$urlRouterProvider', 'JQ_CONFIG',
       function ($stateProvider, $urlRouterProvider, JQ_CONFIG) {
-          var fetchMetadata = ['serviceBase', 'backendService', '$q', function (serviceBase, backendService, $q) {
+          var fetchMetadata = ['serviceBase', 'backendService', '$q', 'authBackendService', function (serviceBase, backendService, $q, authBackendService) {
               var defer = $q.defer();
-              backendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/EVM')
-                  .then(function() {  defer.resolve(); })
-                  .catch(function(){ defer.resolve();});
+              $q.all([
+                  backendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/EVM')
+              ]).then(function () { defer.resolve(); })
+              .catch(function () { defer.resolve(); });
 
               return defer.promise;
           }];
- 
+
 
           $urlRouterProvider.otherwise('/app/dashboard');
           $stateProvider
@@ -46,10 +47,6 @@ angular.module('app')
                   url: '/dashboard',
                   templateUrl: 'tpl/app_dashboard.html',
                   resolve: {
-                      deps: ['$ocLazyLoad',
-                        function ($ocLazyLoad) {
-                            return $ocLazyLoad.load(['js/controllers/dashboard.js']);
-                        }]
                   }
               })
 
@@ -63,10 +60,6 @@ angular.module('app')
                   url: '/signin',
                   templateUrl: 'tpl/page_signin.html',
                   resolve: {
-                      deps: ['uiLoad',
-                        function (uiLoad) {
-                            return uiLoad.load(['js/controllers/signin.js']);
-                        }]
                   },
                   allowAnonymous: true
               })
@@ -104,6 +97,13 @@ angular.module('app')
                   templateUrl: 'tpl/beneficiaries/edit.html',
                   controller: 'BeneficiaryEditCtrl'
               })
+
+              .state('beneficiaries.bulkEdit', {
+                  url: '/bulkEdit',
+                  templateUrl: 'tpl/beneficiaries/bulkEdit.html',
+                  controller: 'BeneficiaryBulkEditCtrl'
+              })
+
               .state('beneficiaries.create', {
                   url: '/create',
                   templateUrl: 'tpl/beneficiaries/create.html',
@@ -190,8 +190,6 @@ angular.module('app')
                   templateUrl: 'tpl/generic/create.html',
                   controller: 'GenericCreateCtrl'
               })
-
-
               .state('admin.voucherTypes', {
                   url: '/voucher-types',
                   abstract: true,

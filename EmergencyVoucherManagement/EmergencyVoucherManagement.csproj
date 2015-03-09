@@ -168,6 +168,12 @@
       <Private>True</Private>
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.2\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
     </Reference>
+    <Reference Include="TuesPechkin">
+      <HintPath>..\packages\TuesPechkin.2.1.1\lib\net20\TuesPechkin.dll</HintPath>
+    </Reference>
+    <Reference Include="TuesPechkin.Wkhtmltox.Win64">
+      <HintPath>..\packages\TuesPechkin.Wkhtmltox.Win64.0.12.2.1\lib\net20\TuesPechkin.Wkhtmltox.Win64.dll</HintPath>
+    </Reference>
     <Reference Include="WebActivator">
       <HintPath>..\packages\WebActivator.1.5.3\lib\net40\WebActivator.dll</HintPath>
     </Reference>
@@ -262,11 +268,13 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\Api\DashboardController.cs" />
+    <Compile Include="Controllers\Breeze\AuthController.cs" />
     <Compile Include="Controllers\Breeze\EVMController.cs" />
     <Compile Include="Controllers\OData\RolesController.cs" />
     <Compile Include="Controllers\OData\UsersController.cs" />
     <Compile Include="Controllers\OData\AbstractODataController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Hubs\DashboardHub.cs" />
     <Compile Include="Models\BindingModels\RemoveUserFromRoleBindingModel.cs" />
     <Compile Include="Models\BindingModels\AddUserToRoleBindingModel.cs" />
@@ -279,6 +287,9 @@
     </Compile>
     <Compile Include="Models\BindingModels\AccountBindingModels.cs" />
     <Compile Include="Models\BindingModels\AssignVoucherBidingModel.cs" />
+    <Compile Include="Models\Vouchers\Country.cs" />
+    <Compile Include="Models\Vouchers\DistributionVendor.cs" />
+    <Compile Include="Models\Vouchers\Tenant.cs" />
     <Compile Include="Models\ViewModels\AccountViewModels.cs" />
     <Compile Include="Models\Vouchers\Beneficiary.cs" />
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
@@ -287,8 +298,8 @@
     <Compile Include="Models\Vouchers\Context.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\Distribution.cs" />
-    <Compile Include="Models\Vouchers\VoucherType.cs" />
     <Compile Include="Models\Vouchers\Entity.cs" />
+    <Compile Include="Models\Vouchers\VoucherType.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\Vouchers\Location.cs" />
     <Compile Include="Models\Vouchers\Vendor.cs" />
@@ -306,6 +317,7 @@
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\IRCLogo.svg" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
@@ -336,6 +348,9 @@
     <Content Include="Scripts\jquery.signalR-2.2.0.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.min.js" />
     <Content Include="Scripts\NavigationMenu.js" />
+    <Content Include="Source\src\js\controllers\users.js" />
+    <Content Include="Source\src\js\services\authBackendService.js" />
+    <Content Include="Source\src\tpl\beneficiaries\bulkEdit.html" />
     <Content Include="Source\src\tpl\dialogs\assignToGroup.html" />
     <None Include="Properties\PublishProfiles\EVM.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
@@ -455,18 +470,12 @@
     <Content Include="Source\src\tpl\generic\list.html" />
     <Content Include="Source\src\tpl\includes\vendors_form.html" />
     <Content Include="Source\src\tpl\groups\form.html" />
+    <Content Include="Source\src\tpl\page_signin.html" />
     <Content Include="Source\src\tpl\vendors\create.html" />
     <Content Include="Source\src\tpl\vendors\edit.html" />
     <Content Include="Source\src\tpl\vendors\list.html" />
     <Content Include="Source\src\tpl\includes\distribution_form.html" />
-    <Content Include="Source\src\tpl\todelete\apps_contact.html" />
-    <Content Include="Source\src\tpl\todelete\apps_note.html" />
-    <Content Include="Source\src\tpl\todelete\apps_todo.html" />
-    <Content Include="Source\src\tpl\todelete\apps_weather.html" />
-    <Content Include="Source\src\tpl\todelete\app_calendar.html" />
     <Content Include="Source\src\tpl\app_dashboard.html" />
-    <Content Include="Source\src\tpl\todelete\app_dashboard_v1.html" />
-    <Content Include="Source\src\tpl\todelete\app_dashboard_v2.html" />
     <Content Include="Source\src\tpl\distributions\create.html" />
     <Content Include="Source\src\tpl\distributions\edit.html" />
     <Content Include="Source\src\tpl\distributions\list.html" />
@@ -477,62 +486,9 @@
     <Content Include="Source\src\tpl\blocks\nav.html" />
     <Content Include="Source\src\tpl\blocks\page_footer.html" />
     <Content Include="Source\src\tpl\blocks\settings.html" />
-    <Content Include="Source\src\tpl\todelete\docs.html" />
-    <Content Include="Source\src\tpl\todelete\form_editor.html" />
     <Content Include="Source\src\tpl\beneficiaries\edit.html" />
-    <Content Include="Source\src\tpl\todelete\form_elements.html" />
-    <Content Include="Source\src\tpl\todelete\form_fileupload.html" />
-    <Content Include="Source\src\tpl\todelete\form_imagecrop.html" />
-    <Content Include="Source\src\tpl\todelete\form_select.html" />
-    <Content Include="Source\src\tpl\todelete\form_slider.html" />
-    <Content Include="Source\src\tpl\todelete\form_validation.html" />
-    <Content Include="Source\src\tpl\todelete\form_wizard.html" />
-    <Content Include="Source\src\tpl\todelete\form_xeditable.html" />
     <Content Include="Source\src\tpl\includes\beneficiaries_form.html" />
-    <Content Include="Source\src\tpl\todelete\layout.html" />
-    <Content Include="Source\src\tpl\todelete\layout_app.html" />
-    <Content Include="Source\src\tpl\todelete\layout_footer_fullwidth.html" />
-    <Content Include="Source\src\tpl\todelete\layout_footer_mobile.html" />
-    <Content Include="Source\src\tpl\todelete\layout_fullwidth.html" />
-    <Content Include="Source\src\tpl\todelete\layout_mobile.html" />
-    <Content Include="Source\src\tpl\todelete\mail.detail.html" />
-    <Content Include="Source\src\tpl\todelete\mail.html" />
-    <Content Include="Source\src\tpl\todelete\mail.list.html" />
-    <Content Include="Source\src\tpl\todelete\mail.new.html" />
-    <Content Include="Source\src\tpl\todelete\modal.form.html" />
-    <Content Include="Source\src\tpl\todelete\modal.html" />
-    <Content Include="Source\src\tpl\todelete\page_404.html" />
-    <Content Include="Source\src\tpl\todelete\page_forgotpwd.html" />
-    <Content Include="Source\src\tpl\todelete\page_invoice.html" />
-    <Content Include="Source\src\tpl\todelete\page_lockme.html" />
-    <Content Include="Source\src\tpl\todelete\page_post.html" />
-    <Content Include="Source\src\tpl\todelete\page_price.html" />
-    <Content Include="Source\src\tpl\todelete\page_profile.html" />
-    <Content Include="Source\src\tpl\todelete\page_search.html" />
-    <Content Include="Source\src\tpl\todelete\page_signin.html" />
-    <Content Include="Source\src\tpl\todelete\page_signup.html" />
-    <Content Include="Source\src\tpl\todelete\table_datatable.html" />
-    <Content Include="Source\src\tpl\todelete\table_editable.html" />
-    <Content Include="Source\src\tpl\todelete\table_footable.html" />
     <Content Include="Source\src\tpl\beneficiaries\list.html" />
-    <Content Include="Source\src\tpl\todelete\table_grid.html" />
-    <Content Include="Source\src\tpl\todelete\table_smart.html" />
-    <Content Include="Source\src\tpl\todelete\table_static.html" />
-    <Content Include="Source\src\tpl\todelete\table_uigrid.html" />
-    <Content Include="Source\src\tpl\todelete\ui_bootstrap.html" />
-    <Content Include="Source\src\tpl\todelete\ui_buttons.html" />
-    <Content Include="Source\src\tpl\todelete\ui_chart.html" />
-    <Content Include="Source\src\tpl\todelete\ui_googlemap.html" />
-    <Content Include="Source\src\tpl\todelete\ui_grid.html" />
-    <Content Include="Source\src\tpl\todelete\ui_icons.html" />
-    <Content Include="Source\src\tpl\todelete\ui_jvectormap.html" />
-    <Content Include="Source\src\tpl\todelete\ui_portlet.html" />
-    <Content Include="Source\src\tpl\todelete\ui_scroll.html" />
-    <Content Include="Source\src\tpl\todelete\ui_sortable.html" />
-    <Content Include="Source\src\tpl\todelete\ui_timeline.html" />
-    <Content Include="Source\src\tpl\todelete\ui_toaster.html" />
-    <Content Include="Source\src\tpl\todelete\ui_tree.html" />
-    <Content Include="Source\src\tpl\todelete\ui_widgets.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -578,6 +534,7 @@
     <Content Include="Source\src\js\.DS_Store" />
     <Content Include="Source\src\l10n\ua.yaml" />
     <Content Include="Source\src\l10n\ru.yaml" />
+    <Content Include="Source\src\l10n\en-US.yaml" />
     <None Include="Source\src\l10n\en.yaml" />
     <Content Include="Views\Home\OfflineManifest.cshtml" />
     <Content Include="Source\src\lib\bootstrap-chosen\.bower.json" />
@@ -587,6 +544,7 @@
     <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen.scss" />
     <Content Include="Source\src\lib\bootstrap-chosen\bower.json" />
     <Content Include="Source\src\lib\bootstrap-chosen\README.md" />
+    <Content Include="Views\Report\VoucherReceiptReport.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App\" />

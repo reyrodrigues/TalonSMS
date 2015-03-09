@@ -11,10 +11,11 @@ app.controller('SigninFormController', ['$scope', '$http', '$state', 'authServic
             $scope.authError = null;
 
             authService.login({
-                'userName': $scope.user.email,
+                'userName': $scope.user.userName,
                 'password': $scope.user.password
             }).then(function (response) {
                 $rootScope.$emit('app:authenticated');
+                $state.go('app.dashboard');
             }, function (error) {
                 $scope.authError = error.error_description;
             });

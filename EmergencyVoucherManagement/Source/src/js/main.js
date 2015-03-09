@@ -59,10 +59,7 @@ function ($scope, $translate, $localStorage, $window, $q, $http, authService, ng
             asideFixed: false,
             asideFolded: false,
             asideDock: false,
-            container: false,
-            baseUrl: 'http://localhost:1099/emergencyvouchermanagement',
-            restUrl: 'http://localhost:1099/emergencyvouchermanagement/api',
-            odataUrl: 'http://localhost:1099/emergencyvouchermanagement/odata'
+            container: false
         }
     }
 

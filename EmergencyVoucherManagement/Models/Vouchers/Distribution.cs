@@ -22,6 +22,7 @@ namespace EmergencyVoucherManagement.Models.Vouchers
         public virtual Location Location { get; set; }
 
         public virtual ICollection<DistributionVoucherCategory> Categories { get; set; }
+        public virtual ICollection<DistributionVendor> Vendors { get; set; }
         public virtual ICollection<Voucher> Vouchers { get; set; }
 
         public virtual ICollection<BeneficiaryDistribution> Beneficiaries { get; set; }

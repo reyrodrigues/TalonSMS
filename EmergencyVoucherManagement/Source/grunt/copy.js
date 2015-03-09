@@ -8,9 +8,7 @@ module.exports = {
             { expand: true, src: "**", cwd: 'src/api', dest: "../App/api" },
             { expand: true, src: "**", cwd: 'src/img', dest: "../App/img" },
             { expand: true, src: "**", cwd: 'src/js', dest: "../App/js" },
-            { expand: true, src: "**", cwd: 'src/tpl', dest: "../App/tpl" },
-            { expand: true, src: "**", cwd: 'src/lib', dest: "../App/lib" },
-            { src: 'src/index.min.html', dest: '../App/index.html' }
+            { expand: true, src: "**", cwd: 'src/lib', dest: "../App/lib" }
         ]
     },
     bower: {

@@ -22,6 +22,22 @@
                 <input type="text" class="form-control" placeholder="Value" ng-model="entity.VoucherCodeLength">
             </div>
         </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-lg-12">Authorized Vendors <small>(leave empty for all vendors)</small></label>
+            <div class="col-lg-12">
+                <span ng-repeat="vendor in vendors">
+                    <label>
+                        <input type="checkbox"
+                               name="assignedVendors[]"
+                               value="{{vendor.Id}}"
+                               ng-checked="assignedVendors.indexOf(vendor.Id) > -1"
+                               ng-click="toggleVendor(vendor)">&nbsp;&nbsp;{{vendor.Name}}
+                    </label> <br/>
+                </span>
+            </div>
+        </div>
+
     </div>
 </div>
 <div class="panel panel-default" ng-repeat="category in categories" toggle-editing is-editing="isEditing">

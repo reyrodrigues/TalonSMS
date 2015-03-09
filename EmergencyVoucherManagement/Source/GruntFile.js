@@ -1,5 +1,5 @@
-module.exports = function(grunt) {
-	var gtx = require('gruntfile-gtx').wrap(grunt);
+module.exports = function (grunt) {
+    var gtx = require('gruntfile-gtx').wrap(grunt);
 
     gtx.loadAuto();
 
@@ -10,6 +10,24 @@ module.exports = function(grunt) {
 
     gtx.loadNpm('grunt-contrib-watch');
     gtx.loadNpm('grunt-yaml');
+    gtx.loadNpm('grunt-angular-templates');
+
+    gtx.config({
+        ngtemplates: {
+            app: {
+                cwd: 'src/',
+                src: 'tpl/**/*.html',
+                dest: 'src/tpl/app.templates.js',
+                options: {
+                    htmlmin: {
+                        collapseBooleanAttributes: true,
+                        collapseWhitespace: true
+                    }
+                }
+            }
+        }
+    });
+
     gtx.config({
         yaml: {
             angular: {
@@ -47,8 +65,8 @@ module.exports = function(grunt) {
     });
 
     // We need our bower components in order to develop
-    gtx.alias('build', ['recess:less', 'clean:angular', 'copy:angular', 'copy:bower', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
-    gtx.alias('dev', ['recess:less', 'copy:angular', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
+    gtx.alias('build', ['recess:less', 'clean:angular', 'ngtemplates', 'copy:angular', 'copy:bower', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
+    gtx.alias('dev', ['recess:less', 'ngtemplates', 'copy:angular', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
 
     gtx.alias('release', ['bower-install-simple', 'build:dev', 'bump-commit']);
     gtx.alias('release-patch', ['bump-only:patch', 'release']);

@@ -5,6 +5,11 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using EmergencyVoucherManagement.Models.Vouchers;
 using EmergencyVoucherManagement.Models;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Text;
+using System.Web;
 
 namespace EmergencyVoucherManagement
 {
@@ -15,6 +20,53 @@ namespace EmergencyVoucherManagement
         public ApplicationUserManager(IUserStore<ApplicationUser> store)
             : base(store)
         {
+        }
+
+        private async Task<bool> AuthAgainstAD(string userName, string password)
+        {
+            HttpClient client = new HttpClient();
+            StringContent content = new StringContent(
+                String.Format("username={0}&password={1}", HttpUtility.UrlEncode(userName), HttpUtility.UrlEncode(password)),
+                Encoding.UTF8,
+                "application/x-www-form-urlencoded");
+
+            var response = await client.PostAsync("https://auth.rescue.org/SimpleAuthenticationRESTService.aspx", content);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var result = JToken.Parse(await response.Content.ReadAsStringAsync());
+
+                return result["result"].Value<bool>();
+            }
+
+            return false;
+        }
+
+        public override async Task<ApplicationUser> FindAsync(string userName, string password)
+        {
+            var user = base.FindAsync(userName, password).Result;
+
+            if (user == null)
+            {
+                if (await AuthAgainstAD(userName, password))
+                {
+                    var identity = await CreateAsync(new ApplicationUser
+                    {
+                        UserName = userName,
+                        Email = String.Format("{0}@theirc.org", userName)
+                    }, password);
+
+                    return await base.FindAsync(userName, password);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return user;
+            }
         }
 
         public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context)
