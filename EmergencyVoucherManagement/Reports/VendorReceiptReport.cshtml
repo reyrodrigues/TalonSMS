@@ -1,0 +1,163 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .page {
+            page-break-after: always;
+            height: 20cm;
+            display: block;
+        }
+
+        div.table {
+            height: 14cm;
+            display: block;
+        }
+
+        .footer {
+            width: 100%;
+            display: block;
+            position: fixed;
+            bottom: 0;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+    @foreach (var page in Model.Pages)
+    {
+        <div class="page ">
+            <div class="row">
+                <div class="col-xs-12 text-center"><h1><strong>IRC Ukraine</strong></h1></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-10">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <h1>Vendor Receipt Report</h1>
+                        </div>
+                    </div><div class="row">
+                        <div class="col-xs-4">
+                            <h4>@Model.Vendor.Name</h4>
+                            <h5>@Model.Vendor.Location.Name</h5>
+                            <h5>@Model.Vendor.OwnerName</h5>
+                        </div>
+                        <div class="col-xs-4">
+                        </div>
+                        <div class="col-xs-4">
+                            <h4>@Model.Distribution.Title</h4>
+                            <h5>U1000 GERT 9UKR</h5>
+                            <h5>Reporting Month: @Model.Period.ToString("MMM, yyyy")</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-2">
+                    <img src="data:@Model.LogoMimeType;base64,@Model.Logo" class="img-responsive pull-right" style="width: 2cm" />
+                </div>
+            </div>
+            <div class="table">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Beneficiary Name</th>
+                            <th>Beneficiary Mobile Number</th>
+                            <th>Transaction Timestamp</th>
+                            <th>Voucher Code</th>
+                            <th>Confirmation Code</th>
+                            <th>Voucher Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < page.Items.Length; i++)
+                        {
+                            var item = Model.Items[i];
+                            <tr>
+                                <td>@(((page.Page - 1) * Model.PageSize) + i + 1)</td>
+                                <td>@item.Beneficiary.Name</td>
+                                <td>@item.Beneficiary.MobileNumber</td>
+                                <td>@(item.FinalizedOn ?? item.CreatedOn)</td>
+                                <td>@item.Voucher.VoucherCode</td>
+                                <td>@item.ConfirmationCode</td>
+                                <td>@item.Voucher.Value</td>
+                            </tr>
+                        }
+                    </tbody>
+                    @if (page.IsLastPage)
+                    {
+                        <tfoot>
+
+                            <tr>
+                                <th colspan="6" class="text-right">Total</th>
+                                <th>@Model.Total</th>
+                            </tr>
+                        </tfoot>
+                    }
+                    else
+                    {
+
+                        <tfoot>
+
+                            <tr>
+                                <th colspan="6" class="text-right">Subtotal</th>
+                                <th>@page.SubTotal</th>
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+            @if (page.IsLastPage)
+            {
+                <div id="footer">
+                    <div class=" row">
+                        <div class="col-xs-4">
+                            <div style="display:block; border-bottom: 1px black solid">
+                                <br />
+                                <br />
+                            </div>
+                            <div class="text-2x text-center">@Model.User.Name</div>
+                            <div class="text-2x text-center"><strong>Program Approval</strong></div>
+                        </div>
+                        <div class="col-xs-4">
+                            <div style="display:block; border-bottom: 1px black solid">
+                                <br />
+                                <br />
+                            </div>
+                            <div class="text-2x text-center"><strong>Finance Approval</strong></div>
+                        </div>
+                        <div class="col-xs-4">
+                            <div style="display:block; border-bottom: 1px black solid">
+                                <br />
+                                <br />
+                            </div>
+                            <div class="text-2x text-center">@Model.Vendor.OwnerName</div>
+                            <div class="text-2x text-center"><strong>Vendor</strong></div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="row">
+
+                <div class="col-xs-4">
+                </div>
+                <div class="col-xs-4 text-center">
+                    Page @page.Page of @Model.Pages.Count()
+                </div>
+                <div class="col-xs-4 text-right">
+                    Date: @DateTime.Now.ToString()
+                </div>
+            </div>
+        </div>
+    }
+</body>
+</html>
