@@ -3,23 +3,19 @@
 /* Controllers */
 
 angular.module('app')
-  .controller('AppCtrl', ['$scope', '$translate', '$localStorage', '$window', '$q', '$http', 'authService', 'ngAuthSettings', '$state', '$rootScope', 'localStorageService',
-function ($scope, $translate, $localStorage, $window, $q, $http, authService, ngAuthSettings, $state, $rootScope, localStorageService) {
+  .controller('AppCtrl',
+  ['$scope', '$localStorage', '$window', '$q', '$http', 'authService', 'ngAuthSettings', '$state', '$rootScope', 'localStorageService', 'gettext', 'gettextCatalog',
+function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings, $state, $rootScope, localStorageService, gettext, gettextCatalog) {
     // add 'ie' classes to html
     var isIE = !!navigator.userAgent.match(/MSIE/i);
     isIE && angular.element($window.document.body).addClass('ie');
     isSmartDevice($window) && angular.element($window.document.body).addClass('smart');
 
 
-
     $rootScope.$on('app:authenticated', function () {
         $http.get(ngAuthSettings.apiServiceBaseUri + 'api/Account/UserInfo')
         .then(function (userInfo) {
-            $rootScope.navigationMenu = window.NavigationMenu(userInfo.data);
             $rootScope.me = userInfo.data;
-
-            //$state.go('app.dashboard');
-
         });
     });
 
@@ -36,9 +32,10 @@ function ($scope, $translate, $localStorage, $window, $q, $http, authService, ng
     });
     // config
     $scope.app = {
-        name: 'EVM',
-        fullName: 'Emergency Voucher Management',
-        version: '0.0.1',
+        name: 'TalonSMS',
+        currentYear: moment().year(),
+        fullName: 'TalonSMS',
+        version: '1.0.0b',
         // for chart colors
         color: {
             primary: '#7266ba',
@@ -87,17 +84,26 @@ function ($scope, $translate, $localStorage, $window, $q, $http, authService, ng
     $scope.lang = {
         isopen: false
     };
+
     $scope.langs = {
-        en: 'English',
-        ua: 'Ukrainian',
-        ru: 'Russian'
+        en_US: gettext('English'),
+        ua: gettext('Ukrainian'),
+        ru: gettext('Russian'),
+        pt_BR: gettext('Portuguese')
     };
-    $scope.selectLang = $scope.langs[$translate.proposedLanguage()] || "English";
+
+    gettextCatalog.debug = false;
+    gettextCatalog.setCurrentLanguage($scope.app.settings.selectedLanguage);
+
+    $scope.selectLang = $scope.langs[$scope.app.settings.selectedLanguage] || "English";
     $scope.setLang = function (langKey, $event) {
+        $scope.app.settings.selectedLanguage = langKey;
+        $localStorage.settings.selectedLanguage = langKey;
+        gettextCatalog.setCurrentLanguage(langKey);
+
         // set the current lang
         $scope.selectLang = $scope.langs[langKey];
         // You can change the language during runtime
-        $translate.use(langKey);
         $scope.lang.isopen = !$scope.lang.isopen;
     };
 
@@ -109,4 +115,4 @@ function ($scope, $translate, $localStorage, $window, $q, $http, authService, ng
     }
 
 }
-  ]);
+]);

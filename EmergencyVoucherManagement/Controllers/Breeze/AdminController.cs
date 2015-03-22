@@ -11,7 +11,7 @@ using System.Web.Http;
 namespace EmergencyVoucherManagement.Controllers.Breeze
 {
     [BreezeController]
-    public class AuthController : ApiController
+    public class AdminController : ApiController
     {
         readonly EFContextProvider<Models.Admin.AdminContext> _contextProvider =
             new EFContextProvider<Models.Admin.AdminContext>();
@@ -35,6 +35,17 @@ namespace EmergencyVoucherManagement.Controllers.Breeze
             return _contextProvider.Context.Roles;
         }
 
+        [HttpGet]
+        public IQueryable<EmergencyVoucherManagement.Models.Admin.Organization> Organizations()
+        {
+            return _contextProvider.Context.Organizations;
+        }
+
+        [HttpGet]
+        public IQueryable<EmergencyVoucherManagement.Models.Admin.Country> Countries()
+        {
+            return _contextProvider.Context.Countries;
+        }
 
         [HttpPost]
         public SaveResult SaveChanges(JObject saveBundle)

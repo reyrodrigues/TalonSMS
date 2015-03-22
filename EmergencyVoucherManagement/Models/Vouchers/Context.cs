@@ -5,6 +5,7 @@ using System.Web;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Core.Objects;
+using System.ComponentModel.DataAnnotations;
 
 
 
@@ -15,11 +16,36 @@ namespace EmergencyVoucherManagement.Models.Vouchers
         public Context()
             : base("name=VoucherContext")
         {
+            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += (sender, e) => ApplyUTC(e.Entity);
+
+        }
+
+        private static void ApplyUTC(object entity)
+        {
+            if (entity == null)
+                return;
+
+            var properties = entity.GetType().GetProperties()
+                .Where(x => x.PropertyType == typeof(DateTime) || x.PropertyType == typeof(DateTime?));
+
+            foreach (var property in properties)
+            {
+                
+                var dt = property.PropertyType == typeof(DateTime?)
+                    ? (DateTime?)property.GetValue(entity, null)
+                    : (DateTime)property.GetValue(entity, null);
+
+                if (dt == null)
+                    continue;
+
+                property.SetValue(entity, DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc), null);
+            }
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
 #if DEBUG
             Database.SetInitializer(new System.Data.Entity.NullDatabaseInitializer<Context>());
 #endif

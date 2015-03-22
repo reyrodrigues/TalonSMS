@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Text;
 using System.Web;
+using EmergencyVoucherManagement.Models.Admin;
 
 namespace EmergencyVoucherManagement
 {
@@ -44,34 +45,36 @@ namespace EmergencyVoucherManagement
 
         public override async Task<ApplicationUser> FindAsync(string userName, string password)
         {
-            var user = base.FindAsync(userName, password).Result;
+            var user = await base.FindAsync(userName, password);
 
             if (user == null)
             {
-                if (await AuthAgainstAD(userName, password))
+                if (await this.AuthAgainstAD(userName, password))
                 {
-                    var identity = await CreateAsync(new ApplicationUser
+                    user = await this.FindByNameAsync(userName);
+                    if (user != null)
                     {
-                        UserName = userName,
-                        Email = String.Format("{0}@theirc.org", userName)
-                    }, password);
+                        await this.RemovePasswordAsync(user.Id);
+                        await this.AddPasswordAsync(user.Id, password);
+                    }
+                    else
+                    {
+                        await this.CreateAsync(new ApplicationUser
+                        {
+                            UserName = userName,
+                            Email = String.Format("{0}@theirc.org", userName)
+                        }, password);
+                    }
+                    user = await base.FindAsync(userName, password);
+                }
+            }
 
-                    return await base.FindAsync(userName, password);
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else
-            {
-                return user;
-            }
+            return user;
         }
 
         public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context)
         {
-            var manager = new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<ApplicationDbContext>()));
+            var manager = new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<AdminContext>()));
             // Configure validation logic for usernames
             manager.UserValidator = new UserValidator<ApplicationUser>(manager)
             {

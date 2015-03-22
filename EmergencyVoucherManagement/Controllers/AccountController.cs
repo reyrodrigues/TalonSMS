@@ -15,8 +15,8 @@ using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
 using EmergencyVoucherManagement.Models.Vouchers;
 using EmergencyVoucherManagement.Providers;
-using EmergencyVoucherManagement.Results;
 using EmergencyVoucherManagement.Models;
+using EmergencyVoucherManagement.Models.Admin;
 
 namespace EmergencyVoucherManagement.Controllers
 {
@@ -26,18 +26,6 @@ namespace EmergencyVoucherManagement.Controllers
     {
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
-
-        public AccountController()
-        {
-        }
-
-        public AccountController(ApplicationUserManager userManager,
-            ISecureDataFormat<AuthenticationTicket> accessTokenFormat)
-        {
-            UserManager = userManager;
-            AccessTokenFormat = accessTokenFormat;
-        }
-
         public ApplicationUserManager UserManager
         {
             get
@@ -50,19 +38,27 @@ namespace EmergencyVoucherManagement.Controllers
             }
         }
 
+        public AccountController()
+        {
+        }
+
+        public AccountController(ApplicationUserManager userManager,
+            ISecureDataFormat<AuthenticationTicket> accessTokenFormat)
+        {
+            UserManager = userManager;
+            AccessTokenFormat = accessTokenFormat;
+        }
+
+
         public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
 
         [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
         [Route("UserInfo"), HttpGet]
-        public async Task<UserInfoViewModel> UserInfo(string email = null)
+        public async Task<ApplicationUser> UserInfo(string email = null)
         {
             var user = email == null ? UserManager.FindById(User.Identity.GetUserId()) : await UserManager.FindByEmailAsync(email);
             
-            return new UserInfoViewModel
-            {
-                Email = user.UserName,
-                Roles = UserManager.GetRoles(user.Id),
-            };
+            return user;
         }
 
         [Route("Logout")]
@@ -125,30 +121,6 @@ namespace EmergencyVoucherManagement.Controllers
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
-            }
-
-            return Ok();
-        }
-
-        [Route("CreateRoles")]
-        public async Task<IHttpActionResult> CreateRoles()
-        {
-            using (var context = new ApplicationDbContext())
-            {
-                var roleStore = new RoleStore<IdentityRole>(context);
-                var roleManager = new RoleManager<IdentityRole>(roleStore);
-
-                if (!roleManager.RoleExists("User"))
-                    await roleManager.CreateAsync(new IdentityRole { Name = "User" });
-
-                if (!roleManager.RoleExists("Administrator"))
-                    await roleManager.CreateAsync(new IdentityRole { Name = "Administrator" });
-
-                if (!roleManager.RoleExists("Vendor"))
-                    await roleManager.CreateAsync(new IdentityRole { Name = "Vendor" });
-
-                if (!roleManager.RoleExists("Beneficiary"))
-                    await roleManager.CreateAsync(new IdentityRole { Name = "Beneficiary" });
             }
 
             return Ok();
@@ -231,75 +203,6 @@ namespace EmergencyVoucherManagement.Controllers
             }
 
             return null;
-        }
-
-        private class ExternalLoginData
-        {
-            public string LoginProvider { get; set; }
-            public string ProviderKey { get; set; }
-            public string UserName { get; set; }
-
-            public IList<Claim> GetClaims()
-            {
-                IList<Claim> claims = new List<Claim>();
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, ProviderKey, null, LoginProvider));
-
-                if (UserName != null)
-                {
-                    claims.Add(new Claim(ClaimTypes.Name, UserName, null, LoginProvider));
-                }
-
-                return claims;
-            }
-
-            public static ExternalLoginData FromIdentity(ClaimsIdentity identity)
-            {
-                if (identity == null)
-                {
-                    return null;
-                }
-
-                Claim providerKeyClaim = identity.FindFirst(ClaimTypes.NameIdentifier);
-
-                if (providerKeyClaim == null || String.IsNullOrEmpty(providerKeyClaim.Issuer)
-                    || String.IsNullOrEmpty(providerKeyClaim.Value))
-                {
-                    return null;
-                }
-
-                if (providerKeyClaim.Issuer == ClaimsIdentity.DefaultIssuer)
-                {
-                    return null;
-                }
-
-                return new ExternalLoginData
-                {
-                    LoginProvider = providerKeyClaim.Issuer,
-                    ProviderKey = providerKeyClaim.Value,
-                    UserName = identity.FindFirstValue(ClaimTypes.Name)
-                };
-            }
-        }
-
-        private static class RandomOAuthStateGenerator
-        {
-            private static RandomNumberGenerator _random = new RNGCryptoServiceProvider();
-
-            public static string Generate(int strengthInBits)
-            {
-                const int bitsPerByte = 8;
-
-                if (strengthInBits % bitsPerByte != 0)
-                {
-                    throw new ArgumentException("strengthInBits must be evenly divisible by 8.", "strengthInBits");
-                }
-
-                int strengthInBytes = strengthInBits / bitsPerByte;
-
-                byte[] data = new byte[strengthInBytes];
-                _random.GetBytes(data);
-                return HttpServerUtility.UrlTokenEncode(data);
-            }
         }
 
         #endregion

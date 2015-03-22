@@ -1,0 +1,221 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Project-Id-Version: \n"
+
+#: src/tpl/blocks/nav.html:145
+msgid "Active Vouchers"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:156
+msgid "Administration"
+msgstr ""
+
+#: src/js/factories/genericControllerFactory.js:142
+msgid "Are you sure you would like to delete this record? This operation cannot be reversed."
+msgstr ""
+
+#: src/tpl/blocks/nav.html:66
+msgid "Assign Group"
+msgstr ""
+
+#: src/tpl/generic/create.html:16
+#: src/tpl/generic/edit.html:22
+#: src/tpl/generic/edit.html:35
+msgid "Back"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:78
+msgid "Ben. Groups"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:45
+#: src/tpl/blocks/nav.html:50
+msgid "Beneficiaries"
+msgstr ""
+
+#: src/tpl/beneficiaries/bulkEdit.html:2
+msgid "Beneficiaries - <small>Assign Group</small>"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:83
+msgid "Beneficiary Groups"
+msgstr ""
+
+#: src/js/factories/genericControllerFactory.js:142
+msgid "Confirm"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:120
+#: src/tpl/blocks/nav.html:180
+#: src/tpl/blocks/nav.html:207
+#: src/tpl/blocks/nav.html:93
+msgid "Create"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:9
+msgid "Dashboard"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:88
+msgid "Date of Birth"
+msgstr ""
+
+#: src/tpl/generic/edit.html:16
+msgid "Delete"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:105
+#: src/tpl/blocks/nav.html:110
+msgid "Distributions"
+msgstr ""
+
+#: src/tpl/generic/edit.html:21
+msgid "Edit"
+msgstr ""
+
+#: src/js/main.js:89
+msgid "English"
+msgstr ""
+
+#: src/js/factories/genericControllerFactory.js:137
+#: src/js/factories/genericControllerFactory.js:153
+#: src/js/factories/genericControllerFactory.js:208
+msgid "Error"
+msgstr ""
+
+#: src/tpl/blocks/header.html:54
+msgid "Help"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:115
+#: src/tpl/blocks/nav.html:175
+#: src/tpl/blocks/nav.html:202
+#: src/tpl/blocks/nav.html:28
+#: src/tpl/blocks/nav.html:55
+#: src/tpl/blocks/nav.html:88
+msgid "List"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:91
+msgid "Location"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:165
+#: src/tpl/blocks/nav.html:170
+msgid "Locations"
+msgstr ""
+
+#: src/tpl/blocks/header.html:60
+msgid "Logout"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:90
+msgid "Mobile Number"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:87
+#: src/js/factories/genericControllerFactory.js:12
+#: src/tpl/admin/locations/form.html:5
+#: src/tpl/admin/locations/form.html:7
+#: src/tpl/admin/voucherTypes/form.html:5
+#: src/tpl/admin/voucherTypes/form.html:7
+msgid "Name"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:89
+msgid "National Id Number"
+msgstr ""
+
+#: src/tpl/generic/list.html:12
+msgid "New"
+msgstr ""
+
+#: src/js/main.js:92
+msgid "Portuguese"
+msgstr ""
+
+#: src/tpl/blocks/header.html:51
+msgid "Profile"
+msgstr ""
+
+#: src/js/factories/genericControllerFactory.js:148
+msgid "Record successfully deleted."
+msgstr ""
+
+#: src/js/factories/genericControllerFactory.js:130
+#: src/js/factories/genericControllerFactory.js:205
+msgid "Record successfully saved."
+msgstr ""
+
+#: src/tpl/blocks/nav.html:33
+#: src/tpl/blocks/nav.html:60
+msgid "Register"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:126
+#: src/tpl/blocks/nav.html:135
+msgid "Reporting"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:140
+msgid "Reports"
+msgstr ""
+
+#: src/js/main.js:91
+msgid "Russian"
+msgstr ""
+
+#: src/tpl/generic/create.html:15
+#: src/tpl/generic/edit.html:33
+msgid "Save"
+msgstr ""
+
+#: src/tpl/generic/edit.html:34
+msgid "Save and Continue Editing"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:66
+msgid "Status"
+msgstr ""
+
+#: src/js/factories/genericControllerFactory.js:130
+#: src/js/factories/genericControllerFactory.js:148
+#: src/js/factories/genericControllerFactory.js:205
+msgid "Success"
+msgstr ""
+
+#: src/js/main.js:90
+msgid "Ukrainian"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:71
+msgid "Value"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:69
+msgid "Vendor"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:150
+msgid "Vendor Receipt"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:18
+#: src/tpl/blocks/nav.html:23
+msgid "Vendors"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:70
+msgid "Voucher Code"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:4
+msgid "Voucher Management"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:192
+#: src/tpl/blocks/nav.html:197
+msgid "Voucher Types"
+msgstr ""

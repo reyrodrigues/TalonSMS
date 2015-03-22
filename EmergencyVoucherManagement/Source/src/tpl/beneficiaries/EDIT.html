@@ -4,8 +4,7 @@
 <div class="wrapper-md">
     <form class="bs-example form-horizontal form-validation" ng-submit="save()">
         <div class="row">
-            <div class="col-sm-12" ng-include="'tpl/includes/beneficiaries_form.html'" toggle-editing is-editing="isEditing">
-
+            <div class="col-sm-12" ng-include="'tpl/beneficiaries/form.html'" toggle-editing is-editing="isEditing">
             </div>
         </div>
         <div class="row">
@@ -17,7 +16,7 @@
             <div class="col-sm-12">
                 <div class="panel panel-default">
                     <div class="table-responsive">
-                        <div ng-grid="gridOptions" style="min-height:300px"></div>
+                        <div ng-grid="gridOptionsVoucherTransactionRecords" style="min-height:300px"></div>
                     </div>
                 </div>
             </div>

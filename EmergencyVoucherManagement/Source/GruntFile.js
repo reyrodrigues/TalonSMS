@@ -11,6 +11,7 @@ module.exports = function (grunt) {
     gtx.loadNpm('grunt-contrib-watch');
     gtx.loadNpm('grunt-yaml');
     gtx.loadNpm('grunt-angular-templates');
+    gtx.loadNpm('grunt-angular-gettext');
 
     gtx.config({
         ngtemplates: {
@@ -23,6 +24,26 @@ module.exports = function (grunt) {
                         collapseBooleanAttributes: true,
                         collapseWhitespace: true
                     }
+                }
+            }
+        }
+    });
+
+    gtx.config({
+        nggettext_compile: {
+            all: {
+                files: {
+                    'src/js/translations.js': ['po/*.po']
+                }
+            }
+        }
+    });
+
+    gtx.config({
+        nggettext_extract: {
+            pot: {
+                files: {
+                    'po/template.pot': ['src/tpl/**/*.html', 'src/js/**/*.js']
                 }
             }
         }
@@ -65,8 +86,8 @@ module.exports = function (grunt) {
     });
 
     // We need our bower components in order to develop
-    gtx.alias('build', ['recess:less', 'clean:angular', 'ngtemplates', 'copy:angular', 'copy:bower', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
-    gtx.alias('dev', ['recess:less', 'ngtemplates', 'copy:angular', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
+    gtx.alias('build', ['recess:less', 'clean:angular', 'nggettext_compile', 'ngtemplates', 'copy:angular', 'copy:bower', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
+    gtx.alias('dev', ['recess:less', 'nggettext_compile', 'ngtemplates', 'copy:angular', 'yaml:angular', 'recess:angular', 'concat:angular', 'uglify:angular']);
 
     gtx.alias('release', ['bower-install-simple', 'build:dev', 'bump-commit']);
     gtx.alias('release-patch', ['bump-only:patch', 'release']);

@@ -15,14 +15,17 @@ angular.module('app')
   .config(
     ['$stateProvider', '$urlRouterProvider', 'JQ_CONFIG',
       function ($stateProvider, $urlRouterProvider, JQ_CONFIG) {
-          var fetchMetadata = ['serviceBase', 'backendService', '$q', 'authBackendService', function (serviceBase, backendService, $q, authBackendService) {
-              var defer = $q.defer();
-              $q.all([
-                  backendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/EVM')
-              ]).then(function () { defer.resolve(); })
-              .catch(function () { defer.resolve(); });
+          var fetchMetadata = ['serviceBase', 'backendService', '$q', 'adminBackendService', '$localStorage',
+              function (serviceBase, backendService, $q, adminBackendService, $localStorage) {
+                  var defer = $q.defer();
 
-              return defer.promise;
+                  $q.all([
+                      backendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/EVM'),
+                      adminBackendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/Admin')
+                  ]).then(function () { defer.resolve(); })
+                  .catch(function () { defer.resolve(); });
+
+                 return defer.promise;
           }];
 
 
@@ -50,11 +53,9 @@ angular.module('app')
                   }
               })
 
-
-
               .state('access', {
                   url: '/access',
-                  template: '<div ui-view class="fade-in-right-big smooth"></div>'
+                  template: '<div ui-view class="smooth"></div>'
               })
               .state('access.signin', {
                   url: '/signin',
@@ -159,7 +160,7 @@ angular.module('app')
               .state('admin.locations', {
                   url: '/locations',
                   abstract: true,
-                  template: '<div ui-view class="fade-in-up"></div>',
+                  template: '<div ui-view></div>',
                   resolve: {
                       settings: function () {
                           return {
@@ -193,7 +194,7 @@ angular.module('app')
               .state('admin.voucherTypes', {
                   url: '/voucher-types',
                   abstract: true,
-                  template: '<div ui-view class="fade-in-up"></div>',
+                  template: '<div ui-view></div>',
                   resolve: {
                       settings: function () {
                           return {
@@ -310,8 +311,6 @@ angular.module('app')
                   templateUrl: 'tpl/distributions/create.html',
                   controller: 'VoucherDistributionCreateCtrl'
               })
-
-
       }
     ]
   );

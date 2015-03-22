@@ -1,37 +1,13 @@
 {
-  "name": "BootstrapAngularAdminWebApp",
-  "version": "2.0.1",
-  "description": "Admin web application template with Bootstrap 3 and AngularJS.",
+  "name": "TalonSMS",
+  "version": "1.0.0b",
+  "description": "",
   "scripts": {
     "start": "node node_modules/http-server/bin/http-server -o"
   },
-  "keywords": [
-    "AngularJS",
-    "admin",
-    "admin",
-    "dashboard",
-    "admin",
-    "panel",
-    "app",
-    "charts",
-    "components",
-    "flat",
-    "flat",
-    "ui",
-    "responsive",
-    "responsive",
-    "layout",
-    "ui",
-    "kit",
-    "ui",
-    "route",
-    "web",
-    "app",
-    "widgets"
-  ],
-  "repository": "https://heyflat@bitbucket.org/heyflat/angulr.git",
-  "author": "Flatfull",
-  "license": "Envato REGULAR LICENSE",
+  "keywords": [],
+  "author": "Rey Rodrigues",
+  "license": "AGPL",
   "dependencies": {
     "node-forge": "^0.6.20"
   },
@@ -52,6 +28,7 @@
     "http-server": "^0.6.1",
     "require-directory": "^2.0.0",
     "grunt-yaml": "^0.4.1",
-    "grunt-angular-templates": "^0.5.7"
+    "grunt-angular-templates": "^0.5.7",
+    "grunt-angular-gettext": "^2.0.1"
   }
 }

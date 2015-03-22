@@ -1,6 +1,6 @@
 ﻿'use strict';
-app.factory('backendService', ['breeze', 'serviceBase', function (breeze, serviceBase) {
-    var entityManager = new breeze.EntityManager(serviceBase + 'Breeze/EVM');
+app.factory('adminBackendService', ['breeze', 'serviceBase', function (breeze, serviceBase) {
+    var entityManager = new breeze.EntityManager(serviceBase + 'Breeze/Admin');
     entityManager.metadataStore.setProperties({
         serializerFn: function (dataProperty, value) {
             if (dataProperty.dataType.name == 'DateTime') {

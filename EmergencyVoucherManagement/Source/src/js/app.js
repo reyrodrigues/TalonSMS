@@ -1,6 +1,5 @@
 'use strict';
 
-
 var app = angular.module('app', [
   'ngAnimate',
   'ngCookies',
@@ -15,32 +14,24 @@ var app = angular.module('app', [
   'ui.load',
   'ui.jq',
   'breeze.angular',
-  'oc.lazyLoad',
-  'pascalprecht.translate',
   'LocalStorageModule',
-  'dialogs.default-translations',
   'dialogs.main',
   'toaster',
-  'SignalR'
+  'SignalR',
+  'gettext'
 ]);
 
-
-var serviceBase = window.BaseUrl;
 app.constant('ngAuthSettings', {
-    apiServiceBaseUri: serviceBase,
+    apiServiceBaseUri: window.BaseUrl,
     clientId: 'ngAuthApp'
 });
 
-app.constant('serviceBase', serviceBase);
+app.constant('serviceBase', window.BaseUrl);
 
 app.config(['$httpProvider', function($httpProvider) {
-
   $httpProvider.interceptors.push('authInterceptorService');
 }]);
 
 app.run(['authService', 'breeze', function(authService, breeze) {
     authService.fillAuthData();
-
-
-
 }]);

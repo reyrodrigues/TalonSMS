@@ -3,12 +3,10 @@ module.exports = {
         src: [
         'bower_components/jquery/dist/jquery.min.js',
         'bower_components/bootstrap/dist/js/bootstrap.js',
-        '../Scripts/datajs-1.1.3.js',
-        '../Scripts/odatajs.js',
-        '../Scripts/NavigationMenu.js',
         '../Scripts/jquery.signalR-2.2.0.min.js',
         'bower_components/chosen/chosen.jquery.min.js',
-        'bower_components/moment/moment.js',
+        'bower_components/moment/min/moment-with-locales.min.js',
+        'bower_components/moment-timezone/builds/moment-timezone-with-data.min.js',
 
         'bower_components/angular/angular.js',
 
@@ -32,11 +30,7 @@ module.exports = {
         'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
 
         'bower_components/oclazyload/dist/ocLazyLoad.js',
-
-        'bower_components/angular-translate/angular-translate.js',
-        'bower_components/angular-translate-loader-static-files/angular-translate-loader-static-files.js',
-        'bower_components/angular-translate-storage-cookie/angular-translate-storage-cookie.js',
-        'bower_components/angular-translate-storage-local/angular-translate-storage-local.js',
+        'bower_components/angular-gettext/dist/angular-gettext.min.js',
 
         'bower_components/angular-dialog-service/dist/dialogs.min.js',
 
@@ -45,9 +39,9 @@ module.exports = {
 
         'src/js/*.js',
         'src/tpl/app.templates.js',
-
         'src/js/directives/*.js',
         'src/js/services/*.js',
+        'src/js/factories/*.js',
         'src/js/filters/*.js',
         'src/js/controllers/*.js',
         ],

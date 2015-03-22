@@ -14,12 +14,26 @@ using System.Web;
 using System.Web.Mvc;
 using TuesPechkin;
 using RazorEngine.Templating;
-
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
 
 namespace EmergencyVoucherManagement.Controllers
 {
     public class HomeController : Controller
     {
+        private ApplicationUserManager _userManager;
+        public ApplicationUserManager UserManager
+        {
+            get
+            {
+                return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            }
+            private set
+            {
+                _userManager = value;
+            }
+        }
+
         public ActionResult Index()
         {
             return View(); // Redirect("~/App/");
@@ -52,10 +66,11 @@ namespace EmergencyVoucherManagement.Controllers
                         SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Value).Sum()
                     });
                 }
+                var user = UserManager.FindByName(User.Identity.Name);
 
                 var model = new
                 {
-                    User = User.Identity,
+                    User = user,
                     Distribution = ctx.Distributions.Where(d=> d.Id==distributionId).First(),
                     Period = periodDate,
                     Pages = pages,

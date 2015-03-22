@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 
@@ -8,6 +9,8 @@ namespace EmergencyVoucherManagement.Models.Vouchers
     public class Beneficiary: Entity
     {
         public virtual string Name { get; set; }
+
+        [DataType(DataType.Date)]
         public virtual DateTime DateOfBirth { get; set; }
         public virtual string NationalId { get; set; }
         public virtual string MobileNumber { get; set; }

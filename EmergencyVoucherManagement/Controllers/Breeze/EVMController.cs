@@ -91,7 +91,6 @@ namespace EmergencyVoucherManagement.Controllers.Breeze
             return _contextProvider.Context.VoucherTransactionRecords;
         }
 
-        // ~/breeze/todos/SaveChanges
         [HttpPost]
         public SaveResult SaveChanges(JObject saveBundle)
         {
