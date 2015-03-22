@@ -11,8 +11,8 @@ app.controller('BeneficiaryRegisterCtrl', ['$scope', 'createController', 'locati
         });
     }]);
 
-app.controller('BeneficiaryEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'groups',
-    function ($scope, editController, gettext, subGrid, locations, groups) {
+app.controller('BeneficiaryEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'groups', 'backendService',
+    function ($scope, editController, gettext, subGrid, locations, groups, backendService) {
         $scope.locations = locations;
         $scope.groups = groups;
         $scope.statusToString = function (status) {
@@ -78,12 +78,15 @@ app.controller('BeneficiaryEditCtrl', ['$scope', 'editController', 'gettext', 's
             });
     }]);
 
-app.controller('BeneficiaryGridCtrl', ['$scope', 'listController',
-    function ($scope, listController) {
+app.controller('BeneficiaryGridCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext',
+    function ($scope, $state, $localStorage, listController, gettext) {
+        var storageSetting = $state.current.name + 'GridSettings';
+        $scope.showingDisabled = false;
+
         listController($scope, {
             collectionType: 'Beneficiaries',
-            expand: 'Location',
-            columnsDefs:  [
+            expand: ['Location', "Group"],
+            columnDefs: [
                 { field: "Name", displayName: gettext("Name"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
                 { field: "DateOfBirth", displayName: gettext("Date of Birth"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>' },
                 { field: "NationalId", displayName: gettext("National Id Number") },
@@ -92,92 +95,63 @@ app.controller('BeneficiaryGridCtrl', ['$scope', 'listController',
             ]
         });
 
-        $scope.loadGridData();
-    }]);
+        $scope.filter = { Disabled: { '!=': true } };
+        $scope.showDisabled = function () {
+            $scope.showingDisabled = true;
+            $scope.filter['Disabled'] = { '==': true };
 
-app.controller('BeneficiaryBulkEditCtrl', ['breeze', 'backendService', '$scope', '$http', '$localStorage', 'locations', 'dialogs', 'toaster',
-    function (breeze, backendService, $scope, $http, $localStorage, locations, dialogs, toaster) {
-        $scope.loadGridData = function () {
-            var currentPage = parseInt($scope.pagingOptions.currentPage);
-            var pageSize = parseInt($scope.pagingOptions.pageSize);
-
-            var fields = [];
-            for (var i = 0; i < $scope.gridOptions.sortInfo.fields.length; i++) {
-                var ordering = $scope.gridOptions.sortInfo.fields[i] + ($scope.gridOptions.sortInfo.directions[i] == "desc" ? " desc" : "");
-
-                fields.push(ordering);
-            }
-
-            var order = fields.join(',');
-
-            var entityQuery = new breeze.EntityQuery("Beneficiaries")
-                .expand(["Location", "Group"])
-                .orderBy(order)
-                .skip(pageSize * (currentPage - 1))
-                .take(pageSize)
-                .inlineCount(true)
-                .using(backendService);
-
-            if ($scope.filter) {
-                entityQuery = entityQuery.where($scope.filter);
-            }
-            entityQuery
-                .execute().then(function (res) {
-                    $scope.totalServerItems = res.inlineCount;
-                    $scope.myData = res.results;
-
-                    if (!$scope.$$phase) {
-                        $scope.$apply();
-                    }
-                })
-                .catch(function () { console.log(arguments); });
-
+            $scope.loadGridData();
         };
+        $scope.hideDisabled = function () {
+            $scope.showingDisabled = false;
+            $scope.filter['Disabled'] = { '!=': true };
 
-        var watchFunction = function () {
             $scope.loadGridData();
         };
 
+        $scope.loadGridData();
+    }]);
+
+
+app.controller('BeneficiaryBulkEditCtrl', ['$scope', '$state', 'dialogs', 'listController', 'gettext', 'locations', 'backendService', 'toaster',
+    function ($scope, $state, dialogs, listController, gettext, locations, backendService, toaster) {
+        var storageSetting = $state.current.name + 'GridSettings';
         $scope.locations = locations;
         $scope.bulkFilters = {
             DateOfBirthFrom: null,
             DateOfBirthTo: null
         };
-        $scope.filterOptions = {
-            filterText: "",
-            useExternalFilter: true
-        };
-        $scope.totalServerItems = 0;
-        $scope.pagingOptions = {
-            pageSizes: [250, 500, 1000],
-            pageSize: 250,
-            currentPage: 1
+
+        listController($scope, {
+            collectionType: 'Beneficiaries',
+            expand: ['Location', "Group"],
+            columnDefs: [
+                { field: "Name", displayName: gettext("Name"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
+                { field: "DateOfBirth", displayName: gettext("Date of Birth"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>' },
+                { field: "NationalId", displayName: gettext("National Id Number") },
+                { field: "MobileNumber", displayName: gettext("Mobile Number") },
+                { field: "Location.Name", displayName: gettext("Location") },
+                { field: "Group.Name", displayName: "Group" }
+            ]
+        });
+
+        $scope.assignToGroup = function () {
+            var dlg = dialogs.create('tpl/dialogs/assignToGroup.html', 'AssignToGroupDialogCtrl');
+            dlg.result.then(function (group) {
+                $scope.list.forEach(function (e) {
+                    e.GroupId = group.Id;
+                });
+
+                backendService.saveChanges($scope.list)
+                .then(function () {
+                    toaster.pop('success', gettext('Success'), gettext('Beneficiaries added to group.'));
+                    $scope.loadGridData();
+                }).catch(function (res) {
+                    toaster.pop('error', gettext('Error'), res.data);
+                });
+            });
         };
 
-        $scope.gridOptions = {
-            data: 'myData',
-            enablePaging: true,
-            showFooter: true,
-            rowHeight: 36,
-            headerRowHeight: 36,
-            totalServerItems: 'totalServerItems',
-            sortInfo: {
-                fields: ['Name'],
-                directions: ['asc']
-            },
-            pagingOptions: $scope.pagingOptions,
-            filterOptions: $scope.filterOptions,
-            enableRowSelection: false,
-            useExternalSorting: true,
-            columnDefs: [
-                { field: "Name" },
-                { field: "ParsedDate", displayName: "Date of Birth" },
-                { field: "NationalId", displayName: "National Id Number" },
-                { field: "MobileNumber", displayName: "Mobile Number" },
-                { field: "Location.Name", displayName: "Location" },
-            { field: "Group.Name", displayName: "Group" }
-            ]
-        };
         $scope.runFilters = function () {
             var filter = {
                 'and': []
@@ -199,36 +173,18 @@ app.controller('BeneficiaryBulkEditCtrl', ['breeze', 'backendService', '$scope',
 
             if (filter.and.length) {
                 $scope.filter = filter;
-                watchFunction();
+                $scope.loadGridData();
             } else {
                 $scope.filter = false;
-                watchFunction();
+                $scope.loadGridData();
+
             }
         };
 
-
-        $scope.assignToGroup = function () {
-            var dlg = dialogs.create('tpl/dialogs/assignToGroup.html', 'AssignToGroupDialogCtrl');
-            dlg.result.then(function (group) {
-                $scope.myData.forEach(function (e) {
-                    e.GroupId = group.Id;
-                });
-
-                backendService.saveChanges($scope.myData)
-                .then(function () {
-                    toaster.pop('success', 'Success!', 'Beneficiaries added to group.');
-                    $scope.loadGridData();
-                }).catch(function (res) {
-                    toaster.pop('error', 'Error', res.data);
-                });
-            });
-        }; // end launch
-
-        $scope.$watch('bulkFilters', $scope.runFilters, true);
-        $scope.$watch('pagingOptions', watchFunction, true);
-        $scope.$watch('gridOptions.sortInfo', watchFunction, true);
         $scope.filterLocations = function (name) {
             return $scope.locations.filter(function (l) { return l.Name.toLowerCase().indexOf(name.toLowerCase()) > -1; });
         }
+        $scope.$watch('bulkFilters', $scope.runFilters, true);
+
         $scope.loadGridData();
     }]);

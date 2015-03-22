@@ -1,40 +1,14 @@
 <!-- list -->
 <ul class="nav ng-scope">
-    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
-        <span class="ng-scope" translate>Voucher Management</span>
-    </li>
     <li ui-sref-active="active">
         <a href="" ui-sref="app.dashboard" class="auto">
             <i class="glyphicon glyphicon-stats icon text-primary-dker"></i>
             <span class="font-bold ng-scope" translate>Dashboard</span>
         </a>
-    </li><li ng-class="{active:$state.includes('vendors')}">
-    <a href="" class="auto">
-        <span class="pull-right text-muted">
-            <i class="fa fa-fw fa-angle-right text"></i>
-            <i class="fa fa-fw fa-angle-down text-active"></i>
-        </span>
-        <i class="fa fa-building-o text-success-lter"></i>
-        <span translate>Vendors</span>
-    </a>
-    <ul class="nav nav-sub dk">
-        <li class="nav-sub-header">
-            <a href="">
-                <span translate>Vendors</span>
-            </a>
-        </li>
-        <li ui-sref-active="active">
-            <a ui-sref="vendors.list" href="#">
-                <span translate>List</span>
-            </a>
-        </li>
-        <li ui-sref-active="active">
-            <a ui-sref="vendors.create" href="#">
-                <span translate>Register</span>
-            </a>
-        </li>
-    </ul>
-</li>
+    </li>
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+        <span class="ng-scope" translate>Beneficiaries</span>
+    </li>
     <li ng-class="{active:$state.includes('beneficiaries')}">
         <a href="" class="auto">
             <span class="pull-right text-muted">
@@ -42,12 +16,12 @@
                 <i class="fa fa-fw fa-angle-down text-active"></i>
             </span>
             <i class="icon-user icon text-success-lter"></i>
-            <span translate>Beneficiaries</span>
+            <span translate>Registration</span>
         </a>
         <ul class="nav nav-sub dk">
             <li class="nav-sub-header">
                 <a href="">
-                    <span translate>Beneficiaries</span>
+                    <span translate>Registration</span>
                 </a>
             </li>
             <li ui-sref-active="active">
@@ -75,7 +49,7 @@
                 <i class="fa fa-fw fa-angle-down text-active"></i>
             </span>
             <i class="icon-users icon text-success-lter"></i>
-            <span translate>Ben. Groups</span>
+            <span translate>Groups</span>
         </a>
         <ul class="nav nav-sub dk">
             <li class="nav-sub-header">
@@ -94,6 +68,39 @@
                 </a>
             </li>
         </ul>
+    </li>
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+        <span class="ng-scope" translate>Vendors</span>
+    </li>
+    <li ng-class="{active:$state.includes('vendors')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="fa fa-building-o text-success-lter"></i>
+            <span translate>Registration</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span translate>Registration</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="vendors.list" href="#">
+                    <span translate>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="vendors.create" href="#">
+                    <span translate>Register</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+        <span class="ng-scope" translate>Vouchers</span>
     </li>
     <li ng-class="{active:$state.includes('distributions')}">
         <a href="" class="auto">
@@ -209,5 +216,4 @@
             </li>
         </ul>
     </li>
-
 </ul>

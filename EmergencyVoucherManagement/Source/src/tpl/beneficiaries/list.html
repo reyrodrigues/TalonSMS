@@ -19,6 +19,11 @@
                 <div class="btn-group">
                     <button class="btn btn-sm btn-bg btn-default" data-toggle="tooltip" data-placement="bottom" ng-click="loadGridData()" title="Refresh"><i class="fa fa-refresh"></i></button>
                 </div>
+                <div class="btn-group">
+                    <a class="btn btn-info" href ng-click="ExportToExcel()" translate>Export to Excel</a>
+                    <a class="btn btn-default" href ng-click="ImportExcel()" translate>Import Excel</a>
+                </div>
+                    <button class="btn btn-success pull-right" ui-sref="beneficiaries.create" translate>Register</button>
             </div>
 
         </div>

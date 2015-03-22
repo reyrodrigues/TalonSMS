@@ -234,6 +234,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionResults\FileActionResult.cs" />
     <Compile Include="App_Start\BreezeWebApiConfig.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\EdmBuilder.cs" />
@@ -247,6 +248,7 @@
     <Compile Include="Controllers\Breeze\AuthController.cs" />
     <Compile Include="Controllers\Breeze\EVMController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\Api\ExcelController.cs" />
     <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Hubs\DashboardHub.cs" />
     <Compile Include="Models\Admin\ApplicationUserCountry.cs" />
@@ -502,7 +504,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App\" />
-    <Folder Include="App_Data\" />
+    <Folder Include="App_Data\uploads\" />
     <Folder Include="Source\src\tpl\vouchers\" />
   </ItemGroup>
   <ItemGroup>

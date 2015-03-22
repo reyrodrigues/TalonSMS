@@ -16,7 +16,7 @@ angular.module('app')
                   ];
               }
 
-              $scope.loadGridData = function (pageSize, page) {
+              $scope.loadGridData = function () {
                   setTimeout(function () {
                       var data;
 
@@ -77,7 +77,6 @@ angular.module('app')
                   $localStorage[storageSetting] = {
                       pageSize: 250,
                       currentPage: 1,
-                      showingDisabled: false,
                       sortInfo: {
                           fields: ['Id'],
                           directions: ['asc']
@@ -86,8 +85,6 @@ angular.module('app')
               }
 
               $scope.totalServerItems = 0;
-              $scope.showingDisabled = $localStorage[storageSetting].showingDisabled;
-              $scope.filter = $localStorage[storageSetting].filter;
               $scope.pagingOptions = {
                   pageSizes: [250, 500, 1000],
                   pageSize: $localStorage[storageSetting].pageSize,

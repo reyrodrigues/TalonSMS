@@ -33,8 +33,8 @@
                         <button ng-click="resendMessage()" class="btn btn-sm btn-info" ng-if="entity.WasWelcomeMessageSent && !entity.Disabled">Resend Welcome Message</button>
                     </div>
                     <div class=" col-lg-6">
-                        <div class="btn-group pull-right" ng-if="!entity.Disabled">
-                            <button ng-click="startEditing()" class="btn btn-primary">Edit</button>
+                        <div class="btn-group pull-right">
+                            <button ng-click="startEditing()" class="btn btn-primary" ng-if="!entity.Disabled">Edit</button>
                             <button ui-sref="beneficiaries.list" class="btn btn-info">Back</button>
                         </div>
                     </div>
