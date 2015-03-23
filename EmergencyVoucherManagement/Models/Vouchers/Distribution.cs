@@ -6,7 +6,7 @@ using System.Web;
 
 namespace EmergencyVoucherManagement.Models.Vouchers
 {
-    public class Distribution : Entity
+    public class Distribution : TenantEntity
     {
         public Distribution() {
             VoucherCodeLength = 6;

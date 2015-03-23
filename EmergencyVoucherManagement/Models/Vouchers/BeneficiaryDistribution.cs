@@ -5,7 +5,7 @@ using System.Web;
 
 namespace EmergencyVoucherManagement.Models.Vouchers
 {
-    public class BeneficiaryDistribution : Entity
+    public class BeneficiaryDistribution : TenantEntity
     {
         public virtual int DistributionId { get; set; }
         public virtual int BeneficiaryId { get; set; }

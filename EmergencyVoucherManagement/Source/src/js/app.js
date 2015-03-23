@@ -29,7 +29,8 @@ app.constant('ngAuthSettings', {
 app.constant('serviceBase', window.BaseUrl);
 
 app.config(['$httpProvider', function($httpProvider) {
-  $httpProvider.interceptors.push('authInterceptorService');
+    $httpProvider.interceptors.push('authInterceptorService');
+    $httpProvider.interceptors.push('multiTenantInterceptorService');
 }]);
 
 app.run(['authService', 'breeze', function(authService, breeze) {

@@ -47,7 +47,7 @@ namespace EmergencyVoucherManagement.Models.Vouchers
             base.OnModelCreating(modelBuilder);
 
 #if DEBUG
-            Database.SetInitializer(new System.Data.Entity.NullDatabaseInitializer<Context>());
+            Database.SetInitializer(new System.Data.Entity.DropCreateDatabaseIfModelChanges<Context>());
 #endif
 
             modelBuilder.Entity<DistributionVoucherCategory>()

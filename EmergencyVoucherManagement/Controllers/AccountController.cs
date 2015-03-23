@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Security.Claims;
@@ -17,6 +18,7 @@ using EmergencyVoucherManagement.Models.Vouchers;
 using EmergencyVoucherManagement.Providers;
 using EmergencyVoucherManagement.Models;
 using EmergencyVoucherManagement.Models.Admin;
+using System.Data.Entity;
 
 namespace EmergencyVoucherManagement.Controllers
 {
@@ -54,11 +56,26 @@ namespace EmergencyVoucherManagement.Controllers
 
         [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
         [Route("UserInfo"), HttpGet]
-        public async Task<ApplicationUser> UserInfo(string email = null)
+        public Task<ApplicationUser> UserInfo(string email = null)
         {
-            var user = email == null ? UserManager.FindById(User.Identity.GetUserId()) : await UserManager.FindByEmailAsync(email);
-            
-            return user;
+            return Task.Run<ApplicationUser>(() =>
+            {
+                using (var admin = new Models.Admin.AdminContext())
+                {
+                    admin.Configuration.ProxyCreationEnabled = false;
+                    admin.Configuration.LazyLoadingEnabled = false;
+                    string userId = User.Identity.GetUserId();
+
+                    var user = admin.Users
+                        .Include("ApplicationUserCountries")
+                        .Include("ApplicationUserCountries.Country")
+                        .Include("Organization")
+                        .Where(u => u.Id == userId)
+                        .First();
+
+                    return user;
+                }
+            });
         }
 
         [Route("Logout")]

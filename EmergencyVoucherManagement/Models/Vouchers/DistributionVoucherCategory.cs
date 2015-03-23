@@ -6,7 +6,7 @@ using System.Web;
 
 namespace EmergencyVoucherManagement.Models.Vouchers
 {
-    public class DistributionVoucherCategory:Entity
+    public class DistributionVoucherCategory : TenantEntity
     {
         public DistributionVoucherCategory() {
             IssuedVouchers = 0;

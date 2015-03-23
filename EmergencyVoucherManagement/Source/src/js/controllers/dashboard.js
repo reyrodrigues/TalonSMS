@@ -11,7 +11,7 @@ app.controller('DashboardCtrl', ['breeze', '$scope', '$rootScope', '$http', '$ti
         };
 
         loadDashboard();
-
+        /*
         var hub = new Hub('dashboardHub', {
             //client side methods
             listeners: {
@@ -55,5 +55,5 @@ app.controller('DashboardCtrl', ['breeze', '$scope', '$rootScope', '$http', '$ti
                     );
                 }
             }
-        });
+        });*/
     }]);

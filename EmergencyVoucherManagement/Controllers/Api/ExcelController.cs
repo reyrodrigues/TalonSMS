@@ -13,6 +13,8 @@ using System.Data;
 using System.Net.Http;
 using System.Net;
 using System.Text;
+using System.Data.Entity;
+using EmergencyVoucherManagement.Extensions;
 
 namespace EmergencyVoucherManagement.Controllers
 {
@@ -20,6 +22,7 @@ namespace EmergencyVoucherManagement.Controllers
     [RoutePrefix("api/Excel")]
     public class ExcelController : ApiController
     {
+
         [HttpGet]
         [Route("ExportBeneficiaries")]
         public Task<IHttpActionResult> ExportBeneficiaries()
@@ -91,31 +94,50 @@ namespace EmergencyVoucherManagement.Controllers
                 {
                     ctx.Configuration.LazyLoadingEnabled = false;
                     ctx.Configuration.ProxyCreationEnabled = false;
-                    var allBeneficiaries = ctx.Beneficiaries.ToList();
+                    var allBeneficiaries = ctx.Beneficiaries.AsNoTracking().ToList();
 
-                using (var package = new ExcelPackage(new MemoryStream(fileBytes)))
-                {
-                    if (package.Workbook.Worksheets.Where(s => s.Name == "Beneficiaries").Any())
+                    using (var package = new ExcelPackage(new MemoryStream(fileBytes)))
                     {
-                        var beneficiaries = package.Workbook.Worksheets["Beneficiaries"];
-
-                        var columns = Enumerable.Range(1, beneficiaries.Dimension.End.Column)
-                            .Select(i => (beneficiaries.Cells[1, i].Value??"").ToString())
-                            .ToArray();
-
-                        for (int i = 2; i <= beneficiaries.Dimension.End.Row; i++)
+                        if (package.Workbook.Worksheets.Where(s => s.Name == "Beneficiaries").Any())
                         {
-                            var jBeneficiary = new JObject();
+                            var beneficiaries = package.Workbook.Worksheets["Beneficiaries"];
 
-                            columns.Select((c, z) => new { Index= z, ColumnName =c}).ToList()
-                                .ForEach(o => jBeneficiary.Add(o.ColumnName, JToken.FromObject(beneficiaries.Cells[i, o.Index + 1].Value ?? "")));
+                            var columns = Enumerable.Range(1, beneficiaries.Dimension.End.Column)
+                                .Select(i => (beneficiaries.Cells[1, i].Value ?? "").ToString())
+                                .ToArray();
 
-                            b.AppendLine(JToken.FromObject(jBeneficiary.ToObject<Models.Vouchers.Beneficiary>()).ToString());
-                            b.AppendLine(jBeneficiary.ToString());
+                            for (int i = 2; i <= beneficiaries.Dimension.End.Row; i++)
+                            {
+                                var jBeneficiary = new JObject();
+
+                                columns.Select((c, z) => new { Index = z, ColumnName = c })
+                                    .ToList()
+                                    .ForEach(o => jBeneficiary.Add(o.ColumnName, JToken.FromObject(beneficiaries.Cells[i, o.Index + 1].Value ?? "")));
+
+                                var beneficiaryId = jBeneficiary["Id"].ToObject<int?>();
+                                if (beneficiaryId != null)
+                                {
+                                    var oldBeneficiary = JToken.FromObject(allBeneficiaries.Where(o => o.Id == beneficiaryId.Value).First());
+                                    foreach (var prop in jBeneficiary.Properties())
+                                    {
+
+                                        oldBeneficiary[prop.Name] = prop.Value;
+                                    }
+
+                                    var newBeneficiary = oldBeneficiary.ToObject<Models.Vouchers.Beneficiary>();
+                                    ctx.Beneficiaries.Attach(newBeneficiary);
+                                    ctx.Entry(newBeneficiary).State = EntityState.Modified;
+
+                                    await ctx.SaveChangesAsync();
+                                }
+
+
+                                b.AppendLine(JToken.FromObject(jBeneficiary.ToObject<Models.Vouchers.Beneficiary>()).ToString());
+                                b.AppendLine(jBeneficiary.ToString());
+                            }
+
                         }
-
                     }
-                }
 
                 }
 

@@ -5,7 +5,7 @@ using System.Web;
 
 namespace EmergencyVoucherManagement.Models.Vouchers
 {
-    public class Vendor : Entity
+    public class Vendor : CountryEntity
     {
         public virtual string Name { get; set; }
         public virtual string OwnerName { get; set; }

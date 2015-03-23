@@ -53,10 +53,12 @@ namespace EmergencyVoucherManagement.Controllers
                             orderby v.Beneficiary.Name
                             select v).ToArray();
 
-                items = Enumerable.Repeat(items.First(), 35).ToArray();
                 int pageSize = 12;
                 var pages = new List<dynamic>();
                 var numberOfPages = (int)Math.Ceiling(items.Length / (double)pageSize);
+                if (numberOfPages == 0) {
+                    numberOfPages = 1;
+                }
                 for (int i = 0; i < numberOfPages; i++) {
                     pages.Add(new
                     {

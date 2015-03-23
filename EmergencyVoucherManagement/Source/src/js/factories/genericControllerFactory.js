@@ -203,6 +203,7 @@ angular.module('app')
                       $state.go(settings.editState, { id: ne.entities[0].Id });
                   }).catch(function (error) {
                       toaster.pop('error', gettext('Error'), error);
+                      console.log(arguments);
                   });
               };
           };

@@ -48,10 +48,15 @@ namespace EmergencyVoucherManagement.Models.Admin
 
         public DbSet<Country> Countries { get; set; }
         public DbSet<Organization> Organizations { get; set; }
+        public DbSet<ApplicationUserCountry> ApplicationUserCountries { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ApplicationUserCountry>()
+                .HasRequired(p => p.ApplicationUser)
+                .WithMany(p => p.ApplicationUserCountries);
 
 #if DEBUG
             Database.SetInitializer(new CleanDbInitializer());
@@ -63,25 +68,64 @@ namespace EmergencyVoucherManagement.Models.Admin
     {
         protected override void Seed(AdminContext context)
         {
-            context.Users.Add(new ApplicationUser
-            {
-                UserName = "reynaldor",
-                FullName = "Rey Rodrigues",
-                Email = "reynaldo.rodrigues@rescue.org"
-            });
-
-            context.Organizations.Add(new Organization
+            var ircsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/IRCLogo.svg")));
+            var irc = new Organization
             {
                 Abbreviation = "IRC",
-                Name = "The International Rescue Committee"
-            });
+                Name = "The International Rescue Committee",
+                LogoSVG = ircsLogo
+            };
 
-            context.Countries.Add(new Country
+            var stcsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/STCLogo.svg")));
+            var stc = new Organization
+            {
+                Abbreviation = "Save",
+                Name = "Save The Children",
+                LogoSVG = stcsLogo
+            };
+            var ukraine = new Country
             {
                 Name = "Ukraine",
                 IsoAlpha2 = "UA",
                 IsoAlpha3 = "UKR"
-            });
+            };
+            var unitedStates = new Country
+            {
+                Name = "United States of America",
+                IsoAlpha2 = "US",
+                IsoAlpha3 = "USA"
+            };
+
+            var reynaldor = new ApplicationUser
+            {
+                UserName = "reynaldor",
+                FullName = "Rey Rodrigues",
+                Email = "reynaldo.rodrigues@rescue.org",
+                Organization = irc
+            };
+
+            var uaMembership = new ApplicationUserCountry
+            {
+                Country = ukraine,
+                ApplicationUser = reynaldor
+            };
+
+            var usMembership = new ApplicationUserCountry
+            {
+                Country = unitedStates,
+                ApplicationUser = reynaldor
+            };
+
+
+            context.Users.Add(reynaldor);
+
+            context.Organizations.Add(irc);
+            context.Organizations.Add(stc);
+
+            context.Countries.Add(ukraine);
+
+            context.ApplicationUserCountries.Add(uaMembership);
+            context.ApplicationUserCountries.Add(usMembership);
 
 
             context.SaveChanges();

@@ -6,7 +6,7 @@ using System.Web;
 
 namespace EmergencyVoucherManagement.Models.Vouchers
 {
-    public class Beneficiary: Entity
+    public class Beneficiary: TenantEntity
     {
         public virtual string Name { get; set; }
 

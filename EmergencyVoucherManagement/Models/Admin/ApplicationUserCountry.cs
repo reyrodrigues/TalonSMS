@@ -7,7 +7,7 @@ namespace EmergencyVoucherManagement.Models.Admin
 {
     public class ApplicationUserCountry : Entity
     {
-        public virtual int ApplicationUserId { get; set; }
+        public virtual string ApplicationUserId { get; set; }
         public virtual int CountryId { get; set; }
 
         public virtual ApplicationUser ApplicationUser { get; set; }

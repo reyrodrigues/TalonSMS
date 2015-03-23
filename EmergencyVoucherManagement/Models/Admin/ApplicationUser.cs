@@ -4,6 +4,10 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using System.Xml.Serialization;
+using System.Runtime.Serialization;
 
 namespace EmergencyVoucherManagement.Models.Admin
 {
@@ -14,7 +18,17 @@ namespace EmergencyVoucherManagement.Models.Admin
         public virtual int OrganizationId { get; set; }
 
         public virtual Organization Organization { get; set; }
-        public virtual IEnumerable<ApplicationUserCountry> Countries { get; set; }
+
+        [JsonIgnore, XmlIgnore, IgnoreDataMember]
+        public virtual ICollection<ApplicationUserCountry> ApplicationUserCountries { get; set; }
+
+        public IEnumerable<Country> Countries
+        {
+            get
+            {
+                return this.ApplicationUserCountries.Select(u => u.Country);
+            }
+        }
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager, string authenticationType)
         {

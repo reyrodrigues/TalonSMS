@@ -7,7 +7,7 @@ using System.Web;
 
 namespace EmergencyVoucherManagement.Models.Vouchers
 {
-    public class VoucherTransactionRecord : Entity
+    public class VoucherTransactionRecord : TenantEntity
     {
         public VoucherTransactionRecord() {
             this.CreatedOn = DateTime.UtcNow;
