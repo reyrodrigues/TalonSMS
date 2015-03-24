@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 
-namespace EmergencyVoucherManagement.Extensions
+namespace TalonAdmin.Extensions
 {
     public static class IQueryableExtensions
     {

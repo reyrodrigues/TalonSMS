@@ -3,16 +3,16 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
-using EmergencyVoucherManagement.Models.Vouchers;
-using EmergencyVoucherManagement.Models;
+using TalonAdmin.Models.Vouchers;
+using TalonAdmin.Models;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Text;
 using System.Web;
-using EmergencyVoucherManagement.Models.Admin;
+using TalonAdmin.Models.Admin;
 
-namespace EmergencyVoucherManagement
+namespace TalonAdmin
 {
     // Configure the application user manager used in this application. UserManager is defined in ASP.NET Identity and is used by the application.
 

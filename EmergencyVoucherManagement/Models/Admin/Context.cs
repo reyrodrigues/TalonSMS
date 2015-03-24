@@ -8,7 +8,7 @@ using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Core.Objects;
 using System.ComponentModel.DataAnnotations;
 
-namespace EmergencyVoucherManagement.Models.Admin
+namespace TalonAdmin.Models.Admin
 {
     public class AdminContext : IdentityDbContext<ApplicationUser>
     {

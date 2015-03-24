@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
-namespace EmergencyVoucherManagement.Models.Vouchers
+namespace TalonAdmin.Models.Vouchers
 {
     public class Voucher : TenantEntity
     {
-        public virtual int TypeId { get; set; }
+        public virtual int CategoryId { get; set; }
         public virtual int DistributionId { get; set; }
 
-        /// <summary>
-        /// I'm assuming that the voucher will have currency amounts, but it could be items instead                    
-        /// </summary>
-        public virtual decimal? Value { get; set; }
+        [Index(IsUnique = true), StringLength(30)]
+        public virtual string VoucherCode { get; set; }
 
-        public virtual long VoucherCode { get; set; }
-
-        public virtual VoucherType Type { get; set; }
+        public virtual DistributionVoucherCategory Category { get; set; }
         public virtual Distribution Distribution { get; set; }
-        public virtual VoucherTransactionRecord TransactionRecord { get; set; }
+        public virtual ICollection<VoucherTransactionRecord> TransactionRecords { get; set; }
     }
 }

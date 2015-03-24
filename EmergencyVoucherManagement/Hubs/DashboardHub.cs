@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using Microsoft.AspNet.SignalR;
 
-namespace EmergencyVoucherManagement.Hubs
+namespace TalonAdmin.Hubs
 {
     public class DashboardHub : Hub
     {

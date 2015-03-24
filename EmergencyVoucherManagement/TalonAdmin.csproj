@@ -12,8 +12,8 @@
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EmergencyVoucherManagement</RootNamespace>
-    <AssemblyName>EmergencyVoucherManagement</AssemblyName>
+    <RootNamespace>TalonAdmin</RootNamespace>
+    <AssemblyName>TalonAdmin</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>false</UseIISExpress>
@@ -56,6 +56,12 @@
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.BulkInsert">
+      <HintPath>..\packages\EntityFramework.BulkInsert-ef6.6.0.2.7\lib\Net45\EntityFramework.BulkInsert.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.MappingAPI">
+      <HintPath>..\packages\EntityFramework.MappingAPI.6.0.0.7\lib\net45\EntityFramework.MappingAPI.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -109,6 +115,7 @@
     <Reference Include="System.Spatial, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Spatial.5.6.0\lib\net40\System.Spatial.dll</HintPath>
     </Reference>
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Web.Cors">
       <HintPath>..\packages\Microsoft.AspNet.Cors.5.2.3\lib\net45\System.Web.Cors.dll</HintPath>
     </Reference>
@@ -816,6 +823,7 @@
     <Content Include="Source\src\js\services\adminBackendService.js" />
     <Content Include="Source\src\js\services\multiTenantInterceptorService.js" />
     <Content Include="Source\src\tpl\beneficiaries\bulkEdit.html" />
+    <Content Include="Source\src\tpl\dialogs\importVendors.html" />
     <Content Include="Source\src\tpl\dialogs\importBeneficiaries.html" />
     <Content Include="Source\src\tpl\dialogs\assignToGroup.html" />
     <None Include="Properties\PublishProfiles\EVM.pubxml" />
@@ -935,7 +943,6 @@
     <Content Include="Source\src\tpl\generic\create.html" />
     <Content Include="Source\src\tpl\generic\edit.html" />
     <Content Include="Source\src\tpl\generic\list.html" />
-    <Content Include="Source\src\tpl\includes\vendors_form.html" />
     <Content Include="Source\src\tpl\groups\form.html" />
     <Content Include="Source\src\tpl\page_signin.html" />
     <Content Include="Source\src\tpl\vendors\create.html" />
@@ -956,6 +963,7 @@
     <Content Include="Source\src\tpl\beneficiaries\edit.html" />
     <Content Include="Source\src\tpl\beneficiaries\form.html" />
     <Content Include="Source\src\tpl\beneficiaries\list.html" />
+    <Content Include="Source\src\tpl\vendors\form.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

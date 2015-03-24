@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.OData;
-using EmergencyVoucherManagement.Extensions;
+using TalonAdmin.Extensions;
 
-namespace EmergencyVoucherManagement.Controllers.Api
+namespace TalonAdmin.Controllers.Api
 {
     [Authorize]
     [RoutePrefix("api/Dashboard")]
@@ -35,17 +35,17 @@ namespace EmergencyVoucherManagement.Controllers.Api
             var distributions = ctx.Distributions.FilterCountry(this).FilterOrganization(this)
                 .Select(s => s.Id)
                 .ToArray()
-                .Select(s => new EmergencyVoucherManagement.Models.ViewModels.DashboardSummaryViewModel
+                .Select(s => new TalonAdmin.Models.ViewModels.DashboardSummaryViewModel
             {
                 Distribution = ctx.Distributions.FilterCountry(this).FilterOrganization(this).Where(d => d.Id == s).Take(1).FirstOrDefault(),
                 Location = ctx.Distributions.Include("Location").FilterCountry(this).FilterOrganization(this).Where(d => d.Id == s).Select(d => d.Location).Take(1).FirstOrDefault(),
                 TotalVouchers = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Count(),
-                InactiveVouchers = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecord != null && v.TransactionRecord.Status > 1).Count(),
-                Beneficiaries = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecord != null).Count(),
-                Vendors = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecord != null && v.TransactionRecord.Vendor != null).Select(v => v.TransactionRecord.VendorId).Distinct().Count(),
+                InactiveVouchers = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecords.Any()  && v.TransactionRecords.Where(t=>t.Status > 1).Any()).Count(),
+                Beneficiaries = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecords.Any() ).Count(),
+                Vendors = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecords.Any()  && v.TransactionRecords.Where(t=>t.Vendor != null).Any()).Select(v => v.TransactionRecords.Select(t=>t.VendorId)).SelectMany(r=> r).Distinct().Count(),
                 TotalAmount = ctx.Distributions.FilterCountry(this).FilterOrganization(this).Where(d => d.Id == s).Select(d => d.Categories.Select(c => c.Value.HasValue ? (c.NumberOfVouchers * c.Value) : 0).Sum()).Sum(),
                 IssuedAmount = ctx.Distributions.FilterCountry(this).FilterOrganization(this).Where(d => d.Id == s).Select(d => d.Categories.Select(c => c.Value.HasValue ? (c.IssuedVouchers * c.Value) : 0).Sum()).Sum(),
-                ClaimedAmount = ctx.VoucherTransactionRecords.FilterCountry(this).FilterOrganization(this).Where(d => d.Voucher.DistributionId == s).Where(c => c.Status == 2).Select(d => d.Voucher.Value.HasValue ? d.Voucher.Value : 0m).Sum(),
+                ClaimedAmount = ctx.VoucherTransactionRecords.FilterCountry(this).FilterOrganization(this).Where(d => d.Voucher.DistributionId == s).Where(c => c.Status == 2).Select(d => d.Voucher.Category.Value.HasValue ? d.Voucher.Category.Value : 0m).Sum(),
             });
 
             return distributions;

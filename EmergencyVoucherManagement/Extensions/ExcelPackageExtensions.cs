@@ -6,7 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Web;
 
-namespace EmergencyVoucherManagement.Extensions
+namespace TalonAdmin.Extensions
 {
     public static class ExcelPackageExtensions
     {
@@ -124,7 +124,8 @@ namespace EmergencyVoucherManagement.Extensions
                               where d.DataType == typeof(DateTime) || d.ColumnName.Contains("Date")
                               select d.Ordinal + 1;
 
-            dateColumns.ToList().ForEach(dc => self.Cells[2, dc, self.Dimension.End.Row, dc].Style.Numberformat.Format = "yyyy-dd-mm");
+            if (dataTable.Rows.Count > 0)
+                dateColumns.ToList().ForEach(dc => self.Cells[2, dc, self.Dimension.End.Row, dc].Style.Numberformat.Format = "yyyy-dd-mm");
         }
 
 

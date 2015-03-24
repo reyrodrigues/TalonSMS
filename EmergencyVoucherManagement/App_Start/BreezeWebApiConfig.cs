@@ -1,8 +1,8 @@
 using System.Web.Http;
 
 [assembly: WebActivator.PreApplicationStartMethod(
-    typeof(EmergencyVoucherManagement.App_Start.BreezeWebApiConfig), "RegisterBreezePreStart")]
-namespace EmergencyVoucherManagement.App_Start
+    typeof(TalonAdmin.App_Start.BreezeWebApiConfig), "RegisterBreezePreStart")]
+namespace TalonAdmin.App_Start
 {
     ///<summary>
     /// Inserts the Breeze Web API controller route at the front of all Web API routes

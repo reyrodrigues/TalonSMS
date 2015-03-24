@@ -4,9 +4,9 @@ using System.Linq;
 using Microsoft.Owin;
 using Owin;
 
-[assembly: OwinStartup(typeof(EmergencyVoucherManagement.Startup))]
+[assembly: OwinStartup(typeof(TalonAdmin.Startup))]
 
-namespace EmergencyVoucherManagement
+namespace TalonAdmin
 {
     public partial class Startup
     {

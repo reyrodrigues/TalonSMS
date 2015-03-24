@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace EmergencyVoucherManagement.Models.BindingModels
+namespace TalonAdmin.Models.BindingModels
 {
     public class RemoveUserFromRoleBindingModel
     {

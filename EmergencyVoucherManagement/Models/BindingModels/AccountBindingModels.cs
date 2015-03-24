@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 
-namespace EmergencyVoucherManagement.Models
+namespace TalonAdmin.Models
 {
     // Models used as parameters to AccountController actions.
 

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 
-namespace EmergencyVoucherManagement.Models.Vouchers
+namespace TalonAdmin.Models.Vouchers
 {
     public class Beneficiary: TenantEntity
     {

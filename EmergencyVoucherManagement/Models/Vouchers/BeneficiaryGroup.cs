@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 using System.Web;
 using System.Xml.Serialization;
 
-namespace EmergencyVoucherManagement.Models.Vouchers
+namespace TalonAdmin.Models.Vouchers
 {
     public class BeneficiaryGroup : TenantEntity
     {

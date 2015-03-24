@@ -14,13 +14,13 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
-using EmergencyVoucherManagement.Models.Vouchers;
-using EmergencyVoucherManagement.Providers;
-using EmergencyVoucherManagement.Models;
-using EmergencyVoucherManagement.Models.Admin;
+using TalonAdmin.Models.Vouchers;
+using TalonAdmin.Providers;
+using TalonAdmin.Models;
+using TalonAdmin.Models.Admin;
 using System.Data.Entity;
 
-namespace EmergencyVoucherManagement.Controllers
+namespace TalonAdmin.Controllers
 {
     [Authorize]
     [RoutePrefix("api/Account")]
@@ -56,24 +56,28 @@ namespace EmergencyVoucherManagement.Controllers
 
         [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
         [Route("UserInfo"), HttpGet]
-        public Task<ApplicationUser> UserInfo(string email = null)
+        public Task<IHttpActionResult> UserInfo(string email = null)
         {
-            return Task.Run<ApplicationUser>(() =>
+            return Task.Run<IHttpActionResult>(() =>
             {
                 using (var admin = new Models.Admin.AdminContext())
                 {
                     admin.Configuration.ProxyCreationEnabled = false;
                     admin.Configuration.LazyLoadingEnabled = false;
                     string userId = User.Identity.GetUserId();
+                    if (admin.Users.Where(u => u.Id == userId).Any())
+                    {
+                        var user = admin.Users
+                            .Include("ApplicationUserCountries")
+                            .Include("ApplicationUserCountries.Country")
+                            .Include("Organization")
+                            .Where(u => u.Id == userId)
+                            .First();
 
-                    var user = admin.Users
-                        .Include("ApplicationUserCountries")
-                        .Include("ApplicationUserCountries.Country")
-                        .Include("Organization")
-                        .Where(u => u.Id == userId)
-                        .First();
+                        return Json<ApplicationUser>(user);
+                    }
 
-                    return user;
+                    return BadRequest();
                 }
             });
         }

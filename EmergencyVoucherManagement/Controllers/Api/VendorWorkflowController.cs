@@ -1,4 +1,4 @@
-﻿using EmergencyVoucherManagement.Models.BindingModels;
+﻿using TalonAdmin.Models.BindingModels;
 using Microsoft.AspNet.Identity;
 using Newtonsoft.Json.Linq;
 using System;
@@ -10,8 +10,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
+using System.Transactions;
+using EntityFramework.BulkInsert.Extensions;
+using TalonAdmin.Models.Vouchers;
+using System.Data.Entity;
 
-namespace EmergencyVoucherManagement.Controllers.Api
+namespace TalonAdmin.Controllers.Api
 {
     public static class RandomNumber
     {
@@ -55,37 +59,56 @@ namespace EmergencyVoucherManagement.Controllers.Api
                 }
 
                 var codes = ctx.Vouchers.Select(c => c.VoucherCode).ToArray();
-                var checkSet = new HashSet<long>(codes);
+                int numberOfVouchers = distribution.Categories.Select(c => c.NumberOfVouchers - c.IssuedVouchers).Sum();
+                if (numberOfVouchers < 0)
+                    numberOfVouchers = 0;
 
-                foreach (var category in distribution.Categories.Where(c => c.NumberOfVouchers > c.IssuedVouchers))
+                var checkSet = new HashSet<string>(codes);
+                var allCodes = new HashSet<string>(
+                        Enumerable.Range(0, (int)Math.Pow(10, distribution.VoucherCodeLength))
+                            .AsParallel()
+                            .Select(c => RandomNumber.RandomLong(distribution.VoucherCodeLength).ToString("D" + distribution.VoucherCodeLength))
+                        );
+
+                allCodes = new HashSet<string>(allCodes.Except(checkSet).Take(numberOfVouchers));
+                checkSet = new HashSet<string>(allCodes.Union(checkSet));
+
+                while (allCodes.Count() < numberOfVouchers)
+                {
+                    long curValue = RandomNumber.RandomLong(distribution.VoucherCodeLength);
+                    string stringValue = curValue.ToString("D" + distribution.VoucherCodeLength);
+                    while (checkSet.Contains(stringValue))
+                    {
+                        curValue = RandomNumber.RandomLong(distribution.VoucherCodeLength);
+                        stringValue = curValue.ToString("D" + distribution.VoucherCodeLength);
+                    }
+                    checkSet.Add(stringValue);
+                    allCodes.Add(stringValue);
+                }
+
+                var codeStack = new Stack<string>(allCodes);
+
+                foreach (var category in distribution.Categories.Where(c => c.NumberOfVouchers > c.IssuedVouchers).ToArray())
                 {
                     int typeId = category.TypeId;
                     decimal value = category.Value ?? 0;
 
-                    for (int i = 0; i < category.NumberOfVouchers - category.IssuedVouchers; i++)
-                    {
-                        long curValue = RandomNumber.RandomLong(distribution.VoucherCodeLength);
-                        while (checkSet.Contains(curValue) || curValue < 10001)
+                    var vouchers = Enumerable.Range(0, category.NumberOfVouchers - category.IssuedVouchers).Select((i) =>
+                        new Models.Vouchers.Voucher
                         {
-                            curValue = RandomNumber.RandomLong(distribution.VoucherCodeLength);
-                        }
-                        checkSet.Add(curValue);
-
-                        var voucher = new Models.Vouchers.Voucher
-                        {
-                            TypeId = typeId,
-                            Value = value,
+                            CategoryId = category.Id,
                             DistributionId = distributionId,
-                            VoucherCode = curValue,
+                            VoucherCode = codeStack.Pop(),
                             CountryId = distribution.CountryId,
                             OrganizationId = distribution.OrganizationId
-                        };
+                        }
+                    ).ToArray();
 
-                        ctx.Vouchers.Add(voucher);
-                        ctx.SaveChanges();
-                    };
+                    ctx.BulkInsert(vouchers);
+
                     category.IssuedVouchers = category.NumberOfVouchers;
                 }
+
                 await ctx.SaveChangesAsync();
 
                 return Ok();
@@ -97,10 +120,9 @@ namespace EmergencyVoucherManagement.Controllers.Api
             int beneficiaryId = request.BeneficiaryId;
             int voucherId = request.VoucherId;
 
-            using (var ctx = new Models.Vouchers.Context()) {
-                var beneficiary = ctx.Beneficiaries.Where(b => b.Id == beneficiaryId).First();
-                var voucher = ctx.Vouchers.Where(v => v.Id == voucherId).First();
-                await SendVoucherSms(beneficiary, voucher);
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                await SendVoucherSms(beneficiaryId, voucherId);
             }
 
             return Ok();
@@ -111,7 +133,8 @@ namespace EmergencyVoucherManagement.Controllers.Api
         {
             int voucherId = request.VoucherId;
 
-            using (var ctx = new Models.Vouchers.Context()) {
+            using (var ctx = new Models.Vouchers.Context())
+            {
                 var voucher = ctx.Vouchers.Where(v => v.Id == voucherId).First();
                 SendCancelledVoucher(voucher);
             }
@@ -119,7 +142,7 @@ namespace EmergencyVoucherManagement.Controllers.Api
             return Ok();
         }
 
-        
+
 
         [Route("AssignToGroup")]
         public async Task<IHttpActionResult> AssignToGroup(dynamic request)
@@ -129,61 +152,83 @@ namespace EmergencyVoucherManagement.Controllers.Api
 
             using (var ctx = new Models.Vouchers.Context())
             {
-                var beneficiaries = ctx.Beneficiaries
-                    .Where(b => b.GroupId == groupId);
+                var beneficiaries = await ctx.Beneficiaries
+                            .Include("Group")
+                            .Where(b => b.GroupId == groupId).AsQueryable().ToListAsync();
                 var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
+                var voucherQuery = from v in ctx.Vouchers.AsNoTracking()
+                                   where v.DistributionId == distribution.Id &&
+                                   v.TransactionRecords.Count() == 0
+                                   group v by v.Category into g
+                                   select g;
 
-                foreach (var beneficiary in beneficiaries.ToList())
+                var voucherDictionary = voucherQuery.ToDictionary(k => k.Key, v => v.Take(beneficiaries.Count()));
+                var transactionRecords = new List<VoucherTransactionRecord>();
+
+                foreach (var category in voucherDictionary.Keys)
                 {
-                    foreach (var category in distribution.Categories.ToList())
+                    var voucherStack = new Stack<Voucher>(voucherDictionary[category]);
+                    foreach (var beneficiary in beneficiaries.ToList())
                     {
-                        if (ctx.Vouchers.Where(v => v.DistributionId == distribution.Id &&
-                            v.TypeId == category.TypeId &&
-                            v.Value == category.Value &&
-                            v.TransactionRecord != null &&
-                            v.TransactionRecord.BeneficiaryId == beneficiary.Id &&
-                            v.TransactionRecord.Status != 3).Any())
-                            continue;
+                        if (!voucherStack.Any()) break;
 
+                        var voucher = voucherStack.Pop();
                         var transactionRecord = new Models.Vouchers.VoucherTransactionRecord();
-                        var voucher = ctx.Vouchers.Where(v => v.DistributionId == distribution.Id &&
-                            v.TypeId == category.TypeId &&
-                            v.Value == category.Value &&
-                            v.TransactionRecord == null).First();
+
+                        transactionRecord.Beneficiary = beneficiary;
 
                         transactionRecord.BeneficiaryId = beneficiary.Id;
                         transactionRecord.Status = 0;
-                        voucher.TransactionRecord = transactionRecord;
+                        transactionRecord.VoucherId = voucher.Id;
+                        transactionRecord.Voucher = voucher;
 
-                        ctx.VoucherTransactionRecords.Add(transactionRecord);
-                        await SendVoucherSms(beneficiary, voucher);
 
+                        transactionRecords.Add(transactionRecord);
                     }
-
-                    ctx.BeneficiaryDistributions.Add(new Models.Vouchers.BeneficiaryDistribution
-                    {
-                        BeneficiaryId = beneficiary.Id,
-                        DistributionId = distribution.Id
-                    });
-
-                    await ctx.SaveChangesAsync();
                 }
+
+                ctx.BulkInsert(transactionRecords);
+
+                ctx.BulkInsert(beneficiaries.Select(b =>
+                    new Models.Vouchers.BeneficiaryDistribution
+                    {
+                        BeneficiaryId = b.Id,
+                        DistributionId = distribution.Id
+                    }));
+
+                await ctx.SaveChangesAsync();
+
+                transactionRecords.AsParallel().ForAll( t => {
+                    SendVoucherSms(t.Beneficiary.Id, t.Voucher.Id).ContinueWith((task)=> task.Dispose());
+                });
             }
 
 
             return Ok();
         }
 
-        private async Task SendVoucherSms(Models.Vouchers.Beneficiary beneficiary, Models.Vouchers.Voucher voucher)
+        private async Task SendVoucherSms(int beneficiaryId, int voucherId)
         {
-            dynamic request = new JObject();
+            try
+            {
+                using (var ctx = new Models.Vouchers.Context())
+                {
+                    var beneficiary = ctx.Beneficiaries.Include("Group").Where(b => b.Id == beneficiaryId).First();
+                    var voucher = ctx.Vouchers.Include("Category").Include("Category.Type").Where(b => b.Id == voucherId).First();
 
-            request.MobileNumber = "+" + beneficiary.MobileNumber;
-            request.Name = beneficiary.Name;
-            request.Groups = beneficiary.Group.Name + "," + "Beneficiary";
-            request.Message = String.Format("Your {0} voucher for {1} has been issued: {2}", voucher.Type.Name, voucher.Value, voucher.VoucherCode);
+                    dynamic request = new JObject();
 
-            await Utils.RescueSMSClient.CreateContactAndSendMessageAsync(request);
+                    request.MobileNumber = "+" + beneficiary.MobileNumber;
+                    request.Name = beneficiary.Name;
+                    request.Groups = beneficiary.Group.Name + "," + "Beneficiary";
+                    request.Message = String.Format("Your {0} voucher for {1} has been issued: {2}", voucher.Category.Type.Name, voucher.Category.Value, voucher.VoucherCode);
+
+                    await Utils.RescueSMSClient.CreateContactAndSendMessageAsync(request); 
+                }
+            }
+            catch
+            {
+            }
         }
 
 
@@ -194,14 +239,12 @@ namespace EmergencyVoucherManagement.Controllers.Api
         {
             string[] codes = request.Message.ToString().Split(' ').Where(s => !String.IsNullOrEmpty(s)).ToArray();
             string from = request.From;
-            long voucherCode = 0L;
+            string voucherCode = "";
             var nationalId = "";
 
             if (codes.Length >= 2)
             {
-                if (!Int64.TryParse(codes[codes.Length - 2], out voucherCode))
-                    return BadRequest();
-
+                voucherCode = codes[codes.Length - 2];
                 nationalId = codes[codes.Length - 1];
             }
             else
@@ -222,31 +265,32 @@ namespace EmergencyVoucherManagement.Controllers.Api
                     var vendor = vendorQuery.First();
                     var voucherQuery = from vc in db.Vouchers
                                        where vc.VoucherCode == voucherCode
-                                       && vc.TransactionRecord != null
+                                       && vc.TransactionRecords.Any() 
                                        select vc;
 
                     if (voucherQuery.Count() == 1)
                     {
                         var voucher = voucherQuery.First();
+                        var transactionRecord = voucher.TransactionRecords.First();
 
                         if (voucher.Distribution.Vendors.Count() > 0 &&
                             !voucher.Distribution.Vendors.Where(v => v.VendorId == vendor.Id).Any())
                         {
                             VendorCannotUseVoucher(voucher, vendor);
                         }
-                        else if (voucher.TransactionRecord.Status == 2)
+                        else if (transactionRecord.Status == 2)
                         {
                             VoucherAlreadyUsed(voucher, vendor);
                         }
-                        else if (voucher.TransactionRecord.Status == 3)
+                        else if (transactionRecord.Status == 3)
                         {
                             VoucherCancelled(voucher, vendor);
                         }
-                        else if (voucher.TransactionRecord.Beneficiary.NationalId == nationalId)
+                        else if (transactionRecord.Beneficiary.NationalId == nationalId)
                         {
-                            voucher.TransactionRecord.VendorId = vendor.Id;
-                            voucher.TransactionRecord.Status = 2;
-                            voucher.TransactionRecord.ConfirmationCode = RandomNumber.RandomLong(7);
+                            transactionRecord.VendorId = vendor.Id;
+                            transactionRecord.Status = 2;
+                            transactionRecord.ConfirmationCode = RandomNumber.RandomLong(7);
                             db.SaveChanges();
 
                             ConfirmTransaction(voucher);
@@ -281,8 +325,8 @@ namespace EmergencyVoucherManagement.Controllers.Api
                     "Vendors").Wait();
             });
 
-            string beneficiaryName = voucher.TransactionRecord.Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
+            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
                 Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
@@ -307,8 +351,8 @@ namespace EmergencyVoucherManagement.Controllers.Api
                     "Vendors").Wait();
             });
 
-            string beneficiaryName = voucher.TransactionRecord.Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
+            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
                 Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
@@ -335,7 +379,7 @@ namespace EmergencyVoucherManagement.Controllers.Api
                 var beneficiary = beneficiaryQuery.First();
 
 
-                if (voucher.TransactionRecord != null)
+                if (voucher.TransactionRecords.Any() )
                     return BadRequest("Voucher is being used by another beneficiary");
 
                 var verificationItem = new Models.Vouchers.VoucherTransactionRecord
@@ -354,7 +398,7 @@ namespace EmergencyVoucherManagement.Controllers.Api
         private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
         {
             var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-            context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0}, with the incorrect vocuher type ({1}).", vendor.Name, voucher.Type.Name));
+            context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0}, with the incorrect vocuher type ({1}).", vendor.Name, voucher.Category.Type.Name));
 
             string vendorName = vendor.OwnerName;
             string vendorMobileNumber = vendor.MobileNumber;
@@ -367,8 +411,8 @@ namespace EmergencyVoucherManagement.Controllers.Api
                     "Vendors").Wait();
             });
 
-            string beneficiaryName = voucher.TransactionRecord.Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
+            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
                 Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
@@ -393,9 +437,9 @@ namespace EmergencyVoucherManagement.Controllers.Api
 
         private void SendCancelledVoucher(Models.Vouchers.Voucher voucher)
         {
-            var name = voucher.TransactionRecord.Beneficiary.Name;
+            var name = voucher.TransactionRecords.First().Beneficiary.Name;
             var voucherCode = voucher.VoucherCode;
-            var mobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            var mobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
 
 
             ThreadPool.QueueUserWorkItem((state) =>
@@ -434,9 +478,9 @@ namespace EmergencyVoucherManagement.Controllers.Api
             context.Clients.All.updateDashboard();
 
 
-            string confirmationCode = voucher.TransactionRecord.ConfirmationCode.ToString();
-            string vendorName = voucher.TransactionRecord.Vendor.OwnerName;
-            string vendorMobileNumber = voucher.TransactionRecord.Vendor.MobileNumber;
+            string confirmationCode = voucher.TransactionRecords.First().ConfirmationCode.ToString();
+            string vendorName = voucher.TransactionRecords.First().Vendor.OwnerName;
+            string vendorMobileNumber = voucher.TransactionRecords.First().Vendor.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
                 Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
@@ -446,8 +490,8 @@ namespace EmergencyVoucherManagement.Controllers.Api
                     "Vendors").Wait();
             });
 
-            string beneficiaryName = voucher.TransactionRecord.Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecord.Beneficiary.MobileNumber;
+            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
+            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
                 Utils.RescueSMSClient.CreateContactAndSendMessageAsync(

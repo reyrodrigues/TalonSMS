@@ -8,7 +8,7 @@ using System.Web;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EmergencyVoucherManagement.Utils
+namespace TalonAdmin.Utils
 {
     public static class RescueSMSClient
     {

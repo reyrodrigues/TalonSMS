@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using System.Xml.Serialization;
 using System.Runtime.Serialization;
 
-namespace EmergencyVoucherManagement.Models.Admin
+namespace TalonAdmin.Models.Admin
 {
     public class ApplicationUser : IdentityUser
     {

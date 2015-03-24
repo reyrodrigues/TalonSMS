@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace EmergencyVoucherManagement.Models
+namespace TalonAdmin.Models
 {
     // Models returned by AccountController actions.
 

@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Http;
 using Microsoft.AspNet.Identity;
 
-namespace EmergencyVoucherManagement.Attributes
+namespace TalonAdmin.Attributes
 {
     public class AuthorizeTenantAttribute : AuthorizeAttribute
     {

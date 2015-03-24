@@ -8,7 +8,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 
-namespace EmergencyVoucherManagement.Controllers.Breeze
+namespace TalonAdmin.Controllers.Breeze
 {
     [BreezeController]
     public class AuthController : ApiController
@@ -24,7 +24,7 @@ namespace EmergencyVoucherManagement.Controllers.Breeze
 
 
         [HttpGet]
-        public IQueryable<EmergencyVoucherManagement.Models.Admin.ApplicationUser> Users()
+        public IQueryable<TalonAdmin.Models.Admin.ApplicationUser> Users()
         {
             return _contextProvider.Context.Users;
         }

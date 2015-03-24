@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 
-namespace EmergencyVoucherManagement.ActionResults
+namespace TalonAdmin.ActionResults
 {
     public class FileResult : IHttpActionResult
     {

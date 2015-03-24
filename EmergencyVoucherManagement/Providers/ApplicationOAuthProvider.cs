@@ -9,9 +9,9 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
-using EmergencyVoucherManagement.Models;
+using TalonAdmin.Models;
 
-namespace EmergencyVoucherManagement.Providers
+namespace TalonAdmin.Providers
 {
     public class ApplicationOAuthProvider : OAuthAuthorizationServerProvider
     {

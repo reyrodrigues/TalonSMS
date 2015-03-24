@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
-using EmergencyVoucherManagement.Controllers.Api;
+using TalonAdmin.Controllers.Api;
 using OfficeOpenXml;
-using EmergencyVoucherManagement.ActionResults;
+using TalonAdmin.ActionResults;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using System.Data;
@@ -14,12 +14,12 @@ using System.Net.Http;
 using System.Net;
 using System.Text;
 using System.Data.Entity;
-using EmergencyVoucherManagement.Extensions;
+using TalonAdmin.Extensions;
 using Microsoft.AspNet.Identity;
-using EmergencyVoucherManagement.Models.Vouchers;
+using TalonAdmin.Models.Vouchers;
 using System.Web.Hosting;
 
-namespace EmergencyVoucherManagement.Controllers
+namespace TalonAdmin.Controllers
 {
     //[Authorize]
     [RoutePrefix("api/Excel")]
@@ -98,7 +98,14 @@ namespace EmergencyVoucherManagement.Controllers
                     jsonBeneficiary["Location"] = jsonBeneficiary["Location"].Type != JTokenType.Null ? jsonBeneficiary["Location"]["Name"] : "";
                     jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].Type != JTokenType.Null ? (jsonBeneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
                 }
+
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
+
+                if (beneficiaryQuery.Count() == 0)
+                {
+                    dataTable = JToken.FromObject(new Beneficiary[] { new Beneficiary() }).ToObject<DataTable>();
+                    dataTable.Rows.Clear();
+                }
 
                 dataTable.TableName = "Beneficiaries";
 
@@ -164,7 +171,9 @@ namespace EmergencyVoucherManagement.Controllers
                         {
                             try
                             {
-                                var beneficiaryId = !String.IsNullOrEmpty(jsonBeneficiary["Id"].ToString()) ? jsonBeneficiary["Id"].ToObject<int?>() : null;
+                                var beneficiaryId = jsonBeneficiary.Properties().Where(p=>p.Name=="Id").Any() && 
+                                                        !String.IsNullOrEmpty(jsonBeneficiary["Id"].ToString()) 
+                                                            ? jsonBeneficiary["Id"].ToObject<int?>() : null;
                                 var groupName = jsonBeneficiary["Group"].ToString();
                                 var locationName = jsonBeneficiary["Location"].ToString();
 
@@ -319,11 +328,17 @@ namespace EmergencyVoucherManagement.Controllers
                 }
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
 
-                dataTable.TableName = "Vendors";
+                if (vendorQuery.Count() == 0)
+                {
+                    dataTable = JToken.FromObject(new Vendor[] { new Vendor() }).ToObject<DataTable>();
+                    dataTable.Rows.Clear();
+                }
 
                 // Removing Id Columns because they are parsed later on in the import
                 dataTable.Columns.Remove("LocationId");
                 dataTable.Columns.Remove("CountryId");
+
+                dataTable.TableName = "Vendors";
 
                 return this.File(dataTable.ToExcelSpreadsheet(), "Vendors.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             }
@@ -376,7 +391,9 @@ namespace EmergencyVoucherManagement.Controllers
                         {
                             try
                             {
-                                var vendorId = !String.IsNullOrEmpty(jsonVendor["Id"].ToString()) ? jsonVendor["Id"].ToObject<int?>() : null;
+                                var vendorId = jsonVendor.Properties().Where(p => p.Name == "Id").Any() &&
+                                                        !String.IsNullOrEmpty(jsonVendor["Id"].ToString())
+                                                            ? jsonVendor["Id"].ToObject<int?>() : null;
                                 var locationName = jsonVendor["Location"].ToString();
 
                                 jsonVendor.Remove("Location");
@@ -458,7 +475,7 @@ namespace EmergencyVoucherManagement.Controllers
 
             }
 
-            return response;
+            return Ok<JObject>(response);
         }
     }
 }

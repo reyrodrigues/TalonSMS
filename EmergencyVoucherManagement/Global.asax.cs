@@ -8,7 +8,7 @@ using System.Web.Optimization;
 using System.Web.Routing;
 using TuesPechkin;
 
-namespace EmergencyVoucherManagement
+namespace TalonAdmin
 {
     public class WebApiApplication : System.Web.HttpApplication
     {

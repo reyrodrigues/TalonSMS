@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
-namespace EmergencyVoucherManagement.Controllers
+namespace TalonAdmin.Controllers
 {
     public class ReportController : Controller
     {

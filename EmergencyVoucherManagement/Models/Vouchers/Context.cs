@@ -6,10 +6,12 @@ using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Core.Objects;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Entity.Infrastructure.Annotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 
-namespace EmergencyVoucherManagement.Models.Vouchers
+namespace TalonAdmin.Models.Vouchers
 {
     public class Context : DbContext
     {
@@ -30,7 +32,7 @@ namespace EmergencyVoucherManagement.Models.Vouchers
 
             foreach (var property in properties)
             {
-                
+
                 var dt = property.PropertyType == typeof(DateTime?)
                     ? (DateTime?)property.GetValue(entity, null)
                     : (DateTime)property.GetValue(entity, null);
@@ -49,7 +51,6 @@ namespace EmergencyVoucherManagement.Models.Vouchers
 #if DEBUG
             Database.SetInitializer(new System.Data.Entity.DropCreateDatabaseIfModelChanges<Context>());
 #endif
-
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
                 .WithMany(p => p.Categories);
@@ -59,13 +60,14 @@ namespace EmergencyVoucherManagement.Models.Vouchers
                 .WithMany(p => p.Vendors);
 
             modelBuilder.Entity<Voucher>()
-                .HasOptional(p => p.TransactionRecord)
-                .WithOptionalDependent(p => p.Voucher)
-                .Map(p=>p.MapKey("TransactionRecordId"));
-
-            modelBuilder.Entity<Voucher>()
                 .HasRequired(p => p.Distribution)
-                .WithMany(p => p.Vouchers);
+                .WithMany(p => p.Vouchers)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<VoucherTransactionRecord>()
+                .HasRequired(p => p.Voucher)
+                .WithMany(p => p.TransactionRecords)
+                .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<BeneficiaryDistribution>()
                 .HasRequired(p => p.Beneficiary)

@@ -4,8 +4,23 @@
 <div class="wrapper-md">
     <form class="bs-example form-horizontal form-validation" ng-submit="save()">
         <div class="row">
-            <div class="col-sm-12" ng-include="'tpl/includes/vendors_form.html'" toggle-editing is-editing="isEditing">
+            <div class="col-sm-12" ng-include="'tpl/vendors/form.html'" toggle-editing is-editing="isEditing">
 
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <h1 class="m-n font-thin h4">Voucher History</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-default">
+                    <div class="table-responsive">
+                        <div ng-grid="gridOptionsVoucherTransactionRecords" style="min-height:300px"></div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row">

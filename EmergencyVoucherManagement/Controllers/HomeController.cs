@@ -18,7 +18,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using System.DirectoryServices.AccountManagement;
 
-namespace EmergencyVoucherManagement.Controllers
+namespace TalonAdmin.Controllers
 {
     public class HomeController : Controller
     {
@@ -66,7 +66,7 @@ namespace EmergencyVoucherManagement.Controllers
                         Page = i + 1,
                         IsLastPage = (i + 1) == numberOfPages,
                         Items = items.Skip(i * pageSize).Take(pageSize).ToArray(),
-                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Value).Sum()
+                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Category.Value).Sum()
                     });
                 }
                 var user = UserManager.FindByName(User.Identity.Name);
@@ -82,7 +82,7 @@ namespace EmergencyVoucherManagement.Controllers
                     Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
                     Logo = Convert.ToBase64String(image),
                     LogoMimeType = "image/svg+xml",
-                    Total = items.Select(i=>i.Voucher.Value).Sum()
+                    Total = items.Select(i=>i.Voucher.Category.Value).Sum()
                 };
                 var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
 

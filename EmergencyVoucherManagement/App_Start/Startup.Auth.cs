@@ -8,12 +8,12 @@ using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.Google;
 using Microsoft.Owin.Security.OAuth;
 using Owin;
-using EmergencyVoucherManagement.Providers;
-using EmergencyVoucherManagement.Models.Vouchers;
-using EmergencyVoucherManagement.Models;
-using EmergencyVoucherManagement.Models.Admin;
+using TalonAdmin.Providers;
+using TalonAdmin.Models.Vouchers;
+using TalonAdmin.Models;
+using TalonAdmin.Models.Admin;
 
-namespace EmergencyVoucherManagement
+namespace TalonAdmin
 {
     public partial class Startup
     {

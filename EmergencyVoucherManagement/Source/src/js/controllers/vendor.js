@@ -1,165 +1,108 @@
 ﻿'use strict';
 
-app.controller('VendorRegisterCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', function (breeze, backendService, $scope, $state, $q, locations) {
-    $scope.save = function () {
-        backendService.saveChanges([$scope.entity]).then(function (ne) {
-            $state.go('vendors.edit', { id: ne.entities[0].Id });
-        }).catch(function () {
 
-        });
-    };
-
-    $scope.locations = locations;
-    $scope.isEditing = true;
-    $scope.entity = backendService.createEntity("Vendor");
-}]);
-
-app.controller('VendorEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', 'dialogs',
-    function (breeze, backendService, $scope, $state, $q, locations, dialogs) {
-        $scope.save = function (andContinue) {
-            $scope.isEditing = false;
-
-            backendService.saveChanges([$scope.entity]).then(function () {
-                if (!andContinue)
-                    $state.go('vendors.list');
-            }).catch(function () {
-
-            });
-        };
-        $scope.delete = function () {
-            var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
-            dlg.result.then(function () {
-                console.log(arguments);
-                $scope.entity.entityAspect.setDeleted();
-                $scope.isEditing = false;
-
-                backendService.saveChanges([$scope.entity]).then(function () {
-                    $state.go('vendors.list');
-
-                }).catch(function () {
-
-                });
-
-            });
-        };
-        $scope.startEditing = function () {
-            $scope.isEditing = true;
-        };
-        $scope.endEditing = function () {
-            $scope.isEditing = false;
-        };
-
+app.controller('VendorRegisterCtrl', ['$scope', 'createController', 'locations',
+    function ($scope, createController, locations) {
         $scope.locations = locations;
-        $scope.isEditing = false;
 
-        var query = new breeze.EntityQuery('Vendors')
-            .using(backendService);
-
-
-        query.where("Id", "==", $state.params.id).take(1).execute().then(function (res) {
-            if (res.results) {
-                var entity = res.results[0];
-
-                $scope.entity = entity;
-            }
-        }).catch(function() {
-            console.log(arguments);
+        createController($scope, {
+            entityType: 'Vendor',
+            editState: 'vendors.edit'
         });
     }]);
 
-app.controller('VendorGridCtrl', ['breeze', 'backendService', '$scope', '$http', '$localStorage',
-    function (breeze, backendService, $scope, $http, $localStorage) {
-        $scope.loadGridData = function (pageSize, page) {
-            setTimeout(function () {
-                var data;
+app.controller('VendorEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'backendService',
+    function ($scope, editController, gettext, subGrid, locations, backendService) {
+        $scope.locations = locations;
+        editController($scope, {
+            entityType: 'Vendor',
+            collectionType: 'Vendors',
+        });
 
-                var fields = [];
-                for (var i = 0; i < $scope.gridOptions.sortInfo.fields.length; i++) {
-                    var ordering = $scope.gridOptions.sortInfo.fields[i] + ($scope.gridOptions.sortInfo.directions[i] == "desc" ? " desc" : "");
-
-                    fields.push(ordering);
-                }
-
-                var order = fields.join(',');
-
-                var entityQuery = new breeze.EntityQuery("Vendors")
-                    .orderBy(order)
-                    .skip($localStorage.vendorGridSettings.pageSize * ($localStorage.vendorGridSettings.currentPage - 1))
-                    .take($localStorage.vendorGridSettings.pageSize)
-                    .inlineCount(true)
-                    .using(backendService);
-
-                if ($scope.filter) {
-                    entityQuery = entityQuery.where($scope.filter);
-                }
-                entityQuery
-                    .execute().then(function (res) {
-                        $scope.totalServerItems = res.inlineCount;
-                        $scope.myData = res.results.map(function (r) {
-                            r.ParsedDate = moment(r.DateOfBirth).format('L');
-
-                            return r;
-                        });
-
-                        if (!$scope.$$phase) {
-                            $scope.$apply();
-                        }
-                    }).catch(function () { console.log(arguments); });
-            }, 100);
-        };
-
-        var watchFunction = function () {
-            $localStorage.vendorGridSettings.pageSize = parseInt($scope.pagingOptions.pageSize);
-            $localStorage.vendorGridSettings.currentPage = parseInt($scope.pagingOptions.currentPage);
-            $localStorage.vendorGridSettings.sortInfo = $scope.gridOptions.sortInfo;
-            $scope.loadGridData();
-        };
-
-        if (!angular.isDefined($localStorage.vendorGridSettings)) {
-            $localStorage.vendorGridSettings = {
-                pageSize: 250,
-                currentPage: 1,
-                showingDisabled: false,
-                sortInfo: {
-                    fields: ['Name'],
-                    directions: ['asc']
-                }
-            };
-        }
-
-        $scope.filterOptions = {
-            filterText: "",
-            useExternalFilter: true
-        };
-        $scope.totalServerItems = 0;
-        $scope.showingDisabled = $localStorage.vendorGridSettings.showingDisabled;
-        $scope.filter = $localStorage.vendorGridSettings.filter;
-        $scope.pagingOptions = {
-            pageSizes: [250, 500, 1000],
-            pageSize: $localStorage.vendorGridSettings.pageSize,
-            currentPage: $localStorage.vendorGridSettings.currentPage
-        };
-        $scope.gridOptions = {
-            data: 'myData',
-            enablePaging: true,
-            showFooter: true,
-            rowHeight: 36,
-            headerRowHeight: 36,
-            totalServerItems: 'totalServerItems',
-            sortInfo: $localStorage.vendorGridSettings.sortInfo,
-            pagingOptions: $scope.pagingOptions,
-            filterOptions: $scope.filterOptions,
-            enableRowSelection: false,
-            useExternalSorting: true,
+        subGrid($scope, {
+            collectionType: 'VoucherTransactionRecords',
+            key: 'VendorId',
+            expand: ['Voucher', 'Beneficiary', 'Vendor'],
             columnDefs: [
-                { field: "Name", cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
-                { field: "MobileNumber", displayName: "Mobile Number" },
-                { field: "Location.Name", displayName: "Location" }
+                {
+                    field: "Status", displayName: gettext("Status"),
+                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'
+                },
+                { field: "Beneficiary.Name", displayName: gettext("Beneficiary") },
+                { field: "Voucher.VoucherCode", displayName: gettext("Voucher Code") },
+                { field: "Voucher.Value", displayName: gettext("Value") }
             ]
+        });
+
+        $scope.loadData()
+            .then(function () {
+                $scope.VoucherTransactionRecordsLoadGrid();
+            });
+    }]);
+
+app.controller('VendorGridCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location',
+function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location) {
+    var storageSetting = $state.current.name + 'GridSettings';
+    $scope.showingDisabled = false;
+
+    listController($scope, {
+        collectionType: 'Vendors',
+        expand: ['Location'],
+        columnDefs: [
+            { field: "Name", displayName:gettext("Name"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
+            { field: "MobileNumber", displayName: gettext("Mobile Number") },
+            { field: "Location.Name", displayName: gettext("Location") }
+        ]
+    });
+
+    $scope.exportVendors = function () {
+        var url = serviceBase + 'api/Excel/ExportVendors?countryId=' + $localStorage.country.Id;
+
+        document.location = url;
+    }
+
+    $scope.importVendors = function () {
+        var dlg = dialogs.create('tpl/dialogs/importVendors.html', 'ImportVendorsCtrl');
+        dlg.result.then(function (result) {
+            if (result) {
+                if (!result.Errors.length) {
+                    toaster.pop('success', gettext('Success'), gettext('Vendors successfuly imported.'));
+                } else {
+                    toaster.pop('warning', gettext('Notice'), gettext('Some vendors were not imported correctly.'));
+
+                    result.Errors.forEach(function (e) {
+                        toaster.pop('error', gettext('Error'), gettext('Error importing vendor. Message from server:\n') + e.ErrorText + "\nLine: " + e.Line);
+                    });
+                }
+
+                $scope.loadGridData();
+            }
+        }).catch(function (res) {
+            toaster.pop('error', gettext('Error'), res.data);
+        });
+    };
+
+    $scope.loadGridData();
+}]);
+
+
+app.controller('ImportVendorsCtrl', ['breeze', 'serviceBase', '$scope', '$q', '$modalInstance', '$upload', '$localStorage',
+    function (breeze, serviceBase, $scope, $q, $modalInstance, $upload, $localStorage) {
+        $scope.files = [];
+
+        $scope.upload = function () {
+            console.log(arguments, $scope.files);
+            $scope.uploading = $upload.upload({
+                url: serviceBase + 'api/Excel/ImportVendors?countryId=' + $localStorage.country.Id,
+                file: $scope.files.pop()
+            }).then(function (result) {
+                $modalInstance.close(result.data);
+            }).catch(function () {
+                console.log(arguments);
+            });
         };
 
-        $scope.$watch('pagingOptions', watchFunction, true);
-        $scope.$watch('gridOptions.sortInfo', watchFunction, true);
-
-        $scope.loadGridData();
+        $scope.close = function () {
+            $modalInstance.close(false);
+        };
     }]);

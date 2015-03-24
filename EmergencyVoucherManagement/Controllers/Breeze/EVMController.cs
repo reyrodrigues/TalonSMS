@@ -8,10 +8,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
-using EmergencyVoucherManagement.Extensions;
-using EmergencyVoucherManagement.Attributes;
+using TalonAdmin.Extensions;
+using TalonAdmin.Attributes;
 
-namespace EmergencyVoucherManagement.Controllers.Breeze
+namespace TalonAdmin.Controllers.Breeze
 {
     [BreezeController, AuthorizeTenant]
     public class EVMController : ApiController

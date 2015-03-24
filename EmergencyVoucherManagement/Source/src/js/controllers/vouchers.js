@@ -109,7 +109,7 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
                 var pageSize = parseInt($scope.pagingOptions.pageSize);
                 var currentPage = parseInt($scope.pagingOptions.currentPage);
                 var entityQuery = new breeze.EntityQuery("Vouchers")
-                    .expand(["Type", "TransactionRecord", "TransactionRecord.Beneficiary"])
+                    .expand(["Category.Type", "TransactionRecords", "TransactionRecords.Beneficiary"])
                     .skip(pageSize * (currentPage - 1))
                     .take(pageSize)
                     .inlineCount(true)
@@ -127,6 +127,8 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
                     .execute().then(function (res) {
                         $scope.totalServerItems = res.inlineCount;
                         $scope.vouchers = res.results.map(function (r) {
+                            r.TransactionRecord = r.TransactionRecord.length ? r.TransactionRecord[0] : null;
+
                             return r;
                         });
 
@@ -281,7 +283,7 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
             enableRowSelection: false,
             useExternalSorting: true,
             columnDefs: [
-                { field: "Type.Name", displayName: "Type" },
+                { field: "Category.Type.Name", displayName: "Type" },
                 { field: "VoucherCode", displayName: "Voucher Code" },
                 { field: "Value", displayName: "Value" },
                 { field: "TransactionRecord.Beneficiary.Name", displayName: "Beneficiary" },

@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 
-namespace EmergencyVoucherManagement.Models.Vouchers
+namespace TalonAdmin.Models.Vouchers
 {
     public class VoucherTransactionRecord : TenantEntity
     {
@@ -15,6 +15,7 @@ namespace EmergencyVoucherManagement.Models.Vouchers
 
         public virtual int BeneficiaryId { get; set; }
 
+        public virtual int? VoucherId { get; set; }
         public virtual int? VendorId { get; set; }
 
         public virtual DateTime CreatedOn { get; set; }
