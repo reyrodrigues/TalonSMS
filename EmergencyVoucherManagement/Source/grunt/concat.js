@@ -13,6 +13,7 @@ module.exports = {
         'bower_components/breeze-client/build/breeze.debug.js',
         'bower_components/breeze-client/build/adapters/breeze.bridge.angular.js',
 
+        'bower_components/angular-file-upload/angular-file-upload.min.js',
         'bower_components/angular-animate/angular-animate.js',
         'bower_components/angular-local-storage/dist/angular-local-storage.min.js',
         'bower_components/angular-cookies/angular-cookies.js',
@@ -22,11 +23,11 @@ module.exports = {
         'bower_components/angularjs-toaster/toaster.js',
         'bower_components/ng-grid/build/ng-grid.min.js',
         'bower_components/angular-signalr-hub/signalr-hub.min.js',
+        'bower_components/angular-busy/dist/angular-busy.min.js',
 
         'bower_components/angular-ui-router/release/angular-ui-router.js',
         'bower_components/ngstorage/ngStorage.js',
         'bower_components/angular-ui-utils/ui-utils.js',
-
         'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
 
         'bower_components/oclazyload/dist/ocLazyLoad.js',

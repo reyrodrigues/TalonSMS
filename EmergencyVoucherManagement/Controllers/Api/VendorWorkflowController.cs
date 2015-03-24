@@ -76,7 +76,9 @@ namespace EmergencyVoucherManagement.Controllers.Api
                             TypeId = typeId,
                             Value = value,
                             DistributionId = distributionId,
-                            VoucherCode = curValue
+                            VoucherCode = curValue,
+                            CountryId = distribution.CountryId,
+                            OrganizationId = distribution.OrganizationId
                         };
 
                         ctx.Vouchers.Add(voucher);
@@ -103,6 +105,7 @@ namespace EmergencyVoucherManagement.Controllers.Api
 
             return Ok();
         }
+
         [Route("CancelVoucher")]
         public async Task<IHttpActionResult> CancelVoucher(dynamic request)
         {

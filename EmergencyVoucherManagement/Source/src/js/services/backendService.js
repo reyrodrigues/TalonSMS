@@ -8,7 +8,7 @@ app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', functio
             }
             if (dataProperty.name == 'CountryId') {
                 // Globaly setting Country based on users local storage
-                return  $localStorage.selectedCountry.Id;
+                return $localStorage.country.Id;
             }
             if (dataProperty.name == 'OrganizationId') {
                 // Globaly setting Organization based on users local storage

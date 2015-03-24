@@ -15,6 +15,9 @@ using System.Net;
 using System.Text;
 using System.Data.Entity;
 using EmergencyVoucherManagement.Extensions;
+using Microsoft.AspNet.Identity;
+using EmergencyVoucherManagement.Models.Vouchers;
+using System.Web.Hosting;
 
 namespace EmergencyVoucherManagement.Controllers
 {
@@ -22,132 +25,440 @@ namespace EmergencyVoucherManagement.Controllers
     [RoutePrefix("api/Excel")]
     public class ExcelController : ApiController
     {
-
-        [HttpGet]
-        [Route("ExportBeneficiaries")]
-        public Task<IHttpActionResult> ExportBeneficiaries()
+        /// <summary>
+        /// Simple helper method that validates whether the user trying to run an import and an export has actual permossions to do so
+        /// </summary>
+        private bool ValidateBeneficiaryRequest(int organizationId, int countryId)
         {
-            var result = new Task<IHttpActionResult>(() =>
+            using (var ctx = new Models.Admin.AdminContext())
             {
-                using (var ctx = new Models.Vouchers.Context())
+                var userId = this.RequestContext.Principal.Identity.GetUserId();
+                if (!String.IsNullOrEmpty(userId))
                 {
-                    ctx.Configuration.LazyLoadingEnabled = false;
-                    ctx.Configuration.ProxyCreationEnabled = false;
-
-
-                    var allBeneficiaries = ctx.Beneficiaries.ToList();
-                    var from = JToken.FromObject(allBeneficiaries);
-                    var to = from.ToObject<DataTable>();
-
-                    using (var package = new ExcelPackage())
+                    var user = ctx.Users.Where(u => u.Id == userId).FirstOrDefault();
+                    if (user != null)
                     {
-                        var beneficiaries = package.Workbook.Worksheets.Add("Beneficiaries");
-                        for (int i = 0; i < allBeneficiaries.Count; i++)
-                        {
-                            var beneficiary = allBeneficiaries[i];
-                            beneficiaries.Cells["A1"].LoadFromDataTable(to, true);
-                        }
-                        var outputStream = new MemoryStream();
-                        package.SaveAs(outputStream);
-                        return this.File(outputStream.ToArray(), "Beneficiaries.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+                        return user.Organization.Id == organizationId && user.Countries.Where(c => c.Id == countryId).Any();
                     }
-
                 }
-            });
-            result.Start();
-
-            return result;
+            }
+            return false;
         }
 
-        [Route("ImportBeneficiaries")]
-        public async Task<IHttpActionResult> PostFile()
+        /// <summary>
+        /// Validates the request to make sure the user trying to import the data has the permissions.
+        /// </summary>
+        private bool ValidateVendorRequest(int countryId)
         {
-            HttpRequestMessage request = this.Request;
-            if (!request.Content.IsMimeMultipartContent())
+            using (var ctx = new Models.Admin.AdminContext())
+            {
+                var userId = this.RequestContext.Principal.Identity.GetUserId();
+                if (!String.IsNullOrEmpty(userId))
+                {
+                    var user = ctx.Users.Where(u => u.Id == userId).FirstOrDefault();
+                    if (user != null)
+                    {
+
+                        return user.Countries.Where(c => c.Id == countryId).Any();
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Web Api method that exports all beneficiaries in the database for this organization and country
+        /// </summary>
+        /// <param name="organizationId">Organization Id for the list of beneficiaries</param>
+        /// <param name="countryId">Country of beneficiaries</param>
+        /// <returns>Attachment with Excel Spreadsheet</returns>
+        [HttpGet]
+        [Route("ExportBeneficiaries")]
+        public async Task<IHttpActionResult> ExportBeneficiaries(int organizationId, int countryId)
+        {
+            if (!ValidateBeneficiaryRequest(organizationId, countryId))
+                return BadRequest();
+
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                ctx.Configuration.LazyLoadingEnabled = false;
+                ctx.Configuration.ProxyCreationEnabled = false;
+
+                var beneficiaryQuery = await ctx.Beneficiaries
+                    .Include("Group")
+                    .Include("Location")
+                    .Where(b => b.OrganizationId == organizationId && b.CountryId == countryId)
+                    .ToArrayAsync();
+
+                var jsonBeneficiaries = JToken.FromObject(beneficiaryQuery) as JArray;
+                foreach (var jsonBeneficiary in jsonBeneficiaries)
+                {
+                    jsonBeneficiary["Group"] = jsonBeneficiary["Group"].Type != JTokenType.Null ? jsonBeneficiary["Group"]["Name"] : "";
+                    jsonBeneficiary["Location"] = jsonBeneficiary["Location"].Type != JTokenType.Null ? jsonBeneficiary["Location"]["Name"] : "";
+                    jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].Type != JTokenType.Null ? (jsonBeneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
+                }
+                var dataTable = jsonBeneficiaries.ToObject<DataTable>();
+
+                dataTable.TableName = "Beneficiaries";
+
+                // Removing Id Columns because they are parsed later on in the import
+                dataTable.Columns.Remove("GroupId");
+                dataTable.Columns.Remove("LocationId");
+                dataTable.Columns.Remove("Distributions");
+                dataTable.Columns.Remove("OrganizationId");
+                dataTable.Columns.Remove("CountryId");
+                dataTable.Columns.Remove("WasWelcomeMessageSent");
+                dataTable.Columns.Remove("PIN");
+
+                return this.File(dataTable.ToExcelSpreadsheet(), "Beneficiaries.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+        }
+
+        /// <summary>
+        /// Web Api method that takes in an upload of a spreadsheet with a sheet called beneficiaries and extracts beneficiary data from it.
+        /// </summary>
+        /// <param name="organizationId">Organization Id for the list of beneficiaries</param>
+        /// <param name="countryId">Country of beneficiaries</param>
+        /// <returns>JSON with any import errors in details</returns>
+        [Route("ImportBeneficiaries")]
+        public async Task<IHttpActionResult> ImportBeneficiaries(int organizationId, int countryId)
+        {
+            if (!Request.Content.IsMimeMultipartContent() || !ValidateBeneficiaryRequest(organizationId, countryId))
             {
                 return BadRequest();
             }
 
-            string root = System.Web.HttpContext.Current.Server.MapPath("~/App_Data/uploads");
+            dynamic response = new JObject();
+            response.Errors = new JArray();
+
+            string root = HostingEnvironment.MapPath("~/App_Data/uploads");
             var provider = new MultipartFormDataStreamProvider(root);
-            StringBuilder b = new StringBuilder();
 
             var streamProvider = new MultipartFormDataStreamProvider(root);
             await Request.Content.ReadAsMultipartAsync(streamProvider);
+
             foreach (MultipartFileData fileData in streamProvider.FileData)
             {
-                if (string.IsNullOrEmpty(fileData.Headers.ContentDisposition.FileName))
-                {
-                    return BadRequest("This request is not properly formatted");
-                }
-                string fileName = fileData.Headers.ContentDisposition.FileName;
-                if (fileName.StartsWith("\"") && fileName.EndsWith("\""))
-                {
-                    fileName = fileName.Trim('"');
-                }
-                if (fileName.Contains(@"/") || fileName.Contains(@"\"))
-                {
-                    fileName = Path.GetFileName(fileName);
-                }
                 var fileBytes = File.ReadAllBytes(fileData.LocalFileName);
+
+                // No need to keep the file lying around
+                File.Delete(fileData.LocalFileName);
+
                 using (var ctx = new Models.Vouchers.Context())
                 {
                     ctx.Configuration.LazyLoadingEnabled = false;
                     ctx.Configuration.ProxyCreationEnabled = false;
-                    var allBeneficiaries = ctx.Beneficiaries.AsNoTracking().ToList();
 
-                    using (var package = new ExcelPackage(new MemoryStream(fileBytes)))
+                    var beneficiaryQuery =  await ctx.Beneficiaries.ToListAsync();
+                    var locationQuery = ctx.Locations.Where(l => l.CountryId == countryId);
+                    var groupQuery = ctx.BeneficiaryGroups.Where(g => g.CountryId == countryId && g.OrganizationId == organizationId);
+
+                    var package = new ExcelPackage(new MemoryStream(fileBytes));
+                    var excelData = package.ExtractData();
+                    package.Dispose();
+
+                    if (excelData.ContainsKey("Beneficiaries"))
                     {
-                        if (package.Workbook.Worksheets.Where(s => s.Name == "Beneficiaries").Any())
+                        foreach (var jsonBeneficiary in excelData["Beneficiaries"])
                         {
-                            var beneficiaries = package.Workbook.Worksheets["Beneficiaries"];
-
-                            var columns = Enumerable.Range(1, beneficiaries.Dimension.End.Column)
-                                .Select(i => (beneficiaries.Cells[1, i].Value ?? "").ToString())
-                                .ToArray();
-
-                            for (int i = 2; i <= beneficiaries.Dimension.End.Row; i++)
+                            try
                             {
-                                var jBeneficiary = new JObject();
+                                var beneficiaryId = !String.IsNullOrEmpty(jsonBeneficiary["Id"].ToString()) ? jsonBeneficiary["Id"].ToObject<int?>() : null;
+                                var groupName = jsonBeneficiary["Group"].ToString();
+                                var locationName = jsonBeneficiary["Location"].ToString();
 
-                                columns.Select((c, z) => new { Index = z, ColumnName = c })
-                                    .ToList()
-                                    .ForEach(o => jBeneficiary.Add(o.ColumnName, JToken.FromObject(beneficiaries.Cells[i, o.Index + 1].Value ?? "")));
+                                jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].ToString().Trim().ToLower() == "male" ? 0 : 1;
 
-                                var beneficiaryId = jBeneficiary["Id"].ToObject<int?>();
+
+                                // Removing string fields
+                                jsonBeneficiary.Remove("Group");
+                                jsonBeneficiary.Remove("Location");
+
+                                // Trust no one
+                                jsonBeneficiary.Remove("OrganizationId");
+                                jsonBeneficiary.Remove("CountryId");
+
+                                var isNew = beneficiaryId == null;
+                                Models.Vouchers.Beneficiary beneficiary = null;
+
                                 if (beneficiaryId != null)
+                                    beneficiary = beneficiaryQuery.Where(o => o.Id == beneficiaryId.Value).FirstOrDefault();
+                                else
+                                    beneficiary = new Models.Vouchers.Beneficiary();
+
+                                if (beneficiary == null) throw new Exception("This beneficiary belongs to another organization or another country."); // Something doesn't smell right
+
+                                if (isNew)
                                 {
-                                    var oldBeneficiary = JToken.FromObject(allBeneficiaries.Where(o => o.Id == beneficiaryId.Value).First());
-                                    foreach (var prop in jBeneficiary.Properties())
-                                    {
-
-                                        oldBeneficiary[prop.Name] = prop.Value;
-                                    }
-
-                                    var newBeneficiary = oldBeneficiary.ToObject<Models.Vouchers.Beneficiary>();
-                                    ctx.Beneficiaries.Attach(newBeneficiary);
-                                    ctx.Entry(newBeneficiary).State = EntityState.Modified;
-
-                                    await ctx.SaveChangesAsync();
+                                    jsonBeneficiary["Id"] = 0;
+                                    jsonBeneficiary["CountryId"] = countryId;
+                                    jsonBeneficiary["OrganizationId"] = organizationId;
                                 }
 
 
-                                b.AppendLine(JToken.FromObject(jBeneficiary.ToObject<Models.Vouchers.Beneficiary>()).ToString());
-                                b.AppendLine(jBeneficiary.ToString());
-                            }
+                                jsonBeneficiary.MergeChangesInto(beneficiary);
 
+                                #region Assigning Group
+
+                                BeneficiaryGroup group = null;
+
+                                // If group is filled out, try to find it or create new one
+                                if (!String.IsNullOrEmpty(groupName))
+                                {
+                                    group = groupQuery.Where(g => g.Name.ToLower().Trim() == groupName.Trim().ToLower()).FirstOrDefault();
+
+                                    if (group == null)
+                                    {
+                                        group = new Models.Vouchers.BeneficiaryGroup
+                                        {
+                                            Name = groupName,
+                                            OrganizationId = organizationId,
+                                            CountryId = countryId
+                                        };
+
+                                        ctx.BeneficiaryGroups.Add(group);
+                                    }
+                                }
+                                if (group != null)
+                                {
+                                    beneficiary.Group = group;
+                                    beneficiary.GroupId = group.Id;
+                                }
+                                else
+                                {
+                                    beneficiary.GroupId = null;
+                                    beneficiary.Group = null;
+                                }
+
+                                #endregion
+
+                                #region Assigning Location
+                                Location location = null;
+
+                                // If location is filled out try to find or create new one
+                                if (!String.IsNullOrEmpty(locationName))
+                                {
+                                    location = locationQuery.Where(l => l.Name.ToLower().Trim() == locationName.Trim().ToLower()).FirstOrDefault();
+
+                                    if (location == null)
+                                    {
+                                        location = new Models.Vouchers.Location
+                                        {
+                                            Name = locationName,
+                                            CountryId = countryId
+                                        };
+
+                                        ctx.Locations.Add(location);
+                                    }
+                                }
+
+                                if (location != null)
+                                {
+                                    beneficiary.Location = location;
+                                    beneficiary.LocationId = location.Id;
+                                }
+                                else
+                                {
+                                    beneficiary.Location = null;
+                                    beneficiary.LocationId = null;
+                                }
+
+                                #endregion
+
+                                if(isNew)
+                                {
+                                    ctx.Beneficiaries.Add(beneficiary);
+                                }
+
+                                await ctx.SaveChangesAsync();
+                            }
+                            catch (Exception e)
+                            {
+                                response.Errors.Add(JObject.FromObject(new
+                                {
+                                    ErrorText = e.Message,
+                                    Line = jsonBeneficiary["__RowNumber"]
+                                }));
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            return Ok<JObject>(response);
+        }
+
+        /// <summary>
+        /// Web Api method that exports all vendors in the database for this  country
+        /// </summary>
+        /// <param name="countryId">Country of vendors</param>
+        /// <returns>Attachment with Excel Spreadsheet</returns>
+        [HttpGet]
+        [Route("ExportVendors")]
+        public async Task<IHttpActionResult> ExportVendors(int countryId)
+        {
+            if (!ValidateVendorRequest(countryId))
+                return BadRequest();
+
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                ctx.Configuration.LazyLoadingEnabled = false;
+                ctx.Configuration.ProxyCreationEnabled = false;
+
+                var vendorQuery = await ctx.Vendors
+                    .Include("Location")
+                    .Where(b => b.CountryId == countryId)
+                    .ToArrayAsync();
+
+                var jsonBeneficiaries = JToken.FromObject(vendorQuery) as JArray;
+                foreach (var jsonVendor in jsonBeneficiaries)
+                {
+                    jsonVendor["Location"] = jsonVendor["Location"].Type != JTokenType.Null ? jsonVendor["Location"]["Name"] : "";
+                }
+                var dataTable = jsonBeneficiaries.ToObject<DataTable>();
+
+                dataTable.TableName = "Vendors";
+
+                // Removing Id Columns because they are parsed later on in the import
+                dataTable.Columns.Remove("LocationId");
+                dataTable.Columns.Remove("CountryId");
+
+                return this.File(dataTable.ToExcelSpreadsheet(), "Vendors.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+        }
+
+        /// <summary>
+        /// Web Api methods that allow uses to bulk import and update vendors in the system
+        /// </summary>
+        /// <param name="countryId">Country of vendors</param>
+        /// <returns>JSON with any import errors in details</returns>
+        [Route("ImportVendors")]
+        public async Task<IHttpActionResult> ImportVendors(int countryId)
+        {
+            if (!Request.Content.IsMimeMultipartContent() || !ValidateVendorRequest(countryId))
+            {
+                return BadRequest();
+            }
+
+            dynamic response = new JObject();
+            response.Errors = new JArray();
+
+            string root = HostingEnvironment.MapPath("~/App_Data/uploads");
+            var provider = new MultipartFormDataStreamProvider(root);
+
+            var streamProvider = new MultipartFormDataStreamProvider(root);
+            await Request.Content.ReadAsMultipartAsync(streamProvider);
+
+            foreach (MultipartFileData fileData in streamProvider.FileData)
+            {
+                var fileBytes = File.ReadAllBytes(fileData.LocalFileName);
+
+                // No need to keep the file lying around
+                File.Delete(fileData.LocalFileName);
+
+                using (var ctx = new Models.Vouchers.Context())
+                {
+                    ctx.Configuration.LazyLoadingEnabled = false;
+                    ctx.Configuration.ProxyCreationEnabled = false;
+
+                    var vendorQuery = await ctx.Vendors.Where(v => v.CountryId == countryId).ToListAsync();
+                    var locationQuery = ctx.Locations.Where(l => l.CountryId == countryId);
+
+                    var package = new ExcelPackage(new MemoryStream(fileBytes));
+                    var excelData = package.ExtractData();
+                    package.Dispose();
+
+                    if (excelData.ContainsKey("Vendors"))
+                    {
+                        foreach (var jsonVendor in excelData["Vendors"])
+                        {
+                            try
+                            {
+                                var vendorId = !String.IsNullOrEmpty(jsonVendor["Id"].ToString()) ? jsonVendor["Id"].ToObject<int?>() : null;
+                                var locationName = jsonVendor["Location"].ToString();
+
+                                jsonVendor.Remove("Location");
+
+                                // Trust no one
+                                jsonVendor.Remove("CountryId");
+
+                                var isNew = vendorId == null;
+                                Models.Vouchers.Vendor vendor = null;
+
+                                if (vendorId != null)
+                                    vendor = vendorQuery.Where(o => o.Id == vendorId.Value).FirstOrDefault();
+                                else
+                                    vendor = new Models.Vouchers.Vendor();
+
+                                if (vendor == null) throw new Exception("This vendor is already in another country."); // Something doesn't smell right
+
+                                if (isNew)
+                                {
+                                    jsonVendor["Id"] = 0;
+                                    jsonVendor["CountryId"] = countryId;
+                                }
+
+                                jsonVendor.MergeChangesInto(vendor);
+
+                                #region Assigning Location
+                                Location location = null;
+
+                                // If location is filled out try to find or create new one
+                                if (!String.IsNullOrEmpty(locationName))
+                                {
+                                    location = locationQuery.Where(l => l.Name.ToLower().Trim() == locationName.Trim().ToLower()).FirstOrDefault();
+
+                                    if (location == null)
+                                    {
+                                        location = new Models.Vouchers.Location
+                                        {
+                                            Name = locationName,
+                                            CountryId = countryId
+                                        };
+
+                                        ctx.Locations.Add(location);
+                                    }
+                                }
+
+                                if (location != null)
+                                {
+                                    vendor.Location = location;
+                                    vendor.LocationId = location.Id;
+                                }
+                                else
+                                {
+                                    vendor.Location = null;
+                                    vendor.LocationId = null;
+                                }
+
+
+                                #endregion
+
+                                if (isNew)
+                                {
+                                    ctx.Vendors.Add(vendor);
+                                }
+
+                                await ctx.SaveChangesAsync();
+                            }
+                            catch (Exception e)
+                            {
+                                response.Errors.Add(JObject.FromObject(new
+                                {
+                                    ErrorText = e.Message,
+                                    Line = jsonVendor["__RowNumber"]
+                                }));
+                            }
                         }
                     }
 
                 }
 
-
-                File.Delete(fileData.LocalFileName);
-                //File.Move(fileData.LocalFileName, Path.Combine(root, fileName));
             }
 
-
-            return Ok(b.ToString());
+            return response;
         }
     }
 }

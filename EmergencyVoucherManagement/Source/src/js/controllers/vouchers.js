@@ -5,7 +5,7 @@ app.controller('VoucherDistributionCreateCtrl', ['breeze', 'backendService', '$s
         backendService.saveChanges([$scope.entity]).then(function (ne) {
             $state.go('distributions.edit', { id: ne.entities[0].Id });
         }).catch(function () {
-
+            console.log(arguments);
         });
     };
 

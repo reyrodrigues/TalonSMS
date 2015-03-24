@@ -16,6 +16,7 @@ using TuesPechkin;
 using RazorEngine.Templating;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
+using System.DirectoryServices.AccountManagement;
 
 namespace EmergencyVoucherManagement.Controllers
 {
@@ -109,6 +110,18 @@ namespace EmergencyVoucherManagement.Controllers
             };
 
             return File(WebApiApplication.converter.Convert(document), "application/pdf");
+        }
+
+
+        public ActionResult TestLDAPS()
+        {
+            using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, "ldaps://ldaps.rescue.org:636/", "ou=All Users,dc=theirc,dc=org"))
+            {
+                // validate the credentials
+                bool b = pc.ValidateCredentials("otis", "P@ssw0rd");
+                return Content("TRUE!");
+            }
+
         }
 
         public ActionResult ServerScript()

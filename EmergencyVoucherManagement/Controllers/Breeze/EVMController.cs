@@ -9,10 +9,11 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 using EmergencyVoucherManagement.Extensions;
+using EmergencyVoucherManagement.Attributes;
 
 namespace EmergencyVoucherManagement.Controllers.Breeze
 {
-    [BreezeController]
+    [BreezeController, AuthorizeTenant]
     public class EVMController : ApiController
     {
 

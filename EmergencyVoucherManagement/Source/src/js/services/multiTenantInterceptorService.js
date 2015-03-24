@@ -7,10 +7,10 @@ app.factory('multiTenantInterceptorService', ['$q', '$injector', '$location', '$
 
         config.headers = config.headers || {};
        
-        var selectedCountry = $localStorage.selectedCountry;
+        var country = $localStorage.country;
         var organization = $localStorage.organization;
-        if (selectedCountry && organization) {
-            config.headers['X-Tenant-Country'] = selectedCountry.Id;
+        if (country && organization) {
+            config.headers['X-Tenant-Country'] = country.Id;
             config.headers['X-Tenant-Organization'] = organization.Id;
         }
 

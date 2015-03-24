@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Web;
+using System.Xml.Serialization;
 
 namespace EmergencyVoucherManagement.Models.Vouchers
 {
@@ -9,6 +12,7 @@ namespace EmergencyVoucherManagement.Models.Vouchers
     {
         public virtual string Name { get; set; }
 
+        [JsonIgnore, XmlIgnore, IgnoreDataMember]
         public virtual ICollection<Beneficiary> Beneficiaries { get; set; }
     }
 }

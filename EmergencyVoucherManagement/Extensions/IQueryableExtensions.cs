@@ -20,7 +20,7 @@ namespace EmergencyVoucherManagement.Extensions
             where T : Models.Vouchers.TenantEntity
         {
             int tenantOrganization = Convert.ToInt32(controller.Request.Headers.GetValues("X-Tenant-Organization").First() ?? "0");
-            return queryable.Where(t => t.CountryId == tenantOrganization);
+            return queryable.Where(t => t.OrganizationId == tenantOrganization);
         }
     }
 }

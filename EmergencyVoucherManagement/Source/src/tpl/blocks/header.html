@@ -29,12 +29,12 @@
     <ul class="nav navbar-nav navbar-right">
         <li class=" hidden-sm" ng-if="!availableCountries">
             <div style="padding: 15px 15px 15px 15px">
-                <i class="flag-icon flag-icon-{{myCountry.IsoAlpha2|lowercase}}"></i>&nbsp;{{myCountry.Name}}
+                <i class="flag-icon flag-icon-{{country.IsoAlpha2|lowercase}}"></i>&nbsp;{{country.Name}}
             </div>
         </li>
         <li class="dropdown hidden-sm" ng-if="availableCountries" dropdown>
             <a href class="dropdown-toggle" dropdown-toggle>
-                <i class="flag-icon flag-icon-{{myCountry.IsoAlpha2|lowercase}}"></i>&nbsp;{{myCountry.Name}} <b class="caret"></b>
+                <i class="flag-icon flag-icon-{{country.IsoAlpha2|lowercase}}"></i>&nbsp;{{country.Name}} <b class="caret"></b>
             </a>
             <ul class="dropdown-menu animated fadeInRight w">
                 <li ng-repeat="country in availableCountries">
@@ -56,9 +56,9 @@
             <!-- / dropdown -->
         </li>
         <li class="dropdown" dropdown>
-            <a href class="dropdown-toggle clear" dropdown-toggle>
-                <img src="data:image/svg+xml;base64,{{ myOrganization.LogoSVG }}" style="height: 1em" />&nbsp;
-                <span class="hidden-sm hidden-md">{{ me.FullName }}</span> <b class="caret"></b>
+            <a href class="dropdown-toggle clear" dropdown-toggle ng-if="organization">
+                <img src="data:image/svg+xml;base64,{{ organization.LogoSVG }}" alt="{{ organization.Name}}" style="height: 1em" />&nbsp;
+                <span class="hidden-sm hidden-md">{{ currentUser.FullName }}</span> <b class="caret"></b>
             </a>
             <!-- dropdown -->
             <ul class="dropdown-menu animated fadeInRight w">

@@ -98,6 +98,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
+    <Reference Include="System.DirectoryServices.Protocols" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -243,6 +246,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
     <Compile Include="Controllers\Api\DashboardController.cs" />
     <Compile Include="Controllers\Breeze\AdminController.cs" />
     <Compile Include="Controllers\Breeze\AuthController.cs" />
@@ -812,6 +816,7 @@
     <Content Include="Source\src\js\services\adminBackendService.js" />
     <Content Include="Source\src\js\services\multiTenantInterceptorService.js" />
     <Content Include="Source\src\tpl\beneficiaries\bulkEdit.html" />
+    <Content Include="Source\src\tpl\dialogs\importBeneficiaries.html" />
     <Content Include="Source\src\tpl\dialogs\assignToGroup.html" />
     <None Include="Properties\PublishProfiles\EVM.pubxml" />
     <Content Include="Reports\VendorReceiptReport.cshtml" />

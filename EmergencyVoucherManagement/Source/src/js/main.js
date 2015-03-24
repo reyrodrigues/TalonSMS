@@ -13,27 +13,12 @@ function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings
 
 
     $rootScope.$on('app:authenticated', function () {
-        $http.get(ngAuthSettings.apiServiceBaseUri + 'api/Account/UserInfo')
-        .then(function (userInfo) {
-            $rootScope.me = userInfo.data;
-            $rootScope.myOrganization = $rootScope.me.Organization;
-            $localStorage.organization = $rootScope.me.Organization;
-            if (!$localStorage.selectedCountry) {
-                $localStorage.selectedCountry =  $rootScope.me.Countries[0];
-            }
-            $rootScope.myCountry = $localStorage.selectedCountry;
-
-            if ($rootScope.me.Countries.length > 1)
-                $rootScope.availableCountries = $rootScope.me.Countries;
-            else
-                $rootScope.availableCountries = false;
-        });
     });
 
     $scope.selectCountry = function (country) {
-        if ($rootScope.myCountry.Id != country.Id) {
-            $localStorage.selectedCountry = country
-            $rootScope.myCountry = country;
+        if ($rootScope.country.Id != country.Id) {
+            $localStorage.country = country
+            $rootScope.country = country;
 
             $state.transitionTo('app.dashboard', {}, { reload: true });
         }
@@ -42,6 +27,13 @@ function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings
     $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
         var authData = localStorageService.get('authorizationData');
         if (authData) {
+            authService.loadUserData().then(function () {
+                $rootScope.$emit('app:authenticated');
+            }).catch(function () {
+                var authData = localStorageService.set('authorizationData', null);
+                $state.go('access.signin');
+            });
+
             $rootScope.$emit('app:authenticated');
         }
 
@@ -83,6 +75,7 @@ function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings
 
     $rootScope.logOut = function () {
         authService.logOut();
+        localStorage.clear();
         $state.go('access.signin');
     };
 

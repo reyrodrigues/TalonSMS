@@ -18,7 +18,9 @@ var app = angular.module('app', [
   'dialogs.main',
   'toaster',
   'SignalR',
-  'gettext'
+  'gettext',
+  'angularFileUpload',
+  'cgBusy'
 ]);
 
 app.constant('ngAuthSettings', {

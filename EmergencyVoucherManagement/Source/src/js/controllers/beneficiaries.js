@@ -78,8 +78,8 @@ app.controller('BeneficiaryEditCtrl', ['$scope', 'editController', 'gettext', 's
             });
     }]);
 
-app.controller('BeneficiaryGridCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext',
-    function ($scope, $state, $localStorage, listController, gettext) {
+app.controller('BeneficiaryGridCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster','serviceBase','$location',
+function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location) {
         var storageSetting = $state.current.name + 'GridSettings';
         $scope.showingDisabled = false;
 
@@ -109,9 +109,57 @@ app.controller('BeneficiaryGridCtrl', ['$scope', '$state', '$localStorage', 'lis
             $scope.loadGridData();
         };
 
+        $scope.exportBeneficiaries = function () {
+            var url = serviceBase + 'api/Excel/ExportBeneficiaries?countryId=' + $localStorage.country.Id + '&organizationId=' + $localStorage.organization.Id;
+
+            document.location = url;
+        }
+
+        $scope.importBeneficiaries = function () {
+            var dlg = dialogs.create('tpl/dialogs/importBeneficiaries.html', 'ImportBeneficiariesCtrl');
+            dlg.result.then(function (result) {
+                if (result) {
+                    if (!result.Errors.length) {
+                        toaster.pop('success', gettext('Success'), gettext('Beneficiaries successfuly imported.'));
+                    } else {
+                        toaster.pop('warning', gettext('Notice'), gettext('Some beneficiaries were not imported correctly.'));
+
+                        result.Errors.forEach(function (e) {
+                            toaster.pop('error', gettext('Error'), gettext('Error importing beneficiary. Message from server:\n') + e.ErrorText + "\nLine: " + e.Line);
+                        });
+                    }
+
+                    $scope.loadGridData();
+                }
+            }).catch(function (res) {
+                toaster.pop('error', gettext('Error'), res.data);
+            });
+        };
+
         $scope.loadGridData();
     }]);
 
+
+app.controller('ImportBeneficiariesCtrl', ['breeze', 'serviceBase', '$scope', '$q', '$modalInstance', '$upload', '$localStorage',
+    function (breeze, serviceBase, $scope, $q, $modalInstance, $upload, $localStorage) {
+        $scope.files = [];
+
+        $scope.upload = function () {
+            console.log(arguments, $scope.files);
+            $scope.uploading = $upload.upload({
+                url: serviceBase + 'api/Excel/ImportBeneficiaries?countryId=' + $localStorage.country.Id + '&organizationId=' + $localStorage.organization.Id,
+                file: $scope.files.pop()
+            }).then(function (result) {
+                $modalInstance.close(result.data);
+            }).catch(function () {
+                console.log(arguments);
+            });
+        };
+
+        $scope.close = function () {
+            $modalInstance.close(false);
+        };
+    }]);
 
 app.controller('BeneficiaryBulkEditCtrl', ['$scope', '$state', 'dialogs', 'listController', 'gettext', 'locations', 'backendService', 'toaster',
     function ($scope, $state, dialogs, listController, gettext, locations, backendService, toaster) {

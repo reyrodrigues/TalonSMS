@@ -1,5 +1,6 @@
 ﻿'use strict';
-app.factory('authService', ['$http', '$q', 'localStorageService', 'ngAuthSettings', function ($http, $q, localStorageService, ngAuthSettings) {
+app.factory('authService', ['$http', '$q', 'localStorageService', 'ngAuthSettings', '$localStorage', '$rootScope',
+    function ($http, $q, localStorageService, ngAuthSettings, $localStorage, $rootScope) {
 
     var serviceBase = ngAuthSettings.apiServiceBaseUri;
     var authServiceFactory = {};
@@ -24,6 +25,35 @@ app.factory('authService', ['$http', '$q', 'localStorageService', 'ngAuthSetting
             return response;
         });
 
+    };
+
+    var _loadUserData = function () {
+        var deferred = $q.defer();
+        $http.get(ngAuthSettings.apiServiceBaseUri + 'api/Account/UserInfo')
+        .then(function (userInfo) {
+            $rootScope.currentUser = userInfo.data;
+
+            $rootScope.organization = $rootScope.currentUser.Organization;
+            $localStorage.organization = $rootScope.currentUser.Organization;
+            if (!$localStorage.country) {
+                $localStorage.country = $rootScope.currentUser.Countries[0];
+            }
+
+            $rootScope.country = $localStorage.country;
+
+            if ($rootScope.currentUser.Countries.length > 1)
+                $rootScope.availableCountries = $rootScope.currentUser.Countries;
+            else
+                $rootScope.availableCountries = false;
+
+            deferred.resolve();
+        })
+        .catch(function () {
+            console.log(arguments);
+            deferred.reject(arguments);
+        });
+
+        return deferred.promise;
     };
 
     var _login = function (loginData) {
@@ -165,6 +195,9 @@ app.factory('authService', ['$http', '$q', 'localStorageService', 'ngAuthSetting
     authServiceFactory.obtainAccessToken = _obtainAccessToken;
     authServiceFactory.externalAuthData = _externalAuthData;
     authServiceFactory.registerExternal = _registerExternal;
+    authServiceFactory.loadUserData = _loadUserData;
+
+    
 
     return authServiceFactory;
 }]);
