@@ -226,6 +226,41 @@ angular.module('app')
                   controller: 'GenericCreateCtrl'
               })
 
+              .state('admin.vendorTypes', {
+                  url: '/vendor-types',
+                  abstract: true,
+                  template: '<div ui-view></div>',
+                  resolve: {
+                      settings: function () {
+                          return {
+                              entityType: 'VendorType',
+                              collectionType: 'VendorTypes',
+                              listState: 'admin.vendorTypes.list',
+                              editState: 'admin.vendorTypes.edit',
+                              createState: 'admin.vendorTypes.create',
+                              title: 'Vendor Types',
+                              formTemplate: 'tpl/admin/voucherTypes/form.html'
+                          };
+                      }
+                  }
+              })
+              .state('admin.vendorTypes.list', {
+                  url: '/list',
+                  templateUrl: 'tpl/generic/list.html',
+                  controller: 'GenericGridCtrl'
+              })
+
+              .state('admin.vendorTypes.edit', {
+                  url: '/edit/:id',
+                  templateUrl: 'tpl/generic/edit.html',
+                  controller: 'GenericEditCtrl'
+              })
+              .state('admin.vendorTypes.create', {
+                  url: '/create',
+                  templateUrl: 'tpl/generic/create.html',
+                  controller: 'GenericCreateCtrl'
+              })
+
               .state('vendors', {
                   url: '/vendors',
                   abstract: true,
@@ -234,6 +269,9 @@ angular.module('app')
                       metadata: fetchMetadata,
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
+                      }],
+                      vendorTypes: ['controlledListService', function (controlledListService) {
+                          return controlledListService.getVendorTypes();
                       }],
                       voucherTypes: ['controlledListService', function (controlledListService) {
                           return controlledListService.getVoucherTypes();
@@ -266,6 +304,9 @@ angular.module('app')
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
                       }],
+                      vendorTypes: ['controlledListService', function (controlledListService) {
+                          return controlledListService.getVendorTypes();
+                      }],
                       voucherTypes: ['controlledListService', function (controlledListService) {
                           return controlledListService.getVoucherTypes();
                       }],
@@ -289,6 +330,9 @@ angular.module('app')
                       metadata: fetchMetadata,
                       locations: ['controlledListService', function (controlledListService) {
                           return controlledListService.getLocations();
+                      }],
+                      vendorTypes: ['controlledListService', function (controlledListService) {
+                          return controlledListService.getVendorTypes();
                       }],
                       voucherTypes: ['controlledListService', function (controlledListService) {
                           return controlledListService.getVoucherTypes();

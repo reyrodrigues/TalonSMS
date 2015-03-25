@@ -12,7 +12,9 @@ namespace TalonAdmin.Models.Vouchers
         public virtual string MobileNumber { get; set; }
 
         public virtual int? LocationId { get; set; }
+        public virtual int? TypeId { get; set; }
 
+        public virtual VendorType Type { get; set; }
         public virtual Location Location { get; set; }
     }
 }

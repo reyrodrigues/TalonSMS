@@ -41,7 +41,7 @@ namespace TalonAdmin.Controllers.Api
                 Location = ctx.Distributions.Include("Location").FilterCountry(this).FilterOrganization(this).Where(d => d.Id == s).Select(d => d.Location).Take(1).FirstOrDefault(),
                 TotalVouchers = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Count(),
                 InactiveVouchers = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecords.Any()  && v.TransactionRecords.Where(t=>t.Status > 1).Any()).Count(),
-                Beneficiaries = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecords.Any() ).Count(),
+                Beneficiaries = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecords.Any() ).Select(v=>v.TransactionRecords.Select(r=>r.BeneficiaryId)).SelectMany(r=>r).Distinct().Count(),
                 Vendors = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(d => d.DistributionId == s).Where(v => v.TransactionRecords.Any()  && v.TransactionRecords.Where(t=>t.Vendor != null).Any()).Select(v => v.TransactionRecords.Select(t=>t.VendorId)).SelectMany(r=> r).Distinct().Count(),
                 TotalAmount = ctx.Distributions.FilterCountry(this).FilterOrganization(this).Where(d => d.Id == s).Select(d => d.Categories.Select(c => c.Value.HasValue ? (c.NumberOfVouchers * c.Value) : 0).Sum()).Sum(),
                 IssuedAmount = ctx.Distributions.FilterCountry(this).FilterOrganization(this).Where(d => d.Id == s).Select(d => d.Categories.Select(c => c.Value.HasValue ? (c.IssuedVouchers * c.Value) : 0).Sum()).Sum(),

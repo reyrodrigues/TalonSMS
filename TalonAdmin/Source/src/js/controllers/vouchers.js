@@ -36,8 +36,8 @@ app.controller('AssignToGroupDialogCtrl', ['breeze', 'backendService', '$scope',
         };
     }]);
 
-app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'serviceBase', 'toaster',
-    function (breeze, backendService, $scope, $state, $q, $http, locations, dialogs, voucherTypes, serviceBase, toaster) {
+app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster',
+    function (breeze, backendService, $scope, $state, $q, $http, locations, dialogs, voucherTypes, vendorTypes, serviceBase, toaster) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
@@ -108,8 +108,8 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
                 var order = fields.join(',');
                 var pageSize = parseInt($scope.pagingOptions.pageSize);
                 var currentPage = parseInt($scope.pagingOptions.currentPage);
-                var entityQuery = new breeze.EntityQuery("Vouchers")
-                    .expand(["Category.Type", "TransactionRecords", "TransactionRecords.Beneficiary"])
+                var entityQuery = new breeze.EntityQuery("VoucherTransactionRecords")
+                    .expand(["Voucher", "Voucher.Category.Type", "Beneficiary"])
                     .skip(pageSize * (currentPage - 1))
                     .take(pageSize)
                     .inlineCount(true)
@@ -120,14 +120,13 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
                 }
 
                 entityQuery = entityQuery.where({
-                    "DistributionId": { '==': $scope.entity.Id }
+                    "Voucher.DistributionId": { '==': $scope.entity.Id }
                 });
 
                 entityQuery
                     .execute().then(function (res) {
                         $scope.totalServerItems = res.inlineCount;
                         $scope.vouchers = res.results.map(function (r) {
-                            r.TransactionRecord = r.TransactionRecord.length ? r.TransactionRecord[0] : null;
 
                             return r;
                         });
@@ -260,6 +259,7 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
         };
         $scope.locations = locations;
         $scope.voucherTypes = voucherTypes;
+        $scope.vendorTypes = vendorTypes;
         $scope.isEditing = false;
         $scope.vouchers = [];
         $scope.pagingOptions = {
@@ -283,19 +283,19 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
             enableRowSelection: false,
             useExternalSorting: true,
             columnDefs: [
-                { field: "Category.Type.Name", displayName: "Type" },
-                { field: "VoucherCode", displayName: "Voucher Code" },
-                { field: "Value", displayName: "Value" },
-                { field: "TransactionRecord.Beneficiary.Name", displayName: "Beneficiary" },
+                { field: "Voucher.Category.Type.Name", displayName: "Type" },
+                { field: "Voucher.VoucherCode", displayName: "Voucher Code" },
+                { field: "Voucher.Value", displayName: "Value" },
+                { field: "Beneficiary.Name", displayName: "Beneficiary" },
                 {
-                    field: "TransactionRecord.Status", displayName: "Status",
+                    field: "Status", displayName: "Status", sortable: false,
                     cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'
                 },
                 {
                     field: "Id",
                     displayName: "Actions",
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><div ng-if="row.getProperty(\'TransactionRecord.Status\') < 2"><a href ng-click="cancelVoucher(row.getProperty(\'Id\'))">Cancel Voucher</a>&nbsp;|&nbsp;' +
-                        '<a href ng-click="resendVoucher(row.getProperty(\'Id\'), row.getProperty(\'TransactionRecord.BeneficiaryId\'))">Resend Voucher</a></div>'
+                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><div ng-if="row.getProperty(\'Status\') < 2"><a href ng-click="cancelVoucher(row.getProperty(\'Voucher.Id\'))">Cancel Voucher</a>&nbsp;|&nbsp;' +
+                        '<a href ng-click="resendVoucher(row.getProperty(\'Voucher.Id\'), row.getProperty(\'BeneficiaryId\'))">Resend Voucher</a></div>'
                 }
             ]
         };

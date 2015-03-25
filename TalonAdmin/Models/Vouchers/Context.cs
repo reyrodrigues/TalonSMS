@@ -55,10 +55,6 @@ namespace TalonAdmin.Models.Vouchers
                 .HasRequired(p => p.Distribution)
                 .WithMany(p => p.Categories);
 
-            modelBuilder.Entity<DistributionVendor>()
-                .HasRequired(p => p.Distribution)
-                .WithMany(p => p.Vendors);
-
             modelBuilder.Entity<Voucher>()
                 .HasRequired(p => p.Distribution)
                 .WithMany(p => p.Vouchers)
@@ -83,12 +79,12 @@ namespace TalonAdmin.Models.Vouchers
         }
 
         public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<VendorType> VendorTypes { get; set; }
         public DbSet<Beneficiary> Beneficiaries { get; set; }
         public DbSet<BeneficiaryGroup> BeneficiaryGroups { get; set; }
         public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Distribution> Distributions { get; set; }
-        public DbSet<DistributionVendor> DistributionVendors { get; set; }
         public DbSet<DistributionVoucherCategory> DistributionVoucherCategories { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<VoucherType> VoucherTypes { get; set; }

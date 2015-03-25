@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalonAdmin", "TalonAdmin\TalonAdmin.csproj", "{8800B9C7-8F74-4D19-A2F0-35EBE57143B5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalonAdmin.Tests", "TalonAdmin.Tests\TalonAdmin.Tests.csproj", "{3BD7CA1E-065F-4BFC-9B3F-DE1CE6710D72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,12 @@ Global
 		{8800B9C7-8F74-4D19-A2F0-35EBE57143B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8800B9C7-8F74-4D19-A2F0-35EBE57143B5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8800B9C7-8F74-4D19-A2F0-35EBE57143B5}.Release|x86.ActiveCfg = Release|Any CPU
+		{3BD7CA1E-065F-4BFC-9B3F-DE1CE6710D72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BD7CA1E-065F-4BFC-9B3F-DE1CE6710D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BD7CA1E-065F-4BFC-9B3F-DE1CE6710D72}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3BD7CA1E-065F-4BFC-9B3F-DE1CE6710D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BD7CA1E-065F-4BFC-9B3F-DE1CE6710D72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BD7CA1E-065F-4BFC-9B3F-DE1CE6710D72}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

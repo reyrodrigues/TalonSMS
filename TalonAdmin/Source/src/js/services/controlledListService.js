@@ -36,6 +36,18 @@ app.factory('controlledListService', ['breeze', 'backendService', '$q', function
            });
 
             return deferred.promise;
+        },
+        getVendorTypes: function () {
+            var deferred = $q.defer();
+            new breeze.EntityQuery("VendorTypes")
+           .using(backendService)
+           .noTracking()
+           .execute()
+           .then(function (res) {
+               deferred.resolve(res.results);
+           });
+
+            return deferred.promise;
         }
 
     };

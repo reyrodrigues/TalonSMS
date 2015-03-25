@@ -263,6 +263,7 @@
     <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Extensions\ExcelPackageExtensions.cs" />
     <Compile Include="Extensions\IQueryableExtensions.cs" />
+    <Compile Include="Extensions\JsonExtensions.cs" />
     <Compile Include="Hubs\DashboardHub.cs" />
     <Compile Include="Models\Admin\ApplicationUserCountry.cs" />
     <Compile Include="Models\Admin\Context.cs" />
@@ -278,18 +279,19 @@
     </Compile>
     <Compile Include="Models\BindingModels\AccountBindingModels.cs" />
     <Compile Include="Models\BindingModels\AssignVoucherBidingModel.cs" />
-    <Compile Include="Models\Vouchers\DistributionVendor.cs" />
     <Compile Include="Models\ViewModels\AccountViewModels.cs" />
     <Compile Include="Models\Vouchers\Beneficiary.cs" />
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryDistribution.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryGroup.cs" />
     <Compile Include="Models\Vouchers\Context.cs" />
+    <Compile Include="Models\Vouchers\DistributionLog.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\Distribution.cs" />
     <Compile Include="Models\Entity.cs" />
     <Compile Include="Models\Vouchers\CountryEntity.cs" />
     <Compile Include="Models\Vouchers\TenantEntity.cs" />
+    <Compile Include="Models\Vouchers\VendorType.cs" />
     <Compile Include="Models\Vouchers\VoucherType.cs" />
     <Compile Include="Models\Vouchers\Location.cs" />
     <Compile Include="Models\Vouchers\Vendor.cs" />
@@ -822,6 +824,7 @@
     <Content Include="Source\src\js\services\authBackendService.js" />
     <Content Include="Source\src\js\services\adminBackendService.js" />
     <Content Include="Source\src\js\services\multiTenantInterceptorService.js" />
+    <Content Include="Source\src\tpl\admin\vendorTypes\form.html" />
     <Content Include="Source\src\tpl\beneficiaries\bulkEdit.html" />
     <Content Include="Source\src\tpl\dialogs\importVendors.html" />
     <Content Include="Source\src\tpl\dialogs\importBeneficiaries.html" />

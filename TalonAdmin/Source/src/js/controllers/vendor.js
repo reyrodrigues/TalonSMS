@@ -1,9 +1,10 @@
 ﻿'use strict';
 
 
-app.controller('VendorRegisterCtrl', ['$scope', 'createController', 'locations',
-    function ($scope, createController, locations) {
+app.controller('VendorRegisterCtrl', ['$scope', 'createController', 'locations', 'vendorTypes',
+    function ($scope, createController, locations, vendorTypes) {
         $scope.locations = locations;
+        $scope.vendorTypes = vendorTypes;
 
         createController($scope, {
             entityType: 'Vendor',
@@ -11,9 +12,10 @@ app.controller('VendorRegisterCtrl', ['$scope', 'createController', 'locations',
         });
     }]);
 
-app.controller('VendorEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'backendService',
-    function ($scope, editController, gettext, subGrid, locations, backendService) {
+app.controller('VendorEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'vendorTypes', 'backendService',
+    function ($scope, editController, gettext, subGrid, locations, vendorTypes, backendService) {
         $scope.locations = locations;
+        $scope.vendorTypes = vendorTypes;
         editController($scope, {
             entityType: 'Vendor',
             collectionType: 'Vendors',

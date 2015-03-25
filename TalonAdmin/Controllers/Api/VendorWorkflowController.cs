@@ -14,6 +14,7 @@ using System.Transactions;
 using EntityFramework.BulkInsert.Extensions;
 using TalonAdmin.Models.Vouchers;
 using System.Data.Entity;
+using System.Diagnostics;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -181,6 +182,8 @@ namespace TalonAdmin.Controllers.Api
                         transactionRecord.Status = 0;
                         transactionRecord.VoucherId = voucher.Id;
                         transactionRecord.Voucher = voucher;
+                        transactionRecord.OrganizationId = voucher.OrganizationId;
+                        transactionRecord.CountryId = voucher.CountryId;
 
 
                         transactionRecords.Add(transactionRecord);
@@ -198,9 +201,10 @@ namespace TalonAdmin.Controllers.Api
 
                 await ctx.SaveChangesAsync();
 
-                transactionRecords.AsParallel().ForAll( t => {
-                    SendVoucherSms(t.Beneficiary.Id, t.Voucher.Id).ContinueWith((task)=> task.Dispose());
-                });
+                foreach (var tr in transactionRecords)
+                {
+                    await SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id).ContinueWith(t=>Debug.WriteLine(t.Exception != null ?  t.Exception.Message : ""));
+                }
             }
 
 
@@ -273,8 +277,8 @@ namespace TalonAdmin.Controllers.Api
                         var voucher = voucherQuery.First();
                         var transactionRecord = voucher.TransactionRecords.First();
 
-                        if (voucher.Distribution.Vendors.Count() > 0 &&
-                            !voucher.Distribution.Vendors.Where(v => v.VendorId == vendor.Id).Any())
+                        if (voucher.Category.VendorTypeId != null &&
+                            voucher.Category.VendorTypeId != vendor.TypeId)
                         {
                             VendorCannotUseVoucher(voucher, vendor);
                         }

@@ -19,8 +19,11 @@ namespace TalonAdmin.Models.Vouchers
         public virtual int NumberOfVouchers { get; set; }
         public virtual decimal? Value { get; set; }
 
+        public virtual int? VendorTypeId { get; set; }
+
         public virtual Distribution Distribution { get; set; }
         public virtual VoucherType Type { get; set; }
+        public virtual VendorType VendorType { get; set; }
 
         [DefaultValue(0)]
         public virtual int IssuedVouchers { get; set; }

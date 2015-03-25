@@ -64,11 +64,15 @@ namespace TalonAdmin.Models.Admin
         }
     }
 
-    public class CleanDbInitializer : DropCreateDatabaseAlways<AdminContext>
+    public class CleanDbInitializer : DropCreateDatabaseIfModelChanges<AdminContext>
     {
         protected override void Seed(AdminContext context)
         {
-            var ircsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/IRCLogo.svg")));
+            string ircsLogo = "";
+            if (HttpContext.Current != null)
+            {
+                ircsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/IRCLogo.svg")));
+            }
             var irc = new Organization
             {
                 Abbreviation = "IRC",
@@ -76,7 +80,11 @@ namespace TalonAdmin.Models.Admin
                 LogoSVG = ircsLogo
             };
 
-            var stcsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/STCLogo.svg")));
+            string stcsLogo = "";
+            if (HttpContext.Current != null)
+            {
+                stcsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/STCLogo.svg")));
+            }
             var stc = new Organization
             {
                 Abbreviation = "Save",

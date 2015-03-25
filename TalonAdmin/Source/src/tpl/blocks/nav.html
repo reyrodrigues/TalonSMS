@@ -34,12 +34,13 @@
                     <span translate>Register</span>
                 </a>
             </li>
-
+            <!-- 
             <li ui-sref-active="active">
                 <a ui-sref="beneficiaries.bulkEdit" href="#">
                     <span translate>Assign Group</span>
                 </a>
             </li>
+                -->
         </ul>
     </li>
     <li ng-class="{active:$state.includes('groups')}">
@@ -95,6 +96,33 @@
             <li ui-sref-active="active">
                 <a ui-sref="vendors.create" href="#">
                     <span translate>Register</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-class="{active:$state.includes('admin.vendorTypes')}">
+        <a href="" class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="fa fa-building-o text-success-lter"></i>
+            <span translate>Types</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href="">
+                    <span translate>Types</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.vendorTypes.list" href="#">
+                    <span translate>List</span>
+                </a>
+            </li>
+            <li ui-sref-active="active">
+                <a ui-sref="admin.vendorTypes.create" href="#">
+                    <span translate>Create</span>
                 </a>
             </li>
         </ul>

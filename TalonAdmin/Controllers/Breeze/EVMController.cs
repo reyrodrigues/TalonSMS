@@ -13,7 +13,7 @@ using TalonAdmin.Attributes;
 
 namespace TalonAdmin.Controllers.Breeze
 {
-    [BreezeController, AuthorizeTenant]
+    [BreezeController, AuthorizeTenant, EnableBreezeQuery(MaxExpansionDepth = 5)]
     public class EVMController : ApiController
     {
 
@@ -62,14 +62,6 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
-        public IQueryable<Models.Vouchers.DistributionVendor> DistributionVendors()
-        {
-            return _contextProvider.Context.DistributionVendors
-                .FilterCountry(this)
-                .FilterOrganization(this);
-        }
-
-        [HttpGet]
         public IQueryable<Models.Vouchers.DistributionVoucherCategory> DistributionVoucherCategories()
         {
             return _contextProvider.Context.DistributionVoucherCategories
@@ -88,6 +80,13 @@ namespace TalonAdmin.Controllers.Breeze
         public IQueryable<Models.Vouchers.Vendor> Vendors()
         {
             return _contextProvider.Context.Vendors
+                .FilterCountry(this);
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.VendorType> VendorTypes()
+        {
+            return _contextProvider.Context.VendorTypes
                 .FilterCountry(this);
         }
 

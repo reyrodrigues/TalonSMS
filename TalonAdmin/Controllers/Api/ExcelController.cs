@@ -171,13 +171,11 @@ namespace TalonAdmin.Controllers
                         {
                             try
                             {
-                                var beneficiaryId = jsonBeneficiary.Properties().Where(p=>p.Name=="Id").Any() && 
-                                                        !String.IsNullOrEmpty(jsonBeneficiary["Id"].ToString()) 
-                                                            ? jsonBeneficiary["Id"].ToObject<int?>() : null;
-                                var groupName = jsonBeneficiary["Group"].ToString();
-                                var locationName = jsonBeneficiary["Location"].ToString();
+                                var beneficiaryId = jsonBeneficiary.PropertyValueIfExists<int?>("Id");
+                                var groupName = jsonBeneficiary.PropertyValueIfExists<string>("Group");
+                                var locationName = jsonBeneficiary.PropertyValueIfExists<string>("Location");
 
-                                jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].ToString().Trim().ToLower() == "male" ? 0 : 1;
+                                jsonBeneficiary["Sex"] = (jsonBeneficiary.PropertyValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
 
 
                                 // Removing string fields
@@ -318,6 +316,7 @@ namespace TalonAdmin.Controllers
 
                 var vendorQuery = await ctx.Vendors
                     .Include("Location")
+                    .Include("Type")
                     .Where(b => b.CountryId == countryId)
                     .ToArrayAsync();
 
@@ -325,6 +324,7 @@ namespace TalonAdmin.Controllers
                 foreach (var jsonVendor in jsonBeneficiaries)
                 {
                     jsonVendor["Location"] = jsonVendor["Location"].Type != JTokenType.Null ? jsonVendor["Location"]["Name"] : "";
+                    jsonVendor["Type"] = jsonVendor["Type"].Type != JTokenType.Null ? jsonVendor["Type"]["Name"] : "";
                 }
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
 
@@ -337,6 +337,7 @@ namespace TalonAdmin.Controllers
                 // Removing Id Columns because they are parsed later on in the import
                 dataTable.Columns.Remove("LocationId");
                 dataTable.Columns.Remove("CountryId");
+                dataTable.Columns.Remove("TypeId");
 
                 dataTable.TableName = "Vendors";
 
@@ -380,6 +381,7 @@ namespace TalonAdmin.Controllers
 
                     var vendorQuery = await ctx.Vendors.Where(v => v.CountryId == countryId).ToListAsync();
                     var locationQuery = ctx.Locations.Where(l => l.CountryId == countryId);
+                    var vendorTypeQuery = ctx.VendorTypes.Where(l => l.CountryId == countryId);
 
                     var package = new ExcelPackage(new MemoryStream(fileBytes));
                     var excelData = package.ExtractData();
@@ -391,12 +393,12 @@ namespace TalonAdmin.Controllers
                         {
                             try
                             {
-                                var vendorId = jsonVendor.Properties().Where(p => p.Name == "Id").Any() &&
-                                                        !String.IsNullOrEmpty(jsonVendor["Id"].ToString())
-                                                            ? jsonVendor["Id"].ToObject<int?>() : null;
-                                var locationName = jsonVendor["Location"].ToString();
+                                var vendorId = jsonVendor.PropertyValueIfExists<int?>("Id");
+                                var locationName = jsonVendor.PropertyValueIfExists<string>("Location");
+                                var typeName = jsonVendor.PropertyValueIfExists<string>("Type");
 
                                 jsonVendor.Remove("Location");
+                                jsonVendor.Remove("Type");
 
                                 // Trust no one
                                 jsonVendor.Remove("CountryId");
@@ -448,6 +450,40 @@ namespace TalonAdmin.Controllers
                                 {
                                     vendor.Location = null;
                                     vendor.LocationId = null;
+                                }
+
+
+                                #endregion
+
+                                #region Assigning Type
+                                VendorType type = null;
+
+                                // If location is filled out try to find or create new one
+                                if (!String.IsNullOrEmpty(locationName))
+                                {
+                                    type = vendorTypeQuery.Where(l => l.Name.ToLower().Trim() == locationName.Trim().ToLower()).FirstOrDefault();
+
+                                    if (type == null)
+                                    {
+                                        type = new Models.Vouchers.VendorType
+                                        {
+                                            Name = typeName,
+                                            CountryId = countryId
+                                        };
+
+                                        ctx.VendorTypes.Add(type);
+                                    }
+                                }
+
+                                if (type != null)
+                                {
+                                    vendor.Type = type;
+                                    vendor.TypeId = type.Id;
+                                }
+                                else
+                                {
+                                    vendor.Type = null;
+                                    vendor.TypeId = null;
                                 }
 
 
