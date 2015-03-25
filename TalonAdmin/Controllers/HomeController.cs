@@ -128,7 +128,11 @@ namespace TalonAdmin.Controllers
         {
             StringBuilder content = new StringBuilder();
 
-            content.AppendFormat("window.BaseUrl = '{0}/'\n", Request.ApplicationPath);
+            var appPath = Request.ApplicationPath;
+            if (appPath == "/")
+                appPath = "";
+
+            content.AppendFormat("window.BaseUrl = '{0}/'\n", appPath);
 
 
             return Content(content.ToString());
