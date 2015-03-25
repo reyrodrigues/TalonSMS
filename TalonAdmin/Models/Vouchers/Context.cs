@@ -85,6 +85,7 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Distribution> Distributions { get; set; }
+        public DbSet<DistributionLog> DistributionLogs { get; set; }
         public DbSet<DistributionVoucherCategory> DistributionVoucherCategories { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<VoucherType> VoucherTypes { get; set; }

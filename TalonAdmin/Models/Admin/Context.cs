@@ -95,13 +95,17 @@ namespace TalonAdmin.Models.Admin
             {
                 Name = "Ukraine",
                 IsoAlpha2 = "UA",
-                IsoAlpha3 = "UKR"
+                IsoAlpha3 = "UKR",
+                CurrencyIsoCode = "UAH",
+                CurrencyUnicodeSymbol = "₴"
             };
             var unitedStates = new Country
             {
                 Name = "United States of America",
                 IsoAlpha2 = "US",
-                IsoAlpha3 = "USA"
+                IsoAlpha3 = "USA",
+                CurrencyIsoCode = "USD",
+                CurrencyUnicodeSymbol = "$"
             };
 
             var reynaldor = new ApplicationUser

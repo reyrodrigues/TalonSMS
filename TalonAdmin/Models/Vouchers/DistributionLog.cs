@@ -8,5 +8,10 @@ namespace TalonAdmin.Models.Vouchers
     public class DistributionLog : TenantEntity
     {
         public virtual int DistributionId { get; set; }
+        public virtual DateTime DateTime { get; set; }
+        public virtual int AffectedBeneficiaries { get; set; }
+
+
+        public virtual Distribution Distribution { get; set; }
     }
 }

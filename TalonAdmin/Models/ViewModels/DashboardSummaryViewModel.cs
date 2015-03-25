@@ -9,7 +9,7 @@ namespace TalonAdmin.Models.ViewModels
     {
         public Models.Vouchers.Distribution Distribution { get; set; }
         public int TotalVouchers { get; set; }
-        public int InactiveVouchers { get; set; }
+        public int VouchersUsed { get; set; }
 
         public int Beneficiaries { get; set; }
 

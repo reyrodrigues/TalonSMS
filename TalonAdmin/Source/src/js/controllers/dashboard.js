@@ -11,18 +11,18 @@ app.controller('DashboardCtrl', ['breeze', '$scope', '$rootScope', '$http', '$ti
         };
 
         loadDashboard();
-        /*
-        var hub = new Hub('dashboardHub', {
+
+        window.loadDashboard = loadDashboard;
+
+        if(!window.dashboardHub) {
+            window.dashboardHub = new Hub('dashboardHub', {
             //client side methods
             listeners: {
                 'message': function (type, title, message) {
-                    console.log(arguments);
                     toaster.pop(type, title, message);
                 },
                 'updateDashboard': function () {
-                    console.log(arguments);
-
-                    loadDashboard();
+                    window.loadDashboard();
                     $rootScope.$apply();
                 }
             },
@@ -49,11 +49,14 @@ app.controller('DashboardCtrl', ['breeze', '$scope', '$rootScope', '$http', '$ti
                         else {
                         }
                     })
-                        .fail(function (reason) {
-                            console.log(reason);
-                        }
-                    );
+                    .fail(function (reason) {
+                        console.log(reason);
+                    });
                 }
             }
-        });*/
+            });
+        }
+        /*
+        
+        */
     }]);

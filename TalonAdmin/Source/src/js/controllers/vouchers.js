@@ -41,25 +41,7 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
-            $scope.distributionVendors.forEach(function (d) {
-                if ($scope.assignedVendors.indexOf(d.VendorId) == -1) {
-                    $scope.entity.entityAspect.setDeleted();
-                }
-            });
-
-            $scope.assignedVendors.forEach(function (d) {
-                var vendorIds = $scope.distributionVendors.map(function (dv) { return dv.VendorId; });
-
-                if (vendorIds.indexOf(d) == -1) {
-                    var newDV = backendService.createEntity("DistributionVendor", { DistributionId: $scope.entity.Id, VendorId: d });
-                    $scope.distributionVendors.push(newDV);
-                }
-            });
-
             var saveList = [];
-            $scope.distributionVendors.forEach(function (d) {
-                saveList.push(d);
-            });
             $scope.categories.forEach(function (d) {
                 saveList.push(d);
             });
@@ -72,6 +54,7 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
                 console.log(arguments);
             });
         };
+
         $scope.delete = function () {
             var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
             dlg.result.then(function () {
@@ -181,28 +164,12 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
         var loadData = function () {
 
 
-            var vendorQuery = new breeze.EntityQuery("Vendors")
-            .using(backendService)
-            .execute();
-
-
-            var assignedVendorQuery = new breeze.EntityQuery("DistributionVendors")
-            .where("DistributionId", "==", $state.params.id)
-            .using(backendService)
-            .execute();
-
-
             var entityQuery = query.where("Id", "==", $state.params.id).take(1).execute();
-            $q.all([entityQuery, vendorQuery, assignedVendorQuery]).then(function (responses) {
+            $q.all([entityQuery]).then(function (responses) {
                 var entity = responses[0].results.pop();
-                var vendors = responses[1].results;
-                var assignedVendors = responses[2].results;
 
                 $scope.entity = entity;
                 $scope.categories = entity.Categories;
-                $scope.vendors = vendors;
-                $scope.distributionVendors = assignedVendors;
-                $scope.assignedVendors = $scope.distributionVendors.map(function (dv) { return dv.VendorId; });
 
                 $scope.loadGridData();
             });

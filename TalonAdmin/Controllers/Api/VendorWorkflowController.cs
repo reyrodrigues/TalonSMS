@@ -276,6 +276,8 @@ namespace TalonAdmin.Controllers.Api
                     {
                         var voucher = voucherQuery.First();
                         var transactionRecord = voucher.TransactionRecords.First();
+                        transactionRecord.LastModifiedOn = DateTime.Now;
+                        db.SaveChanges();
 
                         if (voucher.Category.VendorTypeId != null &&
                             voucher.Category.VendorTypeId != vendor.TypeId)
@@ -295,6 +297,7 @@ namespace TalonAdmin.Controllers.Api
                             transactionRecord.VendorId = vendor.Id;
                             transactionRecord.Status = 2;
                             transactionRecord.ConfirmationCode = RandomNumber.RandomLong(7);
+                            transactionRecord.FinalizedOn = DateTime.Now;
                             db.SaveChanges();
 
                             ConfirmTransaction(voucher);

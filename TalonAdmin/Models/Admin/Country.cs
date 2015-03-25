@@ -10,5 +10,12 @@ namespace TalonAdmin.Models.Admin
         public virtual string Name { get; set; }
         public virtual string IsoAlpha2 { get; set; }
         public virtual string IsoAlpha3 { get; set; }
+
+        public virtual string CurrencyIsoCode { get; set; }
+
+        /// <summary>
+        /// Not all currencies can afford the luxury of living above the number four.
+        /// </summary>
+        public virtual string CurrencyUnicodeSymbol { get; set; }
     }
 }

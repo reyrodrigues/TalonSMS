@@ -12,34 +12,27 @@ msgstr ""
 "X-Generator: Poedit 1.7.5\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: src/tpl/blocks/nav.html:145
+#: src/tpl/blocks/nav.html:180
 msgid "Active Vouchers"
 msgstr "Vouchers ativos"
 
-#: src/tpl/blocks/nav.html:156
+#: src/tpl/blocks/nav.html:191
 msgid "Administration"
 msgstr "Administração"
 
-#: src/js/factories/genericControllerFactory.js:142
+#: src/js/factories/genericControllerFactory.js:139
 msgid ""
 "Are you sure you would like to delete this record? This operation cannot be "
 "reversed."
 msgstr "Voce tem certeza?"
 
-#: src/tpl/blocks/nav.html:66
-msgid "Assign Group"
-msgstr "Atribuir grupo"
-
-#: src/tpl/generic/create.html:16 src/tpl/generic/edit.html:22
-#: src/tpl/generic/edit.html:35
+#: src/tpl/dialogs/importBeneficiaries.html:21
+#: src/tpl/dialogs/importVendors.html:21 src/tpl/generic/create.html:16
+#: src/tpl/generic/edit.html:22 src/tpl/generic/edit.html:35
 msgid "Back"
 msgstr "Voltar"
 
-#: src/tpl/blocks/nav.html:78
-msgid "Ben. Groups"
-msgstr "Group de Ben."
-
-#: src/tpl/blocks/nav.html:45 src/tpl/blocks/nav.html:50
+#: src/tpl/blocks/nav.html:10
 msgid "Beneficiaries"
 msgstr "Beneficiários"
 
@@ -47,32 +40,46 @@ msgstr "Beneficiários"
 msgid "Beneficiaries - <small>Assign Group</small>"
 msgstr "Beneficiários - <small>Atribuir grupo</small>"
 
-#: src/tpl/blocks/nav.html:83
+#: src/js/controllers/beneficiaries.js:195
+msgid "Beneficiaries added to group."
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:123
+msgid "Beneficiaries successfuly imported."
+msgstr ""
+
+#: src/js/controllers/vendor.js:33
+msgid "Beneficiary"
+msgstr "Beneficiario"
+
+#: src/tpl/blocks/nav.html:58
 msgid "Beneficiary Groups"
 msgstr "Grupos de beneficiários"
 
-#: src/js/factories/genericControllerFactory.js:142
+#: src/js/factories/genericControllerFactory.js:139
 msgid "Confirm"
 msgstr "Confirme"
 
-#: src/tpl/blocks/nav.html:120 src/tpl/blocks/nav.html:180
-#: src/tpl/blocks/nav.html:207 src/tpl/blocks/nav.html:93
+#: src/tpl/blocks/nav.html:125 src/tpl/blocks/nav.html:155
+#: src/tpl/blocks/nav.html:215 src/tpl/blocks/nav.html:242
+#: src/tpl/blocks/nav.html:68
 msgid "Create"
 msgstr "Criar"
 
-#: src/tpl/blocks/nav.html:9
+#: src/tpl/blocks/nav.html:6
 msgid "Dashboard"
 msgstr "Dashboard"
 
-#: src/js/controllers/beneficiaries.js:88
+#: src/js/controllers/beneficiaries.js:178
+#: src/js/controllers/beneficiaries.js:91
 msgid "Date of Birth"
-msgstr ""
+msgstr "Data de Nascimento"
 
 #: src/tpl/generic/edit.html:16
 msgid "Delete"
 msgstr "Excluir"
 
-#: src/tpl/blocks/nav.html:105 src/tpl/blocks/nav.html:110
+#: src/tpl/blocks/nav.html:140 src/tpl/blocks/nav.html:145
 msgid "Distributions"
 msgstr "Distribuições"
 
@@ -80,88 +87,137 @@ msgstr "Distribuições"
 msgid "Edit"
 msgstr "Editar"
 
-#: src/js/main.js:89
+#: src/js/main.js:103
 msgid "English"
 msgstr "Inglês"
 
-#: src/js/factories/genericControllerFactory.js:137
-#: src/js/factories/genericControllerFactory.js:153
-#: src/js/factories/genericControllerFactory.js:208
+#: src/js/controllers/beneficiaries.js:128
+#: src/js/controllers/beneficiaries.js:135
+#: src/js/controllers/beneficiaries.js:198 src/js/controllers/vendor.js:76
+#: src/js/controllers/vendor.js:83
+#: src/js/factories/genericControllerFactory.js:134
+#: src/js/factories/genericControllerFactory.js:150
+#: src/js/factories/genericControllerFactory.js:205
 msgid "Error"
 msgstr "Erro"
 
-#: src/tpl/blocks/header.html:54
+#: src/js/controllers/beneficiaries.js:128
+msgid "Error importing beneficiary. Message from server:"
+msgstr ""
+
+#: src/js/controllers/vendor.js:76
+msgid "Error importing vendor. Message from server:"
+msgstr ""
+
+#: src/tpl/beneficiaries/list.html:23 src/tpl/vendors/list.html:13
+msgid "Export to Excel"
+msgstr "Exportar para Excel"
+
+#: src/tpl/blocks/nav.html:53
+msgid "Groups"
+msgstr "Groups"
+
+#: src/tpl/blocks/header.html:69
 msgid "Help"
 msgstr "Ajuda"
 
-#: src/tpl/blocks/nav.html:115 src/tpl/blocks/nav.html:175
-#: src/tpl/blocks/nav.html:202 src/tpl/blocks/nav.html:28
-#: src/tpl/blocks/nav.html:55 src/tpl/blocks/nav.html:88
+#: src/tpl/dialogs/importBeneficiaries.html:2
+msgid "Import Beneficiaries"
+msgstr "Importar Beneficiarios"
+
+#: src/tpl/beneficiaries/list.html:24 src/tpl/vendors/list.html:14
+msgid "Import Excel"
+msgstr "Importar Excel"
+
+#: src/tpl/dialogs/importVendors.html:2
+msgid "Import Vendors"
+msgstr "Importar Forncecedores"
+
+#: src/tpl/blocks/nav.html:120 src/tpl/blocks/nav.html:150
+#: src/tpl/blocks/nav.html:210 src/tpl/blocks/nav.html:237
+#: src/tpl/blocks/nav.html:29 src/tpl/blocks/nav.html:63
+#: src/tpl/blocks/nav.html:93
 msgid "List"
 msgstr "Lista"
 
-#: src/js/controllers/beneficiaries.js:91
+#: src/js/controllers/beneficiaries.js:181
+#: src/js/controllers/beneficiaries.js:94 src/js/controllers/vendor.js:56
 msgid "Location"
-msgstr ""
+msgstr "Localização"
 
-#: src/tpl/blocks/nav.html:165 src/tpl/blocks/nav.html:170
+#: src/tpl/blocks/nav.html:200 src/tpl/blocks/nav.html:205
 msgid "Locations"
 msgstr "Locais"
 
-#: src/tpl/blocks/header.html:60
+#: src/tpl/blocks/header.html:75
 msgid "Logout"
 msgstr "Sair"
 
-#: src/js/controllers/beneficiaries.js:90
+#: src/js/controllers/beneficiaries.js:180
+#: src/js/controllers/beneficiaries.js:93 src/js/controllers/vendor.js:55
 msgid "Mobile Number"
-msgstr ""
+msgstr "Número de celular"
 
-#: src/js/controllers/beneficiaries.js:87
+#: src/js/controllers/beneficiaries.js:177
+#: src/js/controllers/beneficiaries.js:90 src/js/controllers/vendor.js:54
 #: src/js/factories/genericControllerFactory.js:12
 #: src/tpl/admin/locations/form.html:5 src/tpl/admin/locations/form.html:7
+#: src/tpl/admin/vendorTypes/form.html:5
+#: src/tpl/admin/vendorTypes/form.html:7
 #: src/tpl/admin/voucherTypes/form.html:5
 #: src/tpl/admin/voucherTypes/form.html:7
 msgid "Name"
 msgstr "Nome"
 
-#: src/js/controllers/beneficiaries.js:89
+#: src/js/controllers/beneficiaries.js:179
+#: src/js/controllers/beneficiaries.js:92
 msgid "National Id Number"
-msgstr ""
+msgstr "Numero de Identidade"
 
 #: src/tpl/generic/list.html:12
 msgid "New"
 msgstr "Novo"
 
-#: src/js/main.js:92
+#: src/js/controllers/beneficiaries.js:125 src/js/controllers/vendor.js:73
+msgid "Notice"
+msgstr ""
+
+#: src/js/main.js:106
 msgid "Portuguese"
 msgstr "Português"
 
-#: src/tpl/blocks/header.html:51
+#: src/tpl/blocks/header.html:66
 msgid "Profile"
 msgstr "Perfil"
 
-#: src/js/factories/genericControllerFactory.js:148
+#: src/js/factories/genericControllerFactory.js:145
 msgid "Record successfully deleted."
 msgstr ""
 
-#: src/js/factories/genericControllerFactory.js:130
-#: src/js/factories/genericControllerFactory.js:205
+#: src/js/factories/genericControllerFactory.js:127
+#: src/js/factories/genericControllerFactory.js:202
 msgid "Record successfully saved."
 msgstr ""
 
-#: src/tpl/blocks/nav.html:33 src/tpl/blocks/nav.html:60
+#: src/tpl/beneficiaries/list.html:26 src/tpl/blocks/nav.html:34
+#: src/tpl/blocks/nav.html:98 src/tpl/vendors/list.html:16
 msgid "Register"
 msgstr "Registrar"
 
-#: src/tpl/blocks/nav.html:126 src/tpl/blocks/nav.html:135
+#: src/tpl/blocks/nav.html:19 src/tpl/blocks/nav.html:24
+#: src/tpl/blocks/nav.html:83 src/tpl/blocks/nav.html:88
+msgid "Registration"
+msgstr "Registro"
+
+#: src/tpl/blocks/nav.html:161 src/tpl/blocks/nav.html:170
 msgid "Reporting"
 msgstr "Relatorios"
 
-#: src/tpl/blocks/nav.html:140
+#: src/tpl/blocks/nav.html:175
 msgid "Reports"
 msgstr "Relatorios"
 
-#: src/js/main.js:91
+#: src/js/main.js:105
 msgid "Russian"
 msgstr "Russo"
 
@@ -174,21 +230,45 @@ msgstr "Salvar"
 msgid "Save and Continue Editing"
 msgstr "Salvar e continuar"
 
-#: src/js/controllers/beneficiaries.js:66
+#: src/tpl/dialogs/importBeneficiaries.html:11
+#: src/tpl/dialogs/importVendors.html:11
+msgid "Select File"
+msgstr "Selecione Arquivo"
+
+#: src/js/controllers/beneficiaries.js:125
+msgid "Some beneficiaries were not imported correctly."
+msgstr ""
+
+#: src/js/controllers/vendor.js:73
+msgid "Some vendors were not imported correctly."
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:66 src/js/controllers/vendor.js:30
 msgid "Status"
 msgstr ""
 
-#: src/js/factories/genericControllerFactory.js:130
-#: src/js/factories/genericControllerFactory.js:148
-#: src/js/factories/genericControllerFactory.js:205
+#: src/js/controllers/beneficiaries.js:123
+#: src/js/controllers/beneficiaries.js:195 src/js/controllers/vendor.js:71
+#: src/js/factories/genericControllerFactory.js:127
+#: src/js/factories/genericControllerFactory.js:145
+#: src/js/factories/genericControllerFactory.js:202
 msgid "Success"
 msgstr "Sucesso"
 
-#: src/js/main.js:90
+#: src/tpl/blocks/nav.html:110 src/tpl/blocks/nav.html:115
+msgid "Types"
+msgstr ""
+
+#: src/js/main.js:104
 msgid "Ukrainian"
 msgstr "Ucraniano"
 
-#: src/js/controllers/beneficiaries.js:71
+#: src/tpl/dialogs/importBeneficiaries.html:18
+#: src/tpl/dialogs/importVendors.html:18
+msgid "Upload File"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:71 src/js/controllers/vendor.js:35
 msgid "Value"
 msgstr ""
 
@@ -196,22 +276,35 @@ msgstr ""
 msgid "Vendor"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:150
+#: src/tpl/blocks/nav.html:185
 msgid "Vendor Receipt"
 msgstr "Recibo de fornecedores"
 
-#: src/tpl/blocks/nav.html:18 src/tpl/blocks/nav.html:23
+#: src/tpl/blocks/nav.html:74
 msgid "Vendors"
 msgstr "Fornecedores"
 
-#: src/js/controllers/beneficiaries.js:70
+#: src/js/controllers/vendor.js:71
+msgid "Vendors successfuly imported."
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:70 src/js/controllers/vendor.js:34
 msgid "Voucher Code"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:4
-msgid "Voucher Management"
-msgstr "Gerenciamento de Vouchers"
-
-#: src/tpl/blocks/nav.html:192 src/tpl/blocks/nav.html:197
+#: src/tpl/blocks/nav.html:227 src/tpl/blocks/nav.html:232
 msgid "Voucher Types"
 msgstr "Tipos de Vouchers"
+
+#: src/tpl/blocks/nav.html:131
+msgid "Vouchers"
+msgstr ""
+
+#~ msgid "Assign Group"
+#~ msgstr "Atribuir grupo"
+
+#~ msgid "Ben. Groups"
+#~ msgstr "Group de Ben."
+
+#~ msgid "Voucher Management"
+#~ msgstr "Gerenciamento de Vouchers"

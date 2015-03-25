@@ -47,7 +47,7 @@
                                     </div>
                                     <div class="col-xs-6">
                                         <div class="panel padder-v bg-primary item">
-                                            <div class="h1  text-black font-thin h1">{{ d.InactiveVouchers }}</div>
+                                            <div class="h1  text-black font-thin h1">{{ d.VouchersUsed }}</div>
                                             <span class="ext-xs  text-black">Vouchers Used</span>
                                         </div>
                                     </div>
@@ -59,7 +59,7 @@
                                     <div class="col-xs-12 m-b-md">
                                         <div class="r bg-dark item hbox no-border">
                                             <div class="col dk padder-v r-r">
-                                                <div class="text-primary-lter font-thin h1"><span>{{ d.IssuedAmount|currency }}</span></div>
+                                                <div class="text-primary-lter font-thin h1"><span>{{ d.IssuedAmount|currency:(country.CurrencyUnicodeSymbol||'$') }}</span></div>
                                                 <span class="text-primary-lter text-xs">Issued</span>
                                             </div>
                                         </div>
@@ -67,7 +67,7 @@
                                     <div class="col-xs-12 m-b-md">
                                         <div class="r bg-dark item hbox no-border">
                                             <div class="col dk padder-v r-r">
-                                                <div class="text-primary-lter font-thin h1"><span>{{ (d.ClaimedAmount || 0)|currency }}</span></div>
+                                                <div class="text-primary-lter font-thin h1"><span>{{ (d.ClaimedAmount || 0)|currency:(country.CurrencyUnicodeSymbol||'$') }}</span></div>
                                                 <span class="text-primary-lter text-xs">Claimed</span>
                                             </div>
                                         </div>
