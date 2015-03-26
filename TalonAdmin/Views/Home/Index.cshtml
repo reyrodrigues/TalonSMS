@@ -28,7 +28,14 @@
     <!-- jQuery -->
     <script src="~/Home/ServerScript"></script>
     <script src="~/App/lib/crypto/forge.min.js"></script>
-    <script src="~/App/js/app.src.js"></script>
+    @if (Context.IsDebuggingEnabled)
+    {
+        <script src="~/App/js/app.src.js"></script>
+    }
+    else
+    { 
+        <script src="~/App/js/app.min.js"></script>
+    }
     <script src="~/Scripts/NonAngularJs"></script>
     <!-- Lazy loading -->
 </body>
