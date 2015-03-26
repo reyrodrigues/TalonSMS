@@ -132,6 +132,15 @@ namespace TalonAdmin.Controllers
             if (appPath == "/")
                 appPath = "";
 
+            if (Request.Headers.AllKeys.Contains("X-Proxy-Path")) {
+                appPath = Request.Headers["X-Proxy-Path"];
+
+                if (appPath.EndsWith("/"))
+                {
+                    appPath = appPath.Substring(0, appPath.Length - 1);
+                }
+            }
+
             content.AppendFormat("window.BaseUrl = '{0}/'\n", appPath);
 
 
