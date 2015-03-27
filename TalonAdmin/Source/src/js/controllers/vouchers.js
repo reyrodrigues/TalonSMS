@@ -1,6 +1,6 @@
 ﻿'use strict';
 
-app.controller('VoucherDistributionCreateCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', function (breeze, backendService, $scope, $state, $q, locations) {
+app.controller('DistributionsCreateCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', function (breeze, backendService, $scope, $state, $q, locations) {
     $scope.save = function () {
         backendService.saveChanges([$scope.entity]).then(function (ne) {
             $state.go('distributions.edit', { id: ne.entities[0].Id });
@@ -15,28 +15,7 @@ app.controller('VoucherDistributionCreateCtrl', ['breeze', 'backendService', '$s
     $scope.entity = backendService.createEntity("Distribution", { VoucherCodeLength: 6 });
 }]);
 
-app.controller('AssignToGroupDialogCtrl', ['breeze', 'backendService', '$scope', '$q', '$modalInstance',
-    function (breeze, backendService, $scope, $q, $modalInstance) {
-        $scope.group = null;
-        $scope.getGroup = function (name) {
-            var query = new breeze.EntityQuery('BeneficiaryGroups')
-                .using(backendService)
-                .where('Name', 'contains', name);
-
-            return query.execute().then(function (res) {
-                if (res.results) {
-                    var groups = res.results;
-                    return groups;
-                }
-            });
-        };
-
-        $scope.done = function () {
-            $modalInstance.close($scope.group);
-        };
-    }]);
-
-app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster',
+app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster',
     function (breeze, backendService, $scope, $state, $q, $http, locations, dialogs, voucherTypes, vendorTypes, serviceBase, toaster) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
@@ -194,7 +173,6 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
                 });
         };
         $scope.cancelVoucher = function (voucherId) {
-            console.log(arguments);
             var query = new breeze.EntityQuery('VoucherTransactionRecords')
                 .where("Voucher.Id", "==", voucherId)
                 .using(backendService)
@@ -279,7 +257,7 @@ app.controller('VoucherDistributionEditCtrl', ['breeze', 'backendService', '$sco
 
     }]);
 
-app.controller('VoucherDistributionGridCtrl', ['breeze', 'backendService', '$scope', '$http', '$localStorage',
+app.controller('DistributionsListCtrl', ['breeze', 'backendService', '$scope', '$http', '$localStorage',
     function (breeze, backendService, $scope, $http, $localStorage) {
         $scope.loadGridData = function (pageSize, page) {
             setTimeout(function () {
@@ -442,7 +420,9 @@ app.controller('VoucherGridCtrl', ['breeze', 'backendService', '$scope', '$http'
                             $scope.$apply();
                         }
                     })
-                .catch(function () { console.log(arguments); });
+                .catch(function () {
+                    console.log(arguments);
+                });
             }, 100);
         };
 
@@ -502,4 +482,25 @@ app.controller('VoucherGridCtrl', ['breeze', 'backendService', '$scope', '$http'
 
         $scope.loadGridData();
 
+    }]);
+
+app.controller('AssignToGroupDialogCtrl', ['breeze', 'backendService', '$scope', '$q', '$modalInstance',
+    function (breeze, backendService, $scope, $q, $modalInstance) {
+        $scope.group = null;
+        $scope.getGroup = function (name) {
+            var query = new breeze.EntityQuery('BeneficiaryGroups')
+                .using(backendService)
+                .where('Name', 'contains', name);
+
+            return query.execute().then(function (res) {
+                if (res.results) {
+                    var groups = res.results;
+                    return groups;
+                }
+            });
+        };
+
+        $scope.done = function () {
+            $modalInstance.close($scope.group);
+        };
     }]);

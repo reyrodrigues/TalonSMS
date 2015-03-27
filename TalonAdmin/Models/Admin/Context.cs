@@ -7,6 +7,7 @@ using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Core.Objects;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json.Linq;
 
 namespace TalonAdmin.Models.Admin
 {
@@ -47,6 +48,9 @@ namespace TalonAdmin.Models.Admin
         }
 
         public DbSet<Country> Countries { get; set; }
+        public DbSet<MenuItem> MenuItems { get; set; }
+        public DbSet<MenuCategoryRole> MenuCategoryRoles { get; set; }
+        public DbSet<MenuCategory> MenuCategories { get; set; }
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<ApplicationUserCountry> ApplicationUserCountries { get; set; }
 
@@ -56,7 +60,19 @@ namespace TalonAdmin.Models.Admin
 
             modelBuilder.Entity<ApplicationUserCountry>()
                 .HasRequired(p => p.ApplicationUser)
-                .WithMany(p => p.ApplicationUserCountries);
+                .WithMany(p => p.Countries);
+
+            modelBuilder.Entity<MenuCategory>()
+                .HasMany(p => p.Items)
+                .WithOptional(p => p.Category);
+
+            modelBuilder.Entity<MenuCategory>()
+                .HasMany(p => p.Roles)
+                .WithRequired(p => p.Category);
+
+            modelBuilder.Entity<MenuItem>()
+                .HasMany(p => p.Children)
+                .WithOptional(p => p.Parent);
 
 #if DEBUG
             Database.SetInitializer(new CleanDbInitializer());
@@ -64,10 +80,11 @@ namespace TalonAdmin.Models.Admin
         }
     }
 
-    public class CleanDbInitializer : DropCreateDatabaseIfModelChanges<AdminContext>
+    public class CleanDbInitializer : DropCreateDatabaseAlways<AdminContext>
     {
         protected override void Seed(AdminContext context)
         {
+            #region Countries and Sys Admin
             string ircsLogo = "";
             if (HttpContext.Current != null)
             {
@@ -80,17 +97,6 @@ namespace TalonAdmin.Models.Admin
                 LogoSVG = ircsLogo
             };
 
-            string stcsLogo = "";
-            if (HttpContext.Current != null)
-            {
-                stcsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/STCLogo.svg")));
-            }
-            var stc = new Organization
-            {
-                Abbreviation = "Save",
-                Name = "Save The Children",
-                LogoSVG = stcsLogo
-            };
             var ukraine = new Country
             {
                 Name = "Ukraine",
@@ -99,16 +105,8 @@ namespace TalonAdmin.Models.Admin
                 CurrencyIsoCode = "UAH",
                 CurrencyUnicodeSymbol = "₴"
             };
-            var unitedStates = new Country
-            {
-                Name = "United States of America",
-                IsoAlpha2 = "US",
-                IsoAlpha3 = "USA",
-                CurrencyIsoCode = "USD",
-                CurrencyUnicodeSymbol = "$"
-            };
 
-            var reynaldor = new ApplicationUser
+            var systemAdmin = new ApplicationUser
             {
                 UserName = "reynaldor",
                 FullName = "Rey Rodrigues",
@@ -119,28 +117,322 @@ namespace TalonAdmin.Models.Admin
             var uaMembership = new ApplicationUserCountry
             {
                 Country = ukraine,
-                ApplicationUser = reynaldor
+                ApplicationUser = systemAdmin
             };
 
-            var usMembership = new ApplicationUserCountry
+            var systemAdminRole = new IdentityRole
             {
-                Country = unitedStates,
-                ApplicationUser = reynaldor
+                Name = "System Administrator"
             };
 
+            var countryAdminRole = new IdentityRole
+            {
+                Name = "Country Administrator"
+            };
 
-            context.Users.Add(reynaldor);
+            var orgAdminRole = new IdentityRole
+            {
+                Name = "Organization Administrator"
+            };
+
+            var progManager = new IdentityRole
+            {
+                Name = "Program Manager"
+            };
+
+            context.Roles.Add(systemAdminRole);
+            context.Roles.Add(countryAdminRole);
+            context.Roles.Add(orgAdminRole);
+            context.Roles.Add(progManager);
+
+
+            context.Users.Add(systemAdmin);
 
             context.Organizations.Add(irc);
-            context.Organizations.Add(stc);
 
             context.Countries.Add(ukraine);
 
             context.ApplicationUserCountries.Add(uaMembership);
-            context.ApplicationUserCountries.Add(usMembership);
+            #endregion
+            #region Menu Items
 
+            var categories = new MenuCategory[] {
+                new MenuCategory { 
+                    SortOrder = 1,
+                    Name = "Beneficiary",
+                    Items = new MenuItem[] { 
+                        new MenuItem {
+                            State = "beneficiaries",
+                            Title = "Registration",
+                            CssClass = "icon-user icon text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "beneficiaries.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "beneficiaries.create",
+                                    Title = "Create",
+                                },
+                            }
+                        }, 
+                        new MenuItem {
+                            State = "groups",
+                            Title = "Groups",
+                            CssClass = "icon-users icon text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "groups.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "groups.create",
+                                    Title = "Create",
+                                },
+                            }
+                        },
+                    }
+                },
+                new MenuCategory { 
+                    SortOrder = 2,
+                    Name = "Vendors",
+                    Items = new MenuItem[] { 
+                        new MenuItem {
+                            State = "vendors",
+                            Title = "Registration",
+                            CssClass = "fa fa-building-o text-info-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "vendors.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "vendors.create",
+                                    Title = "Create",
+                                },
+                            }
+                        }, 
+                        new MenuItem {
+                            State = "vendor-types",
+                            Title = "Types",
+                            CssClass = "fa fa-tags text-info-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "vendor-types.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "vendor-types.create",
+                                    Title = "Create",
+                                },
+                            }
+                        },
+                    }
+                },
+                
+                new MenuCategory { 
+                    SortOrder = 3,
+                    Name = "Vouchers",
+                    Roles = new MenuCategoryRole[] {
+                        new MenuCategoryRole { Role = systemAdminRole },
+                        new MenuCategoryRole { Role = orgAdminRole },
+                        new MenuCategoryRole { Role = progManager }
+                    },
+                    Items = new MenuItem[] { 
+                        new MenuItem {
+                            State = "distributions",
+                            Title = "Distributions",
+                            CssClass = "fa fa-truck text-primary-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "distributions.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "distributions.create",
+                                    Title = "Register",
+                                },
+                            }
+                        }, 
+                    }
+                },
+                new MenuCategory { 
+                    SortOrder = 4,
+                    Name = "Reporting",
+                    Roles = new MenuCategoryRole[] {
+                        new MenuCategoryRole { Role = systemAdminRole },
+                        new MenuCategoryRole { Role = orgAdminRole },
+                        new MenuCategoryRole { Role = progManager }
+                    },
+                    Items = new MenuItem[] { 
+                        new MenuItem {
+                            State = "reporting",
+                            Title = "Reports",
+                            CssClass = "icon-bar-chart icon text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "reporting.distribution",
+                                    Title = "Distribution Report",
+                                },
+                                new MenuItem {
+                                    State = "reporting.vendor-receipt",
+                                    Title = "Vendor Receipt Report",
+                                },
+                            }
+                        }, 
+                    }
+                },
+                new MenuCategory { 
+                    SortOrder = 5,
+                    Name = "Country Administration",
+                    Roles = new MenuCategoryRole[] {
+                        new MenuCategoryRole { Role = systemAdminRole },
+                        new MenuCategoryRole { Role = orgAdminRole },
+                        new MenuCategoryRole { Role = countryAdminRole }
+                    },
+                    Items = new MenuItem[] { 
+                        new MenuItem {
+                            State = "country-admin.voucher-types",
+                            Title = "Voucher Types",
+                            CssClass = "fa fa-tags text-info-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "country-admin.voucher-types.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "country-admin.voucher-types.create",
+                                    Title = "Create",
+                                },
+                            }
+                        }, 
+                        new MenuItem {
+                            State = "country-admin.locations",
+                            Title = "Locations",
+                            CssClass = "icon icon-pin text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "country-admin.locations.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "country-admin.locations.create",
+                                    Title = "Create",
+                                },
+                            }
+                        },
+                    },
+                },
+                new MenuCategory { 
+                    SortOrder = 6,
+                    Name = "Organization Administration",
+                    Roles = new MenuCategoryRole[] {
+                        new MenuCategoryRole { Role = systemAdminRole },
+                        new MenuCategoryRole { Role = orgAdminRole },
+                    },
+                    Items = new MenuItem[] { 
+                        new MenuItem {
+                            State = "org-admin.users",
+                            Title = "Registered Users",
+                            CssClass = "icon-user icon text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "org-admin.users.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "org-admin.users.register",
+                                    Title = "Register",
+                                },
+                            }
+                        }, 
+                        new MenuItem {
+                            State = "org-admin.countries",
+                            Title = "Countries",
+                            CssClass = "fa fa-globe text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "system-admin.countries.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "system-admin.countries.create",
+                                    Title = "Create",
+                                },
+                            }
+                        },
+                    },
+                },
+                new MenuCategory { 
+                    SortOrder = 7,
+                    Name = "System Administration",
+                    Roles = new MenuCategoryRole[] {
+                        new MenuCategoryRole { Role = systemAdminRole },
+                    },
+                    Items = new MenuItem[] { 
+                        new MenuItem {
+                            State = "system-admin.users",
+                            Title = "System Admins",
+                            CssClass = "icon-user icon text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "system-admin.users.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "system-admin.users.register",
+                                    Title = "Register",
+                                },
+                            }
+                        }, 
+                        new MenuItem {
+                            State = "system-admin.countries",
+                            Title = "Countries",
+                            CssClass = "fa fa-globe text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "system-admin.countries.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "system-admin.countries.create",
+                                    Title = "Create",
+                                },
+                            },
+                        },
+                        new MenuItem {
+                            State = "system-admi.organizations",
+                            Title = "Organizations",
+                            CssClass = "fa fa-circle text-success-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "system-admin.organizations.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "system-admin.organizations.create",
+                                    Title = "Create",
+                                },
+                            },
+                        },
+                    }
+                },
+
+            };
+
+            context.MenuCategories.AddRange(categories);
+            #endregion
 
             context.SaveChanges();
+
+
+            systemAdmin.Roles.Add(new IdentityUserRole
+            {
+                UserId = systemAdmin.Id,
+                RoleId = systemAdminRole.Id
+            });
+
+
 
             base.Seed(context);
         }

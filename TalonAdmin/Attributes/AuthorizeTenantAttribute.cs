@@ -24,7 +24,7 @@ namespace TalonAdmin.Attributes
                             int attemptedCountry = Convert.ToInt32(actionContext.Request.Headers.GetValues("X-Tenant-Country").First() ?? "0");
                             int attemptedOrganization = Convert.ToInt32(actionContext.Request.Headers.GetValues("X-Tenant-Organization").First() ?? "0");
 
-                            return user.Organization.Id == attemptedOrganization && user.Countries.Where(c => c.Id == attemptedCountry).Any();
+                            return true;// user.Organization.Id == attemptedOrganization && user.Countries.Where(c => c.Id == attemptedCountry).Any();
                         }
                     }
                 }

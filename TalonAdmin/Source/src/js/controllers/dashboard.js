@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 
-app.controller('DashboardCtrl', ['breeze', '$scope', '$rootScope', '$http', '$timeout', 'serviceBase', 'Hub', 'toaster',
+app.controller('AppDashboardCtrl', ['breeze', '$scope', '$rootScope', '$http', '$timeout', 'serviceBase', 'Hub', 'toaster',
     function (breeze, $scope, $rootScope, $http, $timeout, serviceBase, Hub, toaster) {
         var loadDashboard = function () {
             $http.get(serviceBase + 'api/Dashboard/DashboardSummary')

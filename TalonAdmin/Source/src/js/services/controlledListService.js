@@ -1,5 +1,5 @@
 ﻿'use strict';
-app.factory('controlledListService', ['breeze', 'backendService', '$q', function (breeze, backendService, $q) {
+app.factory('controlledListService', ['breeze', 'backendService', 'adminBackendService', '$q', function (breeze, backendService, adminBackendService, $q) {
     return {
         getLocations: function () {
             var deferred = $q.defer();
@@ -41,6 +41,30 @@ app.factory('controlledListService', ['breeze', 'backendService', '$q', function
             var deferred = $q.defer();
             new breeze.EntityQuery("VendorTypes")
            .using(backendService)
+           .noTracking()
+           .execute()
+           .then(function (res) {
+               deferred.resolve(res.results);
+           });
+
+            return deferred.promise;
+        },
+        getOrganizations: function () {
+            var deferred = $q.defer();
+            new breeze.EntityQuery("Organizations")
+           .using(adminBackendService)
+           .noTracking()
+           .execute()
+           .then(function (res) {
+               deferred.resolve(res.results);
+           });
+
+            return deferred.promise;
+        },
+        getCountries: function () {
+            var deferred = $q.defer();
+            new breeze.EntityQuery("Countries")
+           .using(adminBackendService)
            .noTracking()
            .execute()
            .then(function (res) {

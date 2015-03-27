@@ -14,8 +14,6 @@ using TalonAdmin.Models.Admin;
 
 namespace TalonAdmin
 {
-    // Configure the application user manager used in this application. UserManager is defined in ASP.NET Identity and is used by the application.
-
     public class ApplicationUserManager : UserManager<ApplicationUser>
     {
         public ApplicationUserManager(IUserStore<ApplicationUser> store)
@@ -42,10 +40,17 @@ namespace TalonAdmin
 
             return false;
         }
-
         public override async Task<ApplicationUser> FindAsync(string userName, string password)
         {
-            var user = await base.FindAsync(userName, password);
+            ApplicationUser user = null;
+            if (userName.IndexOf('@') > -1)
+            {
+                user = await base.FindByEmailAsync(userName);
+                user = await base.FindAsync(user.UserName, password);
+            }
+            else {
+                user = await base.FindAsync(userName, password);
+            }
 
             if (user == null)
             {
@@ -81,6 +86,7 @@ namespace TalonAdmin
                 AllowOnlyAlphanumericUserNames = false,
                 RequireUniqueEmail = true
             };
+
             // Configure validation logic for passwords
             manager.PasswordValidator = new PasswordValidator
             {
@@ -92,6 +98,23 @@ namespace TalonAdmin
             {
                 manager.UserTokenProvider = new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"));
             }
+
+            return manager;
+        }
+    }
+
+    public class ApplicationRoleManager : RoleManager<IdentityRole>
+    {
+        public ApplicationRoleManager(RoleStore<IdentityRole> store)
+            : base(store)
+        {
+        }
+
+
+        public static ApplicationRoleManager Create(IdentityFactoryOptions<ApplicationRoleManager> options, IOwinContext context)
+        {
+            var manager = new ApplicationRoleManager(new RoleStore<IdentityRole>(context.Get<AdminContext>()));
+
             return manager;
         }
     }

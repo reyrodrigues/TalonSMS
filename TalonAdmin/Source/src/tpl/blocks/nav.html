@@ -1,247 +1,36 @@
 <!-- list -->
-<ul class="nav ng-scope">
+<ul class="nav">
     <li ui-sref-active="active">
         <a href="" ui-sref="app.dashboard" class="auto">
             <i class="glyphicon glyphicon-stats icon text-primary-dker"></i>
-            <span class="font-bold ng-scope" translate>Dashboard</span>
+            <span class="font-bold " translate>Dashboard</span>
         </a>
     </li>
-    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
-        <span class="ng-scope" translate>Beneficiaries</span>
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs" ng-repeat-start="category in navigationItems">
+        <span translate>{{ category.Name }}</span>
     </li>
-    <li ng-class="{active:$state.includes('beneficiaries')}">
+
+    <li ng-class="{active:$state.includes(item.State)}" ng-repeat="item in category.Items" ng-repeat-end>
         <a href="" class="auto">
             <span class="pull-right text-muted">
                 <i class="fa fa-fw fa-angle-right text"></i>
                 <i class="fa fa-fw fa-angle-down text-active"></i>
             </span>
-            <i class="icon-user icon text-success-lter"></i>
-            <span translate>Registration</span>
+            <i class="{{ item.CssClass }}"></i>
+            <span translate>{{item.Title}}</span>
         </a>
         <ul class="nav nav-sub dk">
             <li class="nav-sub-header">
                 <a href="">
-                    <span translate>Registration</span>
+                    <span translate>{{item.Title}}</span>
                 </a>
             </li>
-            <li ui-sref-active="active">
-                <a ui-sref="beneficiaries.list" href="#">
-                    <span translate>List</span>
+            <li ui-sref-active="active" ng-repeat-start="child in item.Children" ng-repeat-end>
+                <a ui-sref="{{child.State}}" href="#">
+                    <span translate>{{ child.Title}}</span>
                 </a>
             </li>
-            <li ui-sref-active="active">
-                <a ui-sref="beneficiaries.create" href="#">
-                    <span translate>Register</span>
-                </a>
-            </li>
-            <!-- 
-            <li ui-sref-active="active">
-                <a ui-sref="beneficiaries.bulkEdit" href="#">
-                    <span translate>Assign Group</span>
-                </a>
-            </li>
-                -->
         </ul>
-    </li>
-    <li ng-class="{active:$state.includes('groups')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="icon-users icon text-success-lter"></i>
-            <span translate>Groups</span>
         </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span translate>Beneficiary Groups</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="groups.list" href="#">
-                    <span translate>List</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="groups.create" href="#">
-                    <span translate>Create</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
-        <span class="ng-scope" translate>Vendors</span>
-    </li>
-    <li ng-class="{active:$state.includes('vendors')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="fa fa-building-o text-success-lter"></i>
-            <span translate>Registration</span>
-        </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span translate>Registration</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="vendors.list" href="#">
-                    <span translate>List</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="vendors.create" href="#">
-                    <span translate>Register</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-    <li ng-class="{active:$state.includes('admin.vendorTypes')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="fa fa-building-o text-success-lter"></i>
-            <span translate>Types</span>
-        </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span translate>Types</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.vendorTypes.list" href="#">
-                    <span translate>List</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.vendorTypes.create" href="#">
-                    <span translate>Create</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
-        <span class="ng-scope" translate>Vouchers</span>
-    </li>
-    <li ng-class="{active:$state.includes('distributions')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="fa fa-truck text-primary-lter"></i>
-            <span translate>Distributions</span>
-        </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span translate>Distributions</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="distributions.list" href="#">
-                    <span translate>List</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="distributions.create" href="#">
-                    <span translate>Create</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
-        <span class="ng-scope" translate>Reporting</span>
-    </li>
-    <li ng-class="{active:$state.includes('reporting')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="icon-bar-chart icon text-success-lter"></i>
-            <span translate>Reporting</span>
-        </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span translate>Reports</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="reporting.activeVouchers" href="#">
-                    <span translate>Distribution Report</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="reporting.vendorReceipt" href="#">
-                    <span translate>Vendor Receipt Report</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
-        <span class="ng-scope" translate>Administration</span>
-    </li>
-    <li ng-class="{active:$state.includes('admin.locations')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="icon icon-pin text-info-lter"></i>
-            <span translate>Locations</span>
-        </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span translate>Locations</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.locations.list" href="#">
-                    <span translate>List</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.locations.create" href="#">
-                    <span translate>Create</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-    <li ng-class="{active:$state.includes('admin.voucherTypes')}">
-        <a href="" class="auto">
-            <span class="pull-right text-muted">
-                <i class="fa fa-fw fa-angle-right text"></i>
-                <i class="fa fa-fw fa-angle-down text-active"></i>
-            </span>
-            <i class="fa fa-tags text-success-lter"></i>
-            <span translate>Voucher Types</span>
-        </a>
-        <ul class="nav nav-sub dk">
-            <li class="nav-sub-header">
-                <a href="">
-                    <span translate>Voucher Types</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.voucherTypes.list" href="#">
-                    <span translate>List</span>
-                </a>
-            </li>
-            <li ui-sref-active="active">
-                <a ui-sref="admin.voucherTypes.create" href="#">
-                    <span translate>Create</span>
-                </a>
-            </li>
-        </ul>
     </li>
 </ul>

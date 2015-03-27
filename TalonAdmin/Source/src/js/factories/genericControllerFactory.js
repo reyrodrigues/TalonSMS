@@ -5,11 +5,13 @@ angular.module('app')
       function ($state, backendService, toaster, gettext, breeze, dialogs, $localStorage) {
           var listController = function ($scope, settings) {
               var storageSetting = $state.current.name + 'GridSettings';
+              var _backendService = settings.backendService || backendService;
 
               if (!settings.columnDefs) {
                   settings.columnDefs = [
                       {
-                          field: gettext("Name"),
+                          field: "Name",
+                          displayName: gettext("Name"),
                           cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="' +
                           settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'
                       }
@@ -44,7 +46,7 @@ angular.module('app')
                           .skip($localStorage[storageSetting].pageSize * ($localStorage[storageSetting].currentPage - 1))
                           .take($localStorage[storageSetting].pageSize)
                           .inlineCount(true)
-                          .using(backendService);
+                          .using(_backendService);
 
                       if ($scope.filter) {
                           entityQuery = entityQuery.where($scope.filter);
@@ -54,9 +56,10 @@ angular.module('app')
                           .execute()
                           .then(function (res) {
                               $scope.totalServerItems = res.inlineCount;
-                              $scope.list = res.results.map(function (r) {
+                              var map = settings.resultMap || function (r) {
                                   return r;
-                              });
+                              };
+                              $scope.list = res.results.map(map);
 
                               if (!$scope.$$phase) {
                                   $scope.$apply();
@@ -117,13 +120,14 @@ angular.module('app')
   .factory('editController', ['$state', 'backendService', 'toaster', 'gettext', 'breeze', 'dialogs', '$q',
       function ($state, backendService, toaster, gettext, breeze, dialogs, $q) {
           var editController = function ($scope, settings) {
+              var _backendService = settings.backendService || backendService;
               $scope.isEditing = false;
 
 
               $scope.save = function (andContinue) {
                   $scope.isEditing = false;
 
-                  backendService.saveChanges([$scope.entity]).then(function (ne) {
+                  _backendService.saveChanges([$scope.entity]).then(function (ne) {
                       toaster.pop('success', gettext('Success'), gettext('Record successfully saved.'));
 
                       if (!andContinue)
@@ -141,7 +145,7 @@ angular.module('app')
                       $scope.entity.entityAspect.setDeleted();
                       $scope.isEditing = false;
 
-                      backendService.saveChanges([$scope.entity]).then(function () {
+                      _backendService.saveChanges([$scope.entity]).then(function () {
                           toaster.pop('success', gettext('Success'), gettext('Record successfully deleted.'));
                           $state.go(settings.listState);
                       }).catch(function (error) {
@@ -162,7 +166,7 @@ angular.module('app')
               $scope.loadData = function () {
                   var defer = $q.defer();
                   var query = new breeze.EntityQuery(settings.collectionType)
-                      .using(backendService);
+                      .using(_backendService);
 
                   if (settings.expand) {
                       query = query.expand(settings.expand);
@@ -193,12 +197,13 @@ angular.module('app')
   .factory('createController', ['$state', 'backendService', 'toaster', 'gettext',
       function ($state, backendService, toaster, gettext) {
           var createController = function ($scope, settings) {
+              var _backendService = settings.backendService || backendService;
               $scope.isEditing = true;
               $scope.isNew = true;
-              $scope.entity = backendService.createEntity(settings.entityType, settings.defaults);
+              $scope.entity = _backendService.createEntity(settings.entityType, settings.defaults);
 
               $scope.save = function () {
-                  backendService.saveChanges([$scope.entity]).then(function (ne) {
+                  _backendService.saveChanges([$scope.entity]).then(function (ne) {
                       toaster.pop('success', gettext('Success'), gettext('Record successfully saved.'));
                       $state.go(settings.editState, { id: ne.entities[0].Id });
                   }).catch(function (error) {
@@ -218,6 +223,7 @@ angular.module('app')
           var subGrid = function ($scope, settings) {
               var storageSetting = $state.current.name + settings.collectionType + 'GridSettings';
               var columnDefs = settings.columnDefs;
+              var _backendService = settings.backendService || backendService;
 
               if (!columnDefs) {
                   columnDefs = [{ field: "Name", displayName: "Name" }];
@@ -274,7 +280,7 @@ angular.module('app')
                           .skip(pagingOptions.pageSize * (pagingOptions.currentPage - 1))
                           .take(pagingOptions.pageSize)
                           .inlineCount(true)
-                          .using(backendService);
+                          .using(_backendService);
 
                       var keyFilter = {};
                       keyFilter[settings.key] = { '==': $scope.entity.Id };

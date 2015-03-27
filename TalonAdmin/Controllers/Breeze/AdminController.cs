@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using Microsoft.AspNet.Identity.Owin;
+using Microsoft.AspNet.Identity;
+using System.Threading.Tasks; 
 
 namespace TalonAdmin.Controllers.Breeze
 {
@@ -15,6 +18,8 @@ namespace TalonAdmin.Controllers.Breeze
     {
         readonly EFContextProvider<Models.Admin.AdminContext> _contextProvider =
             new EFContextProvider<Models.Admin.AdminContext>();
+
+        public ApplicationRoleManager RoleManager { get { return HttpContext.Current.GetOwinContext().GetUserManager<ApplicationRoleManager>(); } }
 
         [HttpGet]
         public string Metadata()
@@ -27,6 +32,36 @@ namespace TalonAdmin.Controllers.Breeze
         public IQueryable<TalonAdmin.Models.Admin.ApplicationUser> Users()
         {
             return _contextProvider.Context.Users;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "System Administrator")]
+        public async Task<IQueryable<TalonAdmin.Models.Admin.ApplicationUser>> SystemAdministrators()
+        {
+            var role = await RoleManager.FindByNameAsync("System Administrator");
+            var users = role.Users.Select(r => r.UserId).ToArray();
+
+            return _contextProvider.Context.Users.Where(u => users.Contains(u.Id));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Organization Administrator,System Administrator")]
+        public async Task<IQueryable<TalonAdmin.Models.Admin.ApplicationUser>> OrganizationAdministrators()
+        {
+            var role = await RoleManager.FindByNameAsync("Organization Administrator");
+            var users = role.Users.Select(r => r.UserId).ToArray();
+
+            return _contextProvider.Context.Users.Where(u => users.Contains(u.Id));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Country Administrator,Organization Administrator,System Administrator")]
+        public async Task<IQueryable<TalonAdmin.Models.Admin.ApplicationUser>> CountryAdministrators()
+        {
+            var role = await RoleManager.FindByNameAsync("Country Administrator");
+            var users = role.Users.Select(r => r.UserId).ToArray();
+
+            return _contextProvider.Context.Users.Where(u => users.Contains(u.Id));
         }
 
         [HttpGet]

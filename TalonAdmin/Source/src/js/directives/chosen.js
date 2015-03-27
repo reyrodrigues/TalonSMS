@@ -12,7 +12,6 @@ angular.module('app')
                 }
 
                 select.chosen({ allow_single_deselect: true });
-                console.log(select);
                 select.addClass('isChosen');
 
                 select.on('chosen:updated', function () {

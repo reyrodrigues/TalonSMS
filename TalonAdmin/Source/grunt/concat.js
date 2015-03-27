@@ -24,6 +24,7 @@ module.exports = {
         'bower_components/ng-grid/build/ng-grid.min.js',
         'bower_components/angular-signalr-hub/signalr-hub.min.js',
         'bower_components/angular-busy/dist/angular-busy.min.js',
+        'bower_components/angular-filter/dist/angular-filter.min.js',
 
         'bower_components/angular-ui-router/release/angular-ui-router.js',
         'bower_components/ngstorage/ngStorage.js',

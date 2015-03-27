@@ -17,6 +17,7 @@ using RazorEngine.Templating;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using System.DirectoryServices.AccountManagement;
+using System.Globalization;
 
 namespace TalonAdmin.Controllers
 {
@@ -49,18 +50,20 @@ namespace TalonAdmin.Controllers
             using (var ctx = new Models.Vouchers.Context())
             {
                 var items = (from v in ctx.VoucherTransactionRecords
-                            where
-                            v.VendorId == vendorId && v.Voucher.DistributionId == distributionId
-                            orderby v.Beneficiary.Name
-                            select v).ToArray();
+                             where
+                             v.VendorId == vendorId && v.Voucher.DistributionId == distributionId
+                             orderby v.Beneficiary.Name
+                             select v).ToArray();
 
                 int pageSize = 12;
                 var pages = new List<dynamic>();
                 var numberOfPages = (int)Math.Ceiling(items.Length / (double)pageSize);
-                if (numberOfPages == 0) {
+                if (numberOfPages == 0)
+                {
                     numberOfPages = 1;
                 }
-                for (int i = 0; i < numberOfPages; i++) {
+                for (int i = 0; i < numberOfPages; i++)
+                {
                     pages.Add(new
                     {
                         Page = i + 1,
@@ -74,7 +77,7 @@ namespace TalonAdmin.Controllers
                 var model = new
                 {
                     User = user,
-                    Distribution = ctx.Distributions.Where(d=> d.Id==distributionId).First(),
+                    Distribution = ctx.Distributions.Where(d => d.Id == distributionId).First(),
                     Period = periodDate,
                     Pages = pages,
                     Items = items,
@@ -82,7 +85,7 @@ namespace TalonAdmin.Controllers
                     Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
                     Logo = Convert.ToBase64String(image),
                     LogoMimeType = "image/svg+xml",
-                    Total = items.Select(i=>i.Voucher.Category.Value).Sum()
+                    Total = items.Select(i => i.Voucher.Category.Value).Sum()
                 };
                 var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
 
@@ -127,43 +130,59 @@ namespace TalonAdmin.Controllers
         public ActionResult ServerScript()
         {
             StringBuilder content = new StringBuilder();
+            var isAuthenticated = User.Identity.IsAuthenticated;
 
             var appPath = Request.ApplicationPath;
             if (appPath == "/")
                 appPath = "";
 
-            if (Request.Headers.AllKeys.Contains("X-Proxy-Path")) {
+            if (Request.Headers.AllKeys.Contains("X-Proxy-Path"))
+            {
                 appPath = Request.Headers["X-Proxy-Path"];
-
-                if (appPath.EndsWith("/"))
-                {
-                    appPath = appPath.Substring(0, appPath.Length - 1);
-                }
             }
 
-            content.AppendFormat("window.BaseUrl = '{0}/'\n", appPath);
+            if (appPath.EndsWith("/"))
+            {
+                appPath = appPath.Substring(0, appPath.Length - 1);
+            }
 
+            ViewBag.AppPath = appPath;
 
-            return Content(content.ToString());
+            return View();
+        }
+
+        [Authorize]
+        public ActionResult NavigationItems()
+        {
+            var userId = User.Identity.GetUserId();
+            using (var ctx = new Models.Admin.AdminContext())
+            {
+                var user = ctx.Users.Where(u => u.Id == userId).First();
+                var roles = user.Roles.Select(r => r.RoleId).ToArray();
+                var categories = ctx.MenuCategories.ToArray().Where(c =>!c.Roles.Any() || c.Roles.Select(r => r.RoleId).Intersect(roles).Any())
+                    .OrderBy(c => c.SortOrder).ToArray();
+
+                return Content(JToken.FromObject(categories).ToString(), "application/json");
+            }
         }
 
 
         public ActionResult OfflineManifest()
         {
 
-            throw new HttpException(404, "Some description");
-            /*
+            //throw new HttpException(404, "Some description");
+
             var files = Directory.EnumerateFiles(Server.MapPath("~/App"), "*.*", SearchOption.AllDirectories)
-                                .Select(f=> f.Replace(Server.MapPath("~"), ""))
-                                .Union(Directory.EnumerateFiles(Server.MapPath("~/Scripts"), "*.*", SearchOption.AllDirectories)
-                                .Select(f => f.Replace(Server.MapPath("~"), "")))
-                                .Select(f=> f.Replace(Path.DirectorySeparatorChar, '/'))
-                                .Select(f=> (Request.ApplicationPath + f).Replace("//", "/"))
+                                .Union(Directory.EnumerateFiles(Server.MapPath("~/Scripts"), "*.*", SearchOption.AllDirectories))
+                                .Union(Directory.EnumerateFiles(Server.MapPath("~/Content"), "*.*", SearchOption.AllDirectories))
+                                .Select(f => f.Replace(Server.MapPath("~"), ""))
+                                .Select(f => f.Replace(Path.DirectorySeparatorChar, '/'))
+                                .Select(f => (Request.ApplicationPath + f).Replace("//", "/"))
                                 .ToArray();
             ViewBag.Files = files;
 
 
-            return View();*/
+            return View();
         }
     }
 }

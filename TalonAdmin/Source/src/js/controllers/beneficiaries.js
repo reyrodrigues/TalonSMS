@@ -1,6 +1,6 @@
 ﻿'use strict';
 
-app.controller('BeneficiaryRegisterCtrl', ['$scope', 'createController', 'locations', 'groups',
+app.controller('BeneficiariesCreateCtrl', ['$scope', 'createController', 'locations', 'groups',
     function ($scope, createController, locations, groups) {
         $scope.locations = locations;
         $scope.groups = groups;
@@ -11,7 +11,7 @@ app.controller('BeneficiaryRegisterCtrl', ['$scope', 'createController', 'locati
         });
     }]);
 
-app.controller('BeneficiaryEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'groups', 'backendService',
+app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'groups', 'backendService',
     function ($scope, editController, gettext, subGrid, locations, groups, backendService) {
         $scope.locations = locations;
         $scope.groups = groups;
@@ -78,7 +78,7 @@ app.controller('BeneficiaryEditCtrl', ['$scope', 'editController', 'gettext', 's
             });
     }]);
 
-app.controller('BeneficiaryGridCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster','serviceBase','$location',
+app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location',
 function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location) {
         var storageSetting = $state.current.name + 'GridSettings';
         $scope.showingDisabled = false;
@@ -145,7 +145,6 @@ app.controller('ImportBeneficiariesCtrl', ['breeze', 'serviceBase', '$scope', '$
         $scope.files = [];
 
         $scope.upload = function () {
-            console.log(arguments, $scope.files);
             $scope.uploading = $upload.upload({
                 url: serviceBase + 'api/Excel/ImportBeneficiaries?countryId=' + $localStorage.country.Id + '&organizationId=' + $localStorage.organization.Id,
                 file: $scope.files.pop()

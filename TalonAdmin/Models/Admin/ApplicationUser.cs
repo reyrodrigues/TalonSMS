@@ -19,16 +19,7 @@ namespace TalonAdmin.Models.Admin
 
         public virtual Organization Organization { get; set; }
 
-        [JsonIgnore, XmlIgnore, IgnoreDataMember]
-        public virtual ICollection<ApplicationUserCountry> ApplicationUserCountries { get; set; }
-
-        public IEnumerable<Country> Countries
-        {
-            get
-            {
-                return this.ApplicationUserCountries.Select(u => u.Country);
-            }
-        }
+        public virtual ICollection<ApplicationUserCountry> Countries { get; set; }
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager, string authenticationType)
         {

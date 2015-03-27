@@ -4,16 +4,21 @@
 
 angular.module('app')
   .controller('AppCtrl',
-  ['$scope', '$localStorage', '$window', '$q', '$http', 'authService', 'ngAuthSettings', '$state', '$rootScope', 'localStorageService', 'gettext', 'gettextCatalog',
-function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings, $state, $rootScope, localStorageService, gettext, gettextCatalog) {
+  ['$scope', '$localStorage', '$window', '$q', '$http', 'authService', 'ngAuthSettings', '$state', '$rootScope', 'localStorageService', 'gettext', 'gettextCatalog', 'serviceBase',
+function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings, $state, $rootScope, localStorageService, gettext, gettextCatalog,serviceBase) {
     // add 'ie' classes to html
     var isIE = !!navigator.userAgent.match(/MSIE/i);
     isIE && angular.element($window.document.body).addClass('ie');
     isSmartDevice($window) && angular.element($window.document.body).addClass('smart');
 
+    $rootScope.navigationItems = window.NavigationItems;
 
     $rootScope.$on('app:authenticated', function () {
+        $http.get(serviceBase + 'Home/NavigationItems').then(function (response) {
+            $rootScope.navigationItems = response.data;
+        });
     });
+
 
     $scope.selectCountry = function (country) {
         if ($rootScope.country.Id != country.Id) {
@@ -74,9 +79,10 @@ function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings
     }
 
     $rootScope.logOut = function () {
-        authService.logOut();
-        localStorage.clear();
-        $state.go('access.signin');
+        authService.logOut().then(function () {
+            localStorage.clear();
+            $state.go('access.signin');
+        });
     };
 
     // save settings to local storage

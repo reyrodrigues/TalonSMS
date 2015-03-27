@@ -4,14 +4,14 @@
 <div class="wrapper-md">
     <form class="bs-example form-horizontal form-validation" ng-submit="save()">
         <div class="row">
-            <div class="col-sm-12" ng-include="'tpl/includes/distribution_form.html'" toggle-editing is-editing="isEditing">
+            <div class="col-sm-12" ng-include="'tpl/distributions/form.html'" toggle-editing is-editing="isEditing">
 
             </div>
         </div>
         <div class="row">
             <div class="col-sm-12">
                 <div class="form-group">
-                    <div class=" col-lg-12">
+                    <div class=" col-sm-12">
                         <div class="btn-group pull-right">
                             <button type="submit" class="btn btn-primary">Save</button>
                             <button ui-sref="app.vouchers.distributions" class="btn btn-info">Back</button>

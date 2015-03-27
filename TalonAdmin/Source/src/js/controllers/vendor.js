@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 
-app.controller('VendorRegisterCtrl', ['$scope', 'createController', 'locations', 'vendorTypes',
+app.controller('VendorsCreateCtrl', ['$scope', 'createController', 'locations', 'vendorTypes',
     function ($scope, createController, locations, vendorTypes) {
         $scope.locations = locations;
         $scope.vendorTypes = vendorTypes;
@@ -12,7 +12,7 @@ app.controller('VendorRegisterCtrl', ['$scope', 'createController', 'locations',
         });
     }]);
 
-app.controller('VendorEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'vendorTypes', 'backendService',
+app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'vendorTypes', 'backendService',
     function ($scope, editController, gettext, subGrid, locations, vendorTypes, backendService) {
         $scope.locations = locations;
         $scope.vendorTypes = vendorTypes;
@@ -42,7 +42,7 @@ app.controller('VendorEditCtrl', ['$scope', 'editController', 'gettext', 'subGri
             });
     }]);
 
-app.controller('VendorGridCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location',
+app.controller('VendorsListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location',
 function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location) {
     var storageSetting = $state.current.name + 'GridSettings';
     $scope.showingDisabled = false;
@@ -93,7 +93,6 @@ app.controller('ImportVendorsCtrl', ['breeze', 'serviceBase', '$scope', '$q', '$
         $scope.files = [];
 
         $scope.upload = function () {
-            console.log(arguments, $scope.files);
             $scope.uploading = $upload.upload({
                 url: serviceBase + 'api/Excel/ImportVendors?countryId=' + $localStorage.country.Id,
                 file: $scope.files.pop()

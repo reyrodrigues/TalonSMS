@@ -29,20 +29,24 @@ app.factory('authService', ['$http', '$q', 'localStorageService', 'ngAuthSetting
 
     var _loadUserData = function () {
         var deferred = $q.defer();
-        $http.get(ngAuthSettings.apiServiceBaseUri + 'api/Account/UserInfo')
-        .then(function (userInfo) {
-            $rootScope.currentUser = userInfo.data;
+        $http.get(ngAuthSettings.apiServiceBaseUri + 'api/Account/Me')
+        .then(function (response) {
+            $rootScope.currentUser = response.data;
 
             $rootScope.organization = $rootScope.currentUser.Organization;
             $localStorage.organization = $rootScope.currentUser.Organization;
+            var countries = $rootScope.currentUser.Countries.map(function (c) {
+                return c.Country;
+            });
+
             if (!$localStorage.country) {
-                $localStorage.country = $rootScope.currentUser.Countries[0];
+                $localStorage.country = countries[0];
             }
 
             $rootScope.country = $localStorage.country;
 
             if ($rootScope.currentUser.Countries.length > 1)
-                $rootScope.availableCountries = $rootScope.currentUser.Countries;
+                $rootScope.availableCountries = countries;
             else
                 $rootScope.availableCountries = false;
 
@@ -97,6 +101,7 @@ app.factory('authService', ['$http', '$q', 'localStorageService', 'ngAuthSetting
         _authentication.userName = "";
         _authentication.useRefreshTokens = false;
 
+        return $http.post(serviceBase + 'api/Account/LogOut');
     };
 
     var _fillAuthData = function () {

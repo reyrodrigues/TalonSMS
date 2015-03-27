@@ -11,12 +11,12 @@
         <div class="row">
             <div class="col-sm-12" ng-if="!isEditing">
                 <div class="form-group">
-                    <div class=" col-lg-6">
+                    <div class=" col-sm-6">
                         <div class="btn-group ">
                             <a href ng-click="delete()" class="btn btn-sm btn-danger" translate>Delete</a>
                         </div>
                     </div>
-                    <div class=" col-lg-6">
+                    <div class=" col-sm-6">
                         <div class="btn-group pull-right" ng-if="!entity.Disabled">
                             <button ng-click="startEditing()" class="btn btn-primary" translate>Edit</button>
                             <button ui-sref="{{ genericSettings.listState }}" class="btn btn-info" translate>Back</button>
@@ -28,7 +28,7 @@
         <div class="row">
             <div class="col-sm-12" ng-if="isEditing">
                 <div class="form-group">
-                    <div class=" col-lg-12">
+                    <div class=" col-sm-12">
                         <div class="btn-group pull-right">
                             <button type="submit" class="btn btn-primary" translate>Save</button>
                             <a ng-click="save(true)" class="btn btn-primary" translate>Save and Continue Editing</a>

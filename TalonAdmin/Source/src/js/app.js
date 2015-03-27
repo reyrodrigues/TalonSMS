@@ -20,7 +20,8 @@ var app = angular.module('app', [
   'SignalR',
   'gettext',
   'angularFileUpload',
-  'cgBusy'
+  'cgBusy',
+  'angular.filter'
 ]);
 
 app.constant('ngAuthSettings', {
