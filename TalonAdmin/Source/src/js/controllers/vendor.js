@@ -26,13 +26,10 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             key: 'VendorId',
             expand: ['Voucher', 'Beneficiary', 'Vendor'],
             columnDefs: [
-                {
-                    field: "Status", displayName: gettext("Status"),
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'
-                },
-                { field: "Beneficiary.Name", displayName: gettext("Beneficiary") },
-                { field: "Voucher.VoucherCode", displayName: gettext("Voucher Code") },
-                { field: "Voucher.Value", displayName: gettext("Value") }
+                ["Status", gettext("Status"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'],
+                ["Beneficiary.Name", gettext("Beneficiary")],
+                ["Voucher.VoucherCode", gettext("Voucher Code")],
+                ["Voucher.Value", gettext("Value")]
             ]
         });
 
@@ -50,10 +47,10 @@ function ($scope, $state, $localStorage, listController, gettext, dialogs, toast
     listController($scope, {
         collectionType: 'Vendors',
         expand: ['Location'],
-        columnDefs: [
-            { field: "Name", displayName:gettext("Name"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
-            { field: "MobileNumber", displayName: gettext("Mobile Number") },
-            { field: "Location.Name", displayName: gettext("Location") }
+        columns: [
+            ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
+            ["MobileNumber", gettext("Mobile Number")],
+            ["Location.Name", gettext("Location")]
         ]
     });
 

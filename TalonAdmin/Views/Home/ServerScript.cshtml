@@ -1,0 +1,20 @@
+﻿@{
+    Layout = null;
+    Response.ContentType = "application/javascript";
+}
+
+var fetchMetadata = ['serviceBase', 'backendService', '$q', 'adminBackendService', '$localStorage',
+    function (serviceBase, backendService, $q, adminBackendService, $localStorage) {
+        var defer = $q.defer();
+
+        $q.all([
+            backendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/EVM'),
+            adminBackendService.metadataStore.fetchMetadata(serviceBase + 'Breeze/Admin')
+        ]).then(function () { defer.resolve(); })
+        .catch(function () { defer.resolve(); });
+
+        return defer.promise;
+}];
+window.BaseUrl = '@ViewBag.AppPath/';
+window.MainMetadata = JSON.stringify(@Html.Raw(ViewBag.MainMetadata));
+window.AdminMetadata = JSON.stringify(@Html.Raw(ViewBag.AdminMetadata));

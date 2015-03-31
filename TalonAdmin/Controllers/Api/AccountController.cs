@@ -20,8 +20,9 @@ using TalonAdmin.Models;
 using TalonAdmin.Models.Admin;
 using System.Data.Entity;
 using TalonAdmin.Models.BindingModels;
+using Newtonsoft.Json.Linq;
 
-namespace TalonAdmin.Controllers
+namespace TalonAdmin.Controllers.Api
 {
     [Authorize]
     [RoutePrefix("api/Account")]
@@ -29,7 +30,7 @@ namespace TalonAdmin.Controllers
     {
         public ApplicationUserManager UserManager
         {
-            get { return Request.GetOwinContext().GetUserManager<ApplicationUserManager>();  }
+            get { return Request.GetOwinContext().GetUserManager<ApplicationUserManager>(); }
         }
 
         public ApplicationRoleManager RoleManager
@@ -53,14 +54,18 @@ namespace TalonAdmin.Controllers
                 string userId = User.Identity.GetUserId();
                 if (admin.Users.Where(u => u.Id == userId).Any())
                 {
-                    var user = await admin.Users
+                    var user = (await admin.Users
                         .Include("Countries")
                         .Include("Countries.Country")
                         .Include("Organization")
                         .Where(u => u.Id == userId)
-                        .ToListAsync();
+                        .ToListAsync()).First();
 
-                    return Json<ApplicationUser>(user.First());
+                    var jsonUser = JObject.FromObject(user);
+                    var role = await RoleManager.FindByNameAsync("System Administrator");
+                    jsonUser["IsSystemAdministrator"] = role.Users.Select(r => r.UserId).Contains(user.Id);
+
+                    return Json<JObject>(jsonUser);
                 }
 
                 return BadRequest();
@@ -100,19 +105,41 @@ namespace TalonAdmin.Controllers
             {
                 return BadRequest(ModelState);
             }
-            string userId = User.Identity.GetUserId();
-
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await UserManager.FindByNameAsync(model.UserName);
 
             user.FullName = model.FullName;
             user.Email = model.Email;
+            user.UserName = model.UserName;
+            user.OrganizationId = model.OrganizationId;
 
-            var result = await UserManager.UpdateAsync(user);
+            await UserManager.UpdateAsync(user);
 
-            if (!result.Succeeded)
+            if (model.CountryIds != null)
             {
-                return GetErrorResult(result);
+                using (var adminContext = new Models.Admin.AdminContext())
+                {
+                    var countries = adminContext.ApplicationUserCountries.Where(a => a.ApplicationUserId == user.Id);
+
+                    var toDelete = countries.Where(c => !model.CountryIds.Contains(c.CountryId));
+                    var userCountries = countries.Where(c => model.CountryIds.Contains(c.CountryId)).ToList();
+
+                    adminContext.ApplicationUserCountries.RemoveRange(toDelete.ToArray());
+
+                    var toCreate = model.CountryIds.Where(i => !userCountries.Select(c => c.CountryId).Contains(i)).Select(i => new ApplicationUserCountry { CountryId = i, ApplicationUserId = user.Id }).ToArray();
+
+                    adminContext.ApplicationUserCountries.AddRange(toCreate);
+
+                    await adminContext.SaveChangesAsync();
+                }
             }
+
+            if (!String.IsNullOrEmpty(model.Role))
+            {
+                var role = await RoleManager.FindByIdAsync(model.Role);
+                // Validate this
+                await UserManager.AddToRoleAsync(user.Id, role.Name);
+            }
+
 
             return Ok();
         }
@@ -136,6 +163,7 @@ namespace TalonAdmin.Controllers
         }
 
         [Route("Register")]
+        [Authorize(Roles = "System Administrator, Country Administrator, Organization Administrator")]
         public async Task<IHttpActionResult> Register(RegisterBindingModel model)
         {
             if (!ModelState.IsValid)
@@ -152,9 +180,16 @@ namespace TalonAdmin.Controllers
             };
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
-
             if (result.Succeeded)
             {
+                if (!String.IsNullOrEmpty(model.Role))
+                {
+                    var role = await RoleManager.FindByIdAsync(model.Role);
+
+                    // Validate me
+                    await UserManager.AddToRoleAsync(user.Id, role.Name);
+                }
+
                 using (var ctx = new AdminContext())
                 {
                     var countries = model.Countries.Select(c => new ApplicationUserCountry
@@ -176,9 +211,9 @@ namespace TalonAdmin.Controllers
         }
 
 
-        [Route("RegisterSystemAdministrator")]
+        [Route("RegisterAdministrator")]
         [Authorize(Roles = "System Administrator")]
-        public async Task<IHttpActionResult> RegisterSystemAdministrator(RegisterBindingModel model)
+        public async Task<IHttpActionResult> RegisterAdministrator(RegisterBindingModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -194,10 +229,18 @@ namespace TalonAdmin.Controllers
             };
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
-            var roleResult = await UserManager.AddToRoleAsync(user.Id, "System Administrator");
-
             if (result.Succeeded)
             {
+                if (!String.IsNullOrEmpty(model.Role))
+                {
+                    var role = await RoleManager.FindByIdAsync(model.Role);
+                    await UserManager.AddToRoleAsync(user.Id, role.Name);
+                }
+                else
+                {
+                    await UserManager.AddToRoleAsync(user.Id, "System Administrator");
+                }
+
                 using (var ctx = new AdminContext())
                 {
                     var countries = model.Countries.Select(c => new ApplicationUserCountry

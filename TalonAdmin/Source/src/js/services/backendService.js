@@ -1,7 +1,19 @@
 ﻿'use strict';
 app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', function (breeze, serviceBase, $localStorage) {
-    var entityManager = new breeze.EntityManager(serviceBase + 'Breeze/EVM');
-    entityManager.metadataStore.setProperties({
+    // define the Breeze `DataService` for this app
+    var dataService = new breeze.DataService({
+        serviceName: serviceBase + 'Breeze/EVM',
+        hasServerMetadata: false  // don't ask the server for metadata
+    });
+
+    // create the metadataStore 
+    var metadataStore = new breeze.MetadataStore({
+    });
+
+    // initialize it from the application's metadata variable
+    metadataStore.importMetadata(window.MainMetadata);
+
+    metadataStore.setProperties({
         serializerFn: function (dataProperty, value) {
             if (dataProperty.dataType.name == 'DateTime') {
                 return moment(value).tz('utc').toDate();
@@ -18,6 +30,13 @@ app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', functio
             return value;
         }
     });
+
+    // create a new EntityManager that uses this metadataStore
+    var entityManager = new breeze.EntityManager({
+        dataService: dataService,
+        metadataStore: metadataStore
+    });
+
     entityManager.saveOptions = new breeze.SaveOptions({ allowConcurrentSaves: true });
 
     return entityManager;

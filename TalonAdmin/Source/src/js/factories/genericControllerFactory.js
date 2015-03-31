@@ -7,7 +7,7 @@ angular.module('app')
               var storageSetting = $state.current.name + 'GridSettings';
               var _backendService = settings.backendService || backendService;
 
-              if (!settings.columnDefs) {
+              if (!settings.columns) {
                   settings.columnDefs = [
                       {
                           field: "Name",
@@ -16,6 +16,30 @@ angular.module('app')
                           settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'
                       }
                   ];
+              } else {
+                  settings.columnDefs = [];
+                  angular.forEach(settings.columns, function (v, k) {
+                      var field = v[0];
+                      var name = v[1];
+                      var cellTemplate = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="' +
+                          settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>';
+                      if (v.length > 2) {
+                          cellTemplate = v[2];
+                      }
+
+                      var sortable = true;
+                      if (v.length > 3) {
+                          sortable = sortable && v[3];
+                      }
+
+                      settings.columnDefs.push(
+                      {
+                          field: field,
+                          displayName: name,
+                          cellTemplate: cellTemplate,
+                          sortable: sortable
+                      });
+                  });
               }
 
               $scope.loadGridData = function () {
@@ -222,11 +246,34 @@ angular.module('app')
       function ($state, backendService, toaster, gettext) {
           var subGrid = function ($scope, settings) {
               var storageSetting = $state.current.name + settings.collectionType + 'GridSettings';
-              var columnDefs = settings.columnDefs;
+              var columnDefs = [];
               var _backendService = settings.backendService || backendService;
 
-              if (!columnDefs) {
+              if (!settings.columns) {
                   columnDefs = [{ field: "Name", displayName: "Name" }];
+              } else {
+                  angular.forEach(settings.columns, function (v, k) {
+                      var field = v[0];
+                      var name = v[1];
+                      var cellTemplate = null;
+
+                      if (v.length > 2) {
+                          cellTemplate = v[2];
+                      }
+
+                      var sortable = true;
+                      if (v.length > 3) {
+                          sortable = sortable && v[3];
+                      }
+
+                      settings.columnDefs.push(
+                      {
+                          field: field,
+                          displayName: name,
+                          cellTemplate: cellTemplate,
+                          sortable: sortable
+                      });
+                  });
               }
 
               $scope[settings.collectionType] = [];

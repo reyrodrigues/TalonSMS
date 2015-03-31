@@ -61,14 +61,11 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
             collectionType: 'VoucherTransactionRecords',
             key: 'BeneficiaryId',
             expand: ['Voucher', 'Vendor'],
-            columnDefs: [
-                {
-                    field: "Status", displayName: gettext("Status"),
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'
-                },
-                { field: "Vendor.Name", displayName: gettext("Vendor") },
-                { field: "Voucher.VoucherCode", displayName: gettext("Voucher Code") },
-                { field: "Voucher.Value", displayName: gettext("Value") }
+            columns: [
+                [ "Status", gettext("Status"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'],
+                ["Vendor.Name", gettext("Vendor")],
+                ["Voucher.VoucherCode", gettext("Voucher Code")],
+                ["Voucher.Value", gettext("Value")]
             ]
         });
 
@@ -78,22 +75,23 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
             });
     }]);
 
-app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location',
-function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location) {
+app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location', 'settings',
+function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location, settings) {
         var storageSetting = $state.current.name + 'GridSettings';
         $scope.showingDisabled = false;
+        $scope.genericSettings = settings;
 
-        listController($scope, {
-            collectionType: 'Beneficiaries',
+        listController($scope, angular.extend({
             expand: ['Location', "Group"],
-            columnDefs: [
-                { field: "Name", displayName: gettext("Name"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
-                { field: "DateOfBirth", displayName: gettext("Date of Birth"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>' },
-                { field: "NationalId", displayName: gettext("National Id Number") },
-                { field: "MobileNumber", displayName: gettext("Mobile Number") },
-                { field: "Location.Name", displayName: gettext("Location") }
+            columns: [
+                ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' ],
+                ["DateOfBirth",gettext("Date of Birth"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>' ],
+                ["NationalId", gettext("National Id Number") ],
+                ["MobileNumber", gettext("Mobile Number") ],
+                ["Location.Name", gettext("Location")],
+                ["Group.Name", gettext("Group")]
             ]
-        });
+        }, settings));
 
         $scope.filter = { Disabled: { '!=': true } };
         $scope.showDisabled = function () {

@@ -52,6 +52,7 @@ namespace TalonAdmin.Models.Admin
         public DbSet<MenuCategoryRole> MenuCategoryRoles { get; set; }
         public DbSet<MenuCategory> MenuCategories { get; set; }
         public DbSet<Organization> Organizations { get; set; }
+        public DbSet<OrganizationCountry> OrganizationCountries { get; set; }
         public DbSet<ApplicationUserCountry> ApplicationUserCountries { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -80,7 +81,7 @@ namespace TalonAdmin.Models.Admin
         }
     }
 
-    public class CleanDbInitializer : DropCreateDatabaseAlways<AdminContext>
+    public class CleanDbInitializer : DropCreateDatabaseIfModelChanges<AdminContext>
     {
         protected override void Seed(AdminContext context)
         {
@@ -103,7 +104,8 @@ namespace TalonAdmin.Models.Admin
                 IsoAlpha2 = "UA",
                 IsoAlpha3 = "UKR",
                 CurrencyIsoCode = "UAH",
-                CurrencyUnicodeSymbol = "₴"
+                CurrencyUnicodeSymbol = "₴",
+                Settings = new CountrySettings()
             };
 
             var systemAdmin = new ApplicationUser
@@ -151,15 +153,22 @@ namespace TalonAdmin.Models.Admin
             context.Organizations.Add(irc);
 
             context.Countries.Add(ukraine);
+            context.OrganizationCountries.Add(new  OrganizationCountry{ 
+                Country = ukraine,
+                Organization = irc,
+                Settings = new CountrySettings()
+            });
 
             context.ApplicationUserCountries.Add(uaMembership);
             #endregion
+
             #region Menu Items
 
             var categories = new MenuCategory[] {
                 new MenuCategory { 
                     SortOrder = 1,
                     Name = "Beneficiary",
+                    NeedsCountry = true,
                     Items = new MenuItem[] { 
                         new MenuItem {
                             State = "beneficiaries",
@@ -196,6 +205,7 @@ namespace TalonAdmin.Models.Admin
                 new MenuCategory { 
                     SortOrder = 2,
                     Name = "Vendors",
+                    NeedsCountry = true,
                     Items = new MenuItem[] { 
                         new MenuItem {
                             State = "vendors",
@@ -233,6 +243,7 @@ namespace TalonAdmin.Models.Admin
                 new MenuCategory { 
                     SortOrder = 3,
                     Name = "Vouchers",
+                    NeedsCountry = true,
                     Roles = new MenuCategoryRole[] {
                         new MenuCategoryRole { Role = systemAdminRole },
                         new MenuCategoryRole { Role = orgAdminRole },
@@ -259,6 +270,7 @@ namespace TalonAdmin.Models.Admin
                 new MenuCategory { 
                     SortOrder = 4,
                     Name = "Reporting",
+                    NeedsCountry = true,
                     Roles = new MenuCategoryRole[] {
                         new MenuCategoryRole { Role = systemAdminRole },
                         new MenuCategoryRole { Role = orgAdminRole },
@@ -268,7 +280,7 @@ namespace TalonAdmin.Models.Admin
                         new MenuItem {
                             State = "reporting",
                             Title = "Reports",
-                            CssClass = "icon-bar-chart icon text-success-lter",
+                            CssClass = "icon-bar-chart icon text-success-dker",
                             Children = new MenuItem[] {
                                 new MenuItem {
                                     State = "reporting.distribution",
@@ -294,7 +306,7 @@ namespace TalonAdmin.Models.Admin
                         new MenuItem {
                             State = "country-admin.voucher-types",
                             Title = "Voucher Types",
-                            CssClass = "fa fa-tags text-info-lter",
+                            CssClass = "fa fa-tags text-info-dker",
                             Children = new MenuItem[] {
                                 new MenuItem {
                                     State = "country-admin.voucher-types.list",
@@ -309,7 +321,7 @@ namespace TalonAdmin.Models.Admin
                         new MenuItem {
                             State = "country-admin.locations",
                             Title = "Locations",
-                            CssClass = "icon icon-pin text-success-lter",
+                            CssClass = "icon icon-pin text-info-dker",
                             Children = new MenuItem[] {
                                 new MenuItem {
                                     State = "country-admin.locations.list",
@@ -320,7 +332,22 @@ namespace TalonAdmin.Models.Admin
                                     Title = "Create",
                                 },
                             }
-                        },
+                        }, 
+                        new MenuItem {
+                            State = "country-admin.users",
+                            Title = "Registered Users",
+                            CssClass = "icon-user icon text-info-dker",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "country-admin.users.list",
+                                    Title = "List",
+                                },
+                                new MenuItem {
+                                    State = "country-admin.users.register",
+                                    Title = "Register",
+                                },
+                            }
+                        }, 
                     },
                 },
                 new MenuCategory { 
@@ -333,8 +360,8 @@ namespace TalonAdmin.Models.Admin
                     Items = new MenuItem[] { 
                         new MenuItem {
                             State = "org-admin.users",
-                            Title = "Registered Users",
-                            CssClass = "icon-user icon text-success-lter",
+                            Title = "Org Users",
+                            CssClass = "icon-user icon text-warning-lter",
                             Children = new MenuItem[] {
                                 new MenuItem {
                                     State = "org-admin.users.list",
@@ -349,14 +376,14 @@ namespace TalonAdmin.Models.Admin
                         new MenuItem {
                             State = "org-admin.countries",
                             Title = "Countries",
-                            CssClass = "fa fa-globe text-success-lter",
+                            CssClass = "fa fa-globe text-warning-lter",
                             Children = new MenuItem[] {
                                 new MenuItem {
-                                    State = "system-admin.countries.list",
+                                    State = "org-admin.countries.list",
                                     Title = "List",
                                 },
                                 new MenuItem {
-                                    State = "system-admin.countries.create",
+                                    State = "org-admin.countries.create",
                                     Title = "Create",
                                 },
                             }
@@ -373,7 +400,7 @@ namespace TalonAdmin.Models.Admin
                         new MenuItem {
                             State = "system-admin.users",
                             Title = "System Admins",
-                            CssClass = "icon-user icon text-success-lter",
+                            CssClass = "icon-user icon text-danger-lter",
                             Children = new MenuItem[] {
                                 new MenuItem {
                                     State = "system-admin.users.list",
@@ -388,7 +415,7 @@ namespace TalonAdmin.Models.Admin
                         new MenuItem {
                             State = "system-admin.countries",
                             Title = "Countries",
-                            CssClass = "fa fa-globe text-success-lter",
+                            CssClass = "fa fa-globe text-danger-lter",
                             Children = new MenuItem[] {
                                 new MenuItem {
                                     State = "system-admin.countries.list",
@@ -403,7 +430,7 @@ namespace TalonAdmin.Models.Admin
                         new MenuItem {
                             State = "system-admi.organizations",
                             Title = "Organizations",
-                            CssClass = "fa fa-circle text-success-lter",
+                            CssClass = "fa fa-circle text-danger-lter",
                             Children = new MenuItem[] {
                                 new MenuItem {
                                     State = "system-admin.organizations.list",

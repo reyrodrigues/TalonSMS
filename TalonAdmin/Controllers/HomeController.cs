@@ -18,6 +18,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using System.DirectoryServices.AccountManagement;
 using System.Globalization;
+using Breeze.ContextProvider.EF6;
 
 namespace TalonAdmin.Controllers
 {
@@ -147,6 +148,13 @@ namespace TalonAdmin.Controllers
             }
 
             ViewBag.AppPath = appPath;
+
+            var talonContextProvider = new EFContextProvider<Models.Vouchers.Context>();
+            var adminContextProvider = new EFContextProvider<Models.Admin.AdminContext>();
+
+            ViewBag.MainMetadata = talonContextProvider.Metadata();
+            ViewBag.AdminMetadata = adminContextProvider.Metadata();
+
 
             return View();
         }

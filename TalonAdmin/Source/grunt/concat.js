@@ -42,6 +42,7 @@ module.exports = {
         'src/js/*.js',
         'src/tpl/app.templates.js',
         'src/js/directives/*.js',
+        'src/js/providers/*.js',
         'src/js/services/*.js',
         'src/js/factories/*.js',
         'src/js/filters/*.js',

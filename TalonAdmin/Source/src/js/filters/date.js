@@ -13,6 +13,7 @@ angular.module('app')
 angular.module('app')
   .filter('localeDate', function () {
       return function (date) {
+          console.log(arguments);
           var datePart = moment(date).tz('utc').toISOString().split('T')[0];
 
           return moment(datePart).tz('utc').format("LL");

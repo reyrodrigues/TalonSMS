@@ -6,7 +6,7 @@
             <span class="font-bold " translate>Dashboard</span>
         </a>
     </li>
-    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs" ng-repeat-start="category in navigationItems">
+    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs" ng-repeat-start="category in navigationItems" ng-if="!category.NeedsCountry || country">
         <span translate>{{ category.Name }}</span>
     </li>
 

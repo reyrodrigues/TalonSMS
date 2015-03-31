@@ -34,6 +34,10 @@ angular.module('app')
                 if (ngModel) {
                     if (attrs.multiple) {
                         viewWatch = function () {
+                            $timeout(function () {
+                                select.trigger('chosen:updated');
+                            }, 500);
+
                             return ngModel.$viewValue;
                         };
                         scope.$watch(viewWatch, ngModel.$render, true);

@@ -1,0 +1,78 @@
+﻿<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3" translate>Register User</h1>
+</div>
+<div class="wrapper-md">
+    <form class="bs-example form-horizontal form-validation" ng-submit="save()">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" translate>Full Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" placeholder="{{'Full Name'|translate}}" ng-model="user.FullName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" translate>Account Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" placeholder="{{'Account Name'|translate}}" ng-model="user.UserName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Role</label>
+                        <div class="col-sm-8">
+                            <select chosen class="form-control" ng-model="user.Role"
+                                    ng-options="item.Id as item.Name for item in roles | orderBy:'item.Name'"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Organization</label>
+                        <div class="col-sm-8">
+                            <select chosen class="form-control" ng-model="user.OrganizationId"
+                                    ng-options="item.Id as item.Name for item in organizations | orderBy:'item.Name'" disabled></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Countries</label>
+                        <div class="col-sm-8">
+                            <select chosen class="form-control" ng-model="user.Countries" multiple
+                                    ng-options="item.Id as item.Name for item in countries | orderBy:'item.Name'"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" translate>Email</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" placeholder="{{'Email'|translate}}" ng-model="user.Email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" translate>Password</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" placeholder="{{ 'Password'|translate }}" ng-model="user.Password" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" translate>Confirm Password</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" placeholder="{{ 'Confirm Password'|translate }}" ng-model="user.ConfirmPassword"
+                                   ui-validate="'$value==user.Password'" ui-validate-watch="'user.Password'" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <div class=" col-sm-12">
+                        <div class="btn-group pull-right">
+                            <button type="submit" class="btn btn-primary" translate>Save</button>
+                            <button ui-sref="system-admin.users.list" class="btn btn-info" translate>Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

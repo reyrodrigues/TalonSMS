@@ -13,9 +13,13 @@ namespace TalonAdmin.Models.Admin
 
         public virtual string CurrencyIsoCode { get; set; }
 
+        public virtual int SettingsId { get; set; }
+
         /// <summary>
         /// Not all currencies can afford the luxury of living above the number four.
         /// </summary>
         public virtual string CurrencyUnicodeSymbol { get; set; }
+
+        public virtual CountrySettings Settings { get; set; }
     }
 }
