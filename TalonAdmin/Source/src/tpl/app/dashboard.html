@@ -1,0 +1,85 @@
+<div class="hbox hbox-auto-xs hbox-auto-sm" ng-init="
+    app.settings.asideFolded = false;
+    app.settings.asideDock = false;
+  ">
+    <!-- main -->
+    <div class="col">
+        <!-- main header -->
+        <div class="bg-light lter b-b wrapper-md">
+            <div class="row">
+                <div class="col-sm-6 col-xs-12">
+                    <h1 class="m-n font-thin h3 text-black">Dashboard</h1>
+                </div>
+                <div class="col-sm-6 text-right hidden-xs">
+                </div>
+            </div>
+        </div>
+
+        <!-- / main header -->
+        <div class="wrapper-md">
+            <div ng-repeat="d in distributions">
+                <!-- stats -->
+                <div class="panel">
+                    <div class="panel-heading no-border bg-primary">
+                        <h1 class="m-n h4 "><a class="text-black" ui-sref="distributions.edit({id: d.Distribution.Id})" href="">{{ d.Distribution.Title || "Distribution " + d.Location.Name }} - {{ d.Location.Name }}</a></h1>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="row row-sm text-center">
+                                    <div class="col-xs-6">
+                                        <div class="panel padder-v bg-primary item">
+                                            <div class="h1  text-black font-thin h1">{{ d.Beneficiaries }}</div>
+                                            <span class=" text-xs  text-black">Beneficiaries</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="panel padder-v bg-primary item">
+                                            <div class="h1  text-black font-thin h1">{{ d.Vendors }}</div>
+                                            <span class=" text-xs  text-black">Vendors</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="panel padder-v bg-primary item">
+                                            <div class="h1  text-black font-thin h1">{{ d.TotalVouchers }}</div>
+                                            <span class="text-xs  text-black">Vouchers Issued</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="panel padder-v bg-primary item">
+                                            <div class="h1  text-black font-thin h1">{{ d.VouchersUsed }}</div>
+                                            <span class="ext-xs  text-black">Vouchers Used</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="row row-sm text-center">
+
+                                    <div class="col-xs-12 m-b-md">
+                                        <div class="r bg-dark item hbox no-border">
+                                            <div class="col dk padder-v r-r">
+                                                <div class="text-primary-lter font-thin h1"><span>{{ d.IssuedAmount|currency:(country.CurrencyUnicodeSymbol||'$') }}</span></div>
+                                                <span class="text-primary-lter text-xs">Issued</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-12 m-b-md">
+                                        <div class="r bg-dark item hbox no-border">
+                                            <div class="col dk padder-v r-r">
+                                                <div class="text-primary-lter font-thin h1"><span>{{ (d.ClaimedAmount || 0)|currency:(country.CurrencyUnicodeSymbol||'$') }}</span></div>
+                                                <span class="text-primary-lter text-xs">Claimed</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- / stats -->
+        </div>
+    </div>
+    <!-- / main -->
+</div>
