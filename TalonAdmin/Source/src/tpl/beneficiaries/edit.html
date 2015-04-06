@@ -1,0 +1,59 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">Beneficiary Information - <small>{{ entity.Name }}</small></h1>
+</div>
+<div class="wrapper-md">
+    <form class="bs-example form-horizontal form-validation" ng-submit="save()">
+        <div class="row">
+            <div class="col-sm-12" ng-include="'tpl/beneficiaries/form.html'" toggle-editing is-editing="isEditing">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <h1 class="m-n font-thin h4">Voucher History</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-default">
+                    <div class="table-responsive">
+                        <div ng-grid="gridOptionsVoucherTransactionRecords" style="min-height:300px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12" ng-if="!isEditing">
+                <div class="form-group">
+                    <div class=" col-sm-6">
+                        <div class="btn-group ">
+                            <a href ng-click="delete()" class="btn btn-sm btn-danger">Delete</a>
+                            <button ng-click="deactivate()" class="btn btn-sm btn-danger" ng-if="!entity.Disabled">Deactivate</button>
+                            <button ng-click="reactivate()" class="btn btn-sm btn-success" ng-if="entity.Disabled">Reactivate</button>
+                        </div>
+                        <button ng-click="resendMessage()" class="btn btn-sm btn-info" ng-if="entity.WasWelcomeMessageSent && !entity.Disabled">Resend Welcome Message</button>
+                    </div>
+                    <div class=" col-sm-6">
+                        <div class="btn-group pull-right">
+                            <button ng-click="startEditing()" class="btn btn-primary" ng-if="!entity.Disabled">Edit</button>
+                            <button ui-sref="beneficiaries.list" class="btn btn-info">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12" ng-if="isEditing">
+                <div class="form-group">
+                    <div class=" col-sm-12">
+                        <div class="btn-group pull-right">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button ng-click="save(true)" class="btn btn-primary">Save and Continue Editing</button>
+                            <button ng-click="endEditing()" class="btn btn-info">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>
