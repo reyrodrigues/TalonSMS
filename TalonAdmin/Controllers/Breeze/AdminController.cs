@@ -15,7 +15,7 @@ using TalonAdmin.Extensions;
 using TalonAdmin.Attributes;
 namespace TalonAdmin.Controllers.Breeze
 {
-    [BreezeController]
+    [BreezeController, EnableBreezeQuery(MaxExpansionDepth = 5)]
     public class AdminController : ApiController
     {
         readonly EFContextProvider<Models.Admin.AdminContext> _contextProvider =

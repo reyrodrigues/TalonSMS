@@ -25,7 +25,7 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             collectionType: 'VoucherTransactionRecords',
             key: 'VendorId',
             expand: ['Voucher', 'Beneficiary', 'Vendor'],
-            columnDefs: [
+            columns: [
                 ["Status", gettext("Status"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'],
                 ["Beneficiary.Name", gettext("Beneficiary")],
                 ["Voucher.VoucherCode", gettext("Voucher Code")],

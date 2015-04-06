@@ -69,18 +69,16 @@ app.factory('controlledListService', ['breeze', 'backendService', 'adminBackendS
             },
             getCountries: function () {
                 var deferred = $q.defer();
-                if ($sessionStorage.countries) {
-                    deferred.resolve($sessionStorage.countries);
-                } else {
-                    new breeze.EntityQuery("Countries")
-                   .using(adminBackendService)
-                   .noTracking()
-                   .execute()
+
+                new breeze.EntityQuery("Countries")
+                .using(adminBackendService)
+                .noTracking()
+                .execute()
                    .then(function (res) {
                        $sessionStorage.countries = res.results;
                        deferred.resolve(res.results);
                    });
-                }
+
                 return deferred.promise;
             },
             getRoles: function () {

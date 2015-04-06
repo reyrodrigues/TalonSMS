@@ -33,21 +33,21 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
             $scope.entity.Disabled = true;
 
             backendService.saveChanges([$scope.entity])
-            .then(function () {
+                .then(function () {
 
-            }).catch(function () {
+                }).catch(function () {
 
-            });
+                });
         };
 
         $scope.reactivate = function () {
             $scope.entity.Disabled = false;
             backendService.saveChanges([$scope.entity])
-            .then(function () {
+                .then(function () {
 
-            }).catch(function () {
+                }).catch(function () {
 
-            });
+                });
         };
 
         editController($scope, {
@@ -62,7 +62,7 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
             key: 'BeneficiaryId',
             expand: ['Voucher', 'Vendor'],
             columns: [
-                [ "Status", gettext("Status"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'],
+                ["Status", gettext("Status"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'],
                 ["Vendor.Name", gettext("Vendor")],
                 ["Voucher.VoucherCode", gettext("Voucher Code")],
                 ["Voucher.Value", gettext("Value")]
@@ -76,7 +76,7 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
     }]);
 
 app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location', 'settings',
-function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location, settings) {
+    function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location, settings) {
         var storageSetting = $state.current.name + 'GridSettings';
         $scope.showingDisabled = false;
         $scope.genericSettings = settings;
@@ -84,10 +84,10 @@ function ($scope, $state, $localStorage, listController, gettext, dialogs, toast
         listController($scope, angular.extend({
             expand: ['Location', "Group"],
             columns: [
-                ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' ],
-                ["DateOfBirth",gettext("Date of Birth"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>' ],
-                ["NationalId", gettext("National Id Number") ],
-                ["MobileNumber", gettext("Mobile Number") ],
+                ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
+                ["DateOfBirth", gettext("Date of Birth"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>'],
+                ["NationalId", gettext("National Id Number")],
+                ["MobileNumber", gettext("Mobile Number")],
                 ["Location.Name", gettext("Location")],
                 ["Group.Name", gettext("Group")]
             ]
@@ -137,7 +137,6 @@ function ($scope, $state, $localStorage, listController, gettext, dialogs, toast
         $scope.loadGridData();
     }]);
 
-
 app.controller('ImportBeneficiariesCtrl', ['breeze', 'serviceBase', '$scope', '$q', '$modalInstance', '$upload', '$localStorage',
     function (breeze, serviceBase, $scope, $q, $modalInstance, $upload, $localStorage) {
         $scope.files = [];
@@ -170,13 +169,13 @@ app.controller('BeneficiaryBulkEditCtrl', ['$scope', '$state', 'dialogs', 'listC
         listController($scope, {
             collectionType: 'Beneficiaries',
             expand: ['Location', "Group"],
-            columnDefs: [
-                { field: "Name", displayName: gettext("Name"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
-                { field: "DateOfBirth", displayName: gettext("Date of Birth"), cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>' },
-                { field: "NationalId", displayName: gettext("National Id Number") },
-                { field: "MobileNumber", displayName: gettext("Mobile Number") },
-                { field: "Location.Name", displayName: gettext("Location") },
-                { field: "Group.Name", displayName: "Group" }
+            columns: [
+                ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
+                ["DateOfBirth", gettext("Date of Birth"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>'],
+                ["NationalId", gettext("National Id Number")],
+                ["MobileNumber", gettext("Mobile Number")],
+                ["Location.Name", gettext("Location")],
+                ["Group.Name", gettext("Group")]
             ]
         });
 
@@ -188,12 +187,12 @@ app.controller('BeneficiaryBulkEditCtrl', ['$scope', '$state', 'dialogs', 'listC
                 });
 
                 backendService.saveChanges($scope.list)
-                .then(function () {
-                    toaster.pop('success', gettext('Success'), gettext('Beneficiaries added to group.'));
-                    $scope.loadGridData();
-                }).catch(function (res) {
-                    toaster.pop('error', gettext('Error'), res.data);
-                });
+                    .then(function () {
+                        toaster.pop('success', gettext('Success'), gettext('Beneficiaries added to group.'));
+                        $scope.loadGridData();
+                    }).catch(function (res) {
+                        toaster.pop('error', gettext('Error'), res.data);
+                    });
             });
         };
 

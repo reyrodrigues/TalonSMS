@@ -74,6 +74,7 @@ namespace TalonAdmin.Models.Admin
             modelBuilder.Entity<MenuItem>()
                 .HasMany(p => p.Children)
                 .WithOptional(p => p.Parent);
+    
 
 #if DEBUG
             Database.SetInitializer(new CleanDbInitializer());
@@ -89,7 +90,7 @@ namespace TalonAdmin.Models.Admin
             string ircsLogo = "";
             if (HttpContext.Current != null)
             {
-                ircsLogo = Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/IRCLogo.svg")));
+                ircsLogo = "data:image/svg+xml;base64," + Convert.ToBase64String(System.IO.File.ReadAllBytes(HttpContext.Current.Server.MapPath("~/Content/IRCLogo.svg")));
             }
             var irc = new Organization
             {
@@ -107,6 +108,7 @@ namespace TalonAdmin.Models.Admin
                 CurrencyUnicodeSymbol = "₴",
                 Settings = new CountrySettings()
             };
+
 
             var systemAdmin = new ApplicationUser
             {
@@ -153,6 +155,7 @@ namespace TalonAdmin.Models.Admin
             context.Organizations.Add(irc);
 
             context.Countries.Add(ukraine);
+
             context.OrganizationCountries.Add(new  OrganizationCountry{ 
                 Country = ukraine,
                 Organization = irc,
@@ -172,7 +175,7 @@ namespace TalonAdmin.Models.Admin
                     Items = new MenuItem[] { 
                         new MenuItem {
                             State = "beneficiaries",
-                            Title = "Registration",
+                            Title = "Enrollment",
                             CssClass = "icon-user icon text-success-lter",
                             Children = new MenuItem[] {
                                 new MenuItem {
@@ -209,7 +212,7 @@ namespace TalonAdmin.Models.Admin
                     Items = new MenuItem[] { 
                         new MenuItem {
                             State = "vendors",
-                            Title = "Registration",
+                            Title = "Enrollment",
                             CssClass = "fa fa-building-o text-info-lter",
                             Children = new MenuItem[] {
                                 new MenuItem {
@@ -326,10 +329,6 @@ namespace TalonAdmin.Models.Admin
                                 new MenuItem {
                                     State = "country-admin.locations.list",
                                     Title = "List",
-                                },
-                                new MenuItem {
-                                    State = "country-admin.locations.create",
-                                    Title = "Create",
                                 },
                             }
                         }, 
@@ -458,8 +457,6 @@ namespace TalonAdmin.Models.Admin
                 UserId = systemAdmin.Id,
                 RoleId = systemAdminRole.Id
             });
-
-
 
             base.Seed(context);
         }

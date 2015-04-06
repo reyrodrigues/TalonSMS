@@ -18,6 +18,7 @@ using TalonAdmin.Models.Vouchers;
 using TalonAdmin.Providers;
 using TalonAdmin.Models;
 using TalonAdmin.Models.Admin;
+using TalonAdmin.Extensions;
 using System.Data.Entity;
 using TalonAdmin.Models.BindingModels;
 using Newtonsoft.Json.Linq;
@@ -116,21 +117,8 @@ namespace TalonAdmin.Controllers.Api
 
             if (model.CountryIds != null)
             {
-                using (var adminContext = new Models.Admin.AdminContext())
-                {
-                    var countries = adminContext.ApplicationUserCountries.Where(a => a.ApplicationUserId == user.Id);
-
-                    var toDelete = countries.Where(c => !model.CountryIds.Contains(c.CountryId));
-                    var userCountries = countries.Where(c => model.CountryIds.Contains(c.CountryId)).ToList();
-
-                    adminContext.ApplicationUserCountries.RemoveRange(toDelete.ToArray());
-
-                    var toCreate = model.CountryIds.Where(i => !userCountries.Select(c => c.CountryId).Contains(i)).Select(i => new ApplicationUserCountry { CountryId = i, ApplicationUserId = user.Id }).ToArray();
-
-                    adminContext.ApplicationUserCountries.AddRange(toCreate);
-
-                    await adminContext.SaveChangesAsync();
-                }
+                var countryIds = model.CountryIds;
+                await AssignCountries(user, countryIds);
             }
 
             if (!String.IsNullOrEmpty(model.Role))
@@ -157,6 +145,25 @@ namespace TalonAdmin.Controllers.Api
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
+            }
+
+            return Ok();
+        }
+
+        [Route("RegisterOrAssignCountry")]
+        [Authorize(Roles = "Country Administrator")]
+        public async Task<IHttpActionResult> RegisterOrAssignCountry(RegisterBindingModel model) {
+            var user = await UserManager.FindByNameAsync(model.UserName);
+
+            if (user == null)
+            {
+                return await Register(model);
+            }
+            else {
+                var countries = user.Countries.Select(c => c.CountryId).ToList();
+                countries.Add(this.GetCountryId());
+
+                await AssignCountries(user, countries.ToArray());
             }
 
             return Ok();
@@ -210,7 +217,6 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
-
         [Route("RegisterAdministrator")]
         [Authorize(Roles = "System Administrator")]
         public async Task<IHttpActionResult> RegisterAdministrator(RegisterBindingModel model)
@@ -241,17 +247,7 @@ namespace TalonAdmin.Controllers.Api
                     await UserManager.AddToRoleAsync(user.Id, "System Administrator");
                 }
 
-                using (var ctx = new AdminContext())
-                {
-                    var countries = model.Countries.Select(c => new ApplicationUserCountry
-                    {
-                        CountryId = c,
-                        ApplicationUserId = user.Id
-                    }).ToArray();
-
-                    ctx.ApplicationUserCountries.AddRange(countries);
-                    await ctx.SaveChangesAsync();
-                }
+                await AssignCountries(user, model.Countries);
             }
             if (!result.Succeeded)
             {
@@ -260,7 +256,6 @@ namespace TalonAdmin.Controllers.Api
 
             return Ok();
         }
-
 
         [Route("AddUserToRole")]
         public async Task<dynamic> AddUserToRole(Models.BindingModels.AddUserToRoleBindingModel request)
@@ -276,7 +271,6 @@ namespace TalonAdmin.Controllers.Api
 
             return Ok();
         }
-
 
         [Route("RemoveUserFromRole")]
         public async Task<dynamic> RemoveUserFromRole(Models.BindingModels.RemoveUserFromRoleBindingModel request)
@@ -294,6 +288,27 @@ namespace TalonAdmin.Controllers.Api
         }
 
         #region Helpers
+
+
+        private static async Task AssignCountries(ApplicationUser user, int[] countries)
+        {
+            using (var adminContext = new Models.Admin.AdminContext())
+            {
+                var currentCountries = await adminContext.ApplicationUserCountries.Where(a => a.ApplicationUserId == user.Id).ToListAsync();
+
+                var toDelete = currentCountries.Where(c => !countries.Contains(c.CountryId));
+
+                currentCountries = currentCountries.Where(c => countries.Contains(c.CountryId)).ToList();
+
+                adminContext.ApplicationUserCountries.RemoveRange(toDelete.ToArray());
+
+                var toCreate = countries.Where(i => !currentCountries.Select(c => c.CountryId).Contains(i)).Select(i => new ApplicationUserCountry { CountryId = i, ApplicationUserId = user.Id }).ToArray();
+
+                adminContext.ApplicationUserCountries.AddRange(toCreate);
+
+                await adminContext.SaveChangesAsync();
+            }
+        }
 
         private IAuthenticationManager Authentication
         {

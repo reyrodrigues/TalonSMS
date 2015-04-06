@@ -39,6 +39,7 @@ angular.module('app')
               }]
           };
 
+
           $urlRouterProvider.otherwise('/app/dashboard');
           $stateProvider
                 .state('app', {
@@ -521,6 +522,8 @@ angular.module('app')
                                 title: 'Countries',
                                 formTemplate: 'tpl/system-admin/countries/form.html',
                                 backendService: adminBackendService,
+                                expand: ["Settings", "Settings.PropertyCollection"],
+                                resultMap: function (r) { console.log(r); return r;},
                                 columns: [
                                     ["Name", gettext("Name")],
                                     ["IsoAlpha2", gettext("2-letter ISO Alpha Code")],
@@ -539,12 +542,12 @@ angular.module('app')
                 .state('system-admin.countries.edit', {
                     url: '/edit/:id',
                     templateUrl: 'tpl/generic/edit.html',
-                    controller: 'GenericEditCtrl'
+                    controller: 'SystemAdminCountriesEditCtrl'
                 })
                 .state('system-admin.countries.create', {
                     url: '/create',
                     templateUrl: 'tpl/generic/create.html',
-                    controller: 'GenericCreateCtrl'
+                    controller: 'SystemAdminCountriesEditCtrl'
                 })
                 .state('system-admin.organizations', {
                     url: '/organizations',
@@ -578,7 +581,39 @@ angular.module('app')
                 .state('system-admin.organizations.edit', {
                     url: '/edit/:id',
                     templateUrl: 'tpl/generic/edit.html',
-                    controller: 'GenericEditCtrl'
+                    controller: 'OrganizationsEditCtrl'
+                })
+                .state('system-admin.organizations.edit-country', {
+                    url: '/:organizationId/edit-country/:id',
+                    templateUrl: 'tpl/system-admin/organizations/edit-country.html',
+                    controller: 'OrganizationCountriesEditCtrl',
+                    resolve: angular.extend({
+                        settings: ['adminBackendService', function (adminBackendService) {
+                            return {
+                                entityType: 'OrganizationCountry',
+                                collectionType: 'OrganizationCountries',
+                                title: 'Country',
+                                backendService: adminBackendService,
+                                expand: ['Country', 'Organization', 'Settings', 'Settings.PropertyCollection', 'Country.Settings', 'Country.Settings.PropertyCollection']
+                            };
+                        }]
+                    }, defaultResolve)
+                })
+                .state('system-admin.organizations.new-country', {
+                    url: '/:organizationId/new-country',
+                    templateUrl: 'tpl/system-admin/organizations/edit-country.html',
+                    controller: 'OrganizationCountriesEditCtrl',
+                    resolve: angular.extend({
+                        settings: ['adminBackendService', function (adminBackendService) {
+                            return {
+                                entityType: 'OrganizationCountry',
+                                collectionType: 'OrganizationCountries',
+                                title: 'Country',
+                                backendService: adminBackendService,
+                                expand: ['Country', 'Organization', 'Settings', 'Settings.PropertyCollection', 'Country.Settings', 'Country.Settings.PropertyCollection']
+                            };
+                        }]
+                    }, defaultResolve)
                 })
                 .state('system-admin.organizations.create', {
                     url: '/create',

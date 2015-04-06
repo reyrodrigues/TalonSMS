@@ -57,7 +57,7 @@
         </li>
         <li class="dropdown" dropdown>
             <a href class="dropdown-toggle clear" dropdown-toggle>
-                <img src="{{ organization.LogoSVG ? 'data:image/svg+xml;base64,' + organization.LogoSVG : '' }}" alt="{{ organization.Name}}" style="height: 1em" ng-if="organization.LogoSVG " />&nbsp;
+                <img src="{{ organization.LogoSVG ? organization.LogoSVG : '' }}" alt="{{ organization.Name}}" style="height: 1em" ng-if="organization.LogoSVG " />&nbsp;
                 <span class="">{{ currentUser.FullName }}</span> <b class="caret"></b>
             </a>
             <!-- dropdown -->

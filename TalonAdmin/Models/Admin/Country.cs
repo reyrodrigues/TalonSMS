@@ -12,6 +12,7 @@ namespace TalonAdmin.Models.Admin
         public virtual string IsoAlpha3 { get; set; }
 
         public virtual string CurrencyIsoCode { get; set; }
+        public virtual string CountryCallingCode { get; set; }
 
         public virtual int SettingsId { get; set; }
 

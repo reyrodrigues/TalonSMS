@@ -8,7 +8,7 @@ angular.module('app')
               var _backendService = settings.backendService || backendService;
 
               if (!settings.columns) {
-                  settings.columnDefs = [
+                  settings.columnDefinitions = [
                       {
                           field: "Name",
                           displayName: gettext("Name"),
@@ -17,7 +17,7 @@ angular.module('app')
                       }
                   ];
               } else {
-                  settings.columnDefs = [];
+                  settings.columnDefinitions = [];
                   angular.forEach(settings.columns, function (v, k) {
                       var field = v[0];
                       var name = v[1];
@@ -32,7 +32,7 @@ angular.module('app')
                           sortable = sortable && v[3];
                       }
 
-                      settings.columnDefs.push(
+                      settings.columnDefinitions.push(
                       {
                           field: field,
                           displayName: name,
@@ -129,7 +129,7 @@ angular.module('app')
                   pagingOptions: $scope.pagingOptions,
                   enableRowSelection: false,
                   useExternalSorting: true,
-                  columnDefs: settings.columnDefs
+                  columnDefs: settings.columnDefinitions
               };
 
               $scope.$watch('pagingOptions', watchFunction, true);
@@ -246,11 +246,11 @@ angular.module('app')
       function ($state, backendService, toaster, gettext) {
           var subGrid = function ($scope, settings) {
               var storageSetting = $state.current.name + settings.collectionType + 'GridSettings';
-              var columnDefs = [];
+              settings.columnDefinitions = [];
               var _backendService = settings.backendService || backendService;
 
               if (!settings.columns) {
-                  columnDefs = [{ field: "Name", displayName: "Name" }];
+                  settings.columnDefinitions = [{ field: "Name", displayName: "Name" }];
               } else {
                   angular.forEach(settings.columns, function (v, k) {
                       var field = v[0];
@@ -266,7 +266,7 @@ angular.module('app')
                           sortable = sortable && v[3];
                       }
 
-                      settings.columnDefs.push(
+                      settings.columnDefinitions.push(
                       {
                           field: field,
                           displayName: name,
@@ -290,13 +290,13 @@ angular.module('app')
                   headerRowHeight: 36,
                   totalServerItems: settings.collectionType + '_Count',
                   sortInfo: {
-                      fields: ['id'],
+                      fields: ['Id'],
                       directions: ['asc']
                   },
                   pagingOptions: $scope[settings.collectionType + 'PagingOptions'],
                   enableRowSelection: false,
                   useExternalSorting: true,
-                  columnDefs: columnDefs
+                  columnDefs: settings.columnDefinitions
               };
 
 
@@ -333,11 +333,20 @@ angular.module('app')
                       keyFilter[settings.key] = { '==': $scope.entity.Id };
 
                       entityQuery = entityQuery.where(keyFilter);
+
+                      if (settings.entityType) {
+                          var entityType = _backendService.metadataStore.getEntityType(settings.entityType);
+                          entityQuery = entityQuery.toType(entityType);
+                      }
+
                       entityQuery.execute()
                           .then(function (res) {
                               $scope[settings.collectionType + '_Count'] = res.inlineCount;
                               $scope[settings.collectionType] = res.results;
-                          });
+                          })
+                        .catch(function () {
+                            console.log(arguments);
+                        });
                   }, 100);
               };
 

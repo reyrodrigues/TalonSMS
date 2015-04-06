@@ -1,0 +1,81 @@
+﻿
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Name</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="{{'Name'|translate}}" ng-model="entity.Name" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>ISO Alpha-2 Code</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'ISO Alpha-2 Code'|translate}}" ng-model="entity.IsoAlpha2" required>
+            </div>
+            <label class="col-sm-2 control-label" translate>ISO Alpha-3 Code</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'ISO Alpha-3 Code'|translate}}" ng-model="entity.IsoAlpha3" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Currency ISO Code</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'Currency ISO Code'|translate}}" ng-model="entity.CurrencyIsoCode" required>
+            </div>
+            <label class="col-sm-2 control-label" translate>Currency Symbol</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'Currency Symbol'|translate}}" ng-model="entity.CurrencyUnicodeSymbol" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Calling Code</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'Calling Code'|translate}}" ng-model="entity.CountryCallingCode" required>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="panel panel-default" ng-if="!isNew">
+    <div class="panel-heading">
+        Application-wide Settings
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>SMS Service URL</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="{{'SMS Service URL'|translate}}" ng-model="countrySettings.ServiceUrl" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>SMS Service User Name</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="{{'SMS Service User Name'|translate}}" ng-model="countrySettings.ServiceUser" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>SMS Service Password</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="{{'SMS Service Password'|translate}}" ng-model="countrySettings.ServicePassword" required>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="panel panel-default" ng-if="!isNew">
+    <div class="panel-heading">
+        Messages
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Message 1</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="{{'SMS Service URL'|translate}}" ng-model="countrySettings.Properties['Outgoing Message']" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Message 2</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="{{'SMS Service URL'|translate}}" ng-model="countrySettings.Properties['Outgoing Message2']" required>
+            </div>
+        </div>
+    </div>
+</div>

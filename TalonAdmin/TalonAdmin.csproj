@@ -108,9 +108,9 @@
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.DirectoryServices.Protocols" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http.Formatting, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.2\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
     <Reference Include="System.Spatial, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Spatial.5.6.0\lib\net40\System.Spatial.dll</HintPath>
@@ -124,9 +124,12 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Web.Http, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.2\lib\net45\System.Web.Http.dll</HintPath>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.Cors">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Cors.5.2.3\lib\net45\System.Web.Http.Cors.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Http.OData">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.OData.5.3.1\lib\net45\System.Web.Http.OData.dll</HintPath>
@@ -264,13 +267,13 @@
     <Compile Include="Models\Admin\OrganizationCountry.cs" />
     <Compile Include="Models\BindingModels\UpdateProfileBindingModel.cs" />
     <Compile Include="Extensions\ExcelPackageExtensions.cs" />
-    <Compile Include="Extensions\IQueryableExtensions.cs" />
+    <Compile Include="Extensions\ControllerExtensions.cs" />
     <Compile Include="Extensions\JsonExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Hubs\DashboardHub.cs" />
     <Compile Include="Models\Admin\MenuCategoryRole.cs" />
     <Compile Include="Models\Admin\ApplicationUserCountry.cs" />
-    <Compile Include="Models\Admin\Context.cs" />
+    <Compile Include="Models\Admin\AdminContext.cs" />
     <Compile Include="Models\Admin\Country.cs" />
     <Compile Include="Models\Admin\ApplicationUser.cs" />
     <Compile Include="Models\Admin\MenuCategory.cs" />
@@ -285,6 +288,7 @@
     </Compile>
     <Compile Include="Models\BindingModels\AccountBindingModels.cs" />
     <Compile Include="Models\BindingModels\AssignVoucherBidingModel.cs" />
+    <Compile Include="Models\JsonProperty.cs" />
     <Compile Include="Models\ViewModels\AccountViewModels.cs" />
     <Compile Include="Models\Vouchers\Beneficiary.cs" />
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
@@ -307,6 +311,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Utils\ObservableDictionary.cs" />
     <Compile Include="Utils\RescueSMSClient.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -827,6 +832,7 @@
     <Content Include="Source\src\js\controllers\orgAdmin.js" />
     <Content Include="Source\src\js\controllers\systemAdmin.js" />
     <Content Include="Source\src\js\controllers\users.js" />
+    <Content Include="Source\src\js\directives\fileReader.js" />
     <Content Include="Source\src\js\directives\date.js" />
     <Content Include="Source\src\js\factories\genericControllerFactory.js" />
     <Content Include="Source\src\js\filters\date.js" />
@@ -963,6 +969,8 @@
     <Content Include="Source\src\tpl\org-admin\users\register.html" />
     <Content Include="Source\src\tpl\page_signin.html" />
     <Content Include="Source\src\tpl\org-admin\countries\form.html" />
+    <Content Include="Source\src\tpl\system-admin\countries\form.html" />
+    <Content Include="Source\src\tpl\system-admin\organizations\edit-country.html" />
     <Content Include="Source\src\tpl\system-admin\organizations\form.html" />
     <Content Include="Source\src\tpl\system-admin\users\edit.html" />
     <Content Include="Source\src\tpl\system-admin\users\register.html" />

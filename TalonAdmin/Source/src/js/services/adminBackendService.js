@@ -23,11 +23,19 @@ app.factory('adminBackendService', ['breeze', 'serviceBase', function (breeze, s
         }
     });
 
+    var CountrySettingsCtor = function () {
+        this.Properties = {};
+    };
+
+    // register your custom constructor
+    metadataStore.registerEntityTypeCtor("CountrySettings", CountrySettingsCtor);
+
     // create a new EntityManager that uses this metadataStore
     var entityManager = new breeze.EntityManager({
         dataService: dataService,
         metadataStore: metadataStore
     });
+
 
     entityManager.saveOptions = new breeze.SaveOptions({ allowConcurrentSaves: true });
 

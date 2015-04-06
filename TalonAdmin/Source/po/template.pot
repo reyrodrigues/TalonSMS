@@ -4,104 +4,195 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: \n"
 
-#: src/tpl/blocks/nav.html:180
-msgid "Active Vouchers"
+#: src/js/config.router.js:529
+msgid "2-letter ISO Alpha Code"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:191
-msgid "Administration"
+#: src/js/config.router.js:530
+msgid "3-letter ISO Alpha Code"
 msgstr ""
 
-#: src/js/factories/genericControllerFactory.js:139
+#: src/js/config.router.js:569
+msgid "Abbreviation"
+msgstr ""
+
+#: src/tpl/country-admin/users/edit.html:17
+#: src/tpl/country-admin/users/edit.html:19
+#: src/tpl/country-admin/users/my-profile.html:17
+#: src/tpl/country-admin/users/my-profile.html:19
+#: src/tpl/org-admin/users/edit.html:17
+#: src/tpl/org-admin/users/edit.html:19
+#: src/tpl/org-admin/users/register.html:17
+#: src/tpl/org-admin/users/register.html:19
+#: src/tpl/system-admin/users/edit.html:17
+#: src/tpl/system-admin/users/edit.html:19
+#: src/tpl/system-admin/users/register.html:17
+#: src/tpl/system-admin/users/register.html:19
+msgid "Account Name"
+msgstr ""
+
+#: src/js/controllers/orgAdmin.js:140
+#: src/js/controllers/systemAdmin.js:128
+msgid "Account created successfully."
+msgstr ""
+
+#: src/js/controllers/countryAdmin.js:58
+#: src/js/controllers/orgAdmin.js:147
+#: src/js/controllers/systemAdmin.js:135
+msgid "Account updated successfully."
+msgstr ""
+
+#: src/js/controllers/orgAdmin.js:99
+#: src/js/controllers/systemAdmin.js:88
+#: src/js/factories/genericControllerFactory.js:167
 msgid "Are you sure you would like to delete this record? This operation cannot be reversed."
 msgstr ""
 
+#: src/tpl/country-admin/users/edit.html:75
+#: src/tpl/country-admin/users/my-profile.html:75
 #: src/tpl/dialogs/importBeneficiaries.html:21
 #: src/tpl/dialogs/importVendors.html:21
 #: src/tpl/generic/create.html:16
 #: src/tpl/generic/edit.html:22
 #: src/tpl/generic/edit.html:35
+#: src/tpl/org-admin/users/edit.html:103
+#: src/tpl/org-admin/users/edit.html:90
+#: src/tpl/org-admin/users/register.html:71
+#: src/tpl/system-admin/users/edit.html:103
+#: src/tpl/system-admin/users/edit.html:90
+#: src/tpl/system-admin/users/register.html:71
 msgid "Back"
-msgstr ""
-
-#: src/tpl/blocks/nav.html:10
-msgid "Beneficiaries"
 msgstr ""
 
 #: src/tpl/beneficiaries/bulkEdit.html:2
 msgid "Beneficiaries - <small>Assign Group</small>"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:195
+#: src/js/controllers/beneficiaries.js:191
 msgid "Beneficiaries added to group."
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:123
+#: src/js/controllers/beneficiaries.js:121
 msgid "Beneficiaries successfuly imported."
 msgstr ""
 
-#: src/js/controllers/vendor.js:33
+#: src/js/controllers/vendor.js:30
 msgid "Beneficiary"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:58
-msgid "Beneficiary Groups"
+#: src/tpl/country-admin/users/edit.html:2
+#: src/tpl/country-admin/users/my-profile.html:2
+msgid "Change my Profile"
 msgstr ""
 
-#: src/js/factories/genericControllerFactory.js:139
+#: src/js/controllers/orgAdmin.js:99
+#: src/js/controllers/systemAdmin.js:88
+#: src/js/factories/genericControllerFactory.js:167
 msgid "Confirm"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:125
-#: src/tpl/blocks/nav.html:155
-#: src/tpl/blocks/nav.html:215
-#: src/tpl/blocks/nav.html:242
-#: src/tpl/blocks/nav.html:68
-msgid "Create"
+#: src/tpl/country-admin/users/edit.html:62
+#: src/tpl/country-admin/users/edit.html:64
+#: src/tpl/country-admin/users/my-profile.html:62
+#: src/tpl/country-admin/users/my-profile.html:64
+#: src/tpl/org-admin/users/edit.html:69
+#: src/tpl/org-admin/users/edit.html:71
+#: src/tpl/org-admin/users/register.html:56
+#: src/tpl/org-admin/users/register.html:58
+#: src/tpl/system-admin/users/edit.html:69
+#: src/tpl/system-admin/users/edit.html:71
+#: src/tpl/system-admin/users/register.html:56
+#: src/tpl/system-admin/users/register.html:58
+msgid "Confirm Password"
+msgstr ""
+
+#: src/js/controllers/countryAdmin.js:11
+#: src/js/controllers/orgAdmin.js:11
+#: src/js/controllers/systemAdmin.js:12
+#: src/tpl/org-admin/users/edit.html:37
+#: src/tpl/system-admin/users/edit.html:37
+msgid "Countries"
 msgstr ""
 
 #: src/tpl/blocks/nav.html:6
 msgid "Dashboard"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:178
-#: src/js/controllers/beneficiaries.js:91
+#: src/js/controllers/beneficiaries.js:174
+#: src/js/controllers/beneficiaries.js:88
 msgid "Date of Birth"
 msgstr ""
 
 #: src/tpl/generic/edit.html:16
+#: src/tpl/org-admin/users/edit.html:84
+#: src/tpl/system-admin/users/edit.html:84
 msgid "Delete"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:140
-#: src/tpl/blocks/nav.html:145
-msgid "Distributions"
-msgstr ""
-
 #: src/tpl/generic/edit.html:21
+#: src/tpl/org-admin/users/edit.html:89
+#: src/tpl/system-admin/users/edit.html:89
 msgid "Edit"
 msgstr ""
 
-#: src/js/main.js:103
+#: src/tpl/org-admin/users/edit.html:2
+#: src/tpl/system-admin/users/edit.html:2
+msgid "Edit Profile"
+msgstr ""
+
+#: src/js/config.router.js:346
+#: src/js/config.router.js:437
+#: src/js/config.router.js:488
+#: src/js/controllers/countryAdmin.js:10
+#: src/js/controllers/orgAdmin.js:10
+#: src/js/controllers/systemAdmin.js:10
+#: src/tpl/country-admin/users/edit.html:37
+#: src/tpl/country-admin/users/edit.html:39
+#: src/tpl/country-admin/users/my-profile.html:37
+#: src/tpl/country-admin/users/my-profile.html:39
+#: src/tpl/org-admin/users/edit.html:44
+#: src/tpl/org-admin/users/edit.html:46
+#: src/tpl/org-admin/users/register.html:44
+#: src/tpl/org-admin/users/register.html:46
+#: src/tpl/system-admin/users/edit.html:44
+#: src/tpl/system-admin/users/edit.html:46
+#: src/tpl/system-admin/users/register.html:44
+#: src/tpl/system-admin/users/register.html:46
+msgid "Email"
+msgstr ""
+
+#: src/js/main.js:109
 msgid "English"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:128
-#: src/js/controllers/beneficiaries.js:135
-#: src/js/controllers/beneficiaries.js:198
-#: src/js/controllers/vendor.js:76
-#: src/js/controllers/vendor.js:83
-#: src/js/factories/genericControllerFactory.js:134
-#: src/js/factories/genericControllerFactory.js:150
-#: src/js/factories/genericControllerFactory.js:205
+#: src/js/controllers/beneficiaries.js:126
+#: src/js/controllers/beneficiaries.js:133
+#: src/js/controllers/beneficiaries.js:194
+#: src/js/controllers/countryAdmin.js:53
+#: src/js/controllers/countryAdmin.js:61
+#: src/js/controllers/orgAdmin.js:118
+#: src/js/controllers/orgAdmin.js:134
+#: src/js/controllers/orgAdmin.js:143
+#: src/js/controllers/orgAdmin.js:150
+#: src/js/controllers/orgAdmin.js:94
+#: src/js/controllers/systemAdmin.js:107
+#: src/js/controllers/systemAdmin.js:123
+#: src/js/controllers/systemAdmin.js:131
+#: src/js/controllers/systemAdmin.js:138
+#: src/js/controllers/systemAdmin.js:83
+#: src/js/controllers/vendor.js:73
+#: src/js/controllers/vendor.js:80
+#: src/js/factories/genericControllerFactory.js:162
+#: src/js/factories/genericControllerFactory.js:178
+#: src/js/factories/genericControllerFactory.js:234
 msgid "Error"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:128
+#: src/js/controllers/beneficiaries.js:126
 msgid "Error importing beneficiary. Message from server:"
 msgstr ""
 
-#: src/js/controllers/vendor.js:76
+#: src/js/controllers/vendor.js:73
 msgid "Error importing vendor. Message from server:"
 msgstr ""
 
@@ -110,8 +201,26 @@ msgstr ""
 msgid "Export to Excel"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:53
-msgid "Groups"
+#: src/js/controllers/countryAdmin.js:8
+#: src/js/controllers/orgAdmin.js:8
+#: src/js/controllers/systemAdmin.js:8
+#: src/tpl/country-admin/users/edit.html:11
+#: src/tpl/country-admin/users/edit.html:13
+#: src/tpl/country-admin/users/my-profile.html:11
+#: src/tpl/country-admin/users/my-profile.html:13
+#: src/tpl/org-admin/users/edit.html:11
+#: src/tpl/org-admin/users/edit.html:13
+#: src/tpl/org-admin/users/register.html:11
+#: src/tpl/org-admin/users/register.html:13
+#: src/tpl/system-admin/users/edit.html:11
+#: src/tpl/system-admin/users/edit.html:13
+#: src/tpl/system-admin/users/register.html:11
+#: src/tpl/system-admin/users/register.html:13
+msgid "Full Name"
+msgstr ""
+
+#: src/js/controllers/beneficiaries.js:92
+msgid "Group"
 msgstr ""
 
 #: src/tpl/blocks/header.html:69
@@ -131,52 +240,47 @@ msgstr ""
 msgid "Import Vendors"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:120
-#: src/tpl/blocks/nav.html:150
-#: src/tpl/blocks/nav.html:210
-#: src/tpl/blocks/nav.html:237
-#: src/tpl/blocks/nav.html:29
-#: src/tpl/blocks/nav.html:63
-#: src/tpl/blocks/nav.html:93
-msgid "List"
-msgstr ""
-
-#: src/js/controllers/beneficiaries.js:181
-#: src/js/controllers/beneficiaries.js:94
-#: src/js/controllers/vendor.js:56
+#: src/js/controllers/beneficiaries.js:177
+#: src/js/controllers/beneficiaries.js:91
+#: src/js/controllers/vendor.js:53
 msgid "Location"
-msgstr ""
-
-#: src/tpl/blocks/nav.html:200
-#: src/tpl/blocks/nav.html:205
-msgid "Locations"
 msgstr ""
 
 #: src/tpl/blocks/header.html:75
 msgid "Logout"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:180
-#: src/js/controllers/beneficiaries.js:93
-#: src/js/controllers/vendor.js:55
+#: src/js/controllers/beneficiaries.js:176
+#: src/js/controllers/beneficiaries.js:90
+#: src/js/controllers/vendor.js:52
 msgid "Mobile Number"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:177
-#: src/js/controllers/beneficiaries.js:90
-#: src/js/controllers/vendor.js:54
-#: src/js/factories/genericControllerFactory.js:12
-#: src/tpl/admin/locations/form.html:5
-#: src/tpl/admin/locations/form.html:7
-#: src/tpl/admin/vendorTypes/form.html:5
-#: src/tpl/admin/vendorTypes/form.html:7
-#: src/tpl/admin/voucherTypes/form.html:5
-#: src/tpl/admin/voucherTypes/form.html:7
+#: src/js/config.router.js:345
+#: src/js/config.router.js:398
+#: src/js/config.router.js:436
+#: src/js/config.router.js:487
+#: src/js/config.router.js:528
+#: src/js/config.router.js:568
+#: src/js/controllers/beneficiaries.js:173
+#: src/js/controllers/beneficiaries.js:87
+#: src/js/controllers/vendor.js:51
+#: src/js/factories/genericControllerFactory.js:14
+#: src/tpl/country-admin/locations/form.html:5
+#: src/tpl/country-admin/locations/form.html:7
+#: src/tpl/country-admin/vendor-types/form.html:5
+#: src/tpl/country-admin/vendor-types/form.html:7
+#: src/tpl/country-admin/voucher-types/form.html:5
+#: src/tpl/country-admin/voucher-types/form.html:7
+#: src/tpl/org-admin/countries/form.html:5
+#: src/tpl/org-admin/countries/form.html:7
+#: src/tpl/system-admin/organizations/form.html:5
+#: src/tpl/system-admin/organizations/form.html:7
 msgid "Name"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:179
-#: src/js/controllers/beneficiaries.js:92
+#: src/js/controllers/beneficiaries.js:175
+#: src/js/controllers/beneficiaries.js:89
 msgid "National Id Number"
 msgstr ""
 
@@ -184,12 +288,51 @@ msgstr ""
 msgid "New"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:125
-#: src/js/controllers/vendor.js:73
+#: src/js/controllers/beneficiaries.js:123
+#: src/js/controllers/vendor.js:70
 msgid "Notice"
 msgstr ""
 
-#: src/js/main.js:106
+#: src/tpl/country-admin/users/edit.html:50
+#: src/tpl/country-admin/users/edit.html:52
+#: src/tpl/country-admin/users/my-profile.html:50
+#: src/tpl/country-admin/users/my-profile.html:52
+#: src/tpl/org-admin/users/edit.html:57
+#: src/tpl/org-admin/users/edit.html:59
+#: src/tpl/system-admin/users/edit.html:57
+#: src/tpl/system-admin/users/edit.html:59
+msgid "Old Password"
+msgstr ""
+
+#: src/js/config.router.js:489
+#: src/js/controllers/systemAdmin.js:11
+#: src/tpl/org-admin/users/edit.html:30
+#: src/tpl/system-admin/users/edit.html:30
+msgid "Organization"
+msgstr ""
+
+#: src/tpl/country-admin/users/edit.html:56
+#: src/tpl/country-admin/users/edit.html:58
+#: src/tpl/country-admin/users/my-profile.html:56
+#: src/tpl/country-admin/users/my-profile.html:58
+#: src/tpl/org-admin/users/edit.html:63
+#: src/tpl/org-admin/users/edit.html:65
+#: src/tpl/org-admin/users/register.html:50
+#: src/tpl/org-admin/users/register.html:52
+#: src/tpl/system-admin/users/edit.html:63
+#: src/tpl/system-admin/users/edit.html:65
+#: src/tpl/system-admin/users/register.html:50
+#: src/tpl/system-admin/users/register.html:52
+msgid "Password"
+msgstr ""
+
+#: src/js/controllers/countryAdmin.js:49
+#: src/js/controllers/orgAdmin.js:130
+#: src/js/controllers/systemAdmin.js:119
+msgid "Password changed successfully."
+msgstr ""
+
+#: src/js/main.js:112
 msgid "Portuguese"
 msgstr ""
 
@@ -197,48 +340,54 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
-#: src/js/factories/genericControllerFactory.js:145
+#: src/js/controllers/orgAdmin.js:113
+#: src/js/controllers/systemAdmin.js:102
+#: src/js/factories/genericControllerFactory.js:173
 msgid "Record successfully deleted."
 msgstr ""
 
-#: src/js/factories/genericControllerFactory.js:127
-#: src/js/factories/genericControllerFactory.js:202
+#: src/js/factories/genericControllerFactory.js:155
+#: src/js/factories/genericControllerFactory.js:231
 msgid "Record successfully saved."
 msgstr ""
 
 #: src/tpl/beneficiaries/list.html:26
-#: src/tpl/blocks/nav.html:34
-#: src/tpl/blocks/nav.html:98
 #: src/tpl/vendors/list.html:16
 msgid "Register"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:19
-#: src/tpl/blocks/nav.html:24
-#: src/tpl/blocks/nav.html:83
-#: src/tpl/blocks/nav.html:88
-msgid "Registration"
+#: src/tpl/system-admin/users/register.html:2
+msgid "Register System Administrator"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:161
-#: src/tpl/blocks/nav.html:170
-msgid "Reporting"
+#: src/tpl/org-admin/users/register.html:2
+msgid "Register User"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:175
-msgid "Reports"
+#: src/js/controllers/countryAdmin.js:12
+#: src/js/controllers/orgAdmin.js:12
+#: src/js/controllers/systemAdmin.js:13
+msgid "Role"
 msgstr ""
 
-#: src/js/main.js:105
+#: src/js/main.js:111
 msgid "Russian"
 msgstr ""
 
+#: src/tpl/country-admin/users/edit.html:74
+#: src/tpl/country-admin/users/my-profile.html:74
 #: src/tpl/generic/create.html:15
 #: src/tpl/generic/edit.html:33
+#: src/tpl/org-admin/users/edit.html:101
+#: src/tpl/org-admin/users/register.html:70
+#: src/tpl/system-admin/users/edit.html:101
+#: src/tpl/system-admin/users/register.html:70
 msgid "Save"
 msgstr ""
 
 #: src/tpl/generic/edit.html:34
+#: src/tpl/org-admin/users/edit.html:102
+#: src/tpl/system-admin/users/edit.html:102
 msgid "Save and Continue Editing"
 msgstr ""
 
@@ -247,34 +396,39 @@ msgstr ""
 msgid "Select File"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:125
+#: src/js/controllers/beneficiaries.js:123
 msgid "Some beneficiaries were not imported correctly."
 msgstr ""
 
-#: src/js/controllers/vendor.js:73
+#: src/js/controllers/vendor.js:70
 msgid "Some vendors were not imported correctly."
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:66
-#: src/js/controllers/vendor.js:30
+#: src/js/controllers/beneficiaries.js:65
+#: src/js/controllers/vendor.js:29
 msgid "Status"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:123
-#: src/js/controllers/beneficiaries.js:195
-#: src/js/controllers/vendor.js:71
-#: src/js/factories/genericControllerFactory.js:127
-#: src/js/factories/genericControllerFactory.js:145
-#: src/js/factories/genericControllerFactory.js:202
+#: src/js/controllers/beneficiaries.js:121
+#: src/js/controllers/beneficiaries.js:191
+#: src/js/controllers/countryAdmin.js:49
+#: src/js/controllers/countryAdmin.js:58
+#: src/js/controllers/orgAdmin.js:113
+#: src/js/controllers/orgAdmin.js:130
+#: src/js/controllers/orgAdmin.js:140
+#: src/js/controllers/orgAdmin.js:147
+#: src/js/controllers/systemAdmin.js:102
+#: src/js/controllers/systemAdmin.js:119
+#: src/js/controllers/systemAdmin.js:128
+#: src/js/controllers/systemAdmin.js:135
+#: src/js/controllers/vendor.js:68
+#: src/js/factories/genericControllerFactory.js:155
+#: src/js/factories/genericControllerFactory.js:173
+#: src/js/factories/genericControllerFactory.js:231
 msgid "Success"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:110
-#: src/tpl/blocks/nav.html:115
-msgid "Types"
-msgstr ""
-
-#: src/js/main.js:104
+#: src/js/main.js:110
 msgid "Ukrainian"
 msgstr ""
 
@@ -283,37 +437,33 @@ msgstr ""
 msgid "Upload File"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:71
-#: src/js/controllers/vendor.js:35
+#: src/js/controllers/beneficiaries.js:68
+#: src/js/controllers/vendor.js:32
 msgid "Value"
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:69
+#: src/js/controllers/beneficiaries.js:66
 msgid "Vendor"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:185
-msgid "Vendor Receipt"
-msgstr ""
-
-#: src/tpl/blocks/nav.html:74
-msgid "Vendors"
-msgstr ""
-
-#: src/js/controllers/vendor.js:71
+#: src/js/controllers/vendor.js:68
 msgid "Vendors successfuly imported."
 msgstr ""
 
-#: src/js/controllers/beneficiaries.js:70
-#: src/js/controllers/vendor.js:34
+#: src/js/controllers/beneficiaries.js:67
+#: src/js/controllers/vendor.js:31
 msgid "Voucher Code"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:227
-#: src/tpl/blocks/nav.html:232
-msgid "Voucher Types"
+#: src/tpl/blocks/nav.html:10
+msgid "{{ category.Name }}"
 msgstr ""
 
-#: src/tpl/blocks/nav.html:131
-msgid "Vouchers"
+#: src/tpl/blocks/nav.html:30
+msgid "{{ child.Title}}"
+msgstr ""
+
+#: src/tpl/blocks/nav.html:20
+#: src/tpl/blocks/nav.html:25
+msgid "{{item.Title}}"
 msgstr ""

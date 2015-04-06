@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Web.Http;
 using Microsoft.Owin.Security.OAuth;
 using Newtonsoft.Json.Serialization;
+using System.Web.Http.Cors;
 
 namespace TalonAdmin
 {
@@ -12,6 +13,8 @@ namespace TalonAdmin
     {
         public static void Register(HttpConfiguration config)
         {
+            config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
+
             config.MapHttpAttributeRoutes();
             // Web API routes
             config.Routes.MapHttpRoute(
