@@ -833,6 +833,7 @@
     <Content Include="Source\src\js\controllers\systemAdmin.js" />
     <Content Include="Source\src\js\controllers\users.js" />
     <Content Include="Source\src\js\directives\fileReader.js" />
+    <Content Include="Source\src\js\directives\phoneNumber.js" />
     <Content Include="Source\src\js\directives\date.js" />
     <Content Include="Source\src\js\factories\genericControllerFactory.js" />
     <Content Include="Source\src\js\filters\date.js" />

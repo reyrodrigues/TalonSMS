@@ -75,7 +75,6 @@ app.factory('controlledListService', ['breeze', 'backendService', 'adminBackendS
                 .noTracking()
                 .execute()
                    .then(function (res) {
-                       $sessionStorage.countries = res.results;
                        deferred.resolve(res.results);
                    });
 
@@ -112,4 +111,7 @@ app.factory('roles', ['controlledListService', function (controlledListService) 
 }])
 app.factory('locations', ['controlledListService', function (controlledListService) {
     return controlledListService.getLocations();
+}])
+app.factory('vendorTypes', ['controlledListService', function (controlledListService) {
+    return controlledListService.getVendorTypes();
 }])

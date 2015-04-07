@@ -6,16 +6,24 @@ using System.Web;
 
 namespace TalonAdmin.Models.Vouchers
 {
-    public class Beneficiary: TenantEntity
+    public class Beneficiary : TenantEntity
     {
-        public virtual string Name { get; set; }
+        public string Name
+        {
+            get
+            {
+                return String.Format("{0} {1}", FirstName, LastName);
+            }
+        }
 
-        [DataType(DataType.Date)]
-        public virtual DateTime DateOfBirth { get; set; }
+        public virtual string FirstName { get; set; }
+        public virtual string LastName { get; set; }
+
         public virtual string NationalId { get; set; }
-        public virtual string MobileNumber { get; set; }
-        public virtual short? Sex { get; set; }
+
         public virtual string IRCId { get; set; }
+
+        public virtual string MobileNumber { get; set; }
 
         public virtual bool? Disabled { get; set; }
         public virtual bool? WasWelcomeMessageSent { get; set; }

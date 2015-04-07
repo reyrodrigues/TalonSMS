@@ -110,6 +110,7 @@ namespace TalonAdmin.Controllers
                 dataTable.TableName = "Beneficiaries";
 
                 // Removing Id Columns because they are parsed later on in the import
+                dataTable.Columns.Remove("Name");
                 dataTable.Columns.Remove("GroupId");
                 dataTable.Columns.Remove("LocationId");
                 dataTable.Columns.Remove("Distributions");
@@ -177,6 +178,7 @@ namespace TalonAdmin.Controllers
 
                                 jsonBeneficiary["Sex"] = (jsonBeneficiary.PropertyValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
 
+                                jsonBeneficiary.Remove("Name");
 
                                 // Removing string fields
                                 jsonBeneficiary.Remove("Group");

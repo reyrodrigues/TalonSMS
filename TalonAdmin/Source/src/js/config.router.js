@@ -51,6 +51,7 @@ angular.module('app')
                 .state('app.dashboard', {
                     url: '/dashboard',
                     templateUrl: 'tpl/app/dashboard.html',
+                    controller: 'AppDashboardCtrl',
                     resolve: {
                     }
                 })
@@ -156,7 +157,19 @@ angular.module('app')
                     url: '/vendors',
                     abstract: true,
                     templateUrl: 'tpl/app.html',
-                    resolve: defaultResolve
+                    resolve: angular.extend({
+                        settings: function () {
+                            return {
+                                entityType: 'Vendor',
+                                collectionType: 'vendors',
+                                listState: 'vendors.list',
+                                editState: 'vendors.edit',
+                                createState: 'vendors.create',
+                                title: 'Vendors',
+                                formTemplate: 'tpl/vendors/form.html'
+                            };
+                        }
+                    }, defaultResolve)
                 })
                 .state('vendors.list', {
                     url: '/list',
@@ -231,7 +244,19 @@ angular.module('app')
                     url: '/distributions',
                     abstract: true,
                     templateUrl: 'tpl/app.html',
-                    resolve: defaultResolve
+                    resolve: angular.extend({
+                        settings: function () {
+                            return {
+                                entityType: 'Distribution',
+                                collectionType: 'Distributions',
+                                listState: 'distributions.list',
+                                editState: 'distributions.edit',
+                                createState: 'distributions.create',
+                                title: 'Locations',
+                                formTemplate: 'tpl/distributions/form.html'
+                            };
+                        }
+                    }, defaultResolve)
                 })
 
                 .state('distributions.list', {

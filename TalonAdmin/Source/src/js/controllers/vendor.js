@@ -1,25 +1,17 @@
 ﻿'use strict';
 
 
-app.controller('VendorsCreateCtrl', ['$scope', 'createController', 'locations', 'vendorTypes',
-    function ($scope, createController, locations, vendorTypes) {
-        $scope.locations = locations;
-        $scope.vendorTypes = vendorTypes;
+app.controller('VendorsCreateCtrl', ['$scope', 'createController', 'settings', 'injectorHelper',
+    function ($scope, createController, settings, injectorHelper) {
+        injectorHelper.injectPromises($scope, ['locations', 'vendorTypes']);
 
-        createController($scope, {
-            entityType: 'Vendor',
-            editState: 'vendors.edit'
-        });
+        createController($scope, settings);
     }]);
 
-app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'locations', 'vendorTypes', 'backendService',
-    function ($scope, editController, gettext, subGrid, locations, vendorTypes, backendService) {
-        $scope.locations = locations;
-        $scope.vendorTypes = vendorTypes;
-        editController($scope, {
-            entityType: 'Vendor',
-            collectionType: 'Vendors',
-        });
+app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'settings', 'injectorHelper', 'backendService',
+    function ($scope, editController, gettext, subGrid, settings, injectorHelper, backendService) {
+        injectorHelper.injectPromises($scope, ['locations', 'vendorTypes']);
+        editController($scope, settings);
 
         subGrid($scope, {
             collectionType: 'VoucherTransactionRecords',

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
@@ -8,21 +9,30 @@ namespace TalonAdmin.Models.Vouchers
 {
     public class Distribution : TenantEntity
     {
-        public Distribution() {
+        public Distribution()
+        {
             VoucherCodeLength = 6;
+            CreatedOn = DateTime.UtcNow;
+            ModifiedOn = DateTime.UtcNow;
         }
 
         public virtual string Title { get; set; }
-        public virtual DateTime? Date { get; set; }
-
         public virtual DistributionStatus? Status { get; set; }
 
         [DefaultValue(6)]
         public virtual int VoucherCodeLength { get; set; }
 
-        public virtual int LocationId { get; set; }
-        public virtual Location Location { get; set; }
+        public virtual string FundCodes { get; set; }
 
+        public virtual int LocationId { get; set; }
+
+        public virtual string CreatedBy { get; set; }
+        public virtual DateTime CreatedOn { get; set; }
+        public virtual string ModifiedBy { get; set; }
+        public virtual DateTime ModifiedOn { get; set; }
+
+
+        public virtual Location Location { get; set; }
         public virtual ICollection<DistributionVoucherCategory> Categories { get; set; }
         public virtual ICollection<Voucher> Vouchers { get; set; }
 

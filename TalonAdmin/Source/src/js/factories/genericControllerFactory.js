@@ -196,9 +196,14 @@ angular.module('app')
                       query = query.expand(settings.expand);
                   }
 
-                  query.where("Id", "==", $state.params.id)
-                      .take(1)
-                      .execute()
+                  query = query.where("Id", "==", $state.params.id)
+                      .take(1);
+                  if(settings.entityType) {
+                      var entityType = _backendService.metadataStore.getEntityType(settings.entityType);
+                      query = query.toType(entityType);
+                  }
+                      
+                  query.execute()
                       .then(function (res) {
                           if (res.results) {
                               var entity = res.results.pop();

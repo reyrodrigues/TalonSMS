@@ -1,21 +1,74 @@
 ﻿'use strict';
-angular.module('app')
-    .directive('dateField', ['JQ_CONFIG', function (JQ_CONFIG, uiLoad, $timeout) {
+
+var inputDateFormat = 'yyyy-MM-dd';
+
+/**
+ * Converts string representation of date to a Date object.
+ *
+ * @param dateString
+ * @returns {Date|null}
+ */
+function parseDateString(dateString) {
+    if ('undefined' === typeof dateString || '' === dateString) {
+        return null;
+    }
+
+    var parts = dateString.split('-');
+    if (3 !== parts.length) {
+        return null;
+    }
+    var year = parseInt(parts[0], 10);
+    var month = parseInt(parts[1], 10);
+    var day = parseInt(parts[2], 10);
+
+    if (month < 1 || year < 1 || day < 1) {
+        return null;
+    }
+
+    return new Date(year, (month - 1), day);
+}
+
+/**
+ * Converts DateTime object to Date object.
+ *
+ * I.e. truncates time part.
+ * @param dateTime
+ * @constructor
+ */
+function ExtractDate(dateTime) {
+    return new Date(
+        dateTime.getUTCFullYear(),
+        dateTime.getUTCMonth(),
+        dateTime.getUTCDate()
+    );
+}
+
+app.factory('inputDate', function () {
         return {
-            restrict: 'A',
+            ExtractDate: ExtractDate
+        };
+    })
+    .directive('input', ['dateFilter', function (dateFilter) {
+        return {
+            restrict: 'E',
             require: '?ngModel',
             link: function (scope, element, attrs, ngModel) {
-                ngModel.$formatters.push(function (inputValue) {
-                    // Removing the Time piece of the equation because it confuses the system
-                    var datePart = moment(inputValue).tz('utc').toISOString().split('T')[0];
+                if (
+                       'undefined' !== typeof attrs.type
+                    && 'date' === attrs.type
+                    && ngModel
+                ) {
+                    ngModel.$formatters.push(function (modelValue) {
+                        return moment.tz(modelValue, 'utc').toDate();
+                    });
 
-                    return moment(datePart).tz('utc').toDate();
-                });
+                    ngModel.$parsers.push(function (viewValue) {
+                        console.log(moment.tz((viewValue.getYear() + 1900) + '-' + viewValue.getMonth() + '-' + viewValue.getDate(), 'utc'));
 
-                ngModel.$parsers.push(function (inputValue) {
-                    return moment(inputValue).tz('utc').toISOString();
-                });
+                        return viewValue;
+                    });
+                }
             }
         }
-    }]);
-
+    }])
+;

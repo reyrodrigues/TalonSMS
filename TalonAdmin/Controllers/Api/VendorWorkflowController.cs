@@ -15,6 +15,7 @@ using EntityFramework.BulkInsert.Extensions;
 using TalonAdmin.Models.Vouchers;
 using System.Data.Entity;
 using System.Diagnostics;
+using TalonAdmin.Extensions;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -151,9 +152,38 @@ namespace TalonAdmin.Controllers.Api
 
             using (var ctx = new Models.Vouchers.Context())
             {
+                var count = await ctx.Beneficiaries
+                            .Include("Group")
+                            .Where(b => b.GroupId == groupId).CountAsync();
+                var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
+                foreach (var category in distribution.Categories)
+                {
+                    category.NumberOfVouchers += count;
+                }
+
+                await ctx.SaveChangesAsync();
+            }
+
+            await GenerateVouchers(new { DistributionId = distributionId });
+
+            using (var ctx = new Models.Vouchers.Context())
+            {
                 var beneficiaries = await ctx.Beneficiaries
                             .Include("Group")
                             .Where(b => b.GroupId == groupId).AsQueryable().ToListAsync();
+
+                var distributionLog = new DistributionLog
+                {
+                    DistributionId = distributionId,
+                    DateTime = DateTime.UtcNow,
+                    AffectedBeneficiaries = beneficiaries.Count(),
+                    CountryId = this.GetCountryId(),
+                    OrganizationId = this.GetOrganizationId(),
+                };
+
+                ctx.DistributionLogs.Add(distributionLog);
+                await ctx.SaveChangesAsync();
+
                 var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
                 var voucherQuery = from v in ctx.Vouchers.AsNoTracking()
                                    where v.DistributionId == distribution.Id &&
@@ -267,7 +297,7 @@ namespace TalonAdmin.Controllers.Api
                         {
                             VoucherCancelled(voucher, vendor);
                         }
-                        else if (transactionRecord.Beneficiary.NationalId == nationalId)
+                        else if (transactionRecord.Beneficiary.NationalId.ToLowerInvariant() == nationalId.ToLowerInvariant())
                         {
                             transactionRecord.VendorId = vendor.Id;
                             transactionRecord.Status = 2;
@@ -368,7 +398,7 @@ namespace TalonAdmin.Controllers.Api
             LogMessage("Voucher {0} cancelled. Vendor {1}", voucher.VoucherCode, vendor.Name);
 
             string voucherCode = voucher.VoucherCode.ToString();
-            string vendorName = vendor.OwnerName;
+            string vendorName = vendor.Name;
             string vendorMobileNumber = vendor.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
@@ -396,7 +426,7 @@ namespace TalonAdmin.Controllers.Api
             LogMessage("Voucher {0} already used. Vendor {1}", voucher.VoucherCode, vendor.Name);
 
             string voucherCode = voucher.VoucherCode.ToString();
-            string vendorName = vendor.OwnerName;
+            string vendorName = vendor.Name;
             string vendorMobileNumber = vendor.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
@@ -426,7 +456,7 @@ namespace TalonAdmin.Controllers.Api
             var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
             context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0}, with the incorrect vocuher type ({1}).", vendor.Name, voucher.Category.Type.Name));
 
-            string vendorName = vendor.OwnerName;
+            string vendorName = vendor.Name;
             string vendorMobileNumber = vendor.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
@@ -489,7 +519,7 @@ namespace TalonAdmin.Controllers.Api
             var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
             context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0}, with the incorrect vocuher code {1}", vendor.Name, voucherCode));
 
-            string name = vendor.OwnerName;
+            string name = vendor.Name;
             string mobileNumber = vendor.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {
@@ -513,7 +543,7 @@ namespace TalonAdmin.Controllers.Api
 
 
             string confirmationCode = voucher.TransactionRecords.First().ConfirmationCode.ToString();
-            string vendorName = voucher.TransactionRecords.First().Vendor.OwnerName;
+            string vendorName = voucher.TransactionRecords.First().Vendor.Name;
             string vendorMobileNumber = voucher.TransactionRecords.First().Vendor.MobileNumber;
             ThreadPool.QueueUserWorkItem((state) =>
             {

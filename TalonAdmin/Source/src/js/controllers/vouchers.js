@@ -1,24 +1,28 @@
 ﻿'use strict';
 
-app.controller('DistributionsCreateCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', 'locations', function (breeze, backendService, $scope, $state, $q, locations) {
-    $scope.save = function () {
-        backendService.saveChanges([$scope.entity]).then(function (ne) {
-            $state.go('distributions.edit', { id: ne.entities[0].Id });
-        }).catch(function () {
-            console.log(arguments);
-        });
-    };
+app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController', 'settings', 'injectorHelper',
+    function ($rootScope, $scope, createController, settings, injectorHelper) {
+        injectorHelper.injectPromises($scope, ['locations']);
 
-    $scope.locations = locations;
-    $scope.isEditing = true;
-    $scope.isNew = true;
-    $scope.entity = backendService.createEntity("Distribution", { VoucherCodeLength: 6 });
-}]);
+        createController($scope, angular.extend({
+            defaults: { VoucherCodeLength: 6, Date: moment().toDate() }
+        }, settings));
 
-app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster',
-    function (breeze, backendService, $scope, $state, $q, $http, locations, dialogs, voucherTypes, vendorTypes, serviceBase, toaster) {
+        $scope.entity.CreatedBy = $rootScope.currentUser.Id;
+        $scope.entity.CreatedOn = moment().toDate();
+
+        $scope.entity.ModifiedBy = $rootScope.currentUser.Id;
+        $scope.entity.ModifiedOn = moment().toDate();
+    }]);
+
+
+app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster',
+    function (breeze, backendService, $rootScope, $scope, $state, $q, $http, locations, dialogs, voucherTypes, vendorTypes, serviceBase, toaster) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
+
+            $scope.entity.ModifiedBy = $rootScope.currentUser.Id;
+            $scope.entity.ModifiedOn = moment().toDate();
 
             var saveList = [];
             $scope.categories.forEach(function (d) {
@@ -230,7 +234,7 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$scope', '
             columnDefs: [
                 { field: "Voucher.Category.Type.Name", displayName: "Type" },
                 { field: "Voucher.VoucherCode", displayName: "Voucher Code" },
-                { field: "Voucher.Value", displayName: "Value" },
+                { field: "Voucher.Category.Value", displayName: "Value", cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{ COL_FIELD|currency:(country.CurrencyIsoCode + " "||"$") }}</span></div>' },
                 { field: "Beneficiary.Name", displayName: "Beneficiary" },
                 {
                     field: "Status", displayName: "Status", sortable: false,

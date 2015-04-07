@@ -20,8 +20,8 @@ namespace TalonAdmin.Tests
 
 
             // Adding some folks
-            Enumerable.Range(0, 1000).ToList().ForEach((i) => ctx.Beneficiaries.Add(new TalonAdmin.Models.Vouchers.Beneficiary { Name = Guid.NewGuid().ToString(), DateOfBirth=DateTime.Now }));
-            Enumerable.Range(0, 100).ToList().ForEach((i) => ctx.Beneficiaries.Add(new TalonAdmin.Models.Vouchers.Beneficiary { Name = Guid.NewGuid().ToString(), DateOfBirth = DateTime.Now, OrganizationId = 1, CountryId = 1 }));
+            Enumerable.Range(0, 1000).ToList().ForEach((i) => ctx.Beneficiaries.Add(new TalonAdmin.Models.Vouchers.Beneficiary { FirstName = Guid.NewGuid().ToString(), }));
+            Enumerable.Range(0, 100).ToList().ForEach((i) => ctx.Beneficiaries.Add(new TalonAdmin.Models.Vouchers.Beneficiary { FirstName = Guid.NewGuid().ToString(), OrganizationId = 1, CountryId = 1 }));
             
             ctx.SaveChanges();
 

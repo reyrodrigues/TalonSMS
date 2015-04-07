@@ -82,7 +82,7 @@ namespace TalonAdmin.Models.Admin
         }
     }
 
-    public class CleanDbInitializer : DropCreateDatabaseIfModelChanges<AdminContext>
+    public class CleanDbInitializer : DropCreateDatabaseAlways<AdminContext>
     {
         protected override void Seed(AdminContext context)
         {
@@ -106,6 +106,7 @@ namespace TalonAdmin.Models.Admin
                 IsoAlpha3 = "UKR",
                 CurrencyIsoCode = "UAH",
                 CurrencyUnicodeSymbol = "₴",
+                CountryCallingCode = "380",
                 Settings = new CountrySettings()
             };
 
@@ -330,9 +331,13 @@ namespace TalonAdmin.Models.Admin
                                     State = "country-admin.locations.list",
                                     Title = "List",
                                 },
+                                new MenuItem {
+                                    State = "country-admin.locations.create",
+                                    Title = "Create",
+                                },
                             }
                         }, 
-                        new MenuItem {
+                        /*new MenuItem {
                             State = "country-admin.users",
                             Title = "Registered Users",
                             CssClass = "icon-user icon text-info-dker",
@@ -346,7 +351,7 @@ namespace TalonAdmin.Models.Admin
                                     Title = "Register",
                                 },
                             }
-                        }, 
+                        }, */
                     },
                 },
                 new MenuCategory { 

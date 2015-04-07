@@ -16,6 +16,6 @@ angular.module('app')
           console.log(arguments);
           var datePart = moment(date).tz('utc').toISOString().split('T')[0];
 
-          return moment(datePart).tz('utc').format("LL");
+          return moment(datePart).tz('utc').format("YYYY-MM-DD");
       }
   });
