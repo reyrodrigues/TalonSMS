@@ -82,7 +82,7 @@ namespace TalonAdmin.Models.Admin
         }
     }
 
-    public class CleanDbInitializer : DropCreateDatabaseAlways<AdminContext>
+    public class CleanDbInitializer : DropCreateDatabaseIfModelChanges<AdminContext>
     {
         protected override void Seed(AdminContext context)
         {

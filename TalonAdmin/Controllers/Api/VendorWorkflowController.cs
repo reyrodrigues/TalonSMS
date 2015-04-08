@@ -261,7 +261,7 @@ namespace TalonAdmin.Controllers.Api
                 return BadRequest();
             }
 
-            var phoneNumber = Regex.Replace(from, "[^\\d]", "").Trim();
+            var phoneNumber = "+" + Regex.Replace(from, "[^\\d]", "").Trim();
 
             using (var db = new Models.Vouchers.Context())
             {

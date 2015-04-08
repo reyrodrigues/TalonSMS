@@ -258,6 +258,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
     <Compile Include="Controllers\Api\DashboardController.cs" />
+    <Compile Include="Controllers\Api\ReportsController.cs" />
     <Compile Include="Controllers\Breeze\AdminController.cs" />
     <Compile Include="Controllers\Breeze\EVMController.cs" />
     <Compile Include="Controllers\Api\AccountController.cs" />

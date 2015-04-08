@@ -235,7 +235,10 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
                 { field: "Voucher.Category.Type.Name", displayName: "Type" },
                 { field: "Voucher.VoucherCode", displayName: "Voucher Code" },
                 { field: "Voucher.Category.Value", displayName: "Value", cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{ COL_FIELD|currency:(country.CurrencyIsoCode + " "||"$") }}</span></div>' },
-                { field: "Beneficiary.Name", displayName: "Beneficiary" },
+                {
+                    field: "Beneficiary.FirstName", displayName: "Beneficiary",
+                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{row.getProperty(\'Beneficiary.Name\')}}</span></div>'
+                },
                 {
                     field: "Status", displayName: "Status", sortable: false,
                     cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'
