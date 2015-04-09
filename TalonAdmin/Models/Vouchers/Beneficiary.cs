@@ -29,7 +29,7 @@ namespace TalonAdmin.Models.Vouchers
         [Column(TypeName = "Date")]
         public virtual DateTime BirthDate { get; set; }
 
-        public virtual Sex Sex { get; set; }
+        public virtual int Sex { get; set; }
 
         public virtual bool? Disabled { get; set; }
         public virtual bool? WasWelcomeMessageSent { get; set; }
@@ -43,11 +43,5 @@ namespace TalonAdmin.Models.Vouchers
         public virtual Location Location { get; set; }
 
         public virtual ICollection<BeneficiaryDistribution> Distributions { get; set; }
-    }
-
-    public enum Sex
-    {
-        Male,
-        Female
     }
 }

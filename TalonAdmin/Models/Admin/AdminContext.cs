@@ -291,8 +291,8 @@ namespace TalonAdmin.Models.Admin
                                     Title = "Distribution Report",
                                 },
                                 new MenuItem {
-                                    State = "reporting.vendor-receipt",
-                                    Title = "Vendor Receipt Report",
+                                    State = "reporting.vendor-financial",
+                                    Title = "Vendor Financial Report",
                                 },
                             }
                         }, 

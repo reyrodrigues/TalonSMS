@@ -163,6 +163,8 @@ namespace TalonAdmin.Extensions
 
                 columns.Select((c, z) => new { Index = z, ColumnName = c })
                     .ToList()
+                    .Where(o=> !String.IsNullOrEmpty(o.ColumnName))
+                    .ToList()
                     .ForEach(o => jObject.Add(o.ColumnName, JToken.FromObject(self.Cells[i, o.Index + 1].Value ?? "")));
 
                 jObject["__RowNumber"] = i;

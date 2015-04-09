@@ -7,18 +7,22 @@ angular.module('app')
         require: '?ngModel',
         link: function(scope, element, attrs, ngModel) {
             if (!ngModel) return;
+
+            var countryCode = 1;
+            ngModel.$parsers.push(function (modelValue) {
+                return '+' + countryCode + modelValue;
+            });
+
+            ngModel.$formatters.push(function (viewValue) {
+                var reg = new RegExp("^\\+" + countryCode + "|" + countryCode);
+
+                return (viewValue || "").replace(reg, "");
+            });
+
             $rootScope.$watch(function () { return $rootScope.country; }, function () {
-                var countryCode = $rootScope.country.CountryCallingCode;
-
-                ngModel.$parsers.push(function (modelValue) {
-                    return '+' + countryCode + modelValue;
-                });
-
-                ngModel.$formatters.push(function (viewValue) {
-                    var reg = new RegExp("^\\+" + countryCode + "|" + countryCode);
-
-                    return (viewValue || "").replace(reg, "");
-                });
+                if ($rootScope.country) {
+                    countryCode = $rootScope.country.CountryCallingCode;
+                };
             });
         } //link
     }; //return

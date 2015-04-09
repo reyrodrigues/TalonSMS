@@ -77,9 +77,6 @@ namespace TalonAdmin.Controllers
         [Route("ExportBeneficiaries")]
         public async Task<IHttpActionResult> ExportBeneficiaries(int organizationId, int countryId)
         {
-            if (!ValidateBeneficiaryRequest(organizationId, countryId))
-                return BadRequest();
-
             using (var ctx = new Models.Vouchers.Context())
             {
                 ctx.Configuration.LazyLoadingEnabled = false;
@@ -132,7 +129,7 @@ namespace TalonAdmin.Controllers
         [Route("ImportBeneficiaries")]
         public async Task<IHttpActionResult> ImportBeneficiaries(int organizationId, int countryId)
         {
-            if (!Request.Content.IsMimeMultipartContent() || !ValidateBeneficiaryRequest(organizationId, countryId))
+            if (!Request.Content.IsMimeMultipartContent())
             {
                 return BadRequest();
             }
@@ -153,12 +150,19 @@ namespace TalonAdmin.Controllers
                 // No need to keep the file lying around
                 File.Delete(fileData.LocalFileName);
 
+                Models.Admin.Country country = null;
+
+                using (var ctx = new Models.Admin.AdminContext())
+                {
+                    country = await ctx.Countries.AsNoTracking().Where(c => c.Id == countryId).FirstOrDefaultAsync();
+                }
+
                 using (var ctx = new Models.Vouchers.Context())
                 {
                     ctx.Configuration.LazyLoadingEnabled = false;
                     ctx.Configuration.ProxyCreationEnabled = false;
 
-                    var beneficiaryQuery =  await ctx.Beneficiaries.ToListAsync();
+                    var beneficiaryQuery = await ctx.Beneficiaries.ToListAsync();
                     var locationQuery = ctx.Locations.Where(l => l.CountryId == countryId);
                     var groupQuery = ctx.BeneficiaryGroups.Where(g => g.CountryId == countryId && g.OrganizationId == organizationId);
 
@@ -204,6 +208,9 @@ namespace TalonAdmin.Controllers
                                     jsonBeneficiary["CountryId"] = countryId;
                                     jsonBeneficiary["OrganizationId"] = organizationId;
                                 }
+
+                                var numberRegex = new System.Text.RegularExpressions.Regex(String.Format("^(\\+{0}|{0}|0|1)", country.CountryCallingCode));
+                                jsonBeneficiary["MobileNumber"] = String.Format("+{0}{1}", country.CountryCallingCode, numberRegex.Replace(jsonBeneficiary["MobileNumber"].ToString(), ""));
 
 
                                 jsonBeneficiary.MergeChangesInto(beneficiary);
@@ -275,7 +282,7 @@ namespace TalonAdmin.Controllers
 
                                 #endregion
 
-                                if(isNew)
+                                if (isNew)
                                 {
                                     ctx.Beneficiaries.Add(beneficiary);
                                 }
@@ -308,9 +315,6 @@ namespace TalonAdmin.Controllers
         [Route("ExportVendors")]
         public async Task<IHttpActionResult> ExportVendors(int countryId)
         {
-            if (!ValidateVendorRequest(countryId))
-                return BadRequest();
-
             using (var ctx = new Models.Vouchers.Context())
             {
                 ctx.Configuration.LazyLoadingEnabled = false;
@@ -355,7 +359,7 @@ namespace TalonAdmin.Controllers
         [Route("ImportVendors")]
         public async Task<IHttpActionResult> ImportVendors(int countryId)
         {
-            if (!Request.Content.IsMimeMultipartContent() || !ValidateVendorRequest(countryId))
+            if (!Request.Content.IsMimeMultipartContent())
             {
                 return BadRequest();
             }
@@ -375,6 +379,13 @@ namespace TalonAdmin.Controllers
 
                 // No need to keep the file lying around
                 File.Delete(fileData.LocalFileName);
+
+                Models.Admin.Country country = null;
+
+                using (var ctx = new Models.Admin.AdminContext())
+                {
+                    country = await ctx.Countries.AsNoTracking().Where(c => c.Id == countryId).FirstOrDefaultAsync();
+                }
 
                 using (var ctx = new Models.Vouchers.Context())
                 {
@@ -420,6 +431,10 @@ namespace TalonAdmin.Controllers
                                     jsonVendor["Id"] = 0;
                                     jsonVendor["CountryId"] = countryId;
                                 }
+
+                                var numberRegex = new System.Text.RegularExpressions.Regex(String.Format("^(\\+{0}|{0}|0|1)", country.CountryCallingCode));
+                                jsonVendor["MobileNumber"] = String.Format("+{0}{1}", country.CountryCallingCode, numberRegex.Replace(jsonVendor["MobileNumber"].ToString(), ""));
+
 
                                 jsonVendor.MergeChangesInto(vendor);
 

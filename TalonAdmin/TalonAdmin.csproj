@@ -832,6 +832,7 @@
     <Content Include="Scripts\NavigationMenu.js" />
     <Content Include="Source\src\js\controllers\countryAdmin.js" />
     <Content Include="Source\src\js\controllers\orgAdmin.js" />
+    <Content Include="Source\src\js\controllers\reports.js" />
     <Content Include="Source\src\js\controllers\systemAdmin.js" />
     <Content Include="Source\src\js\controllers\users.js" />
     <Content Include="Source\src\js\directives\fileReader.js" />
@@ -1056,6 +1057,7 @@
   <ItemGroup>
     <Folder Include="App\" />
     <Folder Include="App_Data\uploads\" />
+    <Folder Include="Source\src\tpl\reports\" />
     <Folder Include="Source\src\tpl\vouchers\" />
   </ItemGroup>
   <ItemGroup>

@@ -645,6 +645,29 @@ angular.module('app')
                     templateUrl: 'tpl/generic/create.html',
                     controller: 'GenericCreateCtrl'
                 })
+
+                .state('reporting', {
+                    url: '/reporting',
+                    abstract: true,
+                    templateUrl: 'tpl/app.html',
+                    resolve: angular.extend({
+                        settings: function () {
+                            return { };
+                        }
+                    }, defaultResolve)
+                })
+                .state('reporting.distribution', {
+                    url: '/distribution',
+                    templateUrl: 'tpl/reports/distribution.html',
+                    controller: 'DistributionReportingCtrl'
+                })
+                .state('reporting.vendor-financial', {
+                    url: '/vendor-financial',
+                    templateUrl: 'tpl/reports/vendor-financial.html',
+                    controller: 'VendorFinancialReportingCtrl'
+                })
+
+
           ;
 
       }

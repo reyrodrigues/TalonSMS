@@ -40,20 +40,10 @@ app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', functio
         this.Name = "";
     };
 
-    var fixDates = function (entity) {
-        console.log('Fixdates fired');
-        var dateProperties = entity.entityType
-            .getProperties()
-            .filter(function (p) { return p.dataType && p.dataType.name == "DateTime" && /Date$/.test(p.name); })
-
-        dateProperties.forEach(function (dp) {
-            entity[dp.name] = moment(moment(entity[dp.name]).tz('utc').format("YYYY-MM-DD")).toDate();
-        });
-    }
 
     // register your custom constructor
     metadataStore.registerEntityTypeCtor("Vendor", Vendor);
-    metadataStore.registerEntityTypeCtor("Beneficiary", Beneficiary, fixDates);
+    metadataStore.registerEntityTypeCtor("Beneficiary", Beneficiary);
 
     // create a new EntityManager that uses this metadataStore
     var entityManager = new breeze.EntityManager({
