@@ -104,7 +104,7 @@ namespace TalonAdmin.Utils
             dynamic parameter = combinedInformation;
 
             string phoneNumber = parameter.MobileNumber;
-            if (phoneNumber[0] != '+')
+            if (!phoneNumber.StartsWith("+"))
                 phoneNumber = "+" + phoneNumber;
 
             contactInformation.name = parameter.Name;
