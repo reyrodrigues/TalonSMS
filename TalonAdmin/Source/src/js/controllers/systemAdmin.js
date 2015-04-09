@@ -5,8 +5,7 @@ function ($scope, settings, $http, listController, gettext, dialogs, toaster, ad
     $scope.genericSettings = settings;
     settings.backendService = adminBackendService;
     settings.columns = [
-        ["FullName", gettext("Full Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="' +
-                                          settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
+        ["FullName", gettext("Full Name"), '<a href ui-sref="' + settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
         ["Email", gettext("Email")],
         ["Organization.Name", gettext("Organization")],
         ["_Countries", gettext("Countries"), null, false],
@@ -345,7 +344,11 @@ app.controller('OrganizationsEditCtrl', ['$scope', 'editController', 'gettext', 
             expand: ['Country', 'Organization'],
             backendService: adminBackendService,
             columns: [
-                ["Country.Name", gettext("Country"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="system-admin.organizations.edit-country({ organizationId: entity.Id, id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>']
+                [
+                    "Country.Name",
+                    gettext("Country"),
+                    '<a href ui-sref="system-admin.organizations.edit-country({ organizationId: entity.Id, id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'
+                ]
             ]
         });
 

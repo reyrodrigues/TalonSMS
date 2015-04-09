@@ -1,54 +1,6 @@
 ﻿'use strict';
 
-var inputDateFormat = 'yyyy-MM-dd';
-
-/**
- * Converts string representation of date to a Date object.
- *
- * @param dateString
- * @returns {Date|null}
- */
-function parseDateString(dateString) {
-    if ('undefined' === typeof dateString || '' === dateString) {
-        return null;
-    }
-
-    var parts = dateString.split('-');
-    if (3 !== parts.length) {
-        return null;
-    }
-    var year = parseInt(parts[0], 10);
-    var month = parseInt(parts[1], 10);
-    var day = parseInt(parts[2], 10);
-
-    if (month < 1 || year < 1 || day < 1) {
-        return null;
-    }
-
-    return new Date(year, (month - 1), day);
-}
-
-/**
- * Converts DateTime object to Date object.
- *
- * I.e. truncates time part.
- * @param dateTime
- * @constructor
- */
-function ExtractDate(dateTime) {
-    return new Date(
-        dateTime.getUTCFullYear(),
-        dateTime.getUTCMonth(),
-        dateTime.getUTCDate()
-    );
-}
-
-app.factory('inputDate', function () {
-        return {
-            ExtractDate: ExtractDate
-        };
-    })
-    .directive('input', ['dateFilter', function (dateFilter) {
+app    .directive('input', ['dateFilter', function (dateFilter) {
         return {
             restrict: 'E',
             require: '?ngModel',
@@ -59,12 +11,10 @@ app.factory('inputDate', function () {
                     && ngModel
                 ) {
                     ngModel.$formatters.push(function (modelValue) {
-                        return moment.tz(modelValue, 'utc').toDate();
+                        return moment(moment(modelValue).tz('utc').format("YYYY-MM-DD")).toDate();
                     });
 
                     ngModel.$parsers.push(function (viewValue) {
-                        console.log(moment.tz((viewValue.getYear() + 1900) + '-' + viewValue.getMonth() + '-' + viewValue.getDate(), 'utc'));
-
                         return viewValue;
                     });
                 }

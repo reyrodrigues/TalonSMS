@@ -121,7 +121,7 @@ namespace TalonAdmin.Extensions
             self.Cells[address].LoadFromDataTable(dataTable, printColumns);
 
             var dateColumns = from DataColumn d in dataTable.Columns
-                              where d.DataType == typeof(DateTime) 
+                              where d.DataType == typeof(DateTime) || d.ColumnName.EndsWith("Date")
                               select d.Ordinal + 1;
 
             if (dataTable.Rows.Count > 0)

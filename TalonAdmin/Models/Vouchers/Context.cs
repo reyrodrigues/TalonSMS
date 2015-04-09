@@ -8,11 +8,26 @@ using System.Data.Entity.Core.Objects;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Entity.Infrastructure.Annotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity.ModelConfiguration.Conventions;
+using System.Data.Entity.ModelConfiguration.Configuration;
 
 
 
 namespace TalonAdmin.Models.Vouchers
 {
+    public class DataTypePropertyAttributeConvention
+    : PrimitivePropertyAttributeConfigurationConvention<DataTypeAttribute>
+    {
+        public override void Apply(ConventionPrimitivePropertyConfiguration configuration,
+            DataTypeAttribute attribute)
+        {
+            if (attribute.DataType == DataType.Date)
+            {
+                configuration.HasColumnType("Date");
+            }
+        }
+    }
+
     public class Context : DbContext
     {
         public Context()
@@ -32,7 +47,7 @@ namespace TalonAdmin.Models.Vouchers
 
             foreach (var property in properties)
             {
-
+                
                 var dt = property.PropertyType == typeof(DateTime?)
                     ? (DateTime?)property.GetValue(entity, null)
                     : (DateTime)property.GetValue(entity, null);
@@ -47,6 +62,8 @@ namespace TalonAdmin.Models.Vouchers
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Conventions.Add(new DataTypePropertyAttributeConvention());
 
 #if DEBUG
             Database.SetInitializer(new System.Data.Entity.DropCreateDatabaseIfModelChanges<Context>());
@@ -90,5 +107,6 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<VoucherType> VoucherTypes { get; set; }
         public DbSet<VoucherTransactionRecord> VoucherTransactionRecords { get; set; }
+        public DbSet<MessageLog> MessageLogs { get; set; }
     }
 }

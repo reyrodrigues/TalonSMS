@@ -301,6 +301,7 @@
     <Compile Include="Models\Vouchers\Distribution.cs" />
     <Compile Include="Models\Entity.cs" />
     <Compile Include="Models\Vouchers\CountryEntity.cs" />
+    <Compile Include="Models\Vouchers\MessageLog.cs" />
     <Compile Include="Models\Vouchers\TenantEntity.cs" />
     <Compile Include="Models\Vouchers\VendorType.cs" />
     <Compile Include="Models\Vouchers\VoucherType.cs" />

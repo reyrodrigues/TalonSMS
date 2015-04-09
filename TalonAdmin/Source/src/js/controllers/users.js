@@ -174,15 +174,15 @@ app.controller('UserGridCtrl', ['breeze', 'authBackendService', '$scope', '$http
             columnDefs: [
                 {
                     field: "Name",
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="' +
+                    cellTemplate: '<a href ui-sref="' +
                     settings.editState +
-                    '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'
+                    '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'
                 },
                 {
                     field: "Email",
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="' +
+                    cellTemplate: '<span ng-cell-text><a href ui-sref="' +
                     settings.editState +
-                    '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'
+                    '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'
                 }
             ]
         };

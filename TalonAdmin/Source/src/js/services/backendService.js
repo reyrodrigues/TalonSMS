@@ -15,7 +15,9 @@ app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', functio
 
     metadataStore.setProperties({
         serializerFn: function (dataProperty, value) {
-            if (dataProperty.dataType.name == 'DateTime') {
+            if (dataProperty.dataType.name == "DateTime" && /Date$/.test(dataProperty.name)) {
+                return moment.tz(moment(value).format("YYYY-MM-DD"), 'utc').toDate();
+            } else if (dataProperty.dataType.name == 'DateTime') {
                 return moment(value).tz('utc').toDate();
             }
             if (dataProperty.name == 'CountryId') {
@@ -38,9 +40,20 @@ app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', functio
         this.Name = "";
     };
 
+    var fixDates = function (entity) {
+        console.log('Fixdates fired');
+        var dateProperties = entity.entityType
+            .getProperties()
+            .filter(function (p) { return p.dataType && p.dataType.name == "DateTime" && /Date$/.test(p.name); })
+
+        dateProperties.forEach(function (dp) {
+            entity[dp.name] = moment(moment(entity[dp.name]).tz('utc').format("YYYY-MM-DD")).toDate();
+        });
+    }
+
     // register your custom constructor
     metadataStore.registerEntityTypeCtor("Vendor", Vendor);
-    metadataStore.registerEntityTypeCtor("Beneficiary", Beneficiary);
+    metadataStore.registerEntityTypeCtor("Beneficiary", Beneficiary, fixDates);
 
     // create a new EntityManager that uses this metadataStore
     var entityManager = new breeze.EntityManager({

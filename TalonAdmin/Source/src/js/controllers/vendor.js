@@ -12,16 +12,30 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
     function ($scope, editController, gettext, subGrid, settings, injectorHelper, backendService) {
         injectorHelper.injectPromises($scope, ['locations', 'vendorTypes']);
         editController($scope, settings);
+        $scope.statusToString = function (status) {
+            if (typeof (status) == 'undefined')
+                return "Not Assigned";
+
+            status = parseInt(status);
+            if (status == 0) {
+                return "SMS Sent"
+            } else if (status == 2) {
+                return "Used";
+            } else if (status == 3) {
+                return "Cancelled";
+            }
+        };
 
         subGrid($scope, {
             collectionType: 'VoucherTransactionRecords',
             key: 'VendorId',
-            expand: ['Voucher', 'Beneficiary', 'Vendor'],
+            expand: ['Voucher', "Voucher.Category", 'Beneficiary', 'Vendor'],
             columns: [
-                ["Status", gettext("Status"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'],
-                ["Beneficiary.Name", gettext("Beneficiary")],
+                ["Status", gettext("Status"), '{{statusToString(COL_FIELD)}}'],
+                ["FinalizedOn", gettext("Redemption Date"), '{{COL_FIELD|date:"medium"}}'],
+                ["Beneficiary.Name", gettext("Beneficiary"), null, false],
                 ["Voucher.VoucherCode", gettext("Voucher Code")],
-                ["Voucher.Value", gettext("Value")]
+                ["Voucher.Category.Value", gettext("Value")]
             ]
         });
 
@@ -40,7 +54,7 @@ function ($scope, $state, $localStorage, listController, gettext, dialogs, toast
         collectionType: 'Vendors',
         expand: ['Location'],
         columns: [
-            ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
+            ["Name", gettext("Name"), '<a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
             ["MobileNumber", gettext("Mobile Number")],
             ["Location.Name", gettext("Location")]
         ]

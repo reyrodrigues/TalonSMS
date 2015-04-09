@@ -23,8 +23,8 @@ angular.module('app')
                       var name = v[1];
                       var cellTemplate = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="' +
                           settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>';
-                      if (v.length > 2) {
-                          cellTemplate = v[2];
+                      if (v.length > 2 && v[2]) {
+                          cellTemplate = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>' + v[2] + '</span></div>';
                       }
 
                       var sortable = true;
@@ -262,8 +262,8 @@ angular.module('app')
                       var name = v[1];
                       var cellTemplate = null;
 
-                      if (v.length > 2) {
-                          cellTemplate = v[2];
+                      if (v.length > 2 && v[2]) {
+                          cellTemplate = '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>' + v[2] + '</span></div>';
                       }
 
                       var sortable = true;

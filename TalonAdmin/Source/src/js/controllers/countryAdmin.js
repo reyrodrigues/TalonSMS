@@ -5,8 +5,7 @@ function ($scope, settings, $http, listController, gettext, dialogs, toaster, ad
     $scope.genericSettings = settings;
     settings.backendService = adminBackendService;
     settings.columns = [
-        ["FullName", gettext("Full Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="' +
-                                          settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
+        ["FullName", gettext("Full Name"), '<a href ui-sref="' +  settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
         ["Email", gettext("Email")],
         ["_Countries", gettext("Countries"), null, false],
         ["_Role", gettext("Role"), null, false]

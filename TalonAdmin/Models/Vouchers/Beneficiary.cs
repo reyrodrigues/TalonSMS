@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
@@ -25,6 +26,11 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual string MobileNumber { get; set; }
 
+        [Column(TypeName = "Date")]
+        public virtual DateTime BirthDate { get; set; }
+
+        public virtual Sex Sex { get; set; }
+
         public virtual bool? Disabled { get; set; }
         public virtual bool? WasWelcomeMessageSent { get; set; }
 
@@ -37,5 +43,11 @@ namespace TalonAdmin.Models.Vouchers
         public virtual Location Location { get; set; }
 
         public virtual ICollection<BeneficiaryDistribution> Distributions { get; set; }
+    }
+
+    public enum Sex
+    {
+        Male,
+        Female
     }
 }

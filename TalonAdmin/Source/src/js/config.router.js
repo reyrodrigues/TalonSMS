@@ -548,7 +548,7 @@ angular.module('app')
                                 formTemplate: 'tpl/system-admin/countries/form.html',
                                 backendService: adminBackendService,
                                 expand: ["Settings", "Settings.PropertyCollection"],
-                                resultMap: function (r) { console.log(r); return r;},
+                                resultMap: function (r) { return r;},
                                 columns: [
                                     ["Name", gettext("Name")],
                                     ["IsoAlpha2", gettext("2-letter ISO Alpha Code")],

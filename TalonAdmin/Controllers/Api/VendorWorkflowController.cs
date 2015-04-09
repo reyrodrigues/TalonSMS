@@ -246,6 +246,25 @@ namespace TalonAdmin.Controllers.Api
         {
             LogMessage("Incoming Message: {0}", JObject.FromObject(request).ToString());
 
+            try
+            {
+                using (var ctx = new Models.Vouchers.Context())
+                {
+                    ctx.MessageLogs.Add(new MessageLog
+                    {
+                        MobileNumber = request.From,
+                        Message = request.Message
+                    });
+
+                    ctx.SaveChanges();
+                }
+            }
+            catch
+            {
+
+            }
+
+
             string[] codes = request.Message.ToString().Split(' ').Where(s => !String.IsNullOrEmpty(s)).ToArray();
             string from = request.From;
             string voucherCode = "";

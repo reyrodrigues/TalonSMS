@@ -60,12 +60,13 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
         subGrid($scope, {
             collectionType: 'VoucherTransactionRecords',
             key: 'BeneficiaryId',
-            expand: ['Voucher', 'Vendor'],
+            expand: ['Voucher', 'Voucher.Category', 'Vendor'],
             columns: [
-                ["Status", gettext("Status"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'],
-                ["Vendor.Name", gettext("Vendor")],
+                ["Status", gettext("Status"), '{{statusToString(COL_FIELD)}}'],
+                ["FinalizedOn", gettext("Redemption Date"), '{{COL_FIELD|date:"medium"}}'],
+                ["Vendor.Name", gettext("Vendor"), false, false],
                 ["Voucher.VoucherCode", gettext("Voucher Code")],
-                ["Voucher.Value", gettext("Value")]
+                ["Voucher.Category.Value", gettext("Value")]
             ]
         });
 
@@ -84,8 +85,8 @@ app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'l
         listController($scope, angular.extend({
             expand: ['Location', "Group"],
             columns: [
-                ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
-                ["DateOfBirth", gettext("Date of Birth"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>'],
+                ["Name", gettext("Name"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
+                ["BirthDate", gettext("Date of Birth"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a>'],
                 ["NationalId", gettext("National Id Number")],
                 ["MobileNumber", gettext("Mobile Number")],
                 ["Location.Name", gettext("Location")],
@@ -162,16 +163,16 @@ app.controller('BeneficiaryBulkEditCtrl', ['$scope', '$state', 'dialogs', 'listC
         var storageSetting = $state.current.name + 'GridSettings';
         $scope.locations = locations;
         $scope.bulkFilters = {
-            DateOfBirthFrom: null,
-            DateOfBirthTo: null
+            BirthDateFrom: null,
+            BirthDateTo: null
         };
 
         listController($scope, {
             collectionType: 'Beneficiaries',
             expand: ['Location', "Group"],
             columns: [
-                ["Name", gettext("Name"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>'],
-                ["DateOfBirth", gettext("Date of Birth"), '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a></span></div>'],
+                ["Name", gettext("Name"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
+                ["BirthDate", gettext("Date of Birth"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a>'],
                 ["NationalId", gettext("National Id Number")],
                 ["MobileNumber", gettext("Mobile Number")],
                 ["Location.Name", gettext("Location")],
@@ -208,11 +209,11 @@ app.controller('BeneficiaryBulkEditCtrl', ['$scope', '$state', 'dialogs', 'listC
             if (bulkFilters.Location && bulkFilters.Location.Id) {
                 filter['and'].push({ 'LocationId': { '==': bulkFilters.Location.Id } });
             }
-            if (bulkFilters.DateOfBirthFrom) {
-                filter['and'].push({ 'DateOfBirth': { '>=': moment(bulkFilters.DateOfBirthFrom).toJSON() } });
+            if (bulkFilters.BirthDateFrom) {
+                filter['and'].push({ 'BirthDate': { '>=': moment(bulkFilters.BirthDateFrom).toJSON() } });
             }
-            if (bulkFilters.DateOfBirthTo) {
-                filter['and'].push({ 'DateOfBirth': { '<=': moment(bulkFilters.DateOfBirthTo).toJSON() } });
+            if (bulkFilters.BirthDateTo) {
+                filter['and'].push({ 'BirthDate': { '<=': moment(bulkFilters.BirthDateTo).toJSON() } });
             }
 
             if (filter.and.length) {
