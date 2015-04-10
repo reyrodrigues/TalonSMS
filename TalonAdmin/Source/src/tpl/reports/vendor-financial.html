@@ -1,0 +1,46 @@
+﻿<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">Vendor Financial Report</h1>
+</div>
+<div class="wrapper-md">
+    <form class="bs-example form-horizontal form-validation" action="{{ url }}" method="POST" target="_blank">
+        <input type="hidden" name="OrganizationId" value="{{report.OrganizationId}}" />
+        <input type="hidden" name="CountryId" value="{{report.CountryId}}" />
+        <input type="hidden" name="DistributionId" value="{{report.DistributionId}}" />
+        <input type="hidden" name="VendorId" value="{{report.VendorId}}" />
+
+        <div class="row">
+            <div class="col-sm-12">
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" translate>Distribution</label>
+                            <div class="col-sm-4">
+                                <select chosen class="form-control" ng-model="report.DistributionId"
+                                        ng-options="item.Id as item.Title for item in distributions | orderBy:'item.Title'"></select>
+                            </div>
+                            <label class="col-sm-2 control-label" translate>Vendor</label>
+                            <div class="col-sm-4">
+                                <select chosen class="form-control" ng-model="report.VendorId"
+                                        ng-options="item.Id as item.Name for item in vendors | orderBy:'item.Title'"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <div class=" col-sm-12">
+                        <div class="btn-group pull-right">
+                            <button type="submit" class="btn btn-primary" ng-disabled="!report.DistributionId || !report.VendorId">Generate Report</button>
+                            <button ui-sref="app.dashboard" class="btn btn-info">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>
