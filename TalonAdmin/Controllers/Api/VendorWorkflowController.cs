@@ -274,13 +274,13 @@ namespace TalonAdmin.Controllers.Api
             {
             }
 
+            var onlyNumbers = new Regex("[^\\d]");
+            string numericalMessage = onlyNumbers.Replace(request.Message, "");
 
             string[] codes = request.Message.ToString().Split(' ').Where(s => !String.IsNullOrEmpty(s)).ToArray();
             string from = request.From;
             string voucherCode = "";
             var nationalId = "";
-
-            var onlyNumbers = new Regex("[^\\d]");
 
             if (codes.Length >= 2)
             {
@@ -347,7 +347,7 @@ namespace TalonAdmin.Controllers.Api
 
                     return Ok("Voucher Canceled");
                 }
-                else if (transactionRecord.Beneficiary.NationalId.ToLowerInvariant().Trim() != nationalId.ToLowerInvariant().Trim())
+                else if (onlyNumbers.Replace(transactionRecord.Beneficiary.NationalId, "") != onlyNumbers.Replace(nationalId, ""))
                 {
                     // Wrong national id
                     WrongNationalId(voucher, vendor);
@@ -401,12 +401,11 @@ namespace TalonAdmin.Controllers.Api
         private void VoucherCancelled(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
         {
             var transactionRecord = voucher.TransactionRecords.First();
-            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
+            var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = transactionRecord.Beneficiary };
 
             var vendorMessage = CompileMessage("Vendor Cancelled Message", voucher.CountryId, voucher.OrganizationId, model);
-            var beneficiaryMessage = CompileMessage("Beneficiary Cancelled Message", voucher.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage);
         }
 
         private void VoucherAlreadyUsed(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
