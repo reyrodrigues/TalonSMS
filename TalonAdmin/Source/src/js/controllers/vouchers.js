@@ -22,7 +22,7 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
             $scope.isEditing = false;
 
             $scope.entity.ModifiedBy = $rootScope.currentUser.Id;
-            $scope.entity.ModifiedOn = moment().toDate();
+            $scope.entity.ModifiedOn = moment().utc().toDate();
 
             var saveList = [];
             $scope.categories.forEach(function (d) {

@@ -16,6 +16,10 @@ using TalonAdmin.Models.Vouchers;
 using System.Data.Entity;
 using System.Diagnostics;
 using TalonAdmin.Extensions;
+using System.Configuration;
+using RazorEngine.Templating;
+using RazorEngine;
+using TalonAdmin.Extensions;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -116,6 +120,7 @@ namespace TalonAdmin.Controllers.Api
                 return Ok();
             }
         }
+
         [Route("ResendSMS")]
         public async Task<IHttpActionResult> ResendSMS(dynamic request)
         {
@@ -124,7 +129,7 @@ namespace TalonAdmin.Controllers.Api
 
             using (var ctx = new Models.Vouchers.Context())
             {
-                await SendVoucherSms(beneficiaryId, voucherId);
+                SendVoucherSms(beneficiaryId, voucherId);
             }
 
             return Ok();
@@ -154,7 +159,7 @@ namespace TalonAdmin.Controllers.Api
             {
                 var count = await ctx.Beneficiaries
                             .Include("Group")
-                            .Where(b => b.GroupId == groupId).CountAsync();
+                            .Where(b => b.GroupId == groupId && b.Disabled != true).CountAsync();
                 var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
                 foreach (var category in distribution.Categories)
                 {
@@ -170,7 +175,7 @@ namespace TalonAdmin.Controllers.Api
             {
                 var beneficiaries = await ctx.Beneficiaries
                             .Include("Group")
-                            .Where(b => b.GroupId == groupId).AsQueryable().ToListAsync();
+                            .Where(b => b.GroupId == groupId && b.Disabled != true).AsQueryable().ToListAsync();
 
                 var distributionLog = new DistributionLog
                 {
@@ -231,7 +236,7 @@ namespace TalonAdmin.Controllers.Api
 
                 foreach (var tr in transactionRecords)
                 {
-                    await SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id).ContinueWith(t=>Debug.WriteLine(t.Exception != null ?  t.Exception.Message : ""));
+                    SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id);
                 }
             }
 
@@ -242,9 +247,14 @@ namespace TalonAdmin.Controllers.Api
         [Route("ValidateTransactionSMS")]
         [OverrideAuthentication]
         [AllowAnonymous]
-        public IHttpActionResult ValidateTransactionSMS(IncomingSmsBindingModel request)
+        public async Task<IHttpActionResult> ValidateTransactionSMS([FromBody]IncomingSmsBindingModel request, [FromUri] string secret = "")
         {
-            LogMessage("Incoming Message: {0}", JObject.FromObject(request).ToString());
+            var systemSecret = ConfigurationManager.AppSettings["SystemSecret"] ?? "";
+
+            if (systemSecret != secret && !String.IsNullOrEmpty(systemSecret))
+            {
+                return BadRequest("Secret is invalid.");
+            }
 
             try
             {
@@ -253,7 +263,8 @@ namespace TalonAdmin.Controllers.Api
                     ctx.MessageLogs.Add(new MessageLog
                     {
                         MobileNumber = request.From,
-                        Message = request.Message
+                        Message = request.Message,
+                        DateTime = DateTime.Now
                     });
 
                     ctx.SaveChanges();
@@ -261,7 +272,6 @@ namespace TalonAdmin.Controllers.Api
             }
             catch
             {
-
             }
 
 
@@ -270,14 +280,12 @@ namespace TalonAdmin.Controllers.Api
             string voucherCode = "";
             var nationalId = "";
 
+            var onlyNumbers = new Regex("[^\\d]");
+
             if (codes.Length >= 2)
             {
-                voucherCode = codes[codes.Length - 2];
+                voucherCode = onlyNumbers.Replace(codes[codes.Length - 2], "");
                 nationalId = codes[codes.Length - 1];
-            }
-            else
-            {
-                return BadRequest();
             }
 
             var phoneNumber = "+" + Regex.Replace(from, "[^\\d]", "").Trim();
@@ -288,302 +296,237 @@ namespace TalonAdmin.Controllers.Api
                                   where v.MobileNumber == phoneNumber
                                   select v;
 
-                if (vendorQuery.Count() == 1)
+
+                var voucherQuery = from vc in db.Vouchers
+                                   where vc.VoucherCode == voucherCode
+                                   && vc.TransactionRecords.Any()
+                                   select vc;
+
+                var vendor = await vendorQuery.FirstOrDefaultAsync();
+                var voucher = await voucherQuery.FirstOrDefaultAsync();
+
+                if (vendor == null && voucher != null)
                 {
-                    var vendor = vendorQuery.First();
-                    var voucherQuery = from vc in db.Vouchers
-                                       where vc.VoucherCode == voucherCode
-                                       && vc.TransactionRecords.Any() 
-                                       select vc;
+                    // valid voucher invalid vendor
+                    UnauthorizedPhone(phoneNumber);
 
-                    if (voucherQuery.Count() == 1)
-                    {
-                        var voucher = voucherQuery.First();
-                        var transactionRecord = voucher.TransactionRecords.First();
-                        transactionRecord.LastModifiedOn = DateTime.Now;
-                        db.SaveChanges();
+                    return Ok("Unauthorized Vendor");
+                }
 
-                        if (voucher.Category.VendorTypeId != null &&
-                            voucher.Category.VendorTypeId != vendor.TypeId)
-                        {
-                            VendorCannotUseVoucher(voucher, vendor);
-                        }
-                        else if (transactionRecord.Status == 2)
-                        {
-                            VoucherAlreadyUsed(voucher, vendor);
-                        }
-                        else if (transactionRecord.Status == 3)
-                        {
-                            VoucherCancelled(voucher, vendor);
-                        }
-                        else if (transactionRecord.Beneficiary.NationalId.ToLowerInvariant() == nationalId.ToLowerInvariant())
-                        {
-                            transactionRecord.VendorId = vendor.Id;
-                            transactionRecord.Status = 2;
-                            transactionRecord.ConfirmationCode = RandomNumber.RandomLong(7);
-                            transactionRecord.FinalizedOn = DateTime.Now;
-                            db.SaveChanges();
+                if (vendor != null && voucher == null)
+                {
+                    // Valid Vendor invalid Voucher
+                    VoucherIsInvalid(vendor, voucherCode.ToString());
 
-                            ConfirmTransaction(voucher);
-                        }
-                    }
-                    else
-                    {
-                        VoucherIsInvalid(vendor, voucherCode.ToString());
-                    }
+                    return Ok("Invalid Voucher Code");
+                }
 
+                var transactionRecord = voucher.TransactionRecords.First();
+                transactionRecord.LastModifiedOn = DateTime.UtcNow;
+                db.SaveChanges();
+
+                if (voucher.Category.VendorTypeId != null &&
+                    voucher.Category.VendorTypeId != vendor.TypeId)
+                {
+                    // Voucher limited to another category that doesn't match vendor
+                    VendorCannotUseVoucher(voucher, vendor);
+
+                    return Ok("Wrong Vendor Type");
+                }
+                else if (transactionRecord.Status == 2)
+                {
+                    // Voucher used already
+                    VoucherAlreadyUsed(voucher, vendor);
+
+                    return Ok("Voucher Already Used");
+                }
+                else if (transactionRecord.Status == 3)
+                {
+                    // Voucher canceled
+                    VoucherCancelled(voucher, vendor);
+
+                    return Ok("Voucher Canceled");
+                }
+                else if (transactionRecord.Beneficiary.NationalId.ToLowerInvariant().Trim() != nationalId.ToLowerInvariant().Trim())
+                {
+                    // Wrong national id
+                    WrongNationalId(voucher, vendor);
+
+                    return Ok("Wrong National Id Canceled");
                 }
                 else
                 {
-                    UnauthorizedPhone(phoneNumber);
+                    transactionRecord.VendorId = vendor.Id;
+                    transactionRecord.Status = 2;
+                    transactionRecord.ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6");
+                    transactionRecord.FinalizedOn = DateTime.UtcNow;
+                    db.SaveChanges();
+
+                    ConfirmTransaction(voucher);
+
+                    Ok("Confirmed");
                 }
             }
 
             return Ok();
         }
 
-        [Route("AssignVoucherToBeneficiary")]
-        public IHttpActionResult AssignVoucherToBeneficiary(Models.BindingModels.AssignVoucherBidingModel request)
+        private void SendVoucherSms(int beneficiaryId, int voucherId)
         {
-            using (var db = new Models.Vouchers.Context())
+            using (var ctx = new Models.Vouchers.Context())
             {
-                var beneficiaryQuery = db.Beneficiaries.Where(b => b.Id == request.BeneficiaryId);
-                var voucherQuery = db.Vouchers.Where(v => v.Id == request.VoucherId);
+                var beneficiary = ctx.Beneficiaries.Include("Group").Where(b => b.Id == beneficiaryId).First();
+                var voucher = ctx.Vouchers.Include("Category").Include("Category.Type").Where(b => b.Id == voucherId).First();
 
-                if (!beneficiaryQuery.Any() || !voucherQuery.Any())
-                    return BadRequest("Invalid beneficiary or voucher");
+                var transactionRecord = voucher.TransactionRecords.First();
+                var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
 
-                var voucher = voucherQuery.First();
-                var beneficiary = beneficiaryQuery.First();
+                var beneficiaryMessage = CompileMessage("Beneficiary Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
 
-
-                if (voucher.TransactionRecords.Any() )
-                    return BadRequest("Voucher is being used by another beneficiary");
-
-                var verificationItem = new Models.Vouchers.VoucherTransactionRecord
-                {
-                    Beneficiary = beneficiary,
-                    Status = 1,
-                };
-
-                db.VoucherTransactionRecords.Add(verificationItem);
-                db.SaveChanges();
-
-                return Ok();
+                SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
             }
         }
 
-        private async Task SendVoucherSms(int beneficiaryId, int voucherId)
+        private void SendCancelledVoucher(Models.Vouchers.Voucher voucher)
+        {
+            var transactionRecord = voucher.TransactionRecords.First();
+            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
+
+            var message = CompileMessage("Beneficiary Canceled Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
+
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, message);
+        }
+
+
+        private void VoucherCancelled(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
+        {
+            var transactionRecord = voucher.TransactionRecords.First();
+            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
+
+            var vendorMessage = CompileMessage("Vendor Cancelled Message", voucher.CountryId, voucher.OrganizationId, model);
+            var beneficiaryMessage = CompileMessage("Beneficiary Cancelled Message", voucher.CountryId, voucher.OrganizationId, model);
+
+            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
+        }
+
+        private void VoucherAlreadyUsed(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
+        {
+            var transactionRecord = voucher.TransactionRecords.First();
+            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
+
+            var vendorMessage = CompileMessage("Vendor Already Used Message", voucher.CountryId, voucher.OrganizationId, model);
+            var beneficiaryMessage = CompileMessage("Beneficiary Already Used Message", voucher.CountryId, voucher.OrganizationId, model);
+
+            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
+        }
+
+        private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
+        {
+            var transactionRecord = voucher.TransactionRecords.First();
+            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
+
+            var vendorMessage = CompileMessage("Vendor Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
+            var beneficiaryMessage = CompileMessage("Beneficiary Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
+
+            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
+        }
+
+        private void UnauthorizedPhone(string from)
+        {
+        }
+
+        private void WrongNationalId(Voucher voucher, Vendor vendor)
+        {
+            var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = new { } };
+
+            var message = CompileMessage("Wrong National Id Message", vendor.CountryId, voucher.OrganizationId, model);
+
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message);
+        }
+
+        private void VoucherIsInvalid(Models.Vouchers.Vendor vendor, string voucherCode)
+        {
+            var model = new { Voucher = new { }, Vendor = vendor, Beneficiary = new { }, VoucherCode = voucherCode };
+
+            var message = CompileMessage("Invalid Voucher Message", vendor.CountryId, null, model);
+
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message);
+        }
+
+        private void ConfirmTransaction(Models.Vouchers.Voucher voucher)
+        {
+            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
+
+            context.Clients.All.message("success", "Incoming voucher", "Confirmed voucher!");
+            context.Clients.All.updateDashboard();
+
+            var transactionRecord = voucher.TransactionRecords.First();
+            var model = new { 
+                Voucher = voucher, 
+                Vendor = transactionRecord.Vendor, 
+                Beneficiary = transactionRecord.Beneficiary, 
+                TransactionRecord = transactionRecord 
+            };
+
+            var beneficiaryMessage = CompileMessage("Beneficiary Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
+            var vendorMessage = CompileMessage("Vendor Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
+
+            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
+        }
+
+        private string CompileMessage(string key, int countryId, int? organizationId, object model)
+        {
+            using (var ctx = new Models.Admin.AdminContext())
+            {
+                var country = ctx.Countries.AsNoTracking().Where(c => c.Id == countryId).FirstOrDefault();
+                string organizationMessage = "";
+                string countryMessage = "";
+
+                if (organizationId != null)
+                {
+                    var organization = ctx.OrganizationCountries.AsNoTracking().Where(o => o.Id == organizationId && o.CountryId == countryId).FirstOrDefault();
+                    organizationMessage = organization.Settings.PropertyCollection.Where(p=>p.Name == key).Select(p=> p.Value).FirstOrDefault();
+                }
+
+                countryMessage = country.Settings.PropertyCollection.Where(p => p.Name == key).Select(p => p.Value).FirstOrDefault();
+                try
+                {
+
+                    var message = String.IsNullOrEmpty(organizationMessage) ? countryMessage : organizationMessage;
+
+                    return Engine.Razor.RunCompile(message, Guid.NewGuid().ToString(), null, model);
+                }
+                catch
+                {
+                    return "";
+                }
+            }
+        }
+
+        private void SendAsyncMessage(string to, string name, string message, string groups = "")
         {
             try
             {
-                using (var ctx = new Models.Vouchers.Context())
-                {
-                    var beneficiary = ctx.Beneficiaries.Include("Group").Where(b => b.Id == beneficiaryId).First();
-                    var voucher = ctx.Vouchers.Include("Category").Include("Category.Type").Where(b => b.Id == voucherId).First();
-
-                    dynamic request = new JObject();
-
-                    request.MobileNumber = "+" + beneficiary.MobileNumber;
-                    request.Name = beneficiary.Name;
-                    request.Groups = beneficiary.Group.Name + "," + "Beneficiary";
-                    request.Message = String.Format("Your {0} voucher for {1} has been issued: {2}", voucher.Category.Type.Name, voucher.Category.Value, voucher.VoucherCode);
-
-                    await Utils.RescueSMSClient.CreateContactAndSendMessageAsync(request);
-                }
+                ThreadPool.QueueUserWorkItem((state) =>
+                   {
+                       try
+                       {
+                           Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                               name,
+                               to,
+                               message,
+                               groups
+                            ).Wait();
+                       }
+                       catch { }
+                   });
             }
             catch
             {
             }
         }
-
-        private void LogMessage(string messageFormat, params object[] parameters)
-        {
-            if (HttpContext.Current != null)
-            {
-                if (HttpContext.Current.IsDebuggingEnabled)
-                {
-                    try
-                    {
-                        EventLog.WriteEntry("Talon", String.Format(messageFormat, parameters));
-                    }
-                    catch { }
-                }
-            }
-        }
-
-        private void VoucherCancelled(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
-        {
-            LogMessage("Voucher {0} cancelled. Vendor {1}", voucher.VoucherCode, vendor.Name);
-
-            string voucherCode = voucher.VoucherCode.ToString();
-            string vendorName = vendor.Name;
-            string vendorMobileNumber = vendor.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    vendorName,
-                    vendorMobileNumber,
-                    String.Format("This voucher ({0}) was cancelled.", voucherCode),
-                    "Vendors").Wait();
-            });
-
-            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    beneficiaryName,
-                    beneficiaryMobileNumber,
-                    String.Format("This voucher ({0}) was cancelled.", voucherCode),
-                    "Beneficiaries").Wait();
-            });
-        }
-
-        private void VoucherAlreadyUsed(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
-        {
-            LogMessage("Voucher {0} already used. Vendor {1}", voucher.VoucherCode, vendor.Name);
-
-            string voucherCode = voucher.VoucherCode.ToString();
-            string vendorName = vendor.Name;
-            string vendorMobileNumber = vendor.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    vendorName,
-                    vendorMobileNumber,
-                    String.Format("This voucher ({0}) has already been used.", voucherCode),
-                    "Vendors").Wait();
-            });
-
-            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    beneficiaryName,
-                    beneficiaryMobileNumber,
-                    String.Format("This voucher ({0}) has already been used.", voucherCode),
-                    "Beneficiaries").Wait();
-            });
-        }
-
-        private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
-        {
-            LogMessage("Voucher {0} tried in unauthorized vendor. Vendor {1}", voucher.VoucherCode, vendor.Name);
-
-            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-            context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0}, with the incorrect vocuher type ({1}).", vendor.Name, voucher.Category.Type.Name));
-
-            string vendorName = vendor.Name;
-            string vendorMobileNumber = vendor.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    vendorName,
-                    vendorMobileNumber,
-                    "You are not allowed to claim this voucher.",
-                    "Vendors").Wait();
-            });
-
-            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    beneficiaryName,
-                    beneficiaryMobileNumber,
-                    "This vendor is not allowed to take this type of vouchers.",
-                    "Beneficiaries").Wait();
-            });
-        }
-
-        private void UnauthorizedPhone(string from)
-        {
-            LogMessage("Unauthorized call from {0}", from);
-
-            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-            context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0} which is not a recognize phone", from));
-
-
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync("Unknown", from, "This number is not authorized to claim vouchers").Wait();
-            });
-        }
-
-        private void SendCancelledVoucher(Models.Vouchers.Voucher voucher)
-        {
-            LogMessage("Canelling voucher {0}", voucher.VoucherCode);
-
-            var name = voucher.TransactionRecords.First().Beneficiary.Name;
-            var voucherCode = voucher.VoucherCode;
-            var mobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
-
-
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    name,
-                    mobileNumber,
-                    String.Format("This voucher ({0}) has been canceled.", voucherCode),
-                    "Beneficiaries").Wait();
-            });
-        }
-
-        private void VoucherIsInvalid(Models.Vouchers.Vendor vendor, string voucherCode)
-        {
-            LogMessage("Invalid code {0}. Tried by vendor {1}.", voucherCode, vendor.Name);
-
-            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-            context.Clients.All.message("error", "Unauthorized Phone", String.Format("An attempt to claim a voucher was made from {0}, with the incorrect vocuher code {1}", vendor.Name, voucherCode));
-
-            string name = vendor.Name;
-            string mobileNumber = vendor.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    name,
-                    mobileNumber,
-                    "This number is not authorized to claim vouchers",
-                    "Vendors").Wait();
-            });
-
-        }
-
-        private void ConfirmTransaction(Models.Vouchers.Voucher voucher)
-        {
-            LogMessage("Confirming voucher code {0}.", voucher.VoucherCode);
-
-            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-
-            context.Clients.All.message("info", "Incoming voucher", "Confirmed voucher!");
-            context.Clients.All.updateDashboard();
-
-
-            string confirmationCode = voucher.TransactionRecords.First().ConfirmationCode.ToString();
-            string vendorName = voucher.TransactionRecords.First().Vendor.Name;
-            string vendorMobileNumber = voucher.TransactionRecords.First().Vendor.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    vendorName,
-                    vendorMobileNumber,
-                    String.Format("Your account has been credited. Here is your confirmation code: {0}", confirmationCode),
-                    "Vendors").Wait();
-            });
-
-            string beneficiaryName = voucher.TransactionRecords.First().Beneficiary.Name;
-            string beneficiaryMobileNumber = voucher.TransactionRecords.First().Beneficiary.MobileNumber;
-            ThreadPool.QueueUserWorkItem((state) =>
-            {
-                Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                    beneficiaryName,
-                    beneficiaryMobileNumber,
-               String.Format("Your voucher has been debited. Here is your confirmation code: {0}", confirmationCode),
-               "Beneficiaries").Wait();
-            });
-        }
-
     }
 }

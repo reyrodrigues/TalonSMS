@@ -16,26 +16,26 @@ angular.module('app')
     ['$stateProvider', '$urlRouterProvider', 'JQ_CONFIG', 'gettext',
       function ($stateProvider, $urlRouterProvider, JQ_CONFIG, gettext) {
           var defaultResolve = {
-              locations: ['controlledListService', function (controlledListService) {
-                  return controlledListService.getLocations();
+              locations: ['controlledLists', function (controlledLists) {
+                  return controlledLists.getLocations();
               }],
-              voucherTypes: ['controlledListService', function (controlledListService) {
-                  return controlledListService.getVoucherTypes();
+              voucherTypes: ['controlledLists', function (controlledLists) {
+                  return controlledLists.getVoucherTypes();
               }],
-              groups: ['controlledListService', function (controlledListService) {
-                  return controlledListService.getBeneficiaryGroups();
+              groups: ['controlledLists', function (controlledLists) {
+                  return controlledLists.getBeneficiaryGroups();
               }],
-              vendorTypes: ['controlledListService', function (controlledListService) {
-                  return controlledListService.getVendorTypes();
+              vendorTypes: ['controlledLists', function (controlledLists) {
+                  return controlledLists.getVendorTypes();
               }],
-              organizations: ['controlledListService', function (controlledListService) {
-                  return controlledListService.getOrganizations();
+              organizations: ['controlledLists', function (controlledLists) {
+                  return controlledLists.getOrganizations();
               }],
-              countries: ['controlledListService', function (controlledListService) {
-                  return controlledListService.getCountries();
+              countries: ['controlledLists', function (controlledLists) {
+                  return controlledLists.getCountries();
               }],
-              roles: ['controlledListService', function (controlledListService) {
-                  return controlledListService.getRoles();
+              roles: ['controlledLists', function (controlledLists) {
+                  return controlledLists.getRoles();
               }]
           };
 
@@ -652,7 +652,7 @@ angular.module('app')
                     templateUrl: 'tpl/app.html',
                     resolve: angular.extend({
                         settings: function () {
-                            return { };
+                            return {};
                         }
                     }, defaultResolve)
                 })
@@ -667,6 +667,26 @@ angular.module('app')
                     controller: 'VendorFinancialReportingCtrl'
                 })
 
+                .state('reconciliation', {
+                    url: '/reconciliation',
+                    abstract: true,
+                    templateUrl: 'tpl/app.html',
+                    resolve: angular.extend({
+                        settings: function () {
+                            return {};
+                        }
+                    }, defaultResolve)
+                })
+                .state('reconciliation.report-history', {
+                    url: '/report-history',
+                    templateUrl: 'tpl/reconciliation/report-history.html',
+                    controller: 'ReportHistoryReconciliationCtrl'
+                })
+                .state('reconciliation.vendor-receipt', {
+                    url: '/vendor-receipt',
+                    templateUrl: 'tpl/reconciliation/vendor-receipt.html',
+                    controller: 'VendorReceiptReconciliationCtrl'
+                })
 
           ;
 

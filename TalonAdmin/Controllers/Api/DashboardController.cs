@@ -32,7 +32,10 @@ namespace TalonAdmin.Controllers.Api
         public IEnumerable<Models.ViewModels.DashboardSummaryViewModel> DashboardSummary()
         {
             var vendorCount = ctx.Vendors.Count();
-            var distributions = ctx.Distributions.FilterCountry(this).FilterOrganization(this)
+            var distributions = ctx.Distributions
+                .FilterCountry(this)
+                .FilterOrganization(this)
+                .Where(d=>d.IsClosed != true)
                 .Select(s => s.Id)
                 .ToArray()
                 .Select(s => new TalonAdmin.Models.ViewModels.DashboardSummaryViewModel

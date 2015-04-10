@@ -258,6 +258,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
     <Compile Include="Controllers\Api\DashboardController.cs" />
+    <Compile Include="Models\BindingModels\ReportRequest.cs" />
     <Compile Include="Controllers\Api\ReportsController.cs" />
     <Compile Include="Controllers\Breeze\AdminController.cs" />
     <Compile Include="Controllers\Breeze\EVMController.cs" />
@@ -297,6 +298,7 @@
     <Compile Include="Models\Vouchers\BeneficiaryGroup.cs" />
     <Compile Include="Models\Vouchers\Context.cs" />
     <Compile Include="Models\Vouchers\DistributionLog.cs" />
+    <Compile Include="Models\Vouchers\DistributionVendorReconciliation.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\Distribution.cs" />
     <Compile Include="Models\Entity.cs" />
@@ -832,6 +834,7 @@
     <Content Include="Scripts\NavigationMenu.js" />
     <Content Include="Source\src\js\controllers\countryAdmin.js" />
     <Content Include="Source\src\js\controllers\orgAdmin.js" />
+    <Content Include="Source\src\js\controllers\reconciliation.js" />
     <Content Include="Source\src\js\controllers\reports.js" />
     <Content Include="Source\src\js\controllers\systemAdmin.js" />
     <Content Include="Source\src\js\controllers\users.js" />
@@ -853,6 +856,7 @@
     <Content Include="Source\src\tpl\dialogs\assignToGroup.html" />
     <None Include="Properties\PublishProfiles\EVM.pubxml" />
     <Content Include="Reports\VendorReceiptReport.cshtml" />
+    <Content Include="Reports\DistributionReport.cshtml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -973,6 +977,10 @@
     <Content Include="Source\src\tpl\org-admin\users\register.html" />
     <Content Include="Source\src\tpl\page_signin.html" />
     <Content Include="Source\src\tpl\org-admin\countries\form.html" />
+    <Content Include="Source\src\tpl\reconciliation\report-history.html" />
+    <Content Include="Source\src\tpl\reconciliation\vendor-receipt.html" />
+    <Content Include="Source\src\tpl\reports\distribution.html" />
+    <Content Include="Source\src\tpl\reports\vendor-financial.html" />
     <Content Include="Source\src\tpl\system-admin\countries\form.html" />
     <Content Include="Source\src\tpl\system-admin\organizations\edit-country.html" />
     <Content Include="Source\src\tpl\system-admin\organizations\form.html" />
@@ -1057,7 +1065,6 @@
   <ItemGroup>
     <Folder Include="App\" />
     <Folder Include="App_Data\uploads\" />
-    <Folder Include="Source\src\tpl\reports\" />
     <Folder Include="Source\src\tpl\vouchers\" />
   </ItemGroup>
   <ItemGroup>

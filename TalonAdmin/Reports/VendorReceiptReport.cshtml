@@ -39,7 +39,7 @@
     {
         <div class="page ">
             <div class="row">
-                <div class="col-xs-12 text-center"><h1><strong>@Model.Organization.Abbreviation - @Model.Country.Name</strong></h1></div>
+                <div class="col-xs-12 text-center"><h1><strong>@Model.Organization.Name</strong></h1></div>
             </div>
             <div class="row">
                 <div class="col-xs-10">
@@ -51,7 +51,6 @@
                         <div class="col-xs-6">
                             <h5><strong>Vendor Partner:&nbsp;</strong>@Model.Vendor.Name</h5>
                             <h5><strong>Vendor Location:&nbsp;</strong>@(Model.Vendor.Location != null ? Model.Vendor.Location.Name : "")</h5>
-                            <h5><strong>Reporting Month:&nbsp;</strong>@Model.Period.ToString("MMMM, yyyy")</h5>
                         </div>
                         <div class="col-xs-2">
                         </div>

@@ -1,5 +1,5 @@
 ﻿'use strict';
-app.factory('controlledListService', ['breeze', 'backendService', 'adminBackendService', '$q', '$sessionStorage', '$localStorage',
+app.factory('controlledLists', ['breeze', 'backendService', 'adminBackendService', '$q', '$sessionStorage', '$localStorage',
     function (breeze, backendService, adminBackendService, $q, $sessionStorage, $localStorage) {
         return {
             getLocations: function () {
@@ -41,6 +41,30 @@ app.factory('controlledListService', ['breeze', 'backendService', 'adminBackendS
             getVendorTypes: function () {
                 var deferred = $q.defer();
                 new breeze.EntityQuery("VendorTypes")
+               .using(backendService)
+               .noTracking()
+               .execute()
+               .then(function (res) {
+                   deferred.resolve(res.results);
+               });
+
+                return deferred.promise;
+            },
+            getVendors: function () {
+                var deferred = $q.defer();
+                new breeze.EntityQuery("Vendors")
+               .using(backendService)
+               .noTracking()
+               .execute()
+               .then(function (res) {
+                   deferred.resolve(res.results);
+               });
+
+                return deferred.promise;
+            },
+            getDistributions: function () {
+                var deferred = $q.defer();
+                new breeze.EntityQuery("Distributions")
                .using(backendService)
                .noTracking()
                .execute()
@@ -100,18 +124,24 @@ app.factory('controlledListService', ['breeze', 'backendService', 'adminBackendS
         };
     }]);
 
-app.factory('organizations', ['controlledListService', function (controlledListService) {
-    return controlledListService.getOrganizations();
+app.factory('organizations', ['controlledLists', function (controlledLists) {
+    return controlledLists.getOrganizations();
 }])
-app.factory('countries', ['controlledListService', function (controlledListService) {
-    return controlledListService.getCountries();
+app.factory('countries', ['controlledLists', function (controlledLists) {
+    return controlledLists.getCountries();
 }])
-app.factory('roles', ['controlledListService', function (controlledListService) {
-    return controlledListService.getRoles();
+app.factory('roles', ['controlledLists', function (controlledLists) {
+    return controlledLists.getRoles();
 }])
-app.factory('locations', ['controlledListService', function (controlledListService) {
-    return controlledListService.getLocations();
+app.factory('locations', ['controlledLists', function (controlledLists) {
+    return controlledLists.getLocations();
 }])
-app.factory('vendorTypes', ['controlledListService', function (controlledListService) {
-    return controlledListService.getVendorTypes();
+app.factory('vendorTypes', ['controlledLists', function (controlledLists) {
+    return controlledLists.getVendorTypes();
+}])
+app.factory('distributions', ['controlledLists', function (controlledLists) {
+    return controlledLists.getDistributions();
+}])
+app.factory('vendors', ['controlledLists', function (controlledLists) {
+    return controlledLists.getVendors();
 }])

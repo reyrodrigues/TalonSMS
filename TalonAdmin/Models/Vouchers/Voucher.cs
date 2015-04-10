@@ -15,6 +15,12 @@ namespace TalonAdmin.Models.Vouchers
         [Index(IsUnique = true), StringLength(30)]
         public virtual string VoucherCode { get; set; }
 
+
+        public virtual bool? IsFinalized { get; set; }
+
+        public string ReconciledBy { get; set; }
+        public DateTime? ReconciledOn { get; set; }
+
         public virtual DistributionVoucherCategory Category { get; set; }
         public virtual Distribution Distribution { get; set; }
         public virtual ICollection<VoucherTransactionRecord> TransactionRecords { get; set; }

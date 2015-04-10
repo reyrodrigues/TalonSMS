@@ -26,6 +26,11 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual int LocationId { get; set; }
 
+        public virtual bool IsClosed { get; set; }
+
+        public virtual string ClosedBy { get; set; }
+        public virtual DateTime? ClosedOn { get; set; }
+
         public virtual string CreatedBy { get; set; }
         public virtual DateTime CreatedOn { get; set; }
         public virtual string ModifiedBy { get; set; }

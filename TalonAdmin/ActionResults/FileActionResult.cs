@@ -69,14 +69,14 @@ namespace TalonAdmin.ActionResults
 
     public static class FileResultExensions
     {
-        public static IHttpActionResult File(this ApiController controller, string filePath, string attachementName, string contentType = null)
+        public static IHttpActionResult File(this ApiController controller, string filePath, string attachmentName, string contentType = null)
         {
-            return new FileResult(filePath, attachementName, contentType);
+            return new FileResult(filePath, attachmentName, contentType);
         }
 
-        public static IHttpActionResult File(this ApiController controller, byte[] fileContent, string attachementName, string contentType = null)
+        public static IHttpActionResult File(this ApiController controller, byte[] fileContent, string attachmentName, string contentType = null)
         {
-            return new FileResult(fileContent, attachementName, contentType);
+            return new FileResult(fileContent, attachmentName, contentType);
         }
     }
 }

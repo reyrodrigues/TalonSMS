@@ -269,6 +269,21 @@ namespace TalonAdmin.Models.Admin
                                 },
                             }
                         }, 
+                        new MenuItem {
+                            State = "reconciliation",
+                            Title = "Reconciliation",
+                            CssClass = "icon icon-pencil text-primary-lter",
+                            Children = new MenuItem[] {
+                                new MenuItem {
+                                    State = "reconciliation.vendor-receipt",
+                                    Title = "Vendor Receipt",
+                                },
+                                new MenuItem {
+                                    State = "reconciliation.report-history",
+                                    Title = "Report History",
+                                },
+                            }
+                        }, 
                     }
                 },
                 new MenuCategory { 

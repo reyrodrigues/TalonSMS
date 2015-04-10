@@ -9,5 +9,7 @@ namespace TalonAdmin.Models.Vouchers
     {
         public virtual string MobileNumber { get; set; }
         public virtual string Message { get; set; }
+
+        public virtual DateTime DateTime { get; set; }
     }
 }
