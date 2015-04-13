@@ -19,7 +19,6 @@ using TalonAdmin.Attributes;
 using Microsoft.AspNet.Identity;
 using TalonAdmin.Models.Vouchers;
 using System.Web.Hosting;
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 
 using TuesPechkin;
@@ -124,7 +123,6 @@ namespace TalonAdmin.Controllers.Api
                 content.Append(compiled);
 
 
-
                 var document = new HtmlToPdfDocument
                 {
                     GlobalSettings =
@@ -169,9 +167,12 @@ namespace TalonAdmin.Controllers.Api
                     CountryId = countryId,
                     OrganizationId = organizationId,
                     ReconciledOn = DateTime.Now,
-                    ReportCopy = Convert.ToBase64String(reportData),
+                    OriginalReport = Convert.ToBase64String(reportData),
                     VendorId = vendorId,
-                    DistributionId = distributionId
+                    DistributionId = distributionId,
+
+                    ReportRunBy = User.Identity.GetUserId(),
+                    ReportRunOn = DateTime.Now
                 });
 
                 ctx.SaveChanges();
@@ -208,10 +209,11 @@ namespace TalonAdmin.Controllers.Api
                                     select new
                                     {
                                         Name = v.Beneficiary.FirstName + " " + v.Beneficiary.LastName,
+                                        Sex = v.Beneficiary.Sex == 0 ? "Male" : "Female",
+                                        v.Beneficiary.NationalId,
                                         v.Beneficiary.MobileNumber,
-                                        v.FinalizedOn,
+                                        Location = v.Beneficiary.Location != null ? v.Beneficiary.Location.Name : "",
                                         v.Voucher.VoucherCode,
-                                        v.ConfirmationCode,
                                         v.Voucher.Category.Value
                                     }).ToArrayAsync()).OrderBy(a => a.Name).ToArray();
 

@@ -23,6 +23,7 @@ namespace TalonAdmin.Models.Vouchers
         public virtual DateTime? FinalizedOn { get; set; }
 
         public virtual string ConfirmationCode { get; set; }
+
         /// <summary>
         /// 1. Valid
         /// 2. Invalid

@@ -30,6 +30,7 @@ app.controller('VendorReceiptReconciliationCtrl', ['$scope', '$rootScope', 'gett
                 .catch(function (response) { toaster.pop('error', gettext('Error'), res.data); });
         };
 
+
         $scope.loadVendor = function () {
             var query = new breeze
                 .EntityQuery("VoucherTransactionRecords")
@@ -49,27 +50,36 @@ app.controller('VendorReceiptReconciliationCtrl', ['$scope', '$rootScope', 'gett
         };
     }]);
 
-app.controller('ReportHistoryReconciliationCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists',
-    function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists) {
+app.controller('ReportHistoryReconciliationCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'backendService', 'controlledLists',
+    function ($scope, $rootScope, gettext, settings, $q, toaster, backendService, controlledLists) {
         $q.all([controlledLists.getVendors(), controlledLists.getDistributions()]).then(function (promises) {
             $scope.vendors  = promises[0]; 
             $scope.distributions  = promises[1]; 
         });
 
-        $scope.url = serviceBase + 'api/Reports/DistributionReport'
-
         $scope.report = {
         };
 
-        $rootScope.$watch('currentUser', function () {
-            if ($rootScope.currentUser) {
-                $scope.report.OrganizationId = $rootScope.currentUser.OrganizationId;
-            }
-        });
 
-        $rootScope.$watch('country', function () {
-            if ($rootScope.country) {
-                $scope.report.CountryId = $rootScope.country.Id;
-            }
-        });
+
+        $scope.downloadReport = function (report) {
+            window.open('data:application/pdf;base64,' + report.OriginalReport);
+        };
+
+
+
+        $scope.listReports = function () {
+            var query = new breeze
+                .EntityQuery("DistributionVendorReconciliations")
+                .using(backendService)
+                .where({
+                    "VendorId": { "==": $scope.reconciliation.Vendor.Id },
+                    "DistributionId": { "==": $scope.reconciliation.Distribution.Id }
+                })
+                .execute()
+                .then(function (response) {
+                    $scope.reconciliation.Reports = response.results;
+                })
+                .catch(function () { console.log(arguments) });
+        };
     }]);

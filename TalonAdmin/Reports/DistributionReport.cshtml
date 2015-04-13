@@ -21,7 +21,7 @@
         }
 
         div.table {
-            height: 171mm;
+            height: 161mm;
             display: block;
         }
 
@@ -51,6 +51,7 @@
                         <div class="col-xs-6">
                             <h5><strong>Program Name:&nbsp;</strong>@Model.Distribution.Title</h5>
                             <h5><strong>Fund Code:&nbsp;</strong>@Model.Distribution.FundCodes</h5>
+                            <h5><strong>Distribution Code:&nbsp;</strong>@Model.Distribution.Id.ToString("D6")</h5>
                         </div>
                     </div>
                 </div>
@@ -64,10 +65,11 @@
                         <tr>
                             <th>#</th>
                             <th>Beneficiary Name</th>
-                            <th>Beneficiary Mobile Number</th>
-                            <th>Transaction Timestamp</th>
+                            <th>Sex</th>
+                            <th>Id Number</th>
+                            <th>Phone Number</th>
+                            <th>Location</th>
                             <th>Voucher Code</th>
-                            <th>Confirmation Code</th>
                             <th>Voucher Value</th>
                         </tr>
                     </thead>
@@ -78,10 +80,11 @@
                             <tr>
                                 <td>@(((page.Page - 1) * Model.PageSize) + i + 1)</td>
                                 <td>@item.Name</td>
+                                <td>@item.Sex</td>
+                                <td>@item.NationalId</td>
                                 <td>@item.MobileNumber</td>
-                                <td>@(item.FinalizedOn ?? "")</td>
+                                <td>@item.Location</td>
                                 <td>@item.VoucherCode</td>
-                                <td>@item.ConfirmationCode</td>
                                 <td>@Model.Country.CurrencyIsoCode @item.Value</td>
                             </tr>
                         }
@@ -90,7 +93,7 @@
                         @if (page.Items.Length > 1)
                         {
                             <tr>
-                                <th colspan="6" class="text-right">Subtotal</th>
+                                <th colspan="7" class="text-right">Subtotal</th>
                                 <th>@Model.Country.CurrencyIsoCode @page.SubTotal</th>
                             </tr>
                         }
@@ -98,7 +101,7 @@
                         {
 
                             <tr>
-                                <th colspan="6" class="text-right">Total</th>
+                                <th colspan="7" class="text-right">Total</th>
                                 <th>@Model.Country.CurrencyIsoCode @Model.Total</th>
                             </tr>
                         }

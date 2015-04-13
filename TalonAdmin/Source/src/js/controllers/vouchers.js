@@ -16,8 +16,8 @@ app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController
     }]);
 
 
-app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster',
-    function (breeze, backendService, $rootScope, $scope, $state, $q, $http, locations, dialogs, voucherTypes, vendorTypes, serviceBase, toaster) {
+app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster', 'gettext',
+    function (breeze, backendService, $rootScope, $scope, $state, $q, $http, locations, dialogs, voucherTypes, vendorTypes, serviceBase, toaster, gettext) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
@@ -127,18 +127,23 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
                 });
         };
         $scope.assignToGroup = function () {
-            var dlg = dialogs.create('tpl/dialogs/assignToGroup.html', 'AssignToGroupDialogCtrl', $scope.data);
-            dlg.result.then(function (group) {
-                var payload = { DistributionId: $scope.entity.Id, GroupId: group.Id };
+            console.log("WHY?", !$scope.categories && !$scope.categories.length, $scope.categories)
+            if (!$scope.categories && !$scope.categories.length) {
+                toaster.pop('error', gettext('Error'), gettext('Please add one voucher type to the distribution before assigning it to a group.'));
+            } else {
+                var dlg = dialogs.create('tpl/dialogs/assignToGroup.html', 'AssignToGroupDialogCtrl', $scope.data);
+                dlg.result.then(function (group) {
+                    var payload = { DistributionId: $scope.entity.Id, GroupId: group.Id };
 
-                $http.post(serviceBase + 'Api/VoucherWorkflow/AssignToGroup', payload)
-                .then(function () {
-                    toaster.pop('success', 'Success!', 'Vouchers created successfully!');
-                    loadData();
-                }).catch(function (res) {
-                    toaster.pop('error', 'Error', res.data.Message);
+                    $http.post(serviceBase + 'Api/VoucherWorkflow/AssignToGroup', payload)
+                    .then(function () {
+                        toaster.pop('success', 'Success!', 'Vouchers created successfully!');
+                        loadData();
+                    }).catch(function (res) {
+                        toaster.pop('error', 'Error', res.data.Message);
+                    });
                 });
-            });
+            }
         }; // end launch
 
         var watchFunction = function () {

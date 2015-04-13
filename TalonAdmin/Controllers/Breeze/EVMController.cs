@@ -52,6 +52,15 @@ namespace TalonAdmin.Controllers.Breeze
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
+        
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.DistributionVendorReconciliation> DistributionVendorReconciliations()
+        {
+            return _contextProvider.Context.DistributionVendorReconciliations
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
 
         [HttpGet]
         public IQueryable<Models.Vouchers.DistributionLog> DistributionLogs()

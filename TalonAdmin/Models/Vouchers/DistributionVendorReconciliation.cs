@@ -13,10 +13,16 @@ namespace TalonAdmin.Models.Vouchers
         public virtual int DistributionId { get; set; }
         public virtual int VendorId { get; set; }
 
-        [Column(TypeName="ntext")] 
-        public virtual string ReportCopy { get; set; }
+        [Column(TypeName = "ntext")]
+        public virtual string OriginalReport { get; set; }
+
+        [Column(TypeName = "ntext")]
+        public virtual string SignedReport { get; set; }
 
         public virtual Distribution Distribution { get; set; }
         public virtual Vendor Vendor { get; set; }
+
+        public virtual DateTime? ReportRunOn { get; set; }
+        public virtual string ReportRunBy { get; set; }
     }
 }

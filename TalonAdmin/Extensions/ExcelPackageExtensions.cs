@@ -31,22 +31,31 @@ namespace TalonAdmin.Extensions
                 {
                     var otherProperty = otherPropertyQuery.First();
                     // If there is a mismatch like this it means that Excel didn't return the right date time
-                    if ((otherProperty.PropertyType == typeof(DateTime) ||otherProperty.PropertyType == typeof(DateTime?))
+                    if ((otherProperty.PropertyType == typeof(DateTime) || otherProperty.PropertyType == typeof(DateTime?))
                         && (prop.Value.Type == JTokenType.Float || prop.Value.Type == JTokenType.Integer))
                     {
                         // Convert float to date and continue the loop
-                        otherProperty.SetValue(other, DateTime.FromOADate(prop.Value.ToObject<double>()));
+                        var oaDate = DateTime.FromOADate(prop.Value.ToObject<double>());
+                        var date = DateTime.SpecifyKind(oaDate, DateTimeKind.Utc);
+
+                        if (oaDate.Hour + oaDate.Minute + oaDate.Second + oaDate.Millisecond == 0) // This is a date, not a datetime
+                        {
+                            date = new DateTime(oaDate.Year, oaDate.Month, oaDate.Day, 0, 0, 0, DateTimeKind.Utc);
+                        }
+
+                        otherProperty.SetValue(other, date);
 
                         continue;
                     }
 
                     // What do I do when this happens?
-                    if (otherProperty.PropertyType.IsValueType &&  (prop.Value.Type == JTokenType.Null || String.IsNullOrEmpty(prop.Value.ToString()))) {
+                    if (otherProperty.PropertyType.IsValueType && (prop.Value.Type == JTokenType.Null || String.IsNullOrEmpty(prop.Value.ToString())))
+                    {
                         continue;
                     }
 
                     // Nulls will be null
-                    if (otherProperty.PropertyType != typeof(string) && !otherProperty.PropertyType.IsValueType && 
+                    if (otherProperty.PropertyType != typeof(string) && !otherProperty.PropertyType.IsValueType &&
                         (prop.Value.Type == JTokenType.String || String.IsNullOrEmpty(prop.Value.ToString())))
                     {
                         otherProperty.SetValue(other, null);
@@ -163,9 +172,9 @@ namespace TalonAdmin.Extensions
 
                 columns.Select((c, z) => new { Index = z, ColumnName = c })
                     .ToList()
-                    .Where(o=> !String.IsNullOrEmpty(o.ColumnName))
+                    .Where(o => !String.IsNullOrEmpty(o.ColumnName))
                     .ToList()
-                    .ForEach(o => jObject.Add(o.ColumnName, JToken.FromObject(self.Cells[i, o.Index + 1].Value ?? "")));
+                    .ForEach(o => jObject.Add(o.ColumnName, self.Cells[i, o.Index + 1].ToJToken()));
 
                 jObject["__RowNumber"] = i;
 
@@ -173,6 +182,19 @@ namespace TalonAdmin.Extensions
             }
 
             return returnArray;
+        }
+
+        public static JToken ToJToken(this ExcelRange excelRange)
+        {
+            object returnValue = "";
+
+            if (excelRange.Value != null)
+            {
+                returnValue = excelRange.Value;
+            }
+
+
+            return JToken.FromObject(returnValue);
         }
     }
 }

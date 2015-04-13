@@ -1,1 +1,46 @@
-﻿
+﻿<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">Vendor Receipt History</h1>
+</div>
+<div class="wrapper-md">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" translate>Vendor</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" ng-model="reconciliation.Vendor"
+                                    ng-options="item as item.Name for item in vendors | orderBy:'item.Name'"></select>
+                        </div>
+                        <label class="col-sm-2 control-label" translate>Distribution</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" ng-model="reconciliation.Distribution"
+                                    ng-options="item as item.Title for item in distributions | orderBy:'item.Title'"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <a class="btn btn-primary" href ng-disabled="!(reconciliation.Vendor && reconciliation.Distribution)" ng-click="listReports()">List Reports</a>
+                </div>
+            </div>
+        </div>
+        <div ng-if="reconciliation.Reports" class="container-fluid">
+            <h3>Reports</h3>
+            <div class="row">
+               
+                <div class="col-sm-12">
+                    <div class="panel panel-default" ng-repeat="report in reconciliation.Reports">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Report Run On</strong></div>
+                                <div class="col-sm-4">{{ report.ReportRunOn|date }}</div>
+                                <div class="col-sm-4"><a href mime-type="application/pdf" download="Report.pdf" file-download ng-model="report.OriginalReport" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

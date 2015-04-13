@@ -423,12 +423,12 @@ namespace TalonAdmin.Controllers.Api
         private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
         {
             var transactionRecord = voucher.TransactionRecords.First();
-            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
+            var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = transactionRecord.Beneficiary };
 
             var vendorMessage = CompileMessage("Vendor Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
             var beneficiaryMessage = CompileMessage("Beneficiary Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage);
             SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
         }
 
