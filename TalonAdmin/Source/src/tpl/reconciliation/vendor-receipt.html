@@ -98,12 +98,12 @@
                             <div class="col-sm-2">
                                 <div class="row">
                                     <div class="col-sm-12">
-                                        <span class="col-sm-12 label bg-success" ng-if="!voucher.Voucher.IsFinalized && voucher.Voucher.ReconciledOn">Reconciled</span>
+                                        <span class="col-sm-12 label bg-info" ng-if="!voucher.Voucher.IsFinalized && voucher.Voucher.ReconciledOn">Reconciled</span>
                                         <span class="col-sm-12 label bg-warning" ng-if="!voucher.Voucher.ReconciledOn">Not Reconciled</span>
                                     </div>
-                                        <div class="col-sm-12">
-                                            &nbsp;
-                                        </div>
+                                    <div class="col-sm-12">
+                                        &nbsp;
+                                    </div>
                                     <div class="col-sm-12" ng-if="!voucher.Voucher.ReconciledOn">
                                         <button class="btn btn-xs btn-block btn-success" ng-click="reconcileVoucher(voucher)">Reconcile</button>
                                     </div>

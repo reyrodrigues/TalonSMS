@@ -18,3 +18,9 @@ angular.module('app')
           return moment.tz(datePart, 'utc').format("LL");
       }
   });
+angular.module('app')
+  .filter('localeDatetime', function () {
+      return function (date) {
+          return moment(date).format("LLL");
+      }
+  });

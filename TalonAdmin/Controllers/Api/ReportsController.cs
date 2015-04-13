@@ -42,6 +42,7 @@ namespace TalonAdmin.Controllers.Api
         }
 
         [Route("VendorFinancialReport")]
+        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> VendorFinancialReport([FromBody] ReportRequestBindingModel request)
         {
             var reportData = new byte[0];
@@ -55,6 +56,7 @@ namespace TalonAdmin.Controllers.Api
             var distributionId = request.DistributionId ?? 0;
             var countryId = request.CountryId;
             var organizationId = request.OrganizationId;
+            var itemCount = 0;
 
             using (var ctx = new Models.Vouchers.Context())
             {
@@ -70,7 +72,7 @@ namespace TalonAdmin.Controllers.Api
 
                 var items = (await (from v in ctx.VoucherTransactionRecords
                                     where
-                                    v.VendorId == vendorId 
+                                    v.VendorId == vendorId
                                     && v.Voucher.DistributionId == distributionId
                                     && v.Voucher.ReconciledOn != null
                                     && v.Voucher.IsFinalized != true
@@ -85,6 +87,7 @@ namespace TalonAdmin.Controllers.Api
                                         v.Voucher.Category.Value,
                                         v.VoucherId
                                     }).ToArrayAsync()).OrderBy(a => a.Name).ToArray();
+                itemCount = items.Count();
 
                 int pageSize = 15;
                 var pages = new List<dynamic>();
@@ -151,7 +154,7 @@ namespace TalonAdmin.Controllers.Api
 
                 var voucherIds = items.Where(v => v.VoucherId.HasValue).Select(v => v.VoucherId.Value).ToArray();
 
-                foreach (var finalizedVoucher in ctx.Vouchers.Where(v=> voucherIds.Contains(v.Id)))
+                foreach (var finalizedVoucher in ctx.Vouchers.Where(v => voucherIds.Contains(v.Id)))
                 {
                     finalizedVoucher.IsFinalized = true;
                 }
@@ -162,26 +165,31 @@ namespace TalonAdmin.Controllers.Api
 
             using (var ctx = new Models.Vouchers.Context())
             {
-                ctx.DistributionVendorReconciliations.Add(new DistributionVendorReconciliation
+                if (itemCount > 0)
                 {
-                    CountryId = countryId,
-                    OrganizationId = organizationId,
-                    ReconciledOn = DateTime.Now,
-                    OriginalReport = Convert.ToBase64String(reportData),
-                    VendorId = vendorId,
-                    DistributionId = distributionId,
+                    ctx.DistributionVendorReconciliations.Add(new DistributionVendorReconciliation
+                    {
+                        CountryId = countryId,
+                        OrganizationId = organizationId,
+                        ReconciledOn = DateTime.Now,
+                        OriginalReport = Convert.ToBase64String(reportData),
+                        VendorId = vendorId,
+                        DistributionId = distributionId,
 
-                    ReportRunBy = User.Identity.GetUserId(),
-                    ReportRunOn = DateTime.Now
-                });
+                        ReportRunBy = User.Identity.GetUserId(),
+                        ReportRunOn = DateTime.Now
+                    });
 
-                ctx.SaveChanges();
+                    ctx.SaveChanges();
+
+                }
             }
 
             return this.File(reportData, null, "application/pdf");
         }
 
         [Route("DistributionReport")]
+        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> DistributionReport([FromBody] ReportRequestBindingModel request)
         {
             var report = System.IO.File.ReadAllText(HostingEnvironment.MapPath("~/Reports/DistributionReport.cshtml"));

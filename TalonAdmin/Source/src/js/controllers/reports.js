@@ -1,7 +1,7 @@
 ﻿'use strict';
 
-app.controller('VendorFinancialReportingCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists',
-    function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists) {
+app.controller('VendorFinancialReportingCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists', 'authService',
+    function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists, authService) {
         $q.all([controlledLists.getVendors(), controlledLists.getDistributions()]).then(function (promises) {
             $scope.vendors = promises[0];
             $scope.distributions = promises[1];
@@ -10,6 +10,9 @@ app.controller('VendorFinancialReportingCtrl', ['$scope', '$rootScope', 'gettext
 
         $scope.report = {
         };
+
+        authService.loadUserData().then(function () {
+        });
 
         $rootScope.$watch('currentUser', function () {
             if ($rootScope.currentUser) {

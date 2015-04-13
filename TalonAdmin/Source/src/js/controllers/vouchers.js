@@ -128,7 +128,7 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
         };
         $scope.assignToGroup = function () {
             console.log("WHY?", !$scope.categories && !$scope.categories.length, $scope.categories)
-            if (!$scope.categories && !$scope.categories.length) {
+            if (!$scope.categories || !$scope.categories.length) {
                 toaster.pop('error', gettext('Error'), gettext('Please add one voucher type to the distribution before assigning it to a group.'));
             } else {
                 var dlg = dialogs.create('tpl/dialogs/assignToGroup.html', 'AssignToGroupDialogCtrl', $scope.data);

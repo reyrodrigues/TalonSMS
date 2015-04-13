@@ -75,6 +75,7 @@ namespace TalonAdmin.Controllers
         /// <returns>Attachment with Excel Spreadsheet</returns>
         [HttpGet]
         [Route("ExportBeneficiaries")]
+        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> ExportBeneficiaries(int organizationId, int countryId)
         {
             using (var ctx = new Models.Vouchers.Context())
@@ -313,6 +314,7 @@ namespace TalonAdmin.Controllers
         /// <returns>Attachment with Excel Spreadsheet</returns>
         [HttpGet]
         [Route("ExportVendors")]
+        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> ExportVendors(int countryId)
         {
             using (var ctx = new Models.Vouchers.Context())

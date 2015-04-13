@@ -33,7 +33,7 @@
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-sm-4"><strong>Report Run On</strong></div>
-                                <div class="col-sm-4">{{ report.ReportRunOn|date }}</div>
+                                <div class="col-sm-4">{{ report.ReportRunOn|localeDatetime }}</div>
                                 <div class="col-sm-4"><a href mime-type="application/pdf" download="Report.pdf" file-download ng-model="report.OriginalReport" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></div>
                             </div>
                         </div>
