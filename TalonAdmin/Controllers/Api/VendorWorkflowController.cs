@@ -565,8 +565,14 @@ namespace TalonAdmin.Controllers.Api
                     var result = service.SendSMS("Talon", to, message, "");
                 }
                 else if (country.Settings.SmsBackendType == 2) {
+                    var isUnicode = message.Any(c => c > 255);
 
-                    var urlCall = String.Format(country.Settings.ServiceUrl, to, message);
+                    if (isUnicode) {
+                        var bytes = System.Text.Encoding.GetEncoding("UTF-16BE").GetBytes(message);
+                        message = string.Concat(bytes.Select(b => b.ToString("X2")));
+                    }
+
+                    var urlCall = String.Format(country.Settings.ServiceUrl + (isUnicode ? "&unicode=1" : ""), to, message);
                     HttpClient client = new HttpClient();
 
                     var result = client.GetAsync(urlCall).Result;

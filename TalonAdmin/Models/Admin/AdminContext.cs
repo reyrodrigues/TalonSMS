@@ -77,6 +77,8 @@ namespace TalonAdmin.Models.Admin
     
 
 #if DEBUG
+            Database.SetInitializer(new CleanDbInitializer());
+#else
             Database.SetInitializer(new NullDatabaseInitializer<AdminContext>());
 #endif
         }
