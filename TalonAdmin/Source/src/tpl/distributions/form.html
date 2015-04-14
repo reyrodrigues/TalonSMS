@@ -14,7 +14,7 @@
         <div class="form-group">
             <label class="col-sm-2 control-label" translate>Location</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="entity.LocationId"
+                <select  class="form-control" ng-model="entity.LocationId"
                         ng-options="item.Id as item.Name for item in locations | orderBy:'item.Name'" required></select>
             </div>
             <label class="col-sm-2 control-label" translate>Number of digits in voucher</label>
@@ -40,12 +40,12 @@
         <div class="form-group">
             <label class="col-sm-2 control-label" translate>Type of Voucher</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="category.TypeId"
+                <select  class="form-control" ng-model="category.TypeId"
                         ng-options="item.Id as item.Name for item in voucherTypes | orderBy:'item.Name'" required></select>
             </div>
             <label class="col-sm-2 control-label">Restricted Type of Vendor</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="category.VendorTypeId"
+                <select  class="form-control" ng-model="category.VendorTypeId"
                         ng-options="item.Id as item.Name for item in vendorTypes | orderBy:'item.Name'"></select>
             </div>
         </div>

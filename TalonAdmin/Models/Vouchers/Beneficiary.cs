@@ -26,8 +26,7 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual string MobileNumber { get; set; }
 
-        [Column(TypeName = "Date")]
-        public virtual DateTime BirthDate { get; set; }
+        public virtual string BirthYear { get; set; }
 
         public virtual int Sex { get; set; }
 

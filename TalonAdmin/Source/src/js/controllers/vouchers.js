@@ -1,8 +1,12 @@
 ﻿'use strict';
 
-app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController', 'settings', 'injectorHelper',
-    function ($rootScope, $scope, createController, settings, injectorHelper) {
-        injectorHelper.injectPromises($scope, ['locations']);
+app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController', 'settings', '$q', 'controlledLists',
+    function ($rootScope, $scope, createController, settings, $q, controlledLists) {
+        $q.all([controlledLists.getLocations(), controlledLists.getVoucherTypes(), controlledLists.getVendorTypes()]).then(function (promises) {
+            $scope.locations = promises[0];
+            $scope.voucherTypes = promises[1];
+            $scope.vendorTypes = promises[2];
+        });
 
         createController($scope, angular.extend({
             defaults: { VoucherCodeLength: 6, Date: moment().toDate() }
@@ -16,8 +20,8 @@ app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController
     }]);
 
 
-app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'locations', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster', 'gettext',
-    function (breeze, backendService, $rootScope, $scope, $state, $q, $http, locations, dialogs, voucherTypes, vendorTypes, serviceBase, toaster, gettext) {
+app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'controlledLists', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster', 'gettext',
+    function (breeze, backendService, $rootScope, $scope, $state, $q, $http, controlledLists, dialogs, voucherTypes, vendorTypes, serviceBase, toaster, gettext) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
@@ -211,9 +215,15 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
                 return "Cancelled";
             }
         };
-        $scope.locations = locations;
-        $scope.voucherTypes = voucherTypes;
-        $scope.vendorTypes = vendorTypes;
+
+
+        $q.all([controlledLists.getLocations(), controlledLists.getVoucherTypes(), controlledLists.getVendorTypes()]).then(function (promises) {
+            $scope.locations = promises[0];
+            $scope.voucherTypes = promises[1];
+            $scope.vendorTypes = promises[2];
+
+        });
+
         $scope.isEditing = false;
         $scope.vouchers = [];
         $scope.pagingOptions = {

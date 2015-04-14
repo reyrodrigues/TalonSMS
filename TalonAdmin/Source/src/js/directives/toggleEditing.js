@@ -14,8 +14,11 @@ angular.module('app')
                 $('input, select, textarea', element).prop('readonly', !isEditing);
                 if (!isEditing) {
                     $('[type=checkbox]').attr('disabled', 'disabled');
+                    $('select', element).attr('disabled', 'disabled');
+
                 } else {
                     $('[type=checkbox]').removeAttr('disabled');
+                    $('select', element).removeAttr('disabled');
                 }
 
                 $('.isChosen').trigger('chosen:updated');

@@ -86,7 +86,7 @@ app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'l
             expand: ['Location', "Group"],
             columns: [
                 ["Name", gettext("Name"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
-                ["BirthDate", gettext("Date of Birth"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a>'],
+                ["BirthYear", gettext("Birth Year"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a>'],
                 ["NationalId", gettext("National Id Number")],
                 ["MobileNumber", gettext("Mobile Number")],
                 ["Location.Name", gettext("Location")],
