@@ -85,8 +85,8 @@ app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'l
         listController($scope, angular.extend({
             expand: ['Location', "Group"],
             columns: [
-                ["Name", gettext("Name"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
-                ["BirthYear", gettext("Birth Year"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a>'],
+                ["FirstName", gettext("Name"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{ row.getProperty(\'Name\')}}</a>'],
+                ["BirthYear", gettext("Birth Year"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
                 ["NationalId", gettext("National Id Number")],
                 ["MobileNumber", gettext("Mobile Number")],
                 ["Location.Name", gettext("Location")],
@@ -171,8 +171,8 @@ app.controller('BeneficiaryBulkEditCtrl', ['$scope', '$state', 'dialogs', 'listC
             collectionType: 'Beneficiaries',
             expand: ['Location', "Group"],
             columns: [
-                ["Name", gettext("Name"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
-                ["BirthDate", gettext("Date of Birth"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD|localeDate}}</a>'],
+                ["FirstName", gettext("Name"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{ row.getProperty(\'Name\')}}</a>'],
+                ["BirthDate", gettext("Date of Birth"), '<a href ui-sref="beneficiaries.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
                 ["NationalId", gettext("National Id Number")],
                 ["MobileNumber", gettext("Mobile Number")],
                 ["Location.Name", gettext("Location")],

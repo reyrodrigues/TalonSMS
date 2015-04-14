@@ -20,6 +20,8 @@ using System.Configuration;
 using RazorEngine.Templating;
 using RazorEngine;
 using TalonAdmin.Extensions;
+using System.Net;
+using System.Net.Http;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -383,7 +385,7 @@ namespace TalonAdmin.Controllers.Api
 
                 var beneficiaryMessage = CompileMessage("Beneficiary Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
 
-                SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
+                SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
             }
         }
 
@@ -394,7 +396,7 @@ namespace TalonAdmin.Controllers.Api
 
             var message = CompileMessage("Beneficiary Canceled Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, message);
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, message, transactionRecord.CountryId, transactionRecord.OrganizationId);
         }
 
 
@@ -405,7 +407,7 @@ namespace TalonAdmin.Controllers.Api
 
             var vendorMessage = CompileMessage("Vendor Cancelled Message", voucher.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage);
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage, vendor.CountryId, voucher.OrganizationId);
         }
 
         private void VoucherAlreadyUsed(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
@@ -416,8 +418,8 @@ namespace TalonAdmin.Controllers.Api
             var vendorMessage = CompileMessage("Vendor Already Used Message", voucher.CountryId, voucher.OrganizationId, model);
             var beneficiaryMessage = CompileMessage("Beneficiary Already Used Message", voucher.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
+            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
         }
 
         private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
@@ -428,8 +430,8 @@ namespace TalonAdmin.Controllers.Api
             var vendorMessage = CompileMessage("Vendor Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
             var beneficiaryMessage = CompileMessage("Beneficiary Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage);
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
         }
 
         private void UnauthorizedPhone(string from)
@@ -442,7 +444,7 @@ namespace TalonAdmin.Controllers.Api
 
             var message = CompileMessage("Wrong National Id Message", vendor.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message);
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message, vendor.CountryId, voucher.OrganizationId);
         }
 
         private void VoucherIsInvalid(Models.Vouchers.Vendor vendor, string voucherCode)
@@ -451,7 +453,7 @@ namespace TalonAdmin.Controllers.Api
 
             var message = CompileMessage("Invalid Voucher Message", vendor.CountryId, null, model);
 
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message);
+            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message, vendor.CountryId);
         }
 
         private void ConfirmTransaction(Models.Vouchers.Voucher voucher)
@@ -472,8 +474,8 @@ namespace TalonAdmin.Controllers.Api
             var beneficiaryMessage = CompileMessage("Beneficiary Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
             var vendorMessage = CompileMessage("Vendor Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
 
-            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage);
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage);
+            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
+            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
         }
 
         private string CompileMessage(string key, int countryId, int? organizationId, object model)
@@ -505,26 +507,74 @@ namespace TalonAdmin.Controllers.Api
             }
         }
 
-        private void SendAsyncMessage(string to, string name, string message, string groups = "")
+        private void SendAsyncMessage(string to, string name, string message, int countryId, int? organizationId = null)
         {
+            string senderName = "Talon";
+            Models.Admin.Country country = null;
+
             try
             {
-                ThreadPool.QueueUserWorkItem((state) =>
-                   {
-                       try
-                       {
-                           Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
-                               name,
-                               to,
-                               message,
-                               groups
-                            ).Wait();
-                       }
-                       catch { }
-                   });
+
+                using (var ctx = new Models.Admin.AdminContext())
+                {
+                    if (organizationId != null)
+                    {
+                        senderName = ctx.Organizations.Where(o => o.Id == organizationId.Value).First().Abbreviation;
+                    }
+
+                    country = ctx.Countries.Include("Settings")
+                        .Include("Settings.PropertyCollection")
+                        .Where(c => c.Id == countryId).FirstOrDefault();
+                }
             }
-            catch
+            catch 
             {
+            }
+
+            if (country == null)
+                return;
+
+            try
+            {
+                if (country.Settings.SmsBackendType == 0) {
+                    // Sending through RSMS
+
+                    ThreadPool.QueueUserWorkItem((state) =>
+                    {
+                        try
+                        {
+                            Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                                name,
+                                to,
+                                message,
+                                ""
+                             ).Wait();
+                        }
+                        catch { }
+                    });
+                }
+                else if (country.Settings.SmsBackendType == 1)
+                {
+                    // Sending through TurboSMS
+
+                    var service = new Soap.TurboSMS.Service();
+                    var cookieJar = new CookieContainer();
+                    service.CookieContainer = cookieJar;
+
+                    var authResponse = service.Auth(country.Settings.ServiceUser, country.Settings.ServicePassword);
+                    var result = service.SendSMS("Talon", to, message, "");
+                }
+                else if (country.Settings.SmsBackendType == 2) {
+
+                    var urlCall = String.Format(country.Settings.ServiceUrl, to, message);
+                    HttpClient client = new HttpClient();
+
+                    var result = client.GetAsync(urlCall).Result;
+                }
+
+            } 
+            catch 
+            { 
             }
         }
     }

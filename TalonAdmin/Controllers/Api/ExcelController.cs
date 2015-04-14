@@ -346,6 +346,9 @@ namespace TalonAdmin.Controllers
                 dataTable.Columns.Remove("LocationId");
                 dataTable.Columns.Remove("CountryId");
                 dataTable.Columns.Remove("TypeId");
+                dataTable.Columns.Remove("Name");
+                dataTable.Columns.Remove("ParentRecord");
+                dataTable.Columns.Remove("ParentRecordId");
 
                 dataTable.TableName = "Vendors";
 

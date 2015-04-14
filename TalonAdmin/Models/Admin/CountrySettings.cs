@@ -99,7 +99,7 @@ namespace TalonAdmin.Models.Admin
 
         }
 
-        public virtual SmsBackendType SmsBackendType { get; set; }
+        public virtual int SmsBackendType { get; set; }
         public virtual string ServiceUrl { get; set; }
         public virtual string ServiceUser { get; set; }
         public virtual string ServicePassword { get; set; }

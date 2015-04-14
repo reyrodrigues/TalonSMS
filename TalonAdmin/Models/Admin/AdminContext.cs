@@ -77,12 +77,12 @@ namespace TalonAdmin.Models.Admin
     
 
 #if DEBUG
-            Database.SetInitializer(new CleanDbInitializer());
+            Database.SetInitializer(new NullDatabaseInitializer<AdminContext>());
 #endif
         }
     }
 
-    public class CleanDbInitializer : DropCreateDatabaseIfModelChanges<AdminContext>
+    public class CleanDbInitializer : System.Data.Entity.DropCreateDatabaseIfModelChanges<AdminContext>
     {
         protected override void Seed(AdminContext context)
         {

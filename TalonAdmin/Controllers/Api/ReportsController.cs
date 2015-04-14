@@ -29,7 +29,6 @@ using TalonAdmin.Controllers.BindingModels;
 
 namespace TalonAdmin.Controllers.Api
 {
-    [Authorize]
     [RoutePrefix("api/Reports")]
     public class ReportsController : ApiController
     {
@@ -42,7 +41,6 @@ namespace TalonAdmin.Controllers.Api
         }
 
         [Route("VendorFinancialReport")]
-        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> VendorFinancialReport([FromBody] ReportRequestBindingModel request)
         {
             var reportData = new byte[0];
@@ -50,8 +48,6 @@ namespace TalonAdmin.Controllers.Api
             var image = new byte[0];
             var content = new StringBuilder();
 
-            // var periodStartDate = DateTime.SpecifyKind(DateTime.Parse(request.PeriodStart), DateTimeKind.Utc);
-            //var periodEndDate = DateTime.SpecifyKind(DateTime.Parse(request.PeriodEnd), DateTimeKind.Utc);
             var vendorId = request.VendorId ?? 0;
             var distributionId = request.DistributionId ?? 0;
             var countryId = request.CountryId;
@@ -189,7 +185,6 @@ namespace TalonAdmin.Controllers.Api
         }
 
         [Route("DistributionReport")]
-        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> DistributionReport([FromBody] ReportRequestBindingModel request)
         {
             var report = System.IO.File.ReadAllText(HostingEnvironment.MapPath("~/Reports/DistributionReport.cshtml"));
