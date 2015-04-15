@@ -68,9 +68,9 @@ namespace TalonAdmin.Models.Vouchers
 #if DEBUG
             Database.SetInitializer(new System.Data.Entity.DropCreateDatabaseIfModelChanges<Context>());
 #else
-            Database.SetInitializer(new NullDatabaseInitializer<AdminContext>());
+            Database.SetInitializer(new NullDatabaseInitializer<Context>());
 #endif
-            
+
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
                 .WithMany(p => p.Categories);
