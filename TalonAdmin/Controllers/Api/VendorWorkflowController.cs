@@ -579,13 +579,14 @@ namespace TalonAdmin.Controllers.Api
                 else if (country.Settings.SmsBackendType == 1)
                 {
                     // Sending through TurboSMS
-
                     var service = new Soap.TurboSMS.Service();
                     var cookieJar = new CookieContainer();
                     service.CookieContainer = cookieJar;
 
+                    var signature = country.Settings.PropertyCollection.Where(s => s.Name == "TurboSMS Signature").Select(s => s.Value).FirstOrDefault() ?? "Talon";
+
                     var authResponse = service.Auth(country.Settings.ServiceUser, country.Settings.ServicePassword);
-                    var result = service.SendSMS("Talon", to, message, "");
+                    var result = service.SendSMS(signature, to, message, "");
                 }
                 else if (country.Settings.SmsBackendType == 2) {
                     // Clickatell
