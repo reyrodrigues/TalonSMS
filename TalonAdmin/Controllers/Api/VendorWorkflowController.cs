@@ -335,12 +335,19 @@ namespace TalonAdmin.Controllers.Api
 
                     return Ok("Wrong Vendor Type");
                 }
-                else if (transactionRecord.Status == 2)
+                else if (transactionRecord.Status == 2 && (DateTime.UtcNow - transactionRecord.FinalizedOn.Value).TotalMinutes > 30)
                 {
                     // Voucher used already
                     VoucherAlreadyUsed(voucher, vendor);
 
                     return Ok("Voucher Already Used");
+                }
+                else if (transactionRecord.Status == 2 && (DateTime.UtcNow - transactionRecord.FinalizedOn.Value).TotalMinutes < 30)
+                {
+                    // Voucher used already
+                    ResendConfirmationCode(voucher, vendor);
+
+                    return Ok("Confirmation code resent");
                 }
                 else if (transactionRecord.Status == 3)
                 {
@@ -371,6 +378,22 @@ namespace TalonAdmin.Controllers.Api
             }
 
             return Ok();
+        }
+
+        private void ResendConfirmationCode(Voucher voucher, Vendor vendor)
+        {
+            var transactionRecord = voucher.TransactionRecords.First();
+            var model = new
+            {
+                Voucher = voucher,
+                Vendor = transactionRecord.Vendor,
+                Beneficiary = transactionRecord.Beneficiary,
+                TransactionRecord = transactionRecord
+            };
+
+            var vendorMessage = CompileMessage("Vendor Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
+
+            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
         }
 
         private void SendVoucherSms(int beneficiaryId, int voucherId)
@@ -565,6 +588,7 @@ namespace TalonAdmin.Controllers.Api
                     var result = service.SendSMS("Talon", to, message, "");
                 }
                 else if (country.Settings.SmsBackendType == 2) {
+                    // Clickatell
                     var isUnicode = message.Any(c => c > 255);
 
                     if (isUnicode) {
