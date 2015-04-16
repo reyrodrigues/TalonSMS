@@ -24,7 +24,7 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual string FundCodes { get; set; }
 
-        public virtual int LocationId { get; set; }
+        public virtual int? LocationId { get; set; }
 
         public virtual bool IsClosed { get; set; }
 

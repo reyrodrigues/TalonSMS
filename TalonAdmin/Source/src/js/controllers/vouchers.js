@@ -174,36 +174,41 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
             }
         };
         $scope.resendVoucher = function (voucherId, beneficiaryId) {
+            var dlg = dialogs.confirm(gettext("Confirm"), gettext("Are you sure you would like to resend this voucher?"));
+            dlg.result.then(function (r) {
+                var payload = { VoucherId: voucherId, BeneficiaryId: beneficiaryId };
 
-            var payload = { VoucherId: voucherId, BeneficiaryId: beneficiaryId };
-
-            $http.post(serviceBase + 'Api/VoucherWorkflow/ResendSMS', payload)
-                .then(function () {
-                    toaster.pop('success', 'Success!', 'Voucher resent successfully!');
-                    loadData();
-                }).catch(function (res) {
-                    toaster.pop('error', 'Error', res.data.Message);
-                });
+                $http.post(serviceBase + 'Api/VoucherWorkflow/ResendSMS', payload)
+                    .then(function () {
+                        toaster.pop('success', 'Success!', 'Voucher resent successfully!');
+                        loadData();
+                    }).catch(function (res) {
+                        toaster.pop('error', 'Error', res.data.Message);
+                    });
+            });
         };
         $scope.cancelVoucher = function (voucherId) {
-            var query = new breeze.EntityQuery('VoucherTransactionRecords')
-                .where("Voucher.Id", "==", voucherId)
-                .using(backendService)
-                .execute()
-            .then(function (res) {
-                var voucher = res.results.pop();
-                voucher.Status = 3;
-                backendService.saveChanges([voucher]).then(function () {
-                    $http.post(serviceBase + 'Api/VoucherWorkflow/CancelVoucher', { VoucherId: voucherId })
-                    .then(function () {
-                        $scope.loadGridData();
+            var dlg = dialogs.confirm(gettext("Confirm"), gettext("Are you sure you would like to cancel this voucher?"));
+            dlg.result.then(function (r) {
+                var query = new breeze.EntityQuery('VoucherTransactionRecords')
+                    .where("Voucher.Id", "==", voucherId)
+                    .using(backendService)
+                    .execute()
+                .then(function (res) {
+                    var voucher = res.results.pop();
+                    voucher.Status = 3;
+                    backendService.saveChanges([voucher]).then(function () {
+                        $http.post(serviceBase + 'Api/VoucherWorkflow/CancelVoucher', { VoucherId: voucherId })
+                        .then(function () {
+                            $scope.loadGridData();
+                        });
                     });
                 });
             });
         };
 
         $scope.statusToString = function (status) {
-            if (typeof(status) == 'undefined')
+            if (typeof (status) == 'undefined')
                 return "Not Assigned";
 
             status = parseInt(status);

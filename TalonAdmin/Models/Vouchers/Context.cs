@@ -65,11 +65,7 @@ namespace TalonAdmin.Models.Vouchers
 
             modelBuilder.Conventions.Add(new DataTypePropertyAttributeConvention());
 
-#if DEBUG
-            Database.SetInitializer(new System.Data.Entity.DropCreateDatabaseIfModelChanges<Context>());
-#else
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
-#endif
 
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
