@@ -186,7 +186,7 @@ app.controller('SystemAdminCountriesEditCtrl', ['$scope', '$state', 'editControl
         if ($scope.isNew) {
             $scope.entity = adminBackendService.createEntity("Country", { Settings: adminBackendService.createEntity("CountrySettings") });
             $scope.countrySettings = $scope.entity.Settings;
-            $scope.countrySettings.SmsBackendType = 1;
+            $scope.countrySettings.SmsBackendType = 0;
             console.log($scope.entity, $scope.countrySettings);
         } else {
             $scope.loadData().then(function () {

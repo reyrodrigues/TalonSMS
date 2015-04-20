@@ -19,7 +19,6 @@ using TalonAdmin.Extensions;
 using System.Configuration;
 using RazorEngine.Templating;
 using RazorEngine;
-using TalonAdmin.Extensions;
 using System.Net;
 using System.Net.Http;
 
@@ -246,12 +245,24 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
-        [Route("ValidateTransactionSMS")]
+        [Route("ValidateTransactionSMS/{countryCode}/")]
         [OverrideAuthentication]
         [AllowAnonymous]
-        public async Task<IHttpActionResult> ValidateTransactionSMS([FromBody]IncomingSmsBindingModel request, [FromUri] string secret = "")
+        public async Task<IHttpActionResult> ValidateTransactionSMS([FromBody]IncomingSmsBindingModel request, 
+            string countryCode, 
+            [FromUri] string secret = "")
         {
             var systemSecret = ConfigurationManager.AppSettings["SystemSecret"] ?? "";
+            int countryId = 0;
+
+            using (var adminContext = new Models.Admin.AdminContext())
+            {
+                countryId = adminContext.Countries.AsNoTracking().Where(o => o.IsoAlpha2.ToLower() == countryCode.ToLower().Trim()).Select(o => o.Id).FirstOrDefault();
+            }
+
+            if (countryId == 0) {
+                return Ok("Not a valid country");
+            }
 
             if (systemSecret != secret && !String.IsNullOrEmpty(systemSecret))
             {
@@ -266,7 +277,8 @@ namespace TalonAdmin.Controllers.Api
                     {
                         MobileNumber = request.From,
                         Message = request.Message,
-                        DateTime = DateTime.UtcNow
+                        DateTime = DateTime.UtcNow,
+                        CountryId = countryId
                     });
 
                     ctx.SaveChanges();
@@ -295,12 +307,12 @@ namespace TalonAdmin.Controllers.Api
             using (var db = new Models.Vouchers.Context())
             {
                 var vendorQuery = from v in db.Vendors
-                                  where v.MobileNumber == phoneNumber
+                                  where v.MobileNumber == phoneNumber && v.CountryId == countryId
                                   select v;
 
 
                 var voucherQuery = from vc in db.Vouchers
-                                   where vc.VoucherCode == voucherCode
+                                   where vc.VoucherCode == voucherCode && vc.CountryId == countryId
                                    && vc.TransactionRecords.Any()
                                    select vc;
 
