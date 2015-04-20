@@ -985,6 +985,7 @@
     <Content Include="Source\src\tpl\reports\distribution.html" />
     <Content Include="Source\src\tpl\reports\vendor-financial.html" />
     <Content Include="Source\src\tpl\system-admin\countries\form.html" />
+    <Content Include="Source\src\tpl\system-admin\message-log\list.html" />
     <Content Include="Source\src\tpl\system-admin\organizations\edit-country.html" />
     <Content Include="Source\src\tpl\system-admin\organizations\form.html" />
     <Content Include="Source\src\tpl\system-admin\users\edit.html" />

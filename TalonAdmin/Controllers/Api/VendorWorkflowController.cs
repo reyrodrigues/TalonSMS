@@ -266,7 +266,7 @@ namespace TalonAdmin.Controllers.Api
                     {
                         MobileNumber = request.From,
                         Message = request.Message,
-                        DateTime = DateTime.Now
+                        DateTime = DateTime.UtcNow
                     });
 
                     ctx.SaveChanges();
