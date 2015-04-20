@@ -574,6 +574,13 @@ angular.module('app')
                     templateUrl: 'tpl/generic/create.html',
                     controller: 'SystemAdminCountriesEditCtrl'
                 })
+
+                .state('system-admin.message-log', {
+                    url: '/message-log',
+                    templateUrl: 'tpl/system-admin/message-log/list.html',
+                    controller: 'MessageLogCtrl'
+                })
+
                 .state('system-admin.organizations', {
                     url: '/organizations',
                     abstract: true,

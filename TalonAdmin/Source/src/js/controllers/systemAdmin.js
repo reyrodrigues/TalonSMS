@@ -1,5 +1,25 @@
 ﻿'use strict';
 
+app.controller('MessageLogCtrl', ['$scope', '$http', 'listController', 'gettext', 'dialogs', 'toaster', 'backendService', 'injectorHelper',
+function ($scope, $http, listController, gettext, dialogs, toaster, backendService, injectorHelper) {
+    var settings = {
+        entityType: 'MessageLog',
+        collectionType: 'MessageLogs'
+    };
+
+    $scope.genericSettings = settings;
+
+    settings.backendService = backendService;
+    settings.columns = [
+        ["MobileNumber", gettext("Mobile Number")],
+        ["Message", gettext("Message")],
+        ["DateTime", gettext("Date Time"), '{{COL_FIELD|localeDatetime}}'],
+    ];
+
+    listController($scope, settings);
+    $scope.loadGridData();
+}]);
+
 app.controller('SystemAdminUsersListCtrl', ['$scope', 'settings', '$http', 'listController', 'gettext', 'dialogs', 'toaster', 'adminBackendService', 'injectorHelper',
 function ($scope, settings, $http, listController, gettext, dialogs, toaster, adminBackendService, injectorHelper) {
     $scope.genericSettings = settings;

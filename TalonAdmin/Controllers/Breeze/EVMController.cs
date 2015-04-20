@@ -94,6 +94,12 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
+        public IQueryable<Models.Vouchers.MessageLog> MessageLogs()
+        {
+            return _contextProvider.Context.MessageLogs;
+        }
+
+        [HttpGet]
         public IQueryable<Models.Vouchers.Vendor> Vendors()
         {
             return _contextProvider.Context.Vendors
