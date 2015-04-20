@@ -76,11 +76,16 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
             });
     }]);
 
-app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location', 'settings',
-    function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location, settings) {
+app.controller('BeneficiariesListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location', 'settings', '$injector',
+    function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location, settings, $injector) {
         var storageSetting = $state.current.name + 'GridSettings';
         $scope.showingDisabled = false;
         $scope.genericSettings = settings;
+
+        var localStorageService = $injector.get('localStorageService');
+        var authData = localStorageService.get('authorizationData');
+        $scope.token = authData.token;
+        $scope.exportUrl = serviceBase + 'api/Excel/ExportBeneficiaries?countryId=' + $localStorage.country.Id + '&organizationId=' + $localStorage.organization.Id;
 
         listController($scope, angular.extend({
             expand: ['Location', "Group"],

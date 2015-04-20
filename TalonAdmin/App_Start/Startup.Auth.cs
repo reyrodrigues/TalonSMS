@@ -35,6 +35,7 @@ namespace TalonAdmin
             // and to use a cookie to temporarily store information about a user logging in with a third party login provider
             app.UseCookieAuthentication(new CookieAuthenticationOptions { SlidingExpiration = true, ExpireTimeSpan = new TimeSpan(365,0,0,0) });
             app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
+            app.Use<Middleware.FormAuthenticationMiddleware>();
 
             // Configure the application for OAuth based flow
             PublicClientId = "self";

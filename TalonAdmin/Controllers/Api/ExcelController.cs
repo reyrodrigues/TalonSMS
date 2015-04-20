@@ -73,7 +73,6 @@ namespace TalonAdmin.Controllers
         /// <param name="organizationId">Organization Id for the list of beneficiaries</param>
         /// <param name="countryId">Country of beneficiaries</param>
         /// <returns>Attachment with Excel Spreadsheet</returns>
-        [HttpGet]
         [Route("ExportBeneficiaries")]
         [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> ExportBeneficiaries(int organizationId, int countryId)
@@ -312,10 +311,8 @@ namespace TalonAdmin.Controllers
         /// </summary>
         /// <param name="countryId">Country of vendors</param>
         /// <returns>Attachment with Excel Spreadsheet</returns>
-        [HttpGet]
         [Route("ExportVendors")]
-        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
-        public async Task<IHttpActionResult> ExportVendors(int countryId)
+        public async Task<IHttpActionResult> ExportVendors([FromBody] int countryId)
         {
             using (var ctx = new Models.Vouchers.Context())
             {

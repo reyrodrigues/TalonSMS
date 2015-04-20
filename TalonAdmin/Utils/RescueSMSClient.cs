@@ -10,20 +10,33 @@ using System.Threading.Tasks;
 
 namespace TalonAdmin.Utils
 {
-    public static class RescueSMSClient
+    public class RescueSMSClient
     {
+        public string BaseUrl { get; set; }
+        public string User { get; set; }
+        public string Password { get; set; }
 
-        public static async Task<JToken> ListConnectionsAsync(string phoneNumber = null)
+        public RescueSMSClient()
         {
-            var baseUrl = ConfigurationManager.AppSettings["RescueSMS.URL"];
-            var rsmsUser = ConfigurationManager.AppSettings["RescueSMS.User"];
-            var rsmsPassword = ConfigurationManager.AppSettings["RescueSMS.Password"];
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", rsmsUser, rsmsPassword)));
+            this.BaseUrl = ConfigurationManager.AppSettings["RescueSMS.URL"];
+            this.User = ConfigurationManager.AppSettings["RescueSMS.User"];
+            this.Password = ConfigurationManager.AppSettings["RescueSMS.Password"];
+        }
+
+        public RescueSMSClient(string baseUrl, string user, string password) {
+            this.BaseUrl = BaseUrl;
+            this.User = user;
+            this.Password = password;
+        }
+
+        public async Task<JToken> ListConnectionsAsync(string phoneNumber = null)
+        {
+            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", User, Password)));
 
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", auth);
 
-            string fullUrl = String.Format("{0}{1}{2}", baseUrl, "connections/", (!String.IsNullOrEmpty(phoneNumber) ? "?identity=" + HttpUtility.UrlEncode(phoneNumber) : ""));
+            string fullUrl = String.Format("{0}{1}{2}", BaseUrl, "connections/", (!String.IsNullOrEmpty(phoneNumber) ? "?identity=" + HttpUtility.UrlEncode(phoneNumber) : ""));
 
             var response = await client.GetAsync(fullUrl);
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -31,17 +44,14 @@ namespace TalonAdmin.Utils
             return JToken.Parse(responseContent);
         }
 
-        public static async Task<JToken> ListMessagesAsync()
+        public async Task<JToken> ListMessagesAsync()
         {
-            var baseUrl = ConfigurationManager.AppSettings["RescueSMS.URL"];
-            var rsmsUser = ConfigurationManager.AppSettings["RescueSMS.User"];
-            var rsmsPassword = ConfigurationManager.AppSettings["RescueSMS.Password"];
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", rsmsUser, rsmsPassword)));
+            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", User, Password)));
 
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", auth);
 
-            string fullUrl = String.Format("{0}{1}", baseUrl, "messages/");
+            string fullUrl = String.Format("{0}{1}", BaseUrl, "messages/");
 
             var response = await client.GetAsync(fullUrl);
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -49,18 +59,15 @@ namespace TalonAdmin.Utils
             return JToken.Parse(responseContent);
         }
 
-        public static async Task<JToken> CreateContactAsync(JToken contactInformation)
+        public async Task<JToken> CreateContactAsync(JToken contactInformation)
         {
-            var baseUrl = ConfigurationManager.AppSettings["RescueSMS.URL"];
-            var rsmsUser = ConfigurationManager.AppSettings["RescueSMS.User"];
-            var rsmsPassword = ConfigurationManager.AppSettings["RescueSMS.Password"];
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", rsmsUser, rsmsPassword)));
+            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", User, Password)));
 
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", auth);
             var content = new StringContent(contactInformation.ToString(), Encoding.UTF8, "application/json");
 
-            string fullUrl = String.Format("{0}{1}", baseUrl, "contacts/create_contact/");
+            string fullUrl = String.Format("{0}{1}", BaseUrl, "contacts/create_contact/");
 
             var response = await client.PostAsync(fullUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -68,18 +75,15 @@ namespace TalonAdmin.Utils
             return JToken.Parse(responseContent);
         }
 
-        public static async Task<JToken> SendMessageAsync(JToken messageInformation)
+        public async Task<JToken> SendMessageAsync(JToken messageInformation)
         {
-            var baseUrl = ConfigurationManager.AppSettings["RescueSMS.URL"];
-            var rsmsUser = ConfigurationManager.AppSettings["RescueSMS.User"];
-            var rsmsPassword = ConfigurationManager.AppSettings["RescueSMS.Password"];
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", rsmsUser, rsmsPassword)));
+            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", User, Password)));
 
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", auth);
             var content = new StringContent(messageInformation.ToString(), Encoding.UTF8, "application/json");
 
-            string fullUrl = String.Format("{0}{1}", baseUrl, "messages/send_message/");
+            string fullUrl = String.Format("{0}{1}", BaseUrl, "messages/send_message/");
 
             var response = await client.PostAsync(fullUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -87,9 +91,10 @@ namespace TalonAdmin.Utils
             return JToken.Parse(responseContent);
         }
 
-        public static async Task<JToken> CreateContactAndSendMessageAsync(string Name, string MobileNumber, string Message, string Groups= "")
+        public async Task<JToken> CreateContactAndSendMessageAsync(string Name, string MobileNumber, string Message, string Groups = "")
         {
-            return await CreateContactAndSendMessageAsync(JToken.FromObject(new  { 
+            return await CreateContactAndSendMessageAsync(JToken.FromObject(new
+            {
                 Name,
                 MobileNumber,
                 Message,
@@ -97,7 +102,7 @@ namespace TalonAdmin.Utils
             }));
         }
 
-        public static async Task<JToken> CreateContactAndSendMessageAsync(JToken combinedInformation)
+        public async Task<JToken> CreateContactAndSendMessageAsync(JToken combinedInformation)
         {
             dynamic contactInformation = new JObject();
             dynamic messageInformation = new JObject();
@@ -115,7 +120,7 @@ namespace TalonAdmin.Utils
             messageInformation.message = parameter.Message;
 
             var connections = (await ListConnectionsAsync(parameter.MobileNumber.ToString())) as JArray;
-            if(connections == null || connections.Count == 0)
+            if (connections == null || connections.Count == 0)
             {
                 await CreateContactAsync(contactInformation);
             }

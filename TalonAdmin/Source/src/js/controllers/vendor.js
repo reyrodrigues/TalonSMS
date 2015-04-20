@@ -45,10 +45,16 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             });
     }]);
 
-app.controller('VendorsListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location',
-function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location) {
+app.controller('VendorsListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location', '$injector',
+function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location, $injector) {
     var storageSetting = $state.current.name + 'GridSettings';
     $scope.showingDisabled = false;
+
+    var localStorageService = $injector.get('localStorageService');
+    var authData = localStorageService.get('authorizationData');
+    $scope.token = authData.token;
+    $scope.countryId = $localStorage.country.Id;
+    $scope.exportUrl = serviceBase + 'api/Excel/ExportVendors';
 
     listController($scope, {
         collectionType: 'Vendors',
@@ -60,11 +66,6 @@ function ($scope, $state, $localStorage, listController, gettext, dialogs, toast
         ]
     });
 
-    $scope.exportVendors = function () {
-        var url = serviceBase + 'api/Excel/ExportVendors?countryId=' + $localStorage.country.Id;
-
-        document.location = url;
-    }
 
     $scope.importVendors = function () {
         var dlg = dialogs.create('tpl/dialogs/importVendors.html', 'ImportVendorsCtrl');

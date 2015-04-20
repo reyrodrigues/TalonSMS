@@ -323,7 +323,13 @@ namespace TalonAdmin.Controllers.Api
                     return Ok("Invalid Voucher Code");
                 }
 
-                var transactionRecord = voucher.TransactionRecords.First();
+                if (vendor == null && voucher == null)
+                {
+                    return Ok("Not a talon message");
+                }
+
+
+                var transactionRecord = voucher.TransactionRecords.FirstOrDefault();
                 transactionRecord.LastModifiedOn = DateTime.UtcNow;
                 db.SaveChanges();
 
@@ -561,12 +567,23 @@ namespace TalonAdmin.Controllers.Api
             {
                 if (country.Settings.SmsBackendType == 0) {
                     // Sending through RSMS
+                    var baseUrl = country.Settings.ServiceUrl;
+                    var user = country.Settings.ServiceUser;
+                    var password = country.Settings.ServicePassword;
 
                     ThreadPool.QueueUserWorkItem((state) =>
                     {
                         try
                         {
-                            Utils.RescueSMSClient.CreateContactAndSendMessageAsync(
+                            var client = new Utils.RescueSMSClient();
+                            if (!String.IsNullOrEmpty(baseUrl) && !String.IsNullOrEmpty(user) && !String.IsNullOrEmpty(password))
+                            {
+                                client.BaseUrl = baseUrl;
+                                client.User = user;
+                                client.Password = password;
+                            }
+
+                            client.CreateContactAndSendMessageAsync(
                                 name,
                                 to,
                                 message,

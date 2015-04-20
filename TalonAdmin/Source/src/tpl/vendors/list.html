@@ -10,9 +10,15 @@
                     <button class="btn btn-sm btn-bg btn-default" data-toggle="tooltip" data-placement="bottom" ng-click="loadGridData()" title="Refresh"><i class="fa fa-refresh"></i></button>
                 </div>
                 <div class="btn-group">
-                    <a class="btn btn-info btn-sm" href ng-click="exportVendors()" translate>Export to Excel</a>
-                    <a class="btn btn-default btn-sm" href ng-click="importVendors()" translate>Import Excel</a>
+                    <form method="POST" action="{{ exportUrl }}" target="_blank">
+                        <input type="hidden" name="countryId" value="{{countryId}}" />
+                        <input type="hidden" name="__authorization" value="Bearer {{token}}" />
+
+                        <button class="btn btn-info btn-sm" type="submit" translate>Export to Excel</button>
+                        <a class="btn btn-default btn-sm" href ng-click="importVendors()" translate>Import Excel</a>
+                    </form>
                 </div>
+
                 <button class="btn btn-success pull-right" ui-sref="vendors.create" translate>Register</button>
             </div>
         </div>

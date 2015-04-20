@@ -313,6 +313,7 @@
     <Compile Include="Models\BindingModels\VendorWorkflowBindingModels.cs" />
     <Compile Include="Models\Vouchers\Voucher.cs" />
     <Compile Include="Models\Vouchers\VoucherTransactionRecord.cs" />
+    <Compile Include="Middleware\FormAuthenticationMiddleware.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Soap\TurboSMS\Service.cs" />

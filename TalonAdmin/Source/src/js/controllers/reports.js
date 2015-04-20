@@ -1,11 +1,15 @@
 ﻿'use strict';
 
-app.controller('VendorFinancialReportingCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists', 'authService',
-    function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists, authService) {
+app.controller('VendorFinancialReportingCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists', 'authService', '$injector',
+    function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists, authService, $injector) {
         $q.all([controlledLists.getVendors(), controlledLists.getDistributions()]).then(function (promises) {
             $scope.vendors = promises[0];
             $scope.distributions = promises[1];
         });
+        var localStorageService = $injector.get('localStorageService');
+        var authData = localStorageService.get('authorizationData');
+        $scope.token = authData.token;
+
         $scope.url = serviceBase + 'api/Reports/VendorFinancialReport'
 
         $scope.report = {
@@ -27,12 +31,15 @@ app.controller('VendorFinancialReportingCtrl', ['$scope', '$rootScope', 'gettext
         });
     }]);
 
-app.controller('DistributionReportingCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists',
-    function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists) {
+app.controller('DistributionReportingCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists', '$injector',
+    function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists, $injector) {
         $q.all([controlledLists.getVendors(), controlledLists.getDistributions()]).then(function (promises) {
             $scope.vendors  = promises[0]; 
             $scope.distributions  = promises[1]; 
         });
+        var localStorageService = $injector.get('localStorageService');
+        var authData = localStorageService.get('authorizationData');
+        $scope.token = authData.token;
 
         $scope.url = serviceBase + 'api/Reports/DistributionReport'
 
