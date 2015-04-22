@@ -20,8 +20,10 @@ app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController
     }]);
 
 
-app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'controlledLists', 'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster', 'gettext',
-    function (breeze, backendService, $rootScope, $scope, $state, $q, $http, controlledLists, dialogs, voucherTypes, vendorTypes, serviceBase, toaster, gettext) {
+app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'controlledLists',
+    'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster', 'gettext', 'subGrid',
+    function (breeze, backendService, $rootScope, $scope, $state, $q, $http, controlledLists,
+        dialogs, voucherTypes, vendorTypes, serviceBase, toaster, gettext, subGrid) {
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
@@ -62,51 +64,6 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
         $scope.endEditing = function () {
             $scope.isEditing = false;
         };
-        $scope.loadGridData = function () {
-            if (!$scope.entity || !$scope.entity.Id) {
-                return;
-            }
-
-            setTimeout(function () {
-                var fields = [];
-                for (var i = 0; i < $scope.gridOptions.sortInfo.fields.length; i++) {
-                    var ordering = $scope.gridOptions.sortInfo.fields[i] + ($scope.gridOptions.sortInfo.directions[i] == "desc" ? " desc" : "");
-
-                    fields.push(ordering);
-                }
-
-                var order = fields.join(',');
-                var pageSize = parseInt($scope.pagingOptions.pageSize);
-                var currentPage = parseInt($scope.pagingOptions.currentPage);
-                var entityQuery = new breeze.EntityQuery("VoucherTransactionRecords")
-                    .expand(["Voucher", "Voucher.Category.Type", "Beneficiary"])
-                    .skip(pageSize * (currentPage - 1))
-                    .take(pageSize)
-                    .inlineCount(true)
-                    .using(backendService);
-
-                if (order) {
-                    entityQuery = entityQuery.orderBy(order);
-                }
-
-                entityQuery = entityQuery.where({
-                    "Voucher.DistributionId": { '==': $scope.entity.Id }
-                });
-
-                entityQuery
-                    .execute().then(function (res) {
-                        $scope.totalServerItems = res.inlineCount;
-                        $scope.vouchers = res.results.map(function (r) {
-
-                            return r;
-                        });
-
-                        if (!$scope.$$phase) {
-                            $scope.$apply();
-                        }
-                    }).catch(function () { console.log(arguments); });
-            }, 100);
-        };
         $scope.removeCategory = function (category) {
             category.entityAspect.setDeleted();
 
@@ -131,21 +88,27 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
                 });
         };
         $scope.assignToGroup = function () {
-            console.log("WHY?", !$scope.categories && !$scope.categories.length, $scope.categories)
+            $scope.isAssigning = true;
             if (!$scope.categories || !$scope.categories.length) {
                 toaster.pop('error', gettext('Error'), gettext('Please add one voucher type to the distribution before assigning it to a group.'));
             } else {
                 var dlg = dialogs.create('tpl/dialogs/assignToGroup.html', 'AssignToGroupDialogCtrl', $scope.data);
                 dlg.result.then(function (group) {
-                    var payload = { DistributionId: $scope.entity.Id, GroupId: group.Id };
+                    if (group) {
+                        var payload = { DistributionId: $scope.entity.Id, GroupId: group.Id };
 
-                    $http.post(serviceBase + 'Api/VoucherWorkflow/AssignToGroup', payload)
-                    .then(function () {
-                        toaster.pop('success', 'Success!', 'Vouchers created successfully!');
-                        loadData();
-                    }).catch(function (res) {
-                        toaster.pop('error', 'Error', res.data.Message);
-                    });
+                        $http.post(serviceBase + 'Api/VoucherWorkflow/AssignToGroup', payload)
+                        .then(function () {
+                            toaster.pop('success', 'Success!', 'Vouchers created successfully!');
+                            loadData();
+                            $scope.isAssigning = false;
+                        }).catch(function (res) {
+                            toaster.pop('error', 'Error', res.data.Message);
+                            $scope.isAssigning = false;
+                        });
+                    } else {
+                        $scope.isAssigning = false;
+                    }
                 });
             }
         }; // end launch
@@ -154,16 +117,12 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
             $scope.loadGridData();
         };
         var loadData = function () {
-
-
             var entityQuery = query.where("Id", "==", $state.params.id).take(1).execute();
-            $q.all([entityQuery]).then(function (responses) {
+            return $q.all([entityQuery]).then(function (responses) {
                 var entity = responses[0].results.pop();
 
                 $scope.entity = entity;
                 $scope.categories = entity.Categories;
-
-                $scope.loadGridData();
             });
         };
         $scope.toggleVendor = function (vendor) {
@@ -230,57 +189,138 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
         });
 
         $scope.isEditing = false;
-        $scope.vouchers = [];
-        $scope.pagingOptions = {
-            pageSizes: [10, 20, 1000],
-            pageSize: 10,
-            currentPage: 1
-        };
-        $scope.gridOptions = {
-            data: 'vouchers',
-            enablePaging: true,
-            showFooter: true,
-            rowHeight: 36,
-            headerRowHeight: 36,
-            totalServerItems: 'totalServerItems',
-            sortInfo: {
-                fields: ['Id'],
-                directions: ['asc']
-            },
-            pagingOptions: $scope.pagingOptions,
-            filterOptions: $scope.filterOptions,
-            enableRowSelection: false,
-            useExternalSorting: true,
-            columnDefs: [
-                { field: "Voucher.Category.Type.Name", displayName: "Type" },
-                { field: "Voucher.VoucherCode", displayName: "Voucher Code" },
-                { field: "Voucher.Category.Value", displayName: "Value", cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{ COL_FIELD|currency:(country.CurrencyIsoCode + " "||"$") }}</span></div>' },
-                {
-                    field: "Beneficiary.FirstName", displayName: "Beneficiary",
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{row.getProperty(\'Beneficiary.Name\')}}</span></div>'
-                },
-                {
-                    field: "Status", displayName: "Status", sortable: false,
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{statusToString(COL_FIELD)}}</span></div>'
-                },
-                {
-                    field: "Id",
-                    displayName: "Actions",
-                    cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><div ng-if="row.getProperty(\'Status\') < 2"><a href ng-click="cancelVoucher(row.getProperty(\'Voucher.Id\'))">Cancel Voucher</a>&nbsp;|&nbsp;' +
-                        '<a href ng-click="resendVoucher(row.getProperty(\'Voucher.Id\'), row.getProperty(\'BeneficiaryId\'))">Resend Voucher</a></div>'
-                }
-            ]
-        };
+        $scope.isAssigning = false;
 
         var query = new breeze.EntityQuery('Distributions')
             .expand('Beneficiaries')
             .expand('Categories')
             .using(backendService);
 
-        loadData();
+        loadData().then(function () {
+            $scope.UsedVouchersLoadGrid();
+            $scope.UnusedVouchersLoadGrid();
+            $scope.VendorsLoadGrid();
+            $scope.DistributionLogLoadGrid();
+        });
 
-        $scope.$watch('pagingOptions', watchFunction, true);
-        $scope.$watch('gridOptions.sortInfo', watchFunction, true);
+
+        $scope.UnusedVouchersFilter = { 'Status': { '==': 0 } };
+        $scope.UsedVouchersFilter = { 'Status': { '==': 2 } };
+
+        $scope.search = {}
+
+        $scope.searchUnused = function () {
+            if ($scope.search.UnusedVouchers) {
+                $scope.UnusedVouchersFilter = {
+                    'and': [
+                        { 'Status': { '==': 0 } },
+                        {
+                            'or': [
+                              { 'Beneficiary.FirstName': { 'contains': $scope.search.UnusedVouchers } },
+                              { 'Beneficiary.LastName': { 'contains': $scope.search.UnusedVouchers } },
+                              { 'Beneficiary.MobileNumber': { 'contains': $scope.search.UnusedVouchers } },
+                              { 'Voucher.VoucherCode': { 'contains': $scope.search.UnusedVouchers } }
+                            ]
+                        }
+                    ]
+                };
+            } else {
+                $scope.UnusedVouchersFilter = { 'Status': { '==': 0 } };
+            }
+            $scope.UnusedVouchersLoadGrid();
+        };
+        $scope.searchUsed = function () {
+            if ($scope.search.UsedVouchers) {
+                $scope.UsedVouchersFilter = {
+                    'and': [
+                        { 'Status': { '==': 2 } },
+                        {
+                            'or': [
+                              { 'Beneficiary.FirstName': { 'contains': $scope.search.UsedVouchers } },
+                              { 'Beneficiary.LastName': { 'contains': $scope.search.UsedVouchers } },
+                              { 'Vendor.FirstName': { 'contains': $scope.search.UsedVouchers } },
+                              { 'Vendor.LastName': { 'contains': $scope.search.UsedVouchers } },
+                              { 'Voucher.VoucherCode': { 'contains': $scope.search.UsedVouchers } },
+                              { 'ConfirmationCode': { 'contains': $scope.search.UsedVouchers } }
+                            ]
+                        }
+                    ]
+                };
+            } else {
+                $scope.UsedVouchersFilter = { 'Status': { '==': 2 } };
+            }
+            $scope.UsedVouchersLoadGrid();
+        };
+        $scope.searchVendor = function () {
+
+            if ($scope.search.Vendors) {
+                $scope.VendorsFilter = {
+                    'or': [
+                      { 'FirstName': { 'contains': $scope.search.Vendors } },
+                      { 'LastName': { 'contains': $scope.search.Vendors } }
+                    ]
+                };
+            } else {
+                $scope.VendorsFilter = { };
+            }
+            $scope.VendorsLoadGrid();
+        };
+
+        subGrid($scope, {
+            collectionType: 'VoucherTransactionRecords',
+            name: 'UsedVouchers',
+            key: 'Voucher.DistributionId',
+            expand: ['Voucher', 'Voucher.Category', 'Voucher.Category.Type', 'Vendor', 'Beneficiary'],
+            columns: [
+                ["Beneficiary.FirstName", gettext("Beneficiary"), '{{row.getProperty(\'Beneficiary.Name\')}}'],
+                ["Vendor.Name", gettext("Vendor"), false, false],
+                ["FinalizedOn", gettext("Redemption Date"), '{{COL_FIELD|localeDateTime}}'],
+                ["Voucher.VoucherCode", gettext("Voucher Code")],
+                ["ConfirmationCode", gettext("Confirmation Code")],
+                ["Voucher.Category.Value", gettext("Value"), '{{ COL_FIELD|currency:(country.CurrencyIsoCode + " "||"$") }}']
+            ]
+        });
+
+        subGrid($scope, {
+            collectionType: 'VoucherTransactionRecords',
+            name: 'UnusedVouchers',
+            key: 'Voucher.DistributionId',
+            expand: ['Voucher', 'Voucher.Category', 'Voucher.Category.Type', 'Beneficiary'],
+            columns: [
+                ["Beneficiary.FirstName", gettext("Beneficiary"), '{{row.getProperty(\'Beneficiary.Name\')}}'],
+                ["Beneficiary.MobileNumber", gettext("Mobile Number")],
+                ["CreatedOn", gettext("Sent On"), '{{COL_FIELD|localeDateTime}}'],
+                ["Voucher.VoucherCode", gettext("Voucher Code")],
+                ["Voucher.Category.Value", gettext("Value"), '{{ COL_FIELD|currency:(country.CurrencyIsoCode + " "||"$") }}'],
+                ["Id", gettext("Actions"), '<div ng-if="row.getProperty(\'Status\') < 2"><a href ng-click="cancelVoucher(row.getProperty(\'Voucher.Id\'))">Cancel Voucher</a>&nbsp;|&nbsp;' +
+                        '<a href ng-click="resendVoucher(row.getProperty(\'Voucher.Id\'), row.getProperty(\'BeneficiaryId\'))">Resend Voucher</a>']
+            ]
+        });
+
+        subGrid($scope, {
+            collectionType: 'DistributionVendors',
+            name: 'Vendors',
+            entityType: 'Vendor',
+            parameters: { 'distributionId': $state.params.id },
+            expand: ['Location', 'Type'],
+            columns: [
+                ["FirstName", gettext("Name"), '{{row.getProperty("Name")}}'],
+                ["MobileNumber", gettext("Mobile Number")],
+                ["Location.Name", gettext("Location")],
+                ["Type.Name", gettext("Type")],
+            ]
+        });
+
+        subGrid($scope, {
+            collectionType: 'DistributionLogs',
+            name: 'DistributionLog',
+            entityType: 'DistributionLog',
+            key: 'DistributionId',
+            columns: [
+                ["DateTime", gettext("Date"), '{{COL_FIELD|localeDateTime}}'],
+                ["AffectedBeneficiaries", gettext("Beneficiaries")]
+            ]
+        });
 
     }]);
 
@@ -514,6 +554,7 @@ app.controller('VoucherGridCtrl', ['breeze', 'backendService', '$scope', '$http'
 app.controller('AssignToGroupDialogCtrl', ['breeze', 'backendService', '$scope', '$q', '$modalInstance',
     function (breeze, backendService, $scope, $q, $modalInstance) {
         $scope.group = null;
+        $scope.isAssigning = false;
         $scope.getGroup = function (name) {
             var query = new breeze.EntityQuery('BeneficiaryGroups')
                 .using(backendService)
@@ -527,7 +568,13 @@ app.controller('AssignToGroupDialogCtrl', ['breeze', 'backendService', '$scope',
             });
         };
 
+
+        $scope.close = function () {
+            $modalInstance.close();
+        };
+
         $scope.done = function () {
+            $scope.isAssigning = true;
             $modalInstance.close($scope.group);
         };
     }]);

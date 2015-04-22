@@ -19,8 +19,11 @@ angular.module('app')
       }
   });
 angular.module('app')
-  .filter('localeDatetime', function () {
+  .filter('localeDateTime', function () {
       return function (date) {
-          return moment(date).format("LLL");
+          if (date)
+              return moment(date).format("LL LTS");
+          else
+              return "";
       }
   });

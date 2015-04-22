@@ -63,7 +63,7 @@ app.controller('BeneficiariesEditCtrl', ['$scope', 'editController', 'gettext', 
             expand: ['Voucher', 'Voucher.Category', 'Vendor'],
             columns: [
                 ["Status", gettext("Status"), '{{statusToString(COL_FIELD)}}'],
-                ["FinalizedOn", gettext("Redemption Date"), '{{COL_FIELD|date:"medium"}}'],
+                ["FinalizedOn", gettext("Redemption Date"), '{{COL_FIELD|localeDateTime}}'],
                 ["Vendor.Name", gettext("Vendor"), false, false],
                 ["Voucher.VoucherCode", gettext("Voucher Code")],
                 ["Voucher.Category.Value", gettext("Value")]

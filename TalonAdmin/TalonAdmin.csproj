@@ -293,6 +293,7 @@
     <Compile Include="Models\BindingModels\AssignVoucherBidingModel.cs" />
     <Compile Include="Models\JsonProperty.cs" />
     <Compile Include="Models\ViewModels\AccountViewModels.cs" />
+    <Compile Include="Models\ViewModels\DistributionVendorViewModel.cs" />
     <Compile Include="Models\Vouchers\Beneficiary.cs" />
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryDistribution.cs" />

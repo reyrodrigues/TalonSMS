@@ -134,8 +134,18 @@ namespace TalonAdmin.Controllers.Breeze
         {
             return _contextProvider.Context.VoucherTransactionRecords
                 .FilterCountry(this)
-                .FilterOrganization(this); 
+                .FilterOrganization(this);
         }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.Vendor> DistributionVendors(int distributionId)
+        {
+            return _contextProvider.Context.VoucherTransactionRecords
+                .Where(v => v.Voucher.DistributionId == distributionId && v.VendorId != null)
+                .Select(v=>v.Vendor)
+                .Distinct();
+        }
+
 
         [HttpPost]
         public SaveResult SaveChanges(JObject saveBundle)

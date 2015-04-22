@@ -13,7 +13,7 @@ function ($scope, $http, listController, gettext, dialogs, toaster, backendServi
     settings.columns = [
         ["MobileNumber", gettext("Mobile Number")],
         ["Message", gettext("Message")],
-        ["DateTime", gettext("Date Time"), '{{COL_FIELD|localeDatetime}}'],
+        ["DateTime", gettext("Date Time"), '{{COL_FIELD|localeDateTime}}'],
     ];
 
     listController($scope, settings);

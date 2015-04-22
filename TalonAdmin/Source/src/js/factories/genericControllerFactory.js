@@ -250,7 +250,9 @@ angular.module('app')
   .factory('subGrid', ['$state', 'backendService', 'toaster', 'gettext',
       function ($state, backendService, toaster, gettext) {
           var subGrid = function ($scope, settings) {
-              var storageSetting = $state.current.name + settings.collectionType + 'GridSettings';
+              var gridName = settings.name || settings.collectionType;
+
+              var storageSetting = $state.current.name + gridName + 'GridSettings';
               settings.columnDefinitions = [];
               var _backendService = settings.backendService || backendService;
 
@@ -281,39 +283,39 @@ angular.module('app')
                   });
               }
 
-              $scope[settings.collectionType] = [];
-              $scope[settings.collectionType + 'PagingOptions'] = {
-                  pageSizes: [10, 20, 1000],
-                  pageSize: 10,
+              $scope[gridName] = [];
+              $scope[gridName + 'PagingOptions'] = {
+                  pageSizes: [50, 100, 200, 500, 1000],
+                  pageSize: 50,
                   currentPage: 1
               };
-              $scope['gridOptions' + settings.collectionType] = {
-                  data: settings.collectionType,
+              $scope[gridName + 'GridOptions'] = {
+                  data: gridName,
                   enablePaging: true,
                   showFooter: true,
                   rowHeight: 36,
                   headerRowHeight: 36,
-                  totalServerItems: settings.collectionType + '_Count',
+                  totalServerItems: gridName + '_Count',
                   sortInfo: {
                       fields: ['Id'],
                       directions: ['asc']
                   },
-                  pagingOptions: $scope[settings.collectionType + 'PagingOptions'],
+                  pagingOptions: $scope[gridName + 'PagingOptions'],
                   enableRowSelection: false,
                   useExternalSorting: true,
                   columnDefs: settings.columnDefinitions
               };
 
 
-              $scope[settings.collectionType + 'LoadGrid'] = function (pageSize, page) {
+              $scope[gridName + 'LoadGrid'] = function () {
                   if (!$scope.entity || !$scope.entity.Id) {
                       return;
                   }
 
                   setTimeout(function () {
                       var fields = [];
-                      var gridOptions = $scope['gridOptions' + settings.collectionType];
-                      var pagingOptions = $scope[settings.collectionType + 'PagingOptions'];
+                      var gridOptions = $scope[gridName + 'GridOptions'];
+                      var pagingOptions = $scope[gridName + 'PagingOptions'];
 
                       for (var i = 0; i < gridOptions.sortInfo.fields.length; i++) {
                           var ordering = gridOptions.sortInfo.fields[i] + (gridOptions.sortInfo.directions[i] == "desc" ? " desc" : "");
@@ -324,20 +326,31 @@ angular.module('app')
                       var order = fields.join(',');
 
                       var entityQuery = new breeze.EntityQuery(settings.collectionType);
+                      if (settings.parameters) {
+                          entityQuery = entityQuery.withParameters(settings.parameters);
+                      }
+
                       if (settings.expand) entityQuery = entityQuery.expand(settings.expand);
                       if (order) entityQuery = entityQuery.orderBy(order);
 
-
                       entityQuery = entityQuery
-                          .skip(pagingOptions.pageSize * (pagingOptions.currentPage - 1))
-                          .take(pagingOptions.pageSize)
+                          .skip(parseInt(pagingOptions.pageSize * (pagingOptions.currentPage - 1)))
+                          .take(parseInt(pagingOptions.pageSize))
                           .inlineCount(true)
                           .using(_backendService);
 
                       var keyFilter = {};
-                      keyFilter[settings.key] = { '==': $scope.entity.Id };
+                      if (settings.key)
+                        keyFilter[settings.key] = { '==': $scope.entity.Id };
 
-                      entityQuery = entityQuery.where(keyFilter);
+                      if ($scope[gridName + 'Filter']) {
+                          keyFilter = angular.extend(keyFilter, $scope[gridName + 'Filter']);
+                      }
+
+                      $scope[gridName + 'Filter'] = keyFilter;
+
+                      if (!$.isEmptyObject(keyFilter))
+                        entityQuery = entityQuery.where(keyFilter);
 
                       if (settings.entityType) {
                           var entityType = _backendService.metadataStore.getEntityType(settings.entityType);
@@ -346,8 +359,8 @@ angular.module('app')
 
                       entityQuery.execute()
                           .then(function (res) {
-                              $scope[settings.collectionType + '_Count'] = res.inlineCount;
-                              $scope[settings.collectionType] = res.results;
+                              $scope[gridName + '_Count'] = res.inlineCount;
+                              $scope[gridName] = res.results;
                           })
                         .catch(function () {
                             console.log(arguments);
@@ -356,11 +369,11 @@ angular.module('app')
               };
 
               var watchFunction = function () {
-                  $scope[settings.collectionType + 'LoadGrid']();
+                  $scope[gridName + 'LoadGrid']();
               };
 
-              $scope.$watch(settings.collectionType + 'PagingOptions', watchFunction, true);
-              $scope.$watch('gridOptions' + settings.collectionType + '.sortInfo', watchFunction, true);
+              $scope.$watch(gridName + 'PagingOptions', watchFunction, true);
+              $scope.$watch(gridName + 'GridOptions.sortInfo', watchFunction, true);
           };
 
           return subGrid;

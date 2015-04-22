@@ -51,6 +51,10 @@ app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', functio
         metadataStore: metadataStore
     });
 
+    var queryOptions = entityManager.queryOptions.using({
+        fetchStrategy: breeze.FetchStrategy.FromServer
+    });
+    entityManager.setProperties({ queryOptions: queryOptions });
     entityManager.saveOptions = new breeze.SaveOptions({ allowConcurrentSaves: true });
 
     return entityManager;

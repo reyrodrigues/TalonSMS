@@ -529,8 +529,9 @@ namespace TalonAdmin.Controllers.Api
 
                 if (organizationId != null)
                 {
-                    var organization = ctx.OrganizationCountries.AsNoTracking().Where(o => o.Id == organizationId && o.CountryId == countryId).FirstOrDefault();
-                    organizationMessage = organization.Settings.PropertyCollection.Where(p=>p.Name == key).Select(p=> p.Value).FirstOrDefault();
+                    var organization = ctx.OrganizationCountries.AsNoTracking().Where(o => o.OrganizationId == organizationId && o.CountryId == countryId).FirstOrDefault();
+                    if(organization != null)
+                        organizationMessage = organization.Settings.PropertyCollection.Where(p=>p.Name == key).Select(p=> p.Value).FirstOrDefault();
                 }
 
                 countryMessage = country.Settings.PropertyCollection.Where(p => p.Name == key).Select(p => p.Value).FirstOrDefault();
