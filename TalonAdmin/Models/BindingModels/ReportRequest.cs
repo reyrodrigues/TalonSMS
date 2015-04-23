@@ -9,6 +9,7 @@ namespace TalonAdmin.Controllers.BindingModels
     {
         public int? DistributionId { get; set; }
         public int? VendorId { get; set; }
+        public int? ProgramId { get; set; }
         public int CountryId { get; set; }
         public int OrganizationId { get; set; }
         public string PeriodStart { get; set; }

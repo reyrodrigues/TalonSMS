@@ -26,6 +26,7 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             }
         };
 
+
         subGrid($scope, {
             collectionType: 'VoucherTransactionRecords',
             key: 'VendorId',
@@ -39,9 +40,29 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             ]
         });
 
+        subGrid($scope, {
+            collectionType: 'Vendors',
+            name: 'ChildVendors',
+            key: 'ParentRecordId',
+            columns: [
+                ["Name", gettext("Name"), '<a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
+                ["MobileNumber", gettext("MobileNumber")],
+                ["Location.Name", gettext("Location")]
+            ]
+        });
+
         $scope.loadData()
             .then(function () {
+                var otherQuery = breeze.EntityQuery.from('Vendors')
+                    .where('Id', '!=', $scope.entity.Id)
+                    .noTracking()
+                    .using(backendService)
+                    .execute()
+                    .then(function (r) {
+                        $scope.otherVendors = r.results;
+                    });
                 $scope.VoucherTransactionRecordsLoadGrid();
+                $scope.ChildVendorsLoadGrid();
             });
     }]);
 
@@ -53,15 +74,15 @@ function ($scope, $state, $localStorage, listController, gettext, dialogs, toast
     var localStorageService = $injector.get('localStorageService');
     var authData = localStorageService.get('authorizationData');
     $scope.token = authData.token;
-    $scope.countryId = $localStorage.country.Id;
-    $scope.exportUrl = serviceBase + 'api/Excel/ExportVendors';
+    $scope.exportUrl = serviceBase + 'api/Excel/ExportVendors?countryId=' +$localStorage.country.Id;
 
     listController($scope, {
         collectionType: 'Vendors',
-        expand: ['Location'],
+        expand: ['Location', 'ParentRecord'],
         columns: [
-            ["Name", gettext("Name"), '<a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
+            ["Name", gettext("Entity Name"), '<a href ui-sref="vendors.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
             ["MobileNumber", gettext("Mobile Number")],
+            ["ParentRecord.Name", gettext("Main Entity Name")],
             ["Location.Name", gettext("Location")]
         ]
     });

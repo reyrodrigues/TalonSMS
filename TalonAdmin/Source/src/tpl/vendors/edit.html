@@ -9,20 +9,15 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-sm-12">
-                <h1 class="m-n font-thin h4">Voucher History</h1>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="panel panel-default">
-                    <div class="table-responsive">
-                        <div ng-grid="VoucherTransactionRecordsGridOptions" style="min-height:300px"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <tabset justified="true" class="tab-container">
+            <tab heading="{{ 'Vouchers'|translate }}">
+                <div ng-grid="VoucherTransactionRecordsGridOptions" style="min-height:300px"></div>
+            </tab>
+            <tab heading="{{ 'Child Vendors'|translate }}" ng-if="!entity.ParentRecordId">
+                <div ng-grid="ChildVendorsGridOptions" style="min-height:300px"></div>
+            </tab>
+        </tabset>
+
         <div class="row">
             <div class="col-sm-12" ng-if="!isEditing">
                 <div class="form-group">

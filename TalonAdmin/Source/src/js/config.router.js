@@ -240,6 +240,43 @@ angular.module('app')
                     templateUrl: 'tpl/vouchers_list.html',
                     controller: 'VoucherListCtrl'
                 })
+
+                .state('programs', {
+                    url: '/programs',
+                    templateUrl: 'tpl/app.html',
+                    abstract: true,
+                    resolve: angular.extend({
+                        settings: function () {
+                            return {
+                                entityType: 'Program',
+                                collectionType: 'Programs',
+                                listState: 'programs.list',
+                                editState: 'programs.edit',
+                                createState: 'programs.create',
+                                title: 'Programs',
+                                formTemplate: 'tpl/programs/form.html'
+                            };
+                        }
+                    }, defaultResolve)
+                })
+                .state('programs.list', {
+                    url: '/list',
+                    templateUrl: 'tpl/generic/list.html',
+                    controller: 'GenericGridCtrl'
+                })
+
+                .state('programs.edit', {
+                    url: '/edit/:id',
+                    templateUrl: 'tpl/generic/edit.html',
+                    controller: 'GenericEditCtrl'
+                })
+                .state('programs.create', {
+                    url: '/create',
+                    templateUrl: 'tpl/generic/create.html',
+                    controller: 'GenericCreateCtrl'
+                })
+
+
                 .state('distributions', {
                     url: '/distributions',
                     abstract: true,

@@ -74,6 +74,18 @@ app.factory('controlledLists', ['breeze', 'backendService', 'adminBackendService
 
                 return deferred.promise;
             },
+            getPrograms: function () {
+                var deferred = $q.defer();
+                new breeze.EntityQuery("Programs")
+               .using(backendService)
+               .noTracking()
+               .execute()
+               .then(function (res) {
+                   deferred.resolve(res.results);
+               });
+
+                return deferred.promise;
+            },
             getOrganizations: function () {
                 var deferred = $q.defer();
                 if ($sessionStorage.organizations) {
@@ -106,18 +118,13 @@ app.factory('controlledLists', ['breeze', 'backendService', 'adminBackendService
             },
             getRoles: function () {
                 var deferred = $q.defer();
-                if ($localStorage.roles) {
-                    deferred.resolve($localStorage.roles);
-                } else {
-                    new breeze.EntityQuery("Roles")
+                new breeze.EntityQuery("Roles")
                    .using(adminBackendService)
                    .noTracking()
                    .execute()
                    .then(function (res) {
-                       $localStorage.roles = res.results;
                        deferred.resolve(res.results);
                    });
-                }
                 return deferred.promise;
             }
 
@@ -144,4 +151,10 @@ app.factory('distributions', ['controlledLists', function (controlledLists) {
 }])
 app.factory('vendors', ['controlledLists', function (controlledLists) {
     return controlledLists.getVendors();
+}])
+app.factory('programs', ['controlledLists', function (controlledLists) {
+    return controlledLists.getPrograms();
+}])
+app.factory('voucherTypes', ['controlledLists', function (controlledLists) {
+    return controlledLists.getVoucherTypes();
 }])

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -7,17 +8,11 @@ namespace TalonAdmin.Models.Vouchers
 {
     public class Vendor : CountryEntity
     {
-        public virtual string Name
-        {
-            get
-            {
-                return String.Format("{0} {1}", FirstName, LastName);
-            }
-        }
-
+        public virtual string Name { get; set; }
         public virtual string FirstName { get; set; }
         public virtual string LastName { get; set; }
         public virtual string MobileNumber { get; set; }
+        public virtual string NationalId { get; set; }
 
         public virtual int? LocationId { get; set; }
         public virtual int? TypeId { get; set; }

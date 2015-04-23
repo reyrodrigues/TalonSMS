@@ -66,6 +66,8 @@ namespace TalonAdmin.Models.Vouchers
             modelBuilder.Conventions.Add(new DataTypePropertyAttributeConvention());
 
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
+#if !DEBUG
+#endif
 
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
@@ -100,8 +102,10 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<BeneficiaryGroup> BeneficiaryGroups { get; set; }
         public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
         public DbSet<Location> Locations { get; set; }
+        public DbSet<Program> Programs { get; set; }
         public DbSet<Distribution> Distributions { get; set; }
         public DbSet<DistributionLog> DistributionLogs { get; set; }
+        public DbSet<ProgramVendorReconciliation> ProgramVendorReconciliations { get; set; }
         public DbSet<DistributionVendorReconciliation> DistributionVendorReconciliations { get; set; }
         public DbSet<DistributionVoucherCategory> DistributionVoucherCategories { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }

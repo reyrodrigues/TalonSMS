@@ -14,9 +14,9 @@
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" translate>Distribution</label>
-                            <div class="col-sm-8">
-                                <select chosen class="form-control" ng-model="report.DistributionId"
+                            <label class="col-sm-2 control-label" translate>Distribution</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" ng-model="report.DistributionId"
                                         ng-options="item.Id as item.Title for item in distributions | orderBy:'item.Title'"></select>
                             </div>
                         </div>

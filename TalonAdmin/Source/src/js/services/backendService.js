@@ -33,16 +33,12 @@ app.factory('backendService', ['breeze', 'serviceBase', '$localStorage', functio
         }
     });
 
-    var Vendor = function () {
-        this.Name = "";
-    };
     var Beneficiary = function () {
         this.Name = "";
     };
 
 
     // register your custom constructor
-    metadataStore.registerEntityTypeCtor("Vendor", Vendor);
     metadataStore.registerEntityTypeCtor("Beneficiary", Beneficiary);
 
     // create a new EntityManager that uses this metadataStore

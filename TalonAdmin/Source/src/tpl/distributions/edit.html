@@ -10,7 +10,7 @@
         </div>
     </form>
 
-    <tabset justified="true" class="tab-container" ng-if="!isEditing">
+    <tabset justified="true" class="tab-container" >
         <tab heading="{{ 'Unused Vouchers'|translate }}">
             <form ng-submit="searchUnused()">
                 <div class="row">
@@ -85,7 +85,7 @@
             <div class="form-group">
                 <div class=" col-sm-12">
                     <div class="btn-group pull-right">
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button ng-click="save()" class="btn btn-primary">Save</button>
                         <button ng-click="save(true)" class="btn btn-primary">Save and Continue Editing</button>
                         <button ng-click="endEditing()" class="btn btn-info">Back</button>
                     </div>

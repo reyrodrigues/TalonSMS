@@ -300,12 +300,14 @@
     <Compile Include="Models\Vouchers\BeneficiaryGroup.cs" />
     <Compile Include="Models\Vouchers\Context.cs" />
     <Compile Include="Models\Vouchers\DistributionLog.cs" />
+    <Compile Include="Models\Vouchers\ProgramVendorReconciliation.cs" />
     <Compile Include="Models\Vouchers\DistributionVendorReconciliation.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\Distribution.cs" />
     <Compile Include="Models\Entity.cs" />
     <Compile Include="Models\Vouchers\CountryEntity.cs" />
     <Compile Include="Models\Vouchers\MessageLog.cs" />
+    <Compile Include="Models\Vouchers\Program.cs" />
     <Compile Include="Models\Vouchers\TenantEntity.cs" />
     <Compile Include="Models\Vouchers\VendorType.cs" />
     <Compile Include="Models\Vouchers\VoucherType.cs" />
@@ -862,6 +864,7 @@
     <None Include="Properties\PublishProfiles\EVM.pubxml" />
     <Content Include="Reports\VendorReceiptReport.cshtml" />
     <Content Include="Reports\DistributionReport.cshtml" />
+    <Content Include="Reports\VendorProgramReceiptReport.cshtml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -982,6 +985,7 @@
     <Content Include="Source\src\tpl\org-admin\users\register.html" />
     <Content Include="Source\src\tpl\page_signin.html" />
     <Content Include="Source\src\tpl\org-admin\countries\form.html" />
+    <Content Include="Source\src\tpl\programs\form.html" />
     <Content Include="Source\src\tpl\reconciliation\report-history.html" />
     <Content Include="Source\src\tpl\reconciliation\vendor-receipt.html" />
     <Content Include="Source\src\tpl\reports\distribution.html" />

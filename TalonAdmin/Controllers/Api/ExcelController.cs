@@ -18,6 +18,7 @@ using TalonAdmin.Extensions;
 using Microsoft.AspNet.Identity;
 using TalonAdmin.Models.Vouchers;
 using System.Web.Hosting;
+using Newtonsoft.Json;
 
 namespace TalonAdmin.Controllers
 {
@@ -74,7 +75,6 @@ namespace TalonAdmin.Controllers
         /// <param name="countryId">Country of beneficiaries</param>
         /// <returns>Attachment with Excel Spreadsheet</returns>
         [Route("ExportBeneficiaries")]
-        [HostAuthentication(DefaultAuthenticationTypes.ApplicationCookie)]
         public async Task<IHttpActionResult> ExportBeneficiaries(int organizationId, int countryId)
         {
             using (var ctx = new Models.Vouchers.Context())
@@ -312,7 +312,7 @@ namespace TalonAdmin.Controllers
         /// <param name="countryId">Country of vendors</param>
         /// <returns>Attachment with Excel Spreadsheet</returns>
         [Route("ExportVendors")]
-        public async Task<IHttpActionResult> ExportVendors([FromBody] int countryId)
+        public async Task<IHttpActionResult> ExportVendors(int countryId)
         {
             using (var ctx = new Models.Vouchers.Context())
             {
@@ -324,14 +324,25 @@ namespace TalonAdmin.Controllers
                     .Include("Type")
                     .Where(b => b.CountryId == countryId)
                     .ToArrayAsync();
+                var jsonString = JsonConvert.SerializeObject(vendorQuery, Formatting.Indented,
+                    new JsonSerializerSettings
+                    {
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                    });
 
-                var jsonBeneficiaries = JToken.FromObject(vendorQuery) as JArray;
-                foreach (var jsonVendor in jsonBeneficiaries)
+                var jsonCollection = JToken.Parse(jsonString) as JArray;
+
+                jsonCollection.Descendants().OfType<JProperty>()
+                  .Where(p => new string[] { "LocationId", "CountryId", "TypeId", "ParentRecord" }.Contains(p.Name))
+                  .ToList()
+                  .ForEach(att => att.Remove());
+
+                foreach (var jsonObject in jsonCollection)
                 {
-                    jsonVendor["Location"] = jsonVendor["Location"].Type != JTokenType.Null ? jsonVendor["Location"]["Name"] : "";
-                    jsonVendor["Type"] = jsonVendor["Type"].Type != JTokenType.Null ? jsonVendor["Type"]["Name"] : "";
+                    jsonObject["Location"] = jsonObject["Location"].Type != JTokenType.Null ? jsonObject["Location"]["Name"] : "";
+                    jsonObject["Type"] = jsonObject["Type"].Type != JTokenType.Null ? jsonObject["Type"]["Name"] : "";
                 }
-                var dataTable = jsonBeneficiaries.ToObject<DataTable>();
+                var dataTable = jsonCollection.ToObject<DataTable>();
 
                 if (vendorQuery.Count() == 0)
                 {
@@ -340,12 +351,6 @@ namespace TalonAdmin.Controllers
                 }
 
                 // Removing Id Columns because they are parsed later on in the import
-                dataTable.Columns.Remove("LocationId");
-                dataTable.Columns.Remove("CountryId");
-                dataTable.Columns.Remove("TypeId");
-                dataTable.Columns.Remove("Name");
-                dataTable.Columns.Remove("ParentRecord");
-                dataTable.Columns.Remove("ParentRecordId");
 
                 dataTable.TableName = "Vendors";
 
@@ -478,7 +483,7 @@ namespace TalonAdmin.Controllers
                                 VendorType type = null;
 
                                 // If location is filled out try to find or create new one
-                                if (!String.IsNullOrEmpty(locationName))
+                                if (!String.IsNullOrEmpty(typeName))
                                 {
                                     type = vendorTypeQuery.Where(l => l.Name.ToLower().Trim() == locationName.Trim().ToLower()).FirstOrDefault();
 

@@ -2,14 +2,16 @@
 
 app.controller('VendorReceiptReconciliationCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'backendService', 'controlledLists',
     function ($scope, $rootScope, gettext, settings, $q, toaster, backendService, controlledLists) {
-        $q.all([controlledLists.getVendors(), controlledLists.getDistributions()]).then(function (promises) {
-            $scope.vendors = promises[0];
+        $q.all([controlledLists.getVendors(), controlledLists.getDistributions(), controlledLists.getPrograms()]).then(function (promises) {
+            $scope.vendors = promises[0].filter(function (v) { return !v.ParentRecordId;});
             $scope.distributions = promises[1];
+            $scope.programs = promises[2];
         });
 
 
         $scope.reconciliation = {
         };
+
         $scope.$watch('reconciliation.Filter', function (filter) {
             if (filter) {
                 $scope.reconciliation.FilteredVouchers = $scope.reconciliation.Vouchers.filter(function (v) {
@@ -35,11 +37,18 @@ app.controller('VendorReceiptReconciliationCtrl', ['$scope', '$rootScope', 'gett
             var query = new breeze
                 .EntityQuery("VoucherTransactionRecords")
                 .using(backendService)
-                .expand(["Voucher", "Beneficiary", "Voucher.Category"])
+                .expand(["Voucher", "Beneficiary", "Voucher.Category", "Vendor", "Vendor.ParentRecord"])
                 .where({
-                    "VendorId": {"==": $scope.reconciliation.Vendor.Id },
-                    "Voucher.DistributionId": {"==": $scope.reconciliation.Distribution.Id },
-                    "Voucher.IsFinalized": {"==": null }
+                    'and': [ 
+                        { 
+                            "or": [
+                                { "VendorId": { "==": $scope.reconciliation.Vendor.Id } },
+                                { "Vendor.ParentRecordId": { "==": $scope.reconciliation.Vendor.Id } },
+                            ]
+                        },
+                        {"Voucher.Distribution.Program.Id": {"==": $scope.reconciliation.Program.Id }},
+                        { "Voucher.IsFinalized": {"==": null } }
+                    ]
                 })
                 .execute()
                 .then(function (response) {
@@ -52,9 +61,10 @@ app.controller('VendorReceiptReconciliationCtrl', ['$scope', '$rootScope', 'gett
 
 app.controller('ReportHistoryReconciliationCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'backendService', 'controlledLists',
     function ($scope, $rootScope, gettext, settings, $q, toaster, backendService, controlledLists) {
-        $q.all([controlledLists.getVendors(), controlledLists.getDistributions()]).then(function (promises) {
+        $q.all([controlledLists.getVendors(), controlledLists.getDistributions(), controlledLists.getPrograms()]).then(function (promises) {
             $scope.vendors  = promises[0]; 
-            $scope.distributions  = promises[1]; 
+            $scope.distributions = promises[1];
+            $scope.programs = promises[2];
         });
 
         $scope.report = {
@@ -70,11 +80,11 @@ app.controller('ReportHistoryReconciliationCtrl', ['$scope', '$rootScope', 'gett
 
         $scope.listReports = function () {
             var query = new breeze
-                .EntityQuery("DistributionVendorReconciliations")
+                .EntityQuery("ProgramVendorReconciliations")
+                .expand(['Vendor'])
                 .using(backendService)
                 .where({
-                    "VendorId": { "==": $scope.reconciliation.Vendor.Id },
-                    "DistributionId": { "==": $scope.reconciliation.Distribution.Id }
+                    "ProgramId": { "==": $scope.reconciliation.Program.Id }
                 })
                 .execute()
                 .then(function (response) {

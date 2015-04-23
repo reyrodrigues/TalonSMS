@@ -7,20 +7,15 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" translate>Vendor</label>
-                        <div class="col-sm-4">
-                            <select class="form-control" ng-model="reconciliation.Vendor"
-                                    ng-options="item as item.Name for item in vendors | orderBy:'item.Name'"></select>
-                        </div>
-                        <label class="col-sm-2 control-label" translate>Distribution</label>
-                        <div class="col-sm-4">
-                            <select class="form-control" ng-model="reconciliation.Distribution"
-                                    ng-options="item as item.Title for item in distributions | orderBy:'item.Title'"></select>
+                        <label class="col-sm-2 control-label" translate>Program</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" ng-model="reconciliation.Program"
+                                    ng-options="item as item.Name for item in programs | orderBy:'item.Name'"></select>
                         </div>
                     </div>
                 </div>
                 <div class="panel-footer">
-                    <a class="btn btn-primary" href ng-disabled="!(reconciliation.Vendor && reconciliation.Distribution)" ng-click="listReports()">List Reports</a>
+                    <a class="btn btn-primary" href ng-disabled="!(reconciliation.Program)" ng-click="listReports()">List Reports</a>
                 </div>
             </div>
         </div>
@@ -32,9 +27,11 @@
                     <div class="panel panel-default" ng-repeat="report in reconciliation.Reports">
                         <div class="panel-body">
                             <div class="row">
-                                <div class="col-sm-4"><strong>Report Run On</strong></div>
-                                <div class="col-sm-4">{{ report.ReportRunOn|localeDateTime }}</div>
-                                <div class="col-sm-4"><a href mime-type="application/pdf" download="Report.pdf" file-download ng-model="report.OriginalReport" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></div>
+                                <div class="col-sm-3"><strong>Vendor</strong></div>
+                                <div class="col-sm-2">{{ report.Vendor.Name }}</div>
+                                <div class="col-sm-3"><strong>Report Run On</strong></div>
+                                <div class="col-sm-2">{{ report.ReportRunOn|localeDateTime }}</div>
+                                <div class="col-sm-2"><a href mime-type="application/pdf" download="Report.pdf" file-download ng-model="report.OriginalReport" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></div>
                             </div>
                         </div>
                     </div>

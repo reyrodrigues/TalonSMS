@@ -2,10 +2,11 @@
 
 app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController', 'settings', '$q', 'controlledLists',
     function ($rootScope, $scope, createController, settings, $q, controlledLists) {
-        $q.all([controlledLists.getLocations(), controlledLists.getVoucherTypes(), controlledLists.getVendorTypes()]).then(function (promises) {
+        $q.all([controlledLists.getLocations(), controlledLists.getVoucherTypes(), controlledLists.getVendorTypes(), controlledLists.getPrograms()]).then(function (promises) {
             $scope.locations = promises[0];
             $scope.voucherTypes = promises[1];
             $scope.vendorTypes = promises[2];
+            $scope.programs = promises[3];
         });
 
         createController($scope, angular.extend({
@@ -21,9 +22,11 @@ app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController
 
 
 app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope', '$scope', '$state', '$q', '$http', 'controlledLists',
-    'dialogs', 'voucherTypes', 'vendorTypes', 'serviceBase', 'toaster', 'gettext', 'subGrid',
+    'dialogs', 'serviceBase', 'toaster', 'gettext', 'subGrid', 'injectorHelper',
     function (breeze, backendService, $rootScope, $scope, $state, $q, $http, controlledLists,
-        dialogs, voucherTypes, vendorTypes, serviceBase, toaster, gettext, subGrid) {
+        dialogs, serviceBase, toaster, gettext, subGrid, injectorHelper) {
+        injectorHelper.injectPromises($scope, ['programs', 'locations', 'voucherTypes', 'vendorTypes']);
+
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
 
@@ -100,7 +103,12 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
                         $http.post(serviceBase + 'Api/VoucherWorkflow/AssignToGroup', payload)
                         .then(function () {
                             toaster.pop('success', 'Success!', 'Vouchers created successfully!');
-                            loadData();
+                            loadData().then(function () {
+                                $scope.UsedVouchersLoadGrid();
+                                $scope.UnusedVouchersLoadGrid();
+                                $scope.VendorsLoadGrid();
+                                $scope.DistributionLogLoadGrid();
+                            });
                             $scope.isAssigning = false;
                         }).catch(function (res) {
                             toaster.pop('error', 'Error', res.data.Message);
@@ -179,14 +187,6 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
                 return "Cancelled";
             }
         };
-
-
-        $q.all([controlledLists.getLocations(), controlledLists.getVoucherTypes(), controlledLists.getVendorTypes()]).then(function (promises) {
-            $scope.locations = promises[0];
-            $scope.voucherTypes = promises[1];
-            $scope.vendorTypes = promises[2];
-
-        });
 
         $scope.isEditing = false;
         $scope.isAssigning = false;
@@ -273,7 +273,7 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
             expand: ['Voucher', 'Voucher.Category', 'Voucher.Category.Type', 'Vendor', 'Beneficiary'],
             columns: [
                 ["Beneficiary.FirstName", gettext("Beneficiary"), '{{row.getProperty(\'Beneficiary.Name\')}}'],
-                ["Vendor.Name", gettext("Vendor"), false, false],
+                ["Vendor.Name", gettext("Vendor")],
                 ["FinalizedOn", gettext("Redemption Date"), '{{COL_FIELD|localeDateTime}}'],
                 ["Voucher.VoucherCode", gettext("Voucher Code")],
                 ["ConfirmationCode", gettext("Confirmation Code")],
@@ -340,7 +340,7 @@ app.controller('DistributionsListCtrl', ['breeze', 'backendService', '$scope', '
                 var order = fields.join(',');
 
                 var entityQuery = new breeze.EntityQuery("Distributions")
-                    .expand("Location")
+                    .expand(["Location", "Program"])
                     .orderBy(order)
                     .skip($localStorage.distributionGridSettings.pageSize * ($localStorage.distributionGridSettings.currentPage - 1))
                     .take($localStorage.distributionGridSettings.pageSize)
@@ -425,7 +425,8 @@ app.controller('DistributionsListCtrl', ['breeze', 'backendService', '$scope', '
             useExternalSorting: true,
             columnDefs: [
                 { field: "Title", cellTemplate: '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text><a href ui-sref="distributions.edit({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a></span></div>' },
-                { field: "Location.Name", displayName: "Location" }
+                { field: "Location.Name", displayName: "Location" },
+                { field: "Program.Name", displayName: "Program" }
             ]
         };
 

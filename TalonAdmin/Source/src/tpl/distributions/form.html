@@ -5,9 +5,10 @@
             <div class="col-sm-4">
                 <input type="text" class="form-control" placeholder="Title" ng-model="entity.Title" required>
             </div>
-            <label class="col-sm-2 control-label" translate>Fund Codes</label>
+            <label class="col-sm-2 control-label" translate>Program</label>
             <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Fund Codes" ng-model="entity.FundCodes" required>
+                <select class="form-control" ng-model="entity.ProgramId"
+                        ng-options="item.Id as item.Name for item in programs | orderBy:'item.Name'" required></select>
             </div>
         </div>
         <div class="line line-dashed b-b line-lg pull-in"></div>

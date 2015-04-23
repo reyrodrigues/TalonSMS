@@ -1,0 +1,162 @@
+﻿@using System.Net;
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .page {
+            page-break-after: always;
+            height: 201mm;
+            display: block;
+        }
+
+        div.table {
+            height: 141mm;
+            display: block;
+        }
+
+        .footer {
+            width: 100%;
+            display: block;
+            position: fixed;
+            bottom: 0;
+            height: 65px;
+        }
+    </style>
+</head>
+<body>
+    @foreach (var page in Model.Pages)
+    {
+        <div class="page ">
+            <div class="row">
+                <div class="col-xs-12 text-center"><h1><strong>@Model.Organization.Name</strong></h1></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-10">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <h1>Vendor Financial Report</h1>
+                        </div>
+                    </div><div class="row">
+                        <div class="col-xs-6">
+                            <h5><strong>Vendor Partner:&nbsp;</strong>@Model.Vendor.Name</h5>
+                            <h5><strong>Vendor Location:&nbsp;</strong>@(Model.Vendor.Location != null ? Model.Vendor.Location.Name : "")</h5>
+                        </div>
+                        <div class="col-xs-2">
+                        </div>
+                        <div class="col-xs-6">
+                            <h5><strong>Program Name:&nbsp;</strong>@Model.Program.Name</h5>
+                            <h5><strong>Fund Code:&nbsp;</strong>@Model.Program.FundCodes</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-2">
+                    <img src="@Model.Organization.LogoSVG" class="img-responsive pull-right" style="width: 2cm" />
+                </div>
+            </div>
+            <div class="table">
+                <table class="table table-striped table-bordered table-condensed">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Beneficiary Name</th>
+                            <th>Beneficiary Mobile Number</th>
+                            <th>Transaction Timestamp</th>
+                            <th>Distribution Code</th>
+                            <th>Voucher Code</th>
+                            <th>Confirmation Code</th>
+                            <th>Voucher Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < page.Items.Length; i++)
+                        {
+                            var item = page.Items[i];
+                            <tr>
+                                <td>@(((page.Page - 1) * Model.PageSize) + i + 1)</td>
+                                <td>@item.Name</td>
+                                <td>@item.MobileNumber</td>
+                                <td>@(item.FinalizedOn ?? "")</td>
+                                <td>@item.DistributionId.ToString("D6")</td>
+                                <td>@item.VoucherCode</td>
+                                <td>@item.ConfirmationCode</td>
+                                <td>@Model.Country.CurrencyIsoCode @item.Value</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        @if (page.Items.Length > 1)
+                        {
+                            <tr>
+                                <th colspan="7" class="text-right">Subtotal</th>
+                                <th>@Model.Country.CurrencyIsoCode @page.SubTotal</th>
+                            </tr>
+                        }
+                        @if (page.IsLastPage)
+                        {
+
+                            <tr>
+                                <th colspan="7" class="text-right">Total</th>
+                                <th>@Model.Country.CurrencyIsoCode @Model.Total</th>
+                            </tr>
+                        }
+                    </tfoot>
+                </table>
+            </div>
+            @if (page.IsLastPage)
+            {
+                <div id="footer">
+                    <div class=" row">
+                        <div class="col-xs-4">
+                            <div style="display:block; border-bottom: 1px black solid">
+                                <br />
+                                <br />
+                            </div>
+                            <div class="text-2x text-center">@Model.User.FullName</div>
+                            <div class="text-2x text-center"><strong>Program Approval</strong></div>
+                        </div>
+                        <div class="col-xs-4">
+                            <div style="display:block; border-bottom: 1px black solid">
+                                <br />
+                                <br />
+                            </div>
+                            <div class="text-2x text-center">&nbsp;</div>
+                            <div class="text-2x text-center"><strong>Finance Approval</strong></div>
+                        </div>
+                        <div class="col-xs-4">
+                            <div style="display:block; border-bottom: 1px black solid">
+                                <br />
+                                <br />
+                            </div>
+                            <div class="text-2x text-center">@Model.Vendor.Name</div>
+                            <div class="text-2x text-center"><strong>Vendor</strong></div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-xs-4">
+                    Report Generated By:&nbsp;@Model.User.FullName
+                </div>
+                <div class="col-xs-4 text-center">
+                    Page @page.Page of @Model.Pages.Count()
+                </div>
+                <div class="col-xs-4 text-right">
+                    Date Report Generated: @DateTime.Now.ToString()
+                </div>
+            </div>
+        </div>
+    }
+</body>
+</html>

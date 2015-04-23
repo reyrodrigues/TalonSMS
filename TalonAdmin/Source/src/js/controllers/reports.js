@@ -2,21 +2,19 @@
 
 app.controller('VendorFinancialReportingCtrl', ['$scope', '$rootScope', 'gettext', 'settings', '$q', 'toaster', 'serviceBase', 'controlledLists', 'authService', '$injector',
     function ($scope, $rootScope, gettext, settings, $q, toaster, serviceBase, controlledLists, authService, $injector) {
-        $q.all([controlledLists.getVendors(), controlledLists.getDistributions()]).then(function (promises) {
-            $scope.vendors = promises[0];
+        $q.all([controlledLists.getVendors(), controlledLists.getDistributions(), controlledLists.getPrograms()]).then(function (promises) {
+            $scope.vendors = promises[0].filter(function (v) { return !v.ParentRecordId; });
             $scope.distributions = promises[1];
+            $scope.programs = promises[2];
         });
         var localStorageService = $injector.get('localStorageService');
         var authData = localStorageService.get('authorizationData');
         $scope.token = authData.token;
 
-        $scope.url = serviceBase + 'api/Reports/VendorFinancialReport'
+        $scope.url = serviceBase + 'api/Reports/VendorProgramFinancialReport'
 
         $scope.report = {
         };
-
-        authService.loadUserData().then(function () {
-        });
 
         $rootScope.$watch('currentUser', function () {
             if ($rootScope.currentUser) {

@@ -17,30 +17,25 @@ namespace TalonAdmin.Models.Vouchers
         }
 
         public virtual string Title { get; set; }
-        public virtual DistributionStatus? Status { get; set; }
-
-        [DefaultValue(6)]
-        public virtual int VoucherCodeLength { get; set; }
-
         public virtual string FundCodes { get; set; }
+        public virtual string ClosedBy { get; set; }
+        public virtual string CreatedBy { get; set; }
+        public virtual string ModifiedBy { get; set; }
 
+        [DefaultValue(6)] public virtual int VoucherCodeLength { get; set; }
+        public virtual int? ProgramId { get; set; }
         public virtual int? LocationId { get; set; }
 
         public virtual bool IsClosed { get; set; }
 
-        public virtual string ClosedBy { get; set; }
         public virtual DateTime? ClosedOn { get; set; }
-
-        public virtual string CreatedBy { get; set; }
         public virtual DateTime CreatedOn { get; set; }
-        public virtual string ModifiedBy { get; set; }
         public virtual DateTime ModifiedOn { get; set; }
 
-
+        public virtual Program Program { get; set; }
         public virtual Location Location { get; set; }
         public virtual ICollection<DistributionVoucherCategory> Categories { get; set; }
         public virtual ICollection<Voucher> Vouchers { get; set; }
-
         public virtual ICollection<BeneficiaryDistribution> Beneficiaries { get; set; }
     }
 
