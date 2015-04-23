@@ -7,4 +7,5 @@ Source/node_modules/
 Source/src/tpl/app.templates.js
 *.mo
 [Ww]eb.[Cc]onfig
+[Ww]eb.*.[Cc]onfig
 
