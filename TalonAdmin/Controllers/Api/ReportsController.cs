@@ -84,7 +84,7 @@ namespace TalonAdmin.Controllers.Api
                                         v.Voucher.Category.Value,
                                         v.VoucherId,
                                         v.Voucher.DistributionId,
-                                    }).ToArrayAsync()).OrderBy(a => a.Name).ToArray();
+                                    }).ToArrayAsync()).OrderBy(a => a.VoucherCode).ToArray();
                 itemCount = items.Count();
 
                 int pageSize = 15;
