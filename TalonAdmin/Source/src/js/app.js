@@ -12,7 +12,6 @@ var app = angular.module('app', [
   'ui.bootstrap',
   'ui.utils',
   'ui.load',
-  'ui.jq',
   'breeze.angular',
   'LocalStorageModule',
   'dialogs.main',

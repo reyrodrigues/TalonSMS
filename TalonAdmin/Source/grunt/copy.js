@@ -13,6 +13,9 @@ module.exports = {
     },
     bower: {
         files: [
+            { expand: true, src: "**/*.woff", cwd: 'bower_components', dest: "../App/bower" },
+            { expand: true, src: "**/*.ttf", cwd: 'bower_components', dest: "../App/bower" },
+            { expand: true, src: "**/*.svg", cwd: 'bower_components', dest: "../App/bower" },
             { expand: true, src: "**/*.js", cwd: 'bower_components', dest: "../App/bower" },
             { expand: true, src: "**/*.css", cwd: 'bower_components', dest: "../App/bower" }
         ]

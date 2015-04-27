@@ -153,11 +153,18 @@ namespace TalonAdmin.Controllers.Api
         [Route("AssignToGroup")]
         public async Task<IHttpActionResult> AssignToGroup(dynamic request)
         {
-            int distributionId = request.DistributionId;
-            int groupId = request.GroupId;
-
             using (var ctx = new Models.Vouchers.Context())
             {
+                int distributionId = request.DistributionId;
+                int groupId = request.GroupId;
+
+                var isAssigning = await ctx.DistributionLogs.Where(l => l.EndedOn == null && l.DistributionId == distributionId).AnyAsync();
+
+                if (isAssigning)
+                {
+                    return Ok("Already assigning");
+                }
+
                 var count = await ctx.Beneficiaries
                             .Include("Group")
                             .Where(b => b.GroupId == groupId && b.Disabled != true).CountAsync();
@@ -168,12 +175,9 @@ namespace TalonAdmin.Controllers.Api
                 }
 
                 await ctx.SaveChangesAsync();
-            }
 
-            await GenerateVouchers(new { DistributionId = distributionId });
+                await GenerateVouchers(new { DistributionId = distributionId });
 
-            using (var ctx = new Models.Vouchers.Context())
-            {
                 var beneficiaries = await ctx.Beneficiaries
                             .Include("Group")
                             .Where(b => b.GroupId == groupId && b.Disabled != true).AsQueryable().ToListAsync();
@@ -185,12 +189,12 @@ namespace TalonAdmin.Controllers.Api
                     AffectedBeneficiaries = beneficiaries.Count(),
                     CountryId = this.GetCountryId(),
                     OrganizationId = this.GetOrganizationId(),
+                    StartedOn = DateTime.UtcNow
                 };
 
                 ctx.DistributionLogs.Add(distributionLog);
                 await ctx.SaveChangesAsync();
 
-                var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
                 var voucherQuery = from v in ctx.Vouchers.AsNoTracking()
                                    where v.DistributionId == distribution.Id &&
                                    v.TransactionRecords.Count() == 0
@@ -239,6 +243,9 @@ namespace TalonAdmin.Controllers.Api
                 {
                     SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id);
                 }
+
+                distributionLog.EndedOn = DateTime.UtcNow;
+                await ctx.SaveChangesAsync();
             }
 
 
@@ -248,8 +255,8 @@ namespace TalonAdmin.Controllers.Api
         [Route("ValidateTransactionSMS/{countryCode}/")]
         [OverrideAuthentication]
         [AllowAnonymous]
-        public async Task<IHttpActionResult> ValidateTransactionSMS([FromBody]IncomingSmsBindingModel request, 
-            string countryCode, 
+        public async Task<IHttpActionResult> ValidateTransactionSMS([FromBody]IncomingSmsBindingModel request,
+            string countryCode,
             [FromUri] string secret = "")
         {
             var systemSecret = ConfigurationManager.AppSettings["SystemSecret"] ?? "";
@@ -260,7 +267,8 @@ namespace TalonAdmin.Controllers.Api
                 countryId = adminContext.Countries.AsNoTracking().Where(o => o.IsoAlpha2.ToLower() == countryCode.ToLower().Trim()).Select(o => o.Id).FirstOrDefault();
             }
 
-            if (countryId == 0) {
+            if (countryId == 0)
+            {
                 return Ok("Not a valid country");
             }
 
@@ -505,11 +513,12 @@ namespace TalonAdmin.Controllers.Api
             context.Clients.All.updateDashboard();
 
             var transactionRecord = voucher.TransactionRecords.First();
-            var model = new { 
-                Voucher = voucher, 
-                Vendor = transactionRecord.Vendor, 
-                Beneficiary = transactionRecord.Beneficiary, 
-                TransactionRecord = transactionRecord 
+            var model = new
+            {
+                Voucher = voucher,
+                Vendor = transactionRecord.Vendor,
+                Beneficiary = transactionRecord.Beneficiary,
+                TransactionRecord = transactionRecord
             };
 
             var beneficiaryMessage = CompileMessage("Beneficiary Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
@@ -530,8 +539,8 @@ namespace TalonAdmin.Controllers.Api
                 if (organizationId != null)
                 {
                     var organization = ctx.OrganizationCountries.AsNoTracking().Where(o => o.OrganizationId == organizationId && o.CountryId == countryId).FirstOrDefault();
-                    if(organization != null)
-                        organizationMessage = organization.Settings.PropertyCollection.Where(p=>p.Name == key).Select(p=> p.Value).FirstOrDefault();
+                    if (organization != null)
+                        organizationMessage = organization.Settings.PropertyCollection.Where(p => p.Name == key).Select(p => p.Value).FirstOrDefault();
                 }
 
                 countryMessage = country.Settings.PropertyCollection.Where(p => p.Name == key).Select(p => p.Value).FirstOrDefault();
@@ -569,7 +578,7 @@ namespace TalonAdmin.Controllers.Api
                         .Where(c => c.Id == countryId).FirstOrDefault();
                 }
             }
-            catch 
+            catch
             {
             }
 
@@ -578,7 +587,8 @@ namespace TalonAdmin.Controllers.Api
 
             try
             {
-                if (country.Settings.SmsBackendType == 0) {
+                if (country.Settings.SmsBackendType == 0)
+                {
                     // Sending through RSMS
                     var baseUrl = country.Settings.ServiceUrl;
                     var user = country.Settings.ServiceUser;
@@ -618,11 +628,13 @@ namespace TalonAdmin.Controllers.Api
                     var authResponse = service.Auth(country.Settings.ServiceUser, country.Settings.ServicePassword);
                     var result = service.SendSMS(signature, to, message, "");
                 }
-                else if (country.Settings.SmsBackendType == 2) {
+                else if (country.Settings.SmsBackendType == 2)
+                {
                     // Clickatell
                     var isUnicode = message.Any(c => c > 255);
 
-                    if (isUnicode) {
+                    if (isUnicode)
+                    {
                         var bytes = System.Text.Encoding.GetEncoding("UTF-16BE").GetBytes(message);
                         message = string.Concat(bytes.Select(b => b.ToString("X2")));
                     }
@@ -633,9 +645,9 @@ namespace TalonAdmin.Controllers.Api
                     var result = client.GetAsync(urlCall).Result;
                 }
 
-            } 
-            catch 
-            { 
+            }
+            catch
+            {
             }
         }
     }
