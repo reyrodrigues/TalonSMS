@@ -153,10 +153,11 @@ namespace TalonAdmin.Controllers.Api
         [Route("AssignToGroup")]
         public async Task<IHttpActionResult> AssignToGroup(dynamic request)
         {
+            int distributionId = request.DistributionId;
+            int groupId = request.GroupId;
+
             using (var ctx = new Models.Vouchers.Context())
             {
-                int distributionId = request.DistributionId;
-                int groupId = request.GroupId;
 
                 var isAssigning = await ctx.DistributionLogs.Where(l => l.EndedOn == null && l.DistributionId == distributionId).AnyAsync();
 
@@ -239,15 +240,25 @@ namespace TalonAdmin.Controllers.Api
 
                 await ctx.SaveChangesAsync();
 
-                foreach (var tr in transactionRecords)
+                try
                 {
-                    SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id);
+                    foreach (var tr in transactionRecords)
+                    {
+                        SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id);
+                    }
                 }
+                catch
+                {
 
-                distributionLog.EndedOn = DateTime.UtcNow;
+                }
+            }
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                var finishedDistribution = await ctx.DistributionLogs.Where(l => l.EndedOn == null && l.DistributionId == distributionId).FirstAsync();
+                finishedDistribution.EndedOn = DateTime.UtcNow;
+
                 await ctx.SaveChangesAsync();
             }
-
 
             return Ok();
         }
