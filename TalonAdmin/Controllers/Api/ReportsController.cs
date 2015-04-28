@@ -26,6 +26,7 @@ using RazorEngine.Templating;
 using RazorEngine;
 using System.Drawing.Printing;
 using TalonAdmin.Controllers.BindingModels;
+using System.Security.Cryptography;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -119,7 +120,15 @@ namespace TalonAdmin.Controllers.Api
                     Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
                     Total = items.Select(i => i.Value).Sum()
                 };
-                var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
+
+
+                var hash = Convert.ToBase64String(MD5CryptoServiceProvider.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(report)));
+                if (!Engine.Razor.IsTemplateCached(hash, null))
+                {
+                    Engine.Razor.Compile(report, hash);
+                }
+
+                var compiled = Engine.Razor.RunCompile(hash, null, model);
 
                 content.Append(compiled);
 
@@ -264,9 +273,14 @@ namespace TalonAdmin.Controllers.Api
                     Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
                     Total = items.Select(i => i.Value).Sum()
                 };
-                var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
 
-                content.Append(compiled);
+                var hash = Convert.ToBase64String(MD5CryptoServiceProvider.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(report)));
+                if (!Engine.Razor.IsTemplateCached(hash, null))
+                {
+                    Engine.Razor.Compile(report, hash);
+                }
+
+                var compiled = Engine.Razor.RunCompile(hash, null, model);
 
 
                 var document = new HtmlToPdfDocument
@@ -398,7 +412,14 @@ namespace TalonAdmin.Controllers.Api
                     PageSize = pageSize,
                     Total = items.Select(i => i.Value).Sum()
                 };
-                var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
+
+                var hash = Convert.ToBase64String(MD5CryptoServiceProvider.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(report)));
+                if (!Engine.Razor.IsTemplateCached(hash, null))
+                {
+                    Engine.Razor.Compile(report, hash);
+                }
+
+                var compiled = Engine.Razor.RunCompile(hash, null, model);
 
                 content.Append(compiled);
 

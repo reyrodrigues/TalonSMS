@@ -196,12 +196,38 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
             .expand('Categories')
             .using(backendService);
 
-        loadData().then(function () {
-            $scope.UsedVouchersLoadGrid();
-            $scope.UnusedVouchersLoadGrid();
-            $scope.VendorsLoadGrid();
-            $scope.DistributionLogLoadGrid();
+        var logQuery = breeze.EntityQuery.from('DistributionLogs')
+        .where({
+            'and': [
+                { 'DistributionId': { '==': $state.params.id } },
+                { 'EndedOn': { '==': null } }
+            ]
+        })
+        .take(0)
+        .using(backendService)
+        .inlineCount(true)
+        .execute(function (results) {
+            $scope.isAssigning = results.inlineCount > 0;
+
+            loadData().then(function () {
+                $scope.UsedVouchersLoadGrid();
+                $scope.UnusedVouchersLoadGrid();
+                $scope.VendorsLoadGrid();
+                $scope.DistributionLogLoadGrid();
+            });
+        }).catch(function () {
+            console.log(arguments);
         });
+
+        delete window.lockAssignment;
+        delete window.unlockAssignment;
+
+        window.lockAssignment = function () {
+            $scope.isAssigning = true;
+        };
+        window.unlockAssignment = function () {
+            $scope.isAssigning = false;
+        };
 
 
         $scope.UnusedVouchersFilter = { 'Status': { '==': 0 } };
@@ -317,7 +343,8 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
             entityType: 'DistributionLog',
             key: 'DistributionId',
             columns: [
-                ["DateTime", gettext("Date"), '{{COL_FIELD|localeDateTime}}'],
+                ["StartedOn", gettext("Started On"), '{{COL_FIELD|localeDateTime}}'],
+                ["EndedOn", gettext("Ended On"), '{{COL_FIELD|localeDateTime}}'],
                 ["AffectedBeneficiaries", gettext("Beneficiaries")]
             ]
         });

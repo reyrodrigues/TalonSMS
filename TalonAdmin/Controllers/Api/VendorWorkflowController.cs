@@ -49,7 +49,7 @@ namespace TalonAdmin.Controllers.Api
         private static object syncObj = new Object();
 
         [Route("GenerateVouchers")]
-        public async Task<IHttpActionResult> GenerateVouchers(dynamic request)
+        public async Task GenerateVouchers(dynamic request)
         {
             int distributionId = request.DistributionId;
 
@@ -62,17 +62,19 @@ namespace TalonAdmin.Controllers.Api
 
                 if (distribution.Vouchers.Count() == totalVouchers)
                 {
-                    return BadRequest("This distribution has been already fulfilled.");
+                    return;
                 }
 
                 var codes = ctx.Vouchers.Select(c => c.VoucherCode).ToArray();
                 int numberOfVouchers = distribution.Categories.Select(c => c.NumberOfVouchers - c.IssuedVouchers).Sum();
                 if (numberOfVouchers < 0)
-                    numberOfVouchers = 0;
+                {
+                    return;
+                }
 
                 var checkSet = new HashSet<string>(codes);
                 var allCodes = new HashSet<string>(
-                        Enumerable.Range(0, (int)Math.Pow(10, distribution.VoucherCodeLength))
+                        Enumerable.Range(0, numberOfVouchers)
                             .AsParallel()
                             .Select(c => RandomNumber.RandomLong(distribution.VoucherCodeLength).ToString("D" + distribution.VoucherCodeLength))
                         );
@@ -117,8 +119,6 @@ namespace TalonAdmin.Controllers.Api
                 }
 
                 await ctx.SaveChangesAsync();
-
-                return Ok();
             }
         }
 
@@ -155,6 +155,10 @@ namespace TalonAdmin.Controllers.Api
         {
             int distributionId = request.DistributionId;
             int groupId = request.GroupId;
+
+            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
+
+            context.Clients.All.lockAssignment();
 
             using (var ctx = new Models.Vouchers.Context())
             {
@@ -252,13 +256,17 @@ namespace TalonAdmin.Controllers.Api
 
                 }
             }
+
             using (var ctx = new Models.Vouchers.Context())
             {
-                var finishedDistribution = await ctx.DistributionLogs.Where(l => l.EndedOn == null && l.DistributionId == distributionId).FirstAsync();
+                var finishedDistribution = ctx.DistributionLogs.Where(l => l.EndedOn == null && l.DistributionId == distributionId).First();
                 finishedDistribution.EndedOn = DateTime.UtcNow;
 
-                await ctx.SaveChangesAsync();
+                ctx.SaveChanges();
             }
+
+
+            context.Clients.All.unlockAssignment();
 
             return Ok();
         }
@@ -459,7 +467,6 @@ namespace TalonAdmin.Controllers.Api
             SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, message, transactionRecord.CountryId, transactionRecord.OrganizationId);
         }
 
-
         private void VoucherCancelled(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
         {
             var transactionRecord = voucher.TransactionRecords.First();
@@ -559,8 +566,13 @@ namespace TalonAdmin.Controllers.Api
                 {
 
                     var message = String.IsNullOrEmpty(organizationMessage) ? countryMessage : organizationMessage;
+                    var hash = Convert.ToBase64String(MD5CryptoServiceProvider.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(message)));
+                    if (!Engine.Razor.IsTemplateCached(hash, null))
+                    {
+                        Engine.Razor.Compile(message, hash);
+                    }
 
-                    return Engine.Razor.RunCompile(message, Guid.NewGuid().ToString(), null, model);
+                    return Engine.Razor.RunCompile(hash, null, model);
                 }
                 catch
                 {
@@ -605,7 +617,8 @@ namespace TalonAdmin.Controllers.Api
                     var user = country.Settings.ServiceUser;
                     var password = country.Settings.ServicePassword;
 
-                    ThreadPool.QueueUserWorkItem((state) =>
+#pragma warning disable 4014
+                    Task.Factory.StartNew(() =>
                     {
                         try
                         {
@@ -622,10 +635,10 @@ namespace TalonAdmin.Controllers.Api
                                 to,
                                 message,
                                 ""
-                             ).Wait();
+                             ).ConfigureAwait(false);
                         }
                         catch { }
-                    });
+                    }).ConfigureAwait(false);
                 }
                 else if (country.Settings.SmsBackendType == 1)
                 {

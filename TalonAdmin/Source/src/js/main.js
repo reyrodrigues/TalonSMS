@@ -4,8 +4,10 @@
 
 angular.module('app')
   .controller('AppCtrl',
-  ['$scope', '$localStorage', '$window', '$q', '$http', 'authService', 'ngAuthSettings', '$state', '$rootScope', 'localStorageService', 'gettext', 'gettextCatalog', 'serviceBase',
-function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings, $state, $rootScope, localStorageService, gettext, gettextCatalog,serviceBase) {
+  ['$scope', '$localStorage', '$window', '$q', '$http', 'authService', 'ngAuthSettings', '$state', '$rootScope', 'localStorageService',
+      'gettext', 'gettextCatalog', 'serviceBase', 'Hub', 'toaster',
+function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings, $state, $rootScope, localStorageService,
+    gettext, gettextCatalog, serviceBase, Hub, toaster) {
     // add 'ie' classes to html
     var isIE = !!navigator.userAgent.match(/MSIE/i);
     isIE && angular.element($window.document.body).addClass('ie');
@@ -19,6 +21,57 @@ function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings
         });
     });
 
+
+    if (!window.dashboardHub) {
+        window.dashboardHub = new Hub('dashboardHub', {
+            //client side methods
+            listeners: {
+                'message': function (type, title, message) {
+                    toaster.pop(type, title, message);
+                },
+                'updateDashboard': function () {
+                    if (window.loadDashboard) {
+                        window.loadDashboard();
+                        $rootScope.$apply();
+                    }
+                },
+                'lockAssignment': function () {
+                    if (window.lockAssignment) {
+                        window.lockAssignment();
+                        $rootScope.$apply();
+                    }
+                },
+                'unlockAssignment': function () {
+                    if (window.unlockAssignment) {
+                        window.unlockAssignment();
+                        $rootScope.$apply();
+                    }
+                }
+            },
+            methods: [],
+            //handle connection error
+            errorHandler: function (error) {
+                console.error(error);
+            },
+            //specify a non default root
+            rootPath: serviceBase + 'signalR/hubs/',
+
+            hubDisconnected: function () {
+                if (hub.connection.lastError) {
+                    hub.connection.start()
+                    .done(function () {
+                        if (hub.connection.state == 0)
+                            $timeout(function () { }, 2000);
+                        else {
+                        }
+                    })
+                    .fail(function (reason) {
+                        console.log(reason);
+                    });
+                }
+            }
+        });
+    }
 
     $scope.selectCountry = function (country) {
         if ($rootScope.country.Id != country.Id) {
