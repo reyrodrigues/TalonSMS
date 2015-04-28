@@ -222,11 +222,13 @@ app.controller('DistributionsEditCtrl', ['breeze', 'backendService', '$rootScope
         delete window.lockAssignment;
         delete window.unlockAssignment;
 
-        window.lockAssignment = function () {
-            $scope.isAssigning = true;
+        window.lockAssignment = function (distributionId) {
+            if ($state.params.id == distributionId)
+                $scope.isAssigning = true;
         };
-        window.unlockAssignment = function () {
-            $scope.isAssigning = false;
+        window.unlockAssignment = function (distributionId) {
+            if ($state.params.id == distributionId)
+                $scope.isAssigning = false;
         };
 
 

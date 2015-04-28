@@ -158,7 +158,7 @@ namespace TalonAdmin.Controllers.Api
 
             var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
 
-            context.Clients.All.lockAssignment();
+            context.Clients.All.lockAssignment(distributionId);
 
             using (var ctx = new Models.Vouchers.Context())
             {
@@ -266,7 +266,7 @@ namespace TalonAdmin.Controllers.Api
             }
 
 
-            context.Clients.All.unlockAssignment();
+            context.Clients.All.unlockAssignment(distributionId);
 
             return Ok();
         }

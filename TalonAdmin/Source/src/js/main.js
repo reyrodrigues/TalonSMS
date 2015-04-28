@@ -35,15 +35,15 @@ function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings
                         $rootScope.$apply();
                     }
                 },
-                'lockAssignment': function () {
+                'lockAssignment': function (distributionId) {
                     if (window.lockAssignment) {
-                        window.lockAssignment();
+                        window.lockAssignment(distributionId);
                         $rootScope.$apply();
                     }
                 },
-                'unlockAssignment': function () {
+                'unlockAssignment': function (distributionId) {
                     if (window.unlockAssignment) {
-                        window.unlockAssignment();
+                        window.unlockAssignment(distributionId);
                         $rootScope.$apply();
                     }
                 }
