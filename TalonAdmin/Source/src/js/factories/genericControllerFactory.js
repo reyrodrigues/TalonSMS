@@ -147,11 +147,19 @@ angular.module('app')
               var _backendService = settings.backendService || backendService;
               $scope.isEditing = false;
 
+              if (!settings.postSave) {
+                  settings.postSave = function () {
+                      var d = $q.defer();
+                      d.resolve.apply(d, arguments);
+                      return d.promise;
+                  };
+              }
+
 
               $scope.save = function (andContinue) {
                   $scope.isEditing = false;
 
-                  _backendService.saveChanges([$scope.entity]).then(function (ne) {
+                  _backendService.saveChanges([$scope.entity]).then(settings.postSave).then(function (ne) {
                       toaster.pop('success', gettext('Success'), gettext('Record successfully saved.'));
 
                       if (!andContinue)

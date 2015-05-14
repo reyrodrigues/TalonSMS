@@ -8,6 +8,7 @@ using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.Google;
 using Microsoft.Owin.Security.OAuth;
 using Owin;
+
 using TalonAdmin.Providers;
 using TalonAdmin.Models.Vouchers;
 using TalonAdmin.Models;
@@ -25,7 +26,6 @@ namespace TalonAdmin
         public void ConfigureAuth(IAppBuilder app)
         {
             app.MapSignalR();
-
             // Configure the db context and user manager to use a single instance per request
             app.CreatePerOwinContext<AdminContext>(() => new AdminContext());
             app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
@@ -36,6 +36,8 @@ namespace TalonAdmin
             app.UseCookieAuthentication(new CookieAuthenticationOptions { SlidingExpiration = true, ExpireTimeSpan = new TimeSpan(365,0,0,0) });
             app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
             app.Use<Middleware.FormAuthenticationMiddleware>();
+            app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+
 
             // Configure the application for OAuth based flow
             PublicClientId = "self";
@@ -44,7 +46,7 @@ namespace TalonAdmin
                 TokenEndpointPath = new PathString("/Token"),
                 Provider = new ApplicationOAuthProvider(PublicClientId),
                 AccessTokenExpireTimeSpan = TimeSpan.FromDays(14),
-                AllowInsecureHttp = true
+                AllowInsecureHttp = true,
             };
 
             // Enable the application to use bearer tokens to authenticate users

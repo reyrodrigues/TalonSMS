@@ -1,6 +1,4 @@
 ﻿'use strict';
-
-
 app.controller('AppDashboardCtrl', ['breeze', '$scope', '$rootScope', '$http', '$timeout', 'serviceBase', 'Hub', 'toaster',
     function (breeze, $scope, $rootScope, $http, $timeout, serviceBase, toaster) {
         var loadDashboard = function () {

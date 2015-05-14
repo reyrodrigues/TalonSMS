@@ -8,9 +8,29 @@ app.controller('VendorsCreateCtrl', ['$scope', 'createController', 'settings', '
         createController($scope, settings);
     }]);
 
-app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'settings', 'injectorHelper', 'backendService',
-    function ($scope, editController, gettext, subGrid, settings, injectorHelper, backendService) {
+app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'settings', 'injectorHelper', 'backendService','$http', 'serviceBase','$q',
+    function ($scope, editController, gettext, subGrid, settings, injectorHelper, backendService, $http, serviceBase, $q) {
         injectorHelper.injectPromises($scope, ['locations', 'vendorTypes']);
+        $scope.password = {};
+        settings.postSave = function () {
+            var args = arguments;
+            var d = $q.defer();
+            if ($scope.password.NewPassword) {
+                $http.post(serviceBase + 'api/App/VendorProfile/UpdatePassword', {
+                    VendorId: $scope.entity.Id,
+                    Password: $scope.password.NewPassword
+                }).then(function () {
+                    d.resolve.apply(d, args);
+                    $scope.password = {};
+                }).catch(function () {
+                    d.reject();
+                });
+            } else {
+                d.resolve.apply(d, args);
+            }
+            return d.promise
+        };
+
         editController($scope, settings);
         $scope.statusToString = function (status) {
             if (typeof (status) == 'undefined')

@@ -27,6 +27,7 @@ using RazorEngine;
 using System.Drawing.Printing;
 using TalonAdmin.Controllers.BindingModels;
 using System.Security.Cryptography;
+using Newtonsoft.Json;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -194,7 +195,6 @@ namespace TalonAdmin.Controllers.Api
 
             return this.File(reportData, null, "application/pdf");
         }
-
 
         [Route("VendorFinancialReport")]
         public async Task<IHttpActionResult> VendorFinancialReport([FromBody] ReportRequestBindingModel request)
@@ -451,5 +451,62 @@ namespace TalonAdmin.Controllers.Api
 
             return this.File(WebApiApplication.converter.Convert(document), null, "application/pdf");
         }
+
+        [Route("PaymentScheduleReport")]
+        public async Task<IHttpActionResult> PaymentScheduleReport([FromBody] ReportRequestBindingModel request)
+        {
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                ctx.Configuration.LazyLoadingEnabled = false;
+                ctx.Configuration.ProxyCreationEnabled = false;
+
+                var periodStart = DateTime.SpecifyKind(DateTime.Parse(request.PeriodStart.Replace("\"", "").Split('T')[0]), DateTimeKind.Utc);
+                var periodEnd = DateTime.SpecifyKind(DateTime.Parse(request.PeriodEnd.Replace("\"", "").Split('T')[0]), DateTimeKind.Utc);
+
+                var query = from v in ctx.VoucherTransactionRecords
+                            where
+                                v.Voucher.Distribution.ProgramId == request.ProgramId
+                                && v.Voucher.ReconciledOn != null
+                                && v.Voucher.ReconciledOn.Value > periodStart
+                                && v.Voucher.ReconciledOn.Value < periodEnd
+                                && v.Voucher.IsFinalized == true
+                            select
+                                new { 
+                                    v.Voucher.ReconciledOn,
+                                    VoucherName = v.Vendor.ParentRecordId == null ?  v.Vendor.Name : v.Vendor.ParentRecord.Name,
+                                    v.Voucher.Category.Value
+                                };
+
+                var groupedQuery = (await query.ToArrayAsync())
+                    .GroupBy(s => s.ReconciledOn.Value.ToShortDateString())
+                    .Select(g => new
+                {
+                    g.Key,
+                    Vendors = g.GroupBy(s => s.VoucherName).Select(v => new { v.Key, Vouchers = v.Sum(v1 => v1.Value) })
+                }).Select(t=>t.Vendors.Select(t1=> new object[] {t.Key, t1.Key, t1.Vouchers}))
+                .SelectMany(v=>v);
+
+                var jsonString = JsonConvert.SerializeObject(query, Formatting.Indented,
+                    new JsonSerializerSettings
+                    {
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                    });
+
+                var jsonCollection = JToken.Parse(jsonString) as JArray;
+
+                var dataTable = new DataTable("Report");
+                dataTable.Columns.Add("Date");
+                dataTable.Columns.Add("Vendor");
+                dataTable.Columns.Add("Amount");
+
+                foreach (var row in groupedQuery)
+                {
+                    dataTable.Rows.Add(row.ToArray());
+                }
+
+                return this.File(dataTable.ToExcelSpreadsheet(), "Report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+        }
+
     }
 }

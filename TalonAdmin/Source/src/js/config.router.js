@@ -710,6 +710,11 @@ angular.module('app')
                     templateUrl: 'tpl/reports/vendor-financial.html',
                     controller: 'VendorFinancialReportingCtrl'
                 })
+                .state('reporting.payment-schedule', {
+                    url: '/payment-schedule',
+                    templateUrl: 'tpl/reports/payment-schedule.html',
+                    controller: 'PaymentScheduleReportCtrl'
+                })
 
                 .state('reconciliation', {
                     url: '/reconciliation',

@@ -91,6 +91,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.OData.Edm.6.9.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.OData.Edm.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Cors">
+      <HintPath>..\packages\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Spatial, Version=6.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Spatial.6.9.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.Spatial.dll</HintPath>
@@ -216,9 +223,6 @@
     <Reference Include="Owin">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Owin">
-      <HintPath>..\packages\Microsoft.Owin.3.0.0\lib\net45\Microsoft.Owin.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Owin.Host.SystemWeb">
       <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
     </Reference>
@@ -258,7 +262,10 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
+    <Compile Include="Controllers\Api\App\OTAController.cs" />
+    <Compile Include="Controllers\Api\App\AdminController.cs" />
     <Compile Include="Controllers\Api\DashboardController.cs" />
+    <Compile Include="Controllers\Api\App\VendorProfileController.cs" />
     <Compile Include="Models\BindingModels\ReportRequest.cs" />
     <Compile Include="Controllers\Api\ReportsController.cs" />
     <Compile Include="Controllers\Breeze\AdminController.cs" />
@@ -300,6 +307,7 @@
     <Compile Include="Models\Vouchers\BeneficiaryGroup.cs" />
     <Compile Include="Models\Vouchers\Context.cs" />
     <Compile Include="Models\Vouchers\DistributionLog.cs" />
+    <Compile Include="Models\Vouchers\ProgramVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\ProgramVendorReconciliation.cs" />
     <Compile Include="Models\Vouchers\DistributionVendorReconciliation.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
@@ -309,6 +317,7 @@
     <Compile Include="Models\Vouchers\MessageLog.cs" />
     <Compile Include="Models\Vouchers\Program.cs" />
     <Compile Include="Models\Vouchers\TenantEntity.cs" />
+    <Compile Include="Models\Vouchers\VendorDevice.cs" />
     <Compile Include="Models\Vouchers\VendorType.cs" />
     <Compile Include="Models\Vouchers\VoucherType.cs" />
     <Compile Include="Models\Vouchers\Location.cs" />
@@ -989,6 +998,7 @@
     <Content Include="Source\src\tpl\reconciliation\report-history.html" />
     <Content Include="Source\src\tpl\reconciliation\vendor-receipt.html" />
     <Content Include="Source\src\tpl\reports\distribution.html" />
+    <Content Include="Source\src\tpl\reports\payment-schedule.html" />
     <Content Include="Source\src\tpl\reports\vendor-financial.html" />
     <Content Include="Source\src\tpl\system-admin\countries\form.html" />
     <Content Include="Source\src\tpl\system-admin\message-log\list.html" />

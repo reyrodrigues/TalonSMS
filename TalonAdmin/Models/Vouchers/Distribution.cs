@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -27,11 +28,13 @@ namespace TalonAdmin.Models.Vouchers
         public virtual int? LocationId { get; set; }
 
         public virtual bool IsClosed { get; set; }
+        public virtual int? GroupId { get; set; }
 
         public virtual DateTime? ClosedOn { get; set; }
         public virtual DateTime CreatedOn { get; set; }
         public virtual DateTime ModifiedOn { get; set; }
 
+        [JsonIgnore]
         public virtual Program Program { get; set; }
         public virtual Location Location { get; set; }
         public virtual ICollection<DistributionVoucherCategory> Categories { get; set; }
