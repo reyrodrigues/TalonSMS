@@ -1,8 +1,7 @@
 ﻿'use strict';
 
-app.controller('OrganizationUsersListCtrl', ['$scope', 'settings', '$http', 'listController', 'gettext', 'dialogs', 'toaster', 'adminBackendService', 'injectorHelper',
-function ($scope, settings, $http, listController, gettext, dialogs, toaster, adminBackendService, injectorHelper) {
-    $scope.genericSettings = settings;
+app.controller('OrganizationUsersListCtrl', ['$scope', 'settings', '$http', 'ControllerFactory', 'gettext', 'dialogs', 'toaster', 'adminBackendService', 'injectorHelper',
+function ($scope, settings, $http, ControllerFactory, gettext, dialogs, toaster, adminBackendService, injectorHelper) {
     settings.backendService = adminBackendService;
     settings.columns = [
         ["FullName", gettext("Full Name"), '<a href ui-sref="' + settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
@@ -12,7 +11,8 @@ function ($scope, settings, $http, listController, gettext, dialogs, toaster, ad
     ];
     settings.expand = ['Organization', 'Countries', 'Countries.Country', 'Roles'];
 
-    listController($scope, settings);
+    ControllerFactory.List($scope, settings);
+
     injectorHelper.injectPromises($scope, ['organizations', 'countries', 'roles']).then(function () {
         $scope.roles = $scope.roles.filter(function (f) {
             return f.Name != "System Administrator";
@@ -37,7 +37,6 @@ function ($scope, settings, $http, listController, gettext, dialogs, toaster, ad
 app.controller('OrganizationUsersEditCtrl',
     ['$scope', '$http', '$state', '$q','$rootScope', 'serviceBase', 'settings', 'adminBackendService', 'toaster', 'dialogs', 'gettext', 'injectorHelper',
 function ($scope, $http, $state, $q, $rootScope, serviceBase, settings, adminBackendService, toaster, dialogs, gettext, injectorHelper) {
-    $scope.genericSettings = settings;
     injectorHelper.injectPromises($scope, ['organizations', 'countries', 'roles']).then(function () {
         $scope.roles = $scope.roles.filter(function (r) {
             return r.Name != "System Administrator";
@@ -76,14 +75,13 @@ function ($scope, $http, $state, $q, $rootScope, serviceBase, settings, adminBac
     $q.when(query).then(function (response) {
         $scope.user = response.results.pop();
         var roles = $scope.user.Roles;
-        $scope.user.Role = roles.length ? roles.pop().RoleId : "";
+        $scope.user.RoleIds = roles.map(function (r) { return r.RoleId; });
 
         if ($scope.user.Countries) {
             $scope.userCountries = $scope.user.Countries.map(function (c) {
                 return c.Country.Id;
             });
         }
-
 
         if (!$scope.$$phase) $scope.$apply();
 
@@ -92,7 +90,6 @@ function ($scope, $http, $state, $q, $rootScope, serviceBase, settings, adminBac
         console.log(arguments);
         toaster.pop("error", gettext("Error"), error);
     });
-
 
     $scope.delete = function () {
         var dlg = dialogs.confirm(gettext("Confirm"), gettext("Are you sure you would like to delete this record? This operation cannot be reversed."));

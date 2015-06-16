@@ -1,8 +1,7 @@
 ﻿'use strict';
 
-app.controller('CountryUserListCtrl', ['$scope', 'settings', '$http', 'listController', 'gettext', 'dialogs', 'toaster', 'adminBackendService', 'injectorHelper',
-function ($scope, settings, $http, listController, gettext, dialogs, toaster, adminBackendService, injectorHelper) {
-    $scope.genericSettings = settings;
+app.controller('CountryUsersListCtrl', ['$scope', 'settings', '$http', 'ControllerFactory', 'gettext', 'dialogs', 'toaster', 'adminBackendService', 'injectorHelper',
+function ($scope, settings, $http, ControllerFactory, gettext, dialogs, toaster, adminBackendService, injectorHelper) {
     settings.backendService = adminBackendService;
     settings.columns = [
         ["FullName", gettext("Full Name"), '<a href ui-sref="' +  settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
@@ -12,7 +11,8 @@ function ($scope, settings, $http, listController, gettext, dialogs, toaster, ad
     ];
     settings.expand = ['Organization', 'Countries', 'Countries.Country', 'Roles'];
 
-    listController($scope, settings);
+    ControllerFactory.List($scope, settings);
+
     injectorHelper.injectPromises($scope, ['organizations', 'countries', 'roles']).then(function () {
         settings.resultMap = function (r) {
             r._Countries = r.Countries.map(function (c) { return c.Country.Name; }).join(', ');
@@ -30,15 +30,18 @@ function ($scope, settings, $http, listController, gettext, dialogs, toaster, ad
     });
 }]);
 
-app.controller('CurrentUserProfileCtrl', ['$rootScope', '$scope', 'settings', '$http', '$state', 'serviceBase', '$q', 'toaster', 'gettext', 'organizations', 'countries',
-function ($rootScope, $scope, settings, $http, $state, serviceBase, $q, toaster, gettext, organizations, countries) {
-    $scope.genericSettings = settings;
-    $scope.organizations = organizations;
-    $scope.countries = countries;
-    $scope.user = $rootScope.currentUser;
+app.controller('EditCurrentUserCtrl', ['$rootScope', '$scope', 'settings', '$http', '$state', 'serviceBase', '$q', 'toaster', 'gettext', 'injectorHelper', 'countries',
+function ($rootScope, $scope, settings, $http, $state, serviceBase, $q, toaster, gettext, injectorHelper, countries) {
+    injectorHelper.injectPromises($scope, ['organizations', 'countries']);
     $scope.password = {};
-    $scope.userCountries = $scope.user.Countries.map(function (c) {
-        return c.Country.Id;
+
+    $rootScope.$watch('currentUser', function () {
+        $scope.user = $rootScope.currentUser;
+        if ($scope.user) {
+            $scope.userCountries = $scope.user.Countries.map(function (c) {
+                return c.Country.Id;
+            });
+        }
     });
 
     $scope.save = function () {

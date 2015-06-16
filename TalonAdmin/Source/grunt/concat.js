@@ -29,6 +29,7 @@ module.exports = {
         'bower_components/angular-ui-router/release/angular-ui-router.js',
         'bower_components/ngstorage/ngStorage.js',
         'bower_components/angular-ui-utils/ui-utils.js',
+        'bower_components/angular-ui-select/dist/select.js',
         'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
 
         'bower_components/oclazyload/dist/ocLazyLoad.js',

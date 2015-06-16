@@ -39,7 +39,7 @@
             </div>
             <label class="col-sm-2 control-label" translate>Sex</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="entity.Sex">
+                <select class="form-control" ng-model="entity.Sex">
                     <option></option>
                     <option value="0" translate>Male</option>
                     <option value="1" translate>Female</option>
@@ -50,12 +50,12 @@
         <div class="form-group">
             <label class="col-sm-2 control-label" translate>Location</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="entity.LocationId"
+                <select  class="form-control" ng-model="entity.LocationId"
                         ng-options="item.Id as item.Name for item in locations | orderBy:'item.Name'"></select>
             </div>
             <label class="col-sm-2 control-label" translate>Group</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="entity.GroupId"
+                <select  class="form-control" ng-model="entity.GroupId"
                         ng-options="item.Id as item.Name for item in groups | orderBy:'item.Name'"></select>
             </div>
         </div>

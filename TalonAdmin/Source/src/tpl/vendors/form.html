@@ -23,12 +23,12 @@
         <div class="form-group">
             <label class="col-sm-2 control-label">Vendor Type</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="entity.TypeId"
+                <select  class="form-control" ng-model="entity.TypeId"
                         ng-options="item.Id as item.Name for item in vendorTypes | orderBy:'item.Name'"></select>
             </div>
             <label class="col-sm-2 control-label">Location</label>
             <div class="col-sm-4">
-                <select chosen class="form-control" ng-model="entity.LocationId"
+                <select  class="form-control" ng-model="entity.LocationId"
                         ng-options="item.Id as item.Name for item in locations | orderBy:'item.Name'"></select>
             </div>
         </div>

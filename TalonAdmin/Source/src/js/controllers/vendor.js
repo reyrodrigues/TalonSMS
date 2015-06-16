@@ -1,15 +1,13 @@
 ﻿'use strict';
-
-
-app.controller('VendorsCreateCtrl', ['$scope', 'createController', 'settings', 'injectorHelper',
-    function ($scope, createController, settings, injectorHelper) {
+app.controller('VendorsCreateCtrl', ['$scope', 'ControllerFactory', 'settings', 'injectorHelper',
+    function ($scope, ControllerFactory, settings, injectorHelper) {
         injectorHelper.injectPromises($scope, ['locations', 'vendorTypes']);
 
-        createController($scope, settings);
+        ControllerFactory.Create($scope, settings);
     }]);
 
-app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'settings', 'injectorHelper', 'backendService','$http', 'serviceBase','$q',
-    function ($scope, editController, gettext, subGrid, settings, injectorHelper, backendService, $http, serviceBase, $q) {
+app.controller('VendorsEditCtrl', ['$scope', 'ControllerFactory', 'gettext', 'subGrid', 'settings', 'injectorHelper', 'backendService','$http', 'serviceBase','$q',
+    function ($scope, ControllerFactory, gettext, subGrid, settings, injectorHelper, backendService, $http, serviceBase, $q) {
         injectorHelper.injectPromises($scope, ['locations', 'vendorTypes']);
         $scope.password = {};
         settings.postSave = function () {
@@ -31,28 +29,14 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             return d.promise
         };
 
-        editController($scope, settings);
-        $scope.statusToString = function (status) {
-            if (typeof (status) == 'undefined')
-                return "Not Assigned";
+        ControllerFactory.Edit($scope, settings);
 
-            status = parseInt(status);
-            if (status == 0) {
-                return "SMS Sent"
-            } else if (status == 2) {
-                return "Used";
-            } else if (status == 3) {
-                return "Cancelled";
-            }
-        };
-
-
-        subGrid($scope, {
+        ControllerFactory.ChildGrid($scope, {
             collectionType: 'VoucherTransactionRecords',
             key: 'VendorId',
             expand: ['Voucher', "Voucher.Category", 'Beneficiary', 'Vendor'],
             columns: [
-                ["Status", gettext("Status"), '{{statusToString(COL_FIELD)}}'],
+                ["Status", gettext("Status"), '{{COL_FIELD|voucherStatus}}'],
                 ["FinalizedOn", gettext("Redemption Date"), '{{COL_FIELD|date:"medium"}}'],
                 ["Beneficiary.Name", gettext("Beneficiary"), null, false],
                 ["Voucher.VoucherCode", gettext("Voucher Code")],
@@ -60,7 +44,7 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             ]
         });
 
-        subGrid($scope, {
+        ControllerFactory.ChildGrid($scope, {
             collectionType: 'Vendors',
             name: 'ChildVendors',
             key: 'ParentRecordId',
@@ -86,8 +70,8 @@ app.controller('VendorsEditCtrl', ['$scope', 'editController', 'gettext', 'subGr
             });
     }]);
 
-app.controller('VendorsListCtrl', ['$scope', '$state', '$localStorage', 'listController', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location', '$injector',
-function ($scope, $state, $localStorage, listController, gettext, dialogs, toaster, serviceBase, $location, $injector) {
+app.controller('VendorsListCtrl', ['$scope', '$state', '$localStorage', 'ControllerFactory', 'gettext', 'dialogs', 'toaster', 'serviceBase', '$location', '$injector',
+function ($scope, $state, $localStorage, ControllerFactory, gettext, dialogs, toaster, serviceBase, $location, $injector) {
     var storageSetting = $state.current.name + 'GridSettings';
     $scope.showingDisabled = false;
 
@@ -96,7 +80,7 @@ function ($scope, $state, $localStorage, listController, gettext, dialogs, toast
     $scope.token = authData.token;
     $scope.exportUrl = serviceBase + 'api/Excel/ExportVendors?countryId=' +$localStorage.country.Id;
 
-    listController($scope, {
+    ControllerFactory.List($scope, {
         collectionType: 'Vendors',
         expand: ['Location', 'ParentRecord'],
         columns: [

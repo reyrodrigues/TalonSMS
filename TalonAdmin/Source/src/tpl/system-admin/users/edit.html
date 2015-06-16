@@ -22,14 +22,14 @@
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Role</label>
                             <div class="col-sm-8">
-                                <select chosen class="form-control" ng-model="user.Role"
+                                <select chosen multiple class="form-control" ng-model="user.RoleIds"
                                         ng-options="item.Id as item.Name for item in roles | orderBy:'item.Name'"></select>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-4 control-label" translate>Organization</label>
                             <div class="col-sm-8">
-                                <select chosen class="form-control" ng-model="user.OrganizationId"
+                                <select class="form-control" ng-model="user.OrganizationId"
                                         ng-options="item.Id as item.Name for item in organizations | orderBy:'item.Name'"></select>
                             </div>
                         </div>

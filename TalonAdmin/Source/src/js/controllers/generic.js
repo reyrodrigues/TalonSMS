@@ -1,26 +1,26 @@
 ﻿'use strict';
 
-app.controller('GenericCreateCtrl', ['$scope', 'settings', 'createController',
-    function ($scope, settings, createController) {
-        $scope.genericSettings = settings;
+app.controller('GenericCreateCtrl', ['$scope', 'settings', 'ControllerFactory',
+    function ($scope, settings, ControllerFactory) {
+        
 
-        createController($scope, settings);
+        ControllerFactory.Create($scope, settings);
     }]);
 
-app.controller('GenericEditCtrl', ['$scope', 'settings', 'editController',
-    function ($scope, settings, editController) {
-        $scope.genericSettings = settings;
+app.controller('GenericEditCtrl', ['$scope', 'settings', 'ControllerFactory',
+    function ($scope, settings, ControllerFactory) {
+        
 
-        editController($scope, settings);
+        ControllerFactory.Edit($scope, settings);
 
         $scope.loadData();
     }]);
 
-app.controller('GenericGridCtrl', ['$scope', 'settings', 'listController',
-    function ($scope, settings, listController) {
-        $scope.genericSettings = settings;
+app.controller('GenericGridCtrl', ['$scope', 'settings', 'ControllerFactory',
+    function ($scope, settings, ControllerFactory) {
+        
        
-        listController($scope, settings);
+        ControllerFactory.List($scope, settings);
 
         $scope.loadGridData();
     }]);

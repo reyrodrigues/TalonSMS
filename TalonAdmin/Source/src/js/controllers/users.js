@@ -2,7 +2,7 @@
 
 app.controller('UserCreateCtrl', ['breeze', 'authBackendService', '$scope', '$state', '$q', 'settings',
     function (breeze, backendService, $scope, $state, $q, settings) {
-        $scope.genericSettings = settings;
+        
 
     $scope.save = function () {
         backendService.saveChanges([$scope.entity]).then(function (ne) {
@@ -19,7 +19,7 @@ app.controller('UserCreateCtrl', ['breeze', 'authBackendService', '$scope', '$st
 
 app.controller('UserEditCtrl', ['breeze', 'authBackendService', '$scope', '$state', '$q', '$http', 'dialogs', 'settings', 'serviceBase', 'toaster',
     function (breeze, backendService, $scope, $state, $q, $http, dialogs, settings, serviceBase, toaster) {
-        $scope.genericSettings = settings;
+        
 
         $scope.save = function (andContinue) {
             $scope.isEditing = false;
@@ -76,7 +76,7 @@ app.controller('UserEditCtrl', ['breeze', 'authBackendService', '$scope', '$stat
 app.controller('UserGridCtrl', ['breeze', 'authBackendService', '$scope', '$http', '$localStorage', '$state', 'settings',
     function (breeze, backendService, $scope, $http, $localStorage, $state, settings) {
         var storageSetting = $state.current.name + 'GridSettings';
-        $scope.genericSettings = settings;
+        
 
         $scope.loadGridData = function (pageSize, page) {
             setTimeout(function () {

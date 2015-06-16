@@ -847,8 +847,10 @@
     <Content Include="Scripts\jquery.signalR-2.2.0.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.min.js" />
     <Content Include="Scripts\NavigationMenu.js" />
+    <Content Include="Source\src\js\controllers\beneficiaryGroups.js" />
     <Content Include="Source\src\js\controllers\countryAdmin.js" />
     <Content Include="Source\src\js\controllers\orgAdmin.js" />
+    <Content Include="Source\src\js\controllers\programs.js" />
     <Content Include="Source\src\js\controllers\reconciliation.js" />
     <Content Include="Source\src\js\controllers\reports.js" />
     <Content Include="Source\src\js\controllers\systemAdmin.js" />
@@ -857,7 +859,7 @@
     <Content Include="Source\src\js\directives\fileReader.js" />
     <Content Include="Source\src\js\directives\phoneNumber.js" />
     <Content Include="Source\src\js\directives\date.js" />
-    <Content Include="Source\src\js\factories\genericControllerFactory.js" />
+    <Content Include="Source\src\js\factories\controllerFactory.js" />
     <Content Include="Source\src\js\filters\date.js" />
     <Content Include="Source\src\js\providers\backendProviders.js" />
     <Content Include="Source\src\js\services\adminBackendService.js" />
@@ -989,6 +991,7 @@
     <Content Include="Source\src\tpl\generic\create.html" />
     <Content Include="Source\src\tpl\generic\edit.html" />
     <Content Include="Source\src\tpl\generic\list.html" />
+    <Content Include="Source\src\tpl\groups\edit.html" />
     <Content Include="Source\src\tpl\groups\form.html" />
     <Content Include="Source\src\tpl\org-admin\users\edit.html" />
     <Content Include="Source\src\tpl\org-admin\users\register.html" />

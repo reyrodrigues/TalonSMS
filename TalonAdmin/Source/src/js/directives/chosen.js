@@ -1,4 +1,6 @@
 ﻿'use strict';
+var NG_OPTIONS_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w]*)|(?:\(\s*([\$\w][\$\w]*)\s*,\s*([\$\w][\$\w]*)\s*\)))\s+in\s+(.*?)(?:\s+track\s+by\s+(.*?))?$/;
+
 angular.module('app')
     .directive('chosen', ['$timeout', function ($timeout) {
         return {
@@ -13,6 +15,22 @@ angular.module('app')
 
                 select.chosen({ allow_single_deselect: true });
                 select.addClass('isChosen');
+
+                if (attrs.ngOptions && ngModel) {
+                    match = attrs.ngOptions.match(NG_OPTIONS_REGEXP);
+                    valuesExpr = match[7];
+                    scope.$watchCollection(valuesExpr, function (newVal, oldVal) {
+                        var timer;
+                        return timer = $timeout(function () {
+                            select.trigger('chosen:updated');
+                        });
+                    });
+                    scope.$on('$destroy', function (event) {
+                        if (typeof timer !== "undefined" && timer !== null) {
+                            return $timeout.cancel(timer);
+                        }
+                    });
+                }
 
                 select.on('chosen:updated', function () {
                     if (select.prop('readonly')) {
@@ -29,7 +47,6 @@ angular.module('app')
                     }
                 });
 
-                select.trigger('chosen:updated');
 
                 if (ngModel) {
                     if (attrs.multiple) {

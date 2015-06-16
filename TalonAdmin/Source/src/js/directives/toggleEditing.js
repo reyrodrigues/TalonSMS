@@ -1,34 +1,33 @@
 ﻿'use strict';
 angular.module('app')
     .directive('toggleEditing', ['$q', function ($q) {
-    return {
-        restrict: 'A',
-        scope: {
-            isEditing: "="
-        },
-        replace: true,
-        link: function (scope, element, attrs) {
-            var toggleEditing = function () {
-                var isEditing = scope.isEditing || false;
+        return {
+            restrict: 'A',
+            scope: {
+                isEditing: "="
+            },
+            replace: true,
+            link: function (scope, element, attrs) {
+                var toggleEditing = function () {
+                    var isEditing = scope.isEditing || false;
 
-                $('input, select, textarea', element).prop('readonly', !isEditing);
-                if (!isEditing) {
-                    $('[type=checkbox]').attr('disabled', 'disabled');
-                    $('select', element).attr('disabled', 'disabled');
+                    $('input:not(.keep-disabled), select:not(.keep-disabled), textarea:not(.keep-disabled)', element).prop('readonly', !isEditing);
+                    if (!isEditing) {
+                        $('[type=checkbox]:not(.keep-disabled)').attr('disabled', 'disabled');
+                        $('select:not(.keep-disabled)', element).attr('disabled', 'disabled');
 
-                } else {
-                    $('[type=checkbox]').removeAttr('disabled');
-                    $('select', element).removeAttr('disabled');
-                }
+                    } else {
+                        $('[type=checkbox]:not(.keep-disabled)').removeAttr('disabled');
+                        $('select:not(.keep-disabled)', element).removeAttr('disabled');
+                    }
+                    $('.isChosen').trigger('chosen:updated');
+                };
 
-                $('.isChosen').trigger('chosen:updated');
-            };
-
-            toggleEditing();
-
-            scope.$watch('isEditing', function () {
                 toggleEditing();
-            });
+
+                scope.$watch('isEditing', function () {
+                    toggleEditing();
+                });
+            }
         }
-    }
     }]);

@@ -121,13 +121,22 @@ namespace TalonAdmin.Controllers.Api
                 await AssignCountries(user, countryIds);
             }
 
-            if (!String.IsNullOrEmpty(model.Role))
+            var currentRoles = user.Roles.Select(r => r.RoleId);
+            var createdRoles = model.RoleIds;
+            var deletedRoles = currentRoles.Except(createdRoles);
+            var addedRoles = createdRoles.Except(currentRoles);
+
+            foreach (var roleId in deletedRoles)
             {
-                var role = await RoleManager.FindByIdAsync(model.Role);
-                // Validate this
-                await UserManager.AddToRoleAsync(user.Id, role.Name);
+                var role = await RoleManager.FindByIdAsync(roleId);
+                await UserManager.RemoveFromRoleAsync(user.Id, role.Name);
             }
 
+            foreach (var roleId in addedRoles)
+            {
+                var role = await RoleManager.FindByIdAsync(roleId);
+                await UserManager.AddToRoleAsync(user.Id, role.Name);
+            }
 
             return Ok();
         }

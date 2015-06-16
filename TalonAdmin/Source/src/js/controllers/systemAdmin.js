@@ -1,13 +1,13 @@
 ﻿'use strict';
 
-app.controller('MessageLogCtrl', ['$scope', '$http', 'listController', 'gettext', 'dialogs', 'toaster', 'backendService', 'injectorHelper',
-function ($scope, $http, listController, gettext, dialogs, toaster, backendService, injectorHelper) {
+app.controller('MessageLogCtrl', ['$scope', '$http', 'ControllerFactory', 'gettext', 'dialogs', 'toaster', 'backendService', 'injectorHelper',
+function ($scope, $http, ControllerFactory, gettext, dialogs, toaster, backendService, injectorHelper) {
     var settings = {
         entityType: 'MessageLog',
         collectionType: 'MessageLogs'
     };
 
-    $scope.genericSettings = settings;
+    
 
     settings.backendService = backendService;
     settings.columns = [
@@ -16,13 +16,13 @@ function ($scope, $http, listController, gettext, dialogs, toaster, backendServi
         ["DateTime", gettext("Date Time"), '{{COL_FIELD|localeDateTime}}'],
     ];
 
-    listController($scope, settings);
+    ControllerFactory.List($scope, settings);
     $scope.loadGridData();
 }]);
 
-app.controller('SystemAdminUsersListCtrl', ['$scope', 'settings', '$http', 'listController', 'gettext', 'dialogs', 'toaster', 'adminBackendService', 'injectorHelper',
-function ($scope, settings, $http, listController, gettext, dialogs, toaster, adminBackendService, injectorHelper) {
-    $scope.genericSettings = settings;
+app.controller('SystemAdminUsersListCtrl', ['$scope', 'settings', '$http', 'ControllerFactory', 'gettext', 'dialogs', 'toaster', 'adminBackendService', 'injectorHelper',
+function ($scope, settings, $http, ControllerFactory, gettext, dialogs, toaster, adminBackendService, injectorHelper) {
+    
     settings.backendService = adminBackendService;
     settings.columns = [
         ["FullName", gettext("Full Name"), '<a href ui-sref="' + settings.editState + '({ id: row.getProperty(\'Id\') })">{{COL_FIELD}}</a>'],
@@ -33,7 +33,7 @@ function ($scope, settings, $http, listController, gettext, dialogs, toaster, ad
     ];
     settings.expand = ['Organization', 'Countries', 'Countries.Country', 'Roles'];
 
-    listController($scope, settings);
+    ControllerFactory.List($scope, settings);
     injectorHelper.injectPromises($scope, ['organizations', 'countries', 'roles']).then(function () {
         settings.resultMap = function (r) {
             r._Countries = r.Countries.map(function (c) { return c.Country.Name; }).join(', ');
@@ -175,12 +175,12 @@ function ($scope, $http, $state, $q, serviceBase, settings, adminBackendService,
     };
 }]);
 
-app.controller('SystemAdminCountriesEditCtrl', ['$scope', '$state', 'editController', 'gettext', 'subGrid', 'injectorHelper', 'settings', 'adminBackendService', 'toaster', 'dialogs',
-    function ($scope, $state, editController, gettext, subGrid, injectorHelper, settings, adminBackendService, toaster, dialogs) {
-        $scope.genericSettings = settings;
+app.controller('SystemAdminCountriesEditCtrl', ['$scope', '$state', 'ControllerFactory', 'gettext', 'subGrid', 'injectorHelper', 'settings', 'adminBackendService', 'toaster', 'dialogs',
+    function ($scope, $state, ControllerFactory, gettext, subGrid, injectorHelper, settings, adminBackendService, toaster, dialogs) {
+        
         $scope.isNew = !($state.params.id || false);
 
-        editController($scope, angular.extend({
+        ControllerFactory.Edit($scope, angular.extend({
         }, settings));
 
         if ($scope.isNew) {
@@ -258,13 +258,13 @@ app.controller('SystemAdminCountriesEditCtrl', ['$scope', '$state', 'editControl
         };
     }]);
 
-app.controller('OrganizationCountriesEditCtrl', ['$scope', '$state', 'editController', 'gettext', 'subGrid', 'injectorHelper', 'settings', 'adminBackendService', 'toaster', 'dialogs',
-    function ($scope, $state, editController, gettext, subGrid, injectorHelper, settings, adminBackendService, toaster, dialogs) {
-        $scope.genericSettings = settings;
+app.controller('OrganizationCountriesEditCtrl', ['$scope', '$state', 'ControllerFactory', 'gettext', 'subGrid', 'injectorHelper', 'settings', 'adminBackendService', 'toaster', 'dialogs',
+    function ($scope, $state, ControllerFactory, gettext, subGrid, injectorHelper, settings, adminBackendService, toaster, dialogs) {
+        
         injectorHelper.injectPromises($scope, ['countries']);
         $scope.isNew = !($state.params.id || false);
 
-        editController($scope, angular.extend({
+        ControllerFactory.Edit($scope, angular.extend({
         }, settings));
 
 
@@ -347,12 +347,12 @@ app.controller('OrganizationCountriesEditCtrl', ['$scope', '$state', 'editContro
         };
     }]);
 
-app.controller('OrganizationsEditCtrl', ['$scope', 'editController', 'gettext', 'subGrid', 'injectorHelper', 'settings', 'adminBackendService',
-    function ($scope, editController, gettext, subGrid, injectorHelper, settings, adminBackendService) {
+app.controller('OrganizationsEditCtrl', ['$scope', 'ControllerFactory', 'gettext', 'subGrid', 'injectorHelper', 'settings', 'adminBackendService',
+    function ($scope, ControllerFactory, gettext, subGrid, injectorHelper, settings, adminBackendService) {
         injectorHelper.injectPromises($scope, ['countries']);
-        $scope.genericSettings = settings;
+        
 
-        editController($scope, angular.extend({
+        ControllerFactory.Edit($scope, angular.extend({
             backendService: adminBackendService
         }, settings));
 

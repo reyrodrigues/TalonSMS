@@ -9,16 +9,22 @@
         </div>
         <div class="row">
             <div class="col-sm-12">
-                <h1 class="m-n font-thin h4">Voucher History</h1>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="panel panel-default">
-                    <div class="table-responsive">
-                        <div ng-grid="VoucherTransactionRecordsGridOptions" style="min-height:300px"></div>
-                    </div>
-                </div>
+                <tabset justified="true" class="tab-container">
+                    <tab heading="{{ 'Unused Vouchers'|translate }}">
+                        <div class="panel panel-default">
+                            <div class="table-responsive">
+                                <div ng-grid="UnusedVouchersGridOptions" style="min-height:350px"></div>
+                            </div>
+                        </div>
+                    </tab>
+                    <tab heading="{{ 'Used Vouchers'|translate }}">
+                        <div class="panel panel-default">
+                            <div class="table-responsive">
+                                <div ng-grid="UsedVouchersGridOptions" style="min-height:350px"></div>
+                            </div>
+                        </div>
+                    </tab>
+                </tabset>
             </div>
         </div>
         <div class="row">

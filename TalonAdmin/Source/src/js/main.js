@@ -103,9 +103,9 @@ function ($scope, $localStorage, $window, $q, $http, authService, ngAuthSettings
 
     // config
     $scope.app = {
-        name: 'TalonSMS',
+        name: 'Talon',
         currentYear: moment().year(),
-        fullName: 'TalonSMS',
+        fullName: 'Talon',
         version: '1.0.0b',
         // for chart colors
         color: {

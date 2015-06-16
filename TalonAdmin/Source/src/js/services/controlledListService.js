@@ -158,3 +158,6 @@ app.factory('programs', ['controlledLists', function (controlledLists) {
 app.factory('voucherTypes', ['controlledLists', function (controlledLists) {
     return controlledLists.getVoucherTypes();
 }])
+app.factory('groups', ['controlledLists', function (controlledLists) {
+    return controlledLists.getBeneficiaryGroups();
+}])

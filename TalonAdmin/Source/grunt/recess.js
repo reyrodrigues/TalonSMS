@@ -18,6 +18,8 @@ module.exports = {
                 'bower_components/simple-line-icons/css/simple-line-icons.css',
                 'bower_components/angular-dialog-service/dist/dialogs.min.css',
                 'bower_components/angular-busy/dist/angular-busy.min.css',
+                'bower_components/angular-ui-select/dist/select.css',
+                'bower_components/select2/dist/select2.css',
                 'src/css/*.css',
                 'lib/bootstrap-chosen/bootstrap-chosen.css',
                 'bower_components/angularjs-toaster/toaster.css'

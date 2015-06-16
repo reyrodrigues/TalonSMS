@@ -16,29 +16,7 @@ angular.module('app')
     ['$stateProvider', '$urlRouterProvider', 'JQ_CONFIG', 'gettext',
       function ($stateProvider, $urlRouterProvider, JQ_CONFIG, gettext) {
           var defaultResolve = {
-              locations: ['controlledLists', function (controlledLists) {
-                  return controlledLists.getLocations();
-              }],
-              voucherTypes: ['controlledLists', function (controlledLists) {
-                  return controlledLists.getVoucherTypes();
-              }],
-              groups: ['controlledLists', function (controlledLists) {
-                  return controlledLists.getBeneficiaryGroups();
-              }],
-              vendorTypes: ['controlledLists', function (controlledLists) {
-                  return controlledLists.getVendorTypes();
-              }],
-              organizations: ['controlledLists', function (controlledLists) {
-                  return controlledLists.getOrganizations();
-              }],
-              countries: ['controlledLists', function (controlledLists) {
-                  return controlledLists.getCountries();
-              }],
-              roles: ['controlledLists', function (controlledLists) {
-                  return controlledLists.getRoles();
-              }]
           };
-
 
           $urlRouterProvider.otherwise('/app/dashboard');
           $stateProvider
@@ -143,8 +121,8 @@ angular.module('app')
 
                 .state('groups.edit', {
                     url: '/edit/:id',
-                    templateUrl: 'tpl/generic/edit.html',
-                    controller: 'GenericEditCtrl'
+                    templateUrl: 'tpl/groups/edit.html',
+                    controller: 'BeneficiaryGroupsEditCtrl'
                 })
                 .state('groups.create', {
                     url: '/create',
@@ -414,7 +392,7 @@ angular.module('app')
                 .state('country-admin.users.list', {
                     url: '/list',
                     templateUrl: 'tpl/generic/list.html',
-                    controller: 'CountryUserListCtrl'
+                    controller: 'CountryUsersListCtrl'
                 })
 
                 .state('country-admin.users.edit', {
@@ -430,7 +408,7 @@ angular.module('app')
                 .state('country-admin.users.my-profile', {
                     url: '/my-profile',
                     templateUrl: 'tpl/country-admin/users/my-profile.html',
-                    controller: 'CurrentUserProfileCtrl'
+                    controller: 'EditCurrentUserCtrl'
                 })
 
 

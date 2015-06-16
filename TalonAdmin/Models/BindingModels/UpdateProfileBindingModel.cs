@@ -22,6 +22,8 @@ namespace TalonAdmin.Models.BindingModels
 
         public int[] CountryIds { get; set; }
 
+        public string[] RoleIds { get; set; }
+
         public string Role { get; set; }
     }
 }

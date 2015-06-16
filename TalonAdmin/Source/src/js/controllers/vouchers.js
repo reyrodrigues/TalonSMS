@@ -1,7 +1,7 @@
 ﻿'use strict';
 
-app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController', 'settings', '$q', 'controlledLists',
-    function ($rootScope, $scope, createController, settings, $q, controlledLists) {
+app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'ControllerFactory', 'settings', '$q', 'controlledLists',
+    function ($rootScope, $scope, ControllerFactory, settings, $q, controlledLists) {
         $q.all([controlledLists.getLocations(), controlledLists.getVoucherTypes(), controlledLists.getVendorTypes(), controlledLists.getPrograms()]).then(function (promises) {
             $scope.locations = promises[0];
             $scope.voucherTypes = promises[1];
@@ -9,7 +9,7 @@ app.controller('DistributionsCreateCtrl', ['$scope', '$scope', 'createController
             $scope.programs = promises[3];
         });
 
-        createController($scope, angular.extend({
+        ControllerFactory.Create($scope, angular.extend({
             defaults: { VoucherCodeLength: 6, Date: moment().toDate() }
         }, settings));
 
@@ -469,7 +469,7 @@ app.controller('VoucherGridCtrl', ['breeze', 'backendService', '$scope', '$http'
     function (breeze, backendService, $scope, $http, $localStorage) {
 
         var storageSetting = $state.current.name + 'GridSettings';
-        $scope.genericSettings = settings;
+        
 
         $scope.loadGridData = function (pageSize, page) {
             setTimeout(function () {
