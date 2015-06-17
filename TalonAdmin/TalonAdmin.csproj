@@ -309,7 +309,6 @@
     <Compile Include="Models\Vouchers\DistributionLog.cs" />
     <Compile Include="Models\Vouchers\ProgramVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\ProgramVendorReconciliation.cs" />
-    <Compile Include="Models\Vouchers\DistributionVendorReconciliation.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\Distribution.cs" />
     <Compile Include="Models\Entity.cs" />
@@ -997,6 +996,7 @@
     <Content Include="Source\src\tpl\org-admin\users\register.html" />
     <Content Include="Source\src\tpl\page_signin.html" />
     <Content Include="Source\src\tpl\org-admin\countries\form.html" />
+    <Content Include="Source\src\tpl\programs\edit.html" />
     <Content Include="Source\src\tpl\programs\form.html" />
     <Content Include="Source\src\tpl\reconciliation\report-history.html" />
     <Content Include="Source\src\tpl\reconciliation\vendor-receipt.html" />

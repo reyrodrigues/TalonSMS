@@ -10,7 +10,6 @@ namespace TalonAdmin.Models.Vouchers
         public virtual int DistributionId { get; set; }
         public virtual int BeneficiaryId { get; set; }
 
-
         public virtual Beneficiary Beneficiary { get; set; }
         public virtual Distribution Distribution { get; set; }
     }

@@ -62,14 +62,6 @@ namespace TalonAdmin.Controllers.Breeze
         }
         
 
-        [HttpGet]
-        public IQueryable<Models.Vouchers.DistributionVendorReconciliation> DistributionVendorReconciliations()
-        {
-            return _contextProvider.Context.DistributionVendorReconciliations
-                .FilterCountry(this)
-                .FilterOrganization(this);
-        }
-
 
         [HttpGet]
         public IQueryable<Models.Vouchers.ProgramVendorReconciliation> ProgramVendorReconciliations()
@@ -159,7 +151,16 @@ namespace TalonAdmin.Controllers.Breeze
         {
             return _contextProvider.Context.VoucherTransactionRecords
                 .Where(v => v.Voucher.DistributionId == distributionId && v.VendorId != null)
-                .Select(v=>v.Vendor)
+                .Select(v => v.Vendor)
+                .Distinct();
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.Vendor> ProgramVendors(int programId)
+        {
+            return _contextProvider.Context.VoucherTransactionRecords
+                .Where(v => v.Voucher.Distribution.ProgramId == programId && v.VendorId != null)
+                .Select(v => v.Vendor)
                 .Distinct();
         }
 

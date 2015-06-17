@@ -169,6 +169,14 @@ angular.module('app')
               var _backendService = settings.backendService || backendService;
               $scope.isEditing = false;
 
+              if (!settings.preSave) {
+                  settings.preSave = function () {
+                      var d = $q.defer();
+                      d.resolve.apply(d, arguments);
+                      return d.promise;
+                  };
+              }
+
               if (!settings.postSave) {
                   settings.postSave = function () {
                       var d = $q.defer();
@@ -181,17 +189,20 @@ angular.module('app')
               $scope.save = function (andContinue) {
                   $scope.isEditing = false;
 
-                  _backendService.saveChanges([$scope.entity])
-                      .then(settings.postSave).then(function (ne) {
-                          toaster.pop('success', gettext('Success'), gettext('Record successfully saved.'));
+                  $q.when(settings.preSave).then(function () {
+                      _backendService.saveChanges([$scope.entity])
+                          .then(settings.postSave).then(function (ne) {
+                              toaster.pop('success', gettext('Success'), gettext('Record successfully saved.'));
 
-                          if (!andContinue)
-                              $state.go(settings.listState);
-                      }).catch(function (error) {
-                          console.log(arguments);
+                              if (!andContinue)
+                                  $state.go(settings.listState);
+                          }).catch(function (error) {
+                              console.log(arguments);
 
-                          toaster.pop('error', gettext('Error'), error);
-                      });
+                              toaster.pop('error', gettext('Error'), error);
+                          });
+                  });
+                  
               };
 
               $scope.delete = function () {

@@ -245,13 +245,13 @@ angular.module('app')
 
                 .state('programs.edit', {
                     url: '/edit/:id',
-                    templateUrl: 'tpl/generic/edit.html',
-                    controller: 'GenericEditCtrl'
+                    templateUrl: 'tpl/programs/edit.html',
+                    controller: 'ProgramsEditCtrl'
                 })
                 .state('programs.create', {
                     url: '/create',
                     templateUrl: 'tpl/generic/create.html',
-                    controller: 'GenericCreateCtrl'
+                    controller: 'ProgramsCreateCtrl'
                 })
 
 
