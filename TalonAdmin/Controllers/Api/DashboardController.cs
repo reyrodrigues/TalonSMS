@@ -53,69 +53,71 @@ namespace TalonAdmin.Controllers.Api
                 .FilterCountry(this)
                 .FilterOrganization(this);
 
-            var distributionSummary = programs.Select(p =>  p.Distributions.Select(d => new
-                                     {
-                                         Program = p,
-                                         Distribution =  new
-                                            {
-                                                Id = d.Id,
-                                                Title = d.Title,
-                                                Location = d.Location != null ? new { 
-                                                    Id = d.Location.Id,
-                                                    Name = d.Location.Name
-                                                } : null,
-                                            },
-                                         Location = d.Location != null ? d.Location : null,
-                                         TotalVouchers = d.Vouchers.Count(),
-                                         VouchersUsed = d.Vouchers.Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any()).Count(),
-                                         UniqueBeneficiaries =
-                                             d.Vouchers
-                                             .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
-                                             .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
-                                             .SelectMany(r => r)
-                                             .Distinct()
-                                             .Count(),
-                                         Beneficiaries =
-                                             d.Vouchers
-                                             .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
-                                             .SelectMany(r => r)
-                                             .Distinct()
-                                             .Count(),
-                                         BeneficiariyIds =
-                                             d.Vouchers
-                                             .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
-                                             .SelectMany(r => r)
-                                             .Distinct(),
-                                         ClaimedAmount =
-                                             d.Vouchers
-                                             .Where(v => v.Category.Value != null)
-                                             .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
-                                             .Select(v => v.Category.Value.Value)
-                                         .Sum(),
-                                         IssuedAmount =
-                                             d.Vouchers
-                                             .Where(v => v.Category.Value != null)
-                                             .Where(v => v.TransactionRecords.Any())
-                                             .Select(v => v.Category.Value.Value)
-                                         .Sum(),
-                                         TotalVendors =
-                                             d.Vouchers
-                                             .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
-                                             .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
-                                             .SelectMany(r => r)
-                                             .Distinct()
-                                         .Sum(),
-                                         VendorIds =
-                                             d.Vouchers
-                                             .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
-                                             .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
-                                             .SelectMany(r => r)
-                                             .Distinct(),
-                                     }));
+            var distributionSummary = programs.Select(p => p.Distributions.Select(d => new
+            {
+                Program = p,
+                Distribution = new
+                {
+                    Id = d.Id,
+                    Title = d.Title,
+                    Location = d.Location != null ? new
+                    {
+                        Id = d.Location.Id,
+                        Name = d.Location.Name
+                    } : null,
+                },
+                Location = d.Location != null ? d.Location : null,
+                TotalVouchers = d.Vouchers.Count(),
+                VouchersUsed = d.Vouchers.Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any()).Count(),
+                UniqueBeneficiaries =
+                    d.Vouchers
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .Count(),
+                Beneficiaries =
+                    d.Vouchers
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .Count(),
+                BeneficiariyIds =
+                    d.Vouchers
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct(),
+                ClaimedAmount =
+                    d.Vouchers
+                    .Where(v => v.Category.Value != null)
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.Category.Value.Value)
+                .Sum(),
+                IssuedAmount =
+                    d.Vouchers
+                    .Where(v => v.Category.Value != null)
+                    .Where(v => v.TransactionRecords.Any())
+                    .Select(v => v.Category.Value.Value)
+                .Sum(),
+                TotalVendors =
+                    d.Vouchers
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                .Sum(),
+                VendorIds =
+                    d.Vouchers
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
+                    .SelectMany(r => r)
+                    .Distinct(),
+            }));
 
             var dashboardQuery = distributionSummary.SelectMany(r => r).ToArray().GroupBy(k => k.Program).Select(g => new
             {
-                Program = new {
+                Program = new
+                {
                     g.Key.Id,
                     g.Key.Name,
                     g.Key.FundCodes
