@@ -28,6 +28,5 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual ICollection<Distribution> Distributions { get; set; }
         public virtual ICollection<ProgramVoucherCategory> Categories { get; set; }
-
     }
 }
