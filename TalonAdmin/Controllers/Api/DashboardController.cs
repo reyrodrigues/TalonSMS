@@ -40,46 +40,102 @@ namespace TalonAdmin.Controllers.Api
             var distributions = ctx.Distributions
                 .FilterCountry(this)
                 .FilterOrganization(this)
-                .Where(d => d.IsClosed != true)
                 .Select(s => s.Id)
                 .ToArray();
 
-            var programs = ctx.Distributions.Where(d => d.IsClosed != true).Select(d => d.Program).Distinct().ToArray();
 
-            var programStatistics = programs.Select(p => new
+            var programs = ctx.Programs
+                .Include("Distributions")
+                .Include("Distributions.Location")
+                .Include("Distributions.Vouchers")
+                .Include("Distributions.Vouchers.TransactionRecords")
+                .Include("Distributions.Vouchers.Category")
+                .FilterCountry(this)
+                .FilterOrganization(this);
+
+            var distributionSummary = programs.Select(p => p.Distributions.Select(d => new
             {
                 Program = p,
-                Distributions = distributionQuery.Where(d => d.ProgramId == p.Id)
-                .Select(s => new
+                Distribution = new
                 {
-                    Distribution = distributionQuery.Where(d => d.Id == s.Id).Take(1).FirstOrDefault(),
-                    Location = distributionQuery.Where(d => d.Id == s.Id).Select(d => d.Location).Take(1).FirstOrDefault(),
-                    TotalVouchers = voucherQuery.Where(d => d.DistributionId == s.Id).Count(),
-                    VouchersUsed = voucherQuery.Where(d => d.DistributionId == s.Id).Where(v => v.TransactionRecords.Any() && v.TransactionRecords.Where(t => t.Status == 2).Any()).Count(),
-                    UniqueBeneficiaries = voucherQuery.Where(d => d.DistributionId == s.Id).Where(v => v.TransactionRecords.Any()).Select(v => v.TransactionRecords.Where(t => t.Status == 2).Select(r => r.BeneficiaryId)).SelectMany(r => r).Distinct().Count(),
-                    Beneficiaries = voucherQuery.Where(d => d.DistributionId == s.Id).Where(v => v.TransactionRecords.Any()).Select(v => v.TransactionRecords.Select(r => r.BeneficiaryId)).SelectMany(r => r).Distinct().Count(),
-                    Vendors = voucherQuery.Where(d => d.DistributionId == s.Id).Where(v => v.TransactionRecords.Any() && v.TransactionRecords.Where(t => t.Vendor != null).Any()).Select(v => v.TransactionRecords.Select(t => t.VendorId)).SelectMany(r => r).Distinct().Count(),
-                    IssuedAmount = transactionRecordQuery.Where(d => d.Voucher.DistributionId == s.Id).Select(d => d.Voucher.Category.Value.HasValue ? d.Voucher.Category.Value : 0m).Sum() ?? 0,
-                    ClaimedAmount = transactionRecordQuery.Where(d => d.Voucher.DistributionId == s.Id).Where(c => c.Status == 2).Select(d => d.Voucher.Category.Value.HasValue ? d.Voucher.Category.Value : 0m).Sum() ?? 0,
-                }),
-                Start = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == p.Id).Select(c => c.CreatedOn).ToArray().Select(c => c.ToUniversalTime()).Min(),
-                End = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == p.Id && d.FinalizedOn != null).Select(c => c.FinalizedOn.Value).ToArray().Select(c => c.ToUniversalTime()).Max(),
-            });
+                    Id = d.Id,
+                    Title = d.Title,
+                    Location = d.Location != null ? new
+                    {
+                        Id = d.Location.Id,
+                        Name = d.Location.Name
+                    } : null,
+                },
+                Location = d.Location != null ? d.Location : null,
+                TotalVouchers = d.Vouchers.Count(),
+                VouchersUsed = d.Vouchers.Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any()).Count(),
+                UniqueBeneficiaries =
+                    d.Vouchers
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .Count(),
+                Beneficiaries =
+                    d.Vouchers
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .Count(),
+                BeneficiariyIds =
+                    d.Vouchers
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct(),
+                ClaimedAmount =
+                    d.Vouchers
+                    .Where(v => v.Category.Value != null)
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.Category.Value.Value)
+                .Sum(),
+                IssuedAmount =
+                    d.Vouchers
+                    .Where(v => v.Category.Value != null)
+                    .Where(v => v.TransactionRecords.Any())
+                    .Select(v => v.Category.Value.Value)
+                .Sum(),
+                Vendors =
+                    d.Vouchers
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .Count(),
+                VendorIds =
+                    d.Vouchers
+                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
+                    .SelectMany(r => r)
+                    .Distinct(),
+            }));
 
-            var dashboardArray = programStatistics.Select(s => new
+
+            var dashboardQuery = distributionSummary.SelectMany(r => r).ToArray().GroupBy(k => k.Program).Select(g => new
             {
-                s.Program,
-                TotalVouchers = s.Distributions.Select(d => d.TotalVouchers).Sum(),
-                VouchersUsed = s.Distributions.Select(d => d.VouchersUsed).Sum(),
-                UniqueBeneficiaries = voucherQuery.Where(d => d.Distribution.ProgramId == s.Program.Id).Where(v => v.TransactionRecords.Any()).Select(v => v.TransactionRecords.Where(t => t.Status == 2).Select(r => r.BeneficiaryId)).SelectMany(r => r).Distinct().Count(),
-                Beneficiaries = voucherQuery.Where(d => d.Distribution.ProgramId == s.Program.Id).Where(v => v.TransactionRecords.Any()).Select(v => v.TransactionRecords.Select(r => r.BeneficiaryId)).SelectMany(r => r).Distinct().Count(),
-                ClaimedAmount = s.Distributions.Select(d => d.ClaimedAmount).Sum(),
-                IssuedAmount = s.Distributions.Select(d => d.IssuedAmount).Sum(),
-                TotalVendors = voucherQuery.Where(d => d.Distribution.ProgramId == s.Program.Id).Where(v => v.TransactionRecords.Any() && v.TransactionRecords.Where(t => t.Vendor != null).Any()).Select(v => v.TransactionRecords.Select(t => t.VendorId)).SelectMany(r => r).Distinct().Count(),
-                s.Distributions,
-                UsedVsIssued = GenerateUsedVsIssuedReport(s.Program, s.Start, s.End),
-                Vendor = GenerateVendorReport(s.Program)
-            });
+                Program = new
+                {
+                    g.Key.Id,
+                    g.Key.Name,
+                    g.Key.FundCodes
+                },
+                TotalVouchers = g.Select(d => d.TotalVouchers).Sum(),
+                VouchersUsed = g.Select(d => d.VouchersUsed).Sum(),
+                UniqueBeneficiaries = g.Select(d => d.UniqueBeneficiaries).Sum(),
+                Beneficiaries = g.Select(d => d.BeneficiariyIds).SelectMany(r => r).Distinct().Count(),
+                ClaimedAmount = g.Select(d => d.ClaimedAmount).Sum(),
+                IssuedAmount = g.Select(d => d.IssuedAmount).Sum(),
+                TotalVendors = g.Select(d => d.VendorIds).SelectMany(r => r).Distinct().Count(),
+                Distributions = g.ToArray(),
+                UsedVsIssued = GenerateUsedVsIssuedReport(g.Key),
+                Vendor = GenerateVendorReport(g.Key)
+            }).ToArray();
+
+            var dashboardArray = dashboardQuery.ToArray();
             var jsonString = JsonConvert.SerializeObject(dashboardArray,
                 Formatting.Indented,
                 new JsonSerializerSettings
@@ -97,23 +153,32 @@ namespace TalonAdmin.Controllers.Api
 
             return transactionRecordQuery
                 .Where(v => v.Voucher.Distribution.ProgramId == program.Id && v.VendorId != null)
-                .GroupBy(v=> v.Vendor.ParentRecordId == null ? v.Vendor : v.Vendor.ParentRecord)
+                .GroupBy(v => v.Vendor.ParentRecordId == null ? v.Vendor : v.Vendor.ParentRecord)
                 .ToArray()
-                .Select(v=> new object[]{ v.Key.Name, v.Count() });
+                .Select(v => new object[] { v.Key.Name, v.Count() });
+        }
+        private dynamic GenerateUsedVsIssuedReport(Models.Vouchers.Program program)
+        {
+            return GenerateUsedVsIssuedReport(program, null, null);
         }
 
-
-        private dynamic GenerateUsedVsIssuedReport(Models.Vouchers.Program program, DateTime start, DateTime end)
+        private dynamic GenerateUsedVsIssuedReport(Models.Vouchers.Program program, DateTime? start, DateTime? end)
         {
             var voucherQuery = ctx.Vouchers.FilterCountry(this).FilterOrganization(this);
 
+            if (start == null)
+                start = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == program.Id).Select(c => c.CreatedOn).ToArray().Select(c => c.ToUniversalTime()).Min();
+            if (end == null)
+                end = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == program.Id && d.FinalizedOn != null).Select(c => c.FinalizedOn.Value).ToArray().Select(c => c.ToUniversalTime()).Max();
+
+
             return Enumerable
-                .Range(0, (int)Math.Ceiling((end - start).TotalDays) + 1)
+                .Range(0, (int)Math.Ceiling((end.Value - start.Value).TotalDays) + 1)
                 .Select(d => new
                 {
-                    Date = DateTime.Parse(start.ToShortDateString()).AddDays(d),
-                    DateMinusOne = DateTime.Parse(start.ToShortDateString()).AddDays(d - 1),
-                    DatePlusOne = DateTime.Parse(start.ToShortDateString()).AddDays(d + 1)
+                    Date = DateTime.Parse(start.Value.ToShortDateString()).AddDays(d),
+                    DateMinusOne = DateTime.Parse(start.Value.ToShortDateString()).AddDays(d - 1),
+                    DatePlusOne = DateTime.Parse(start.Value.ToShortDateString()).AddDays(d + 1)
                 })
                 .Select(d => new object[] { 
                     d.Date,
