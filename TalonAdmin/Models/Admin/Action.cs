@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace TalonAdmin.Models.Vouchers
+namespace TalonAdmin.Models.Admin
 {
-    public class VendorType : CountryEntity
+    public class Action
     {
+        public virtual int Id { get; set; }
         public virtual string Name { get; set; }
-
-        public virtual ICollection<Vendor> Vendors { get; set; }
     }
 }

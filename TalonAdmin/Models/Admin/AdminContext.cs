@@ -47,6 +47,9 @@ namespace TalonAdmin.Models.Admin
             return new AdminContext();
         }
 
+        public DbSet<IdentityUserRole> UserRoles { get; set; }
+        public DbSet<Action> Actions { get; set; }
+        public DbSet<ActionRole> ActionRoles { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<MenuCategoryRole> MenuCategoryRoles { get; set; }

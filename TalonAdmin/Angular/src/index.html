@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html ng-app="talon" ng-controller="AppCtrl">
+<head>
+    <title ng-bind="pageTitle"></title>
+
+
+    <!-- social media tags -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <!-- font awesome from BootstrapCDN -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href="//code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css" rel="stylesheet" />
+    <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="assets/ui-grid.min.css" />
+
+
+    <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
+    <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
+
+
+
+</head>
+<body>
+    <toaster-container></toaster-container>
+
+    <div class="app" id="app" ng-if="isLoggedIn" ng-class="{
+         'app-header-fixed':app.settings.headerFixed,
+         'app-aside-fixed':app.settings.asideFixed,
+         'app-aside-folded':app.settings.asideFolded,
+         'app-aside-dock':app.settings.asideDock,
+         'container':app.settings.container
+    }">
+        <div class="app-header navbar" ng-include="'blocks/header.tpl.html'">
+        </div>
+        <!-- menu -->
+        <div class="app-aside hidden-xs {{app.settings.asideColor}}" ng-include="'blocks/nav.tpl.html'">
+        </div>
+        <!-- / menu -->
+        <!-- content -->
+        <div class="app-content">
+            <a href class="off-screen-toggle hide" ui-toggle-class="off-screen" data-target=".app-aside"></a>
+            <div class="app-content-body fade-in-up" ui-view="app"></div>
+        </div>
+        <!-- /content -->
+        <!-- footer -->
+        <div class="app-footer wrapper b-t bg-light">
+            <span class="pull-right">{{app.version}}</span>
+            Copyright &copy; The International Rescue Committee, {{ app.currentYear }}.
+        </div>
+    </div>
+    <div class="app" ui-view="full" ng-if="!isLoggedIn"></div>
+    <script src="/Home/MetadataJS"></script>
+
+    <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
+    <script type="text/javascript" src="<%= file %>"></script><% }); %>
+    <script>
+        $(function () {
+            $.fn.dataTable.ext.errMode = 'none';
+            moment.locale('en-US');
+        });
+    </script>
+</body>
+</html>

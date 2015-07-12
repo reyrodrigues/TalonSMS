@@ -88,7 +88,9 @@ namespace TalonAdmin.Controllers
                     .Where(b => b.OrganizationId == organizationId && b.CountryId == countryId)
                     .ToArrayAsync();
 
-                var jsonBeneficiaries = JToken.FromObject(beneficiaryQuery) as JArray;
+                var jsonBeneficiaries = JToken.FromObject(beneficiaryQuery, new JsonSerializer { 
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                }) as JArray;
                 foreach (var jsonBeneficiary in jsonBeneficiaries)
                 {
                     jsonBeneficiary["Group"] = jsonBeneficiary["Group"].Type != JTokenType.Null ? jsonBeneficiary["Group"]["Name"] : "";

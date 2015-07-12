@@ -11,8 +11,6 @@ namespace TalonAdmin.Models.Vouchers
     public class BeneficiaryGroup : TenantEntity
     {
         public virtual string Name { get; set; }
-
-        [JsonIgnore, XmlIgnore, IgnoreDataMember]
         public virtual ICollection<Beneficiary> Beneficiaries { get; set; }
     }
 }

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 using TalonAdmin.Extensions;
 using TalonAdmin.Attributes;
+using Microsoft.AspNet.Identity.EntityFramework;
 namespace TalonAdmin.Controllers.Breeze
 {
     [BreezeController, EnableBreezeQuery(MaxExpansionDepth = 5)]
@@ -28,13 +29,6 @@ namespace TalonAdmin.Controllers.Breeze
         public string Metadata()
         {
             return _contextProvider.Metadata();
-        }
-
-
-        [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.ApplicationUser> Users()
-        {
-            return _contextProvider.Context.Users;
         }
 
         [HttpGet]
@@ -91,12 +85,6 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
-        public IQueryable<Microsoft.AspNet.Identity.EntityFramework.IdentityRole> Roles()
-        {
-            return _contextProvider.Context.Roles;
-        }
-
-        [HttpGet]
         public IQueryable<TalonAdmin.Models.Admin.Organization> Organizations()
         {
             return _contextProvider.Context.Organizations;
@@ -107,6 +95,54 @@ namespace TalonAdmin.Controllers.Breeze
         {
             return _contextProvider.Context.Countries;
         }
+        [HttpGet]
+        public IQueryable<TalonAdmin.Models.Admin.Action> Actions()
+        {
+            return _contextProvider.Context.Actions;
+        }
+
+        [HttpGet]
+        public IQueryable<TalonAdmin.Models.Admin.ActionRole> ActionRoles()
+        {
+            return _contextProvider.Context.ActionRoles;
+        }
+
+        [HttpGet]
+        public IQueryable<TalonAdmin.Models.Admin.MenuCategory> MenuCategories()
+        {
+            return _contextProvider.Context.MenuCategories;
+        }
+
+        [HttpGet]
+        public IQueryable<TalonAdmin.Models.Admin.MenuCategoryRole> MenuCategoryRoles()
+        {
+            return _contextProvider.Context.MenuCategoryRoles;
+        }
+
+        [HttpGet]
+        public IQueryable<TalonAdmin.Models.Admin.MenuItem> MenuItems()
+        {
+            return _contextProvider.Context.MenuItems;
+        }
+
+        [HttpGet]
+        public IQueryable<TalonAdmin.Models.Admin.ApplicationUser> Users()
+        {
+            return _contextProvider.Context.Users;
+        }
+
+        [HttpGet]
+        public IQueryable<IdentityRole> Roles()
+        {
+            return _contextProvider.Context.Roles;
+        }
+
+        [HttpGet]
+        public IQueryable<IdentityUserRole> UserRoles()
+        {
+            return _contextProvider.Context.UserRoles;
+        }
+
 
         [HttpPost]
         public SaveResult SaveChanges(JObject saveBundle)

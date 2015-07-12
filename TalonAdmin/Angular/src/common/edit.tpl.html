@@ -1,0 +1,39 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">{{ vm.state.data.pageTitle }}</h1>
+</div>
+<div class="wrapper-md">
+    <form class="bs-example form-horizontal form-validation" ng-submit="vm.save()">
+        <div class="row">
+            <div class="col-sm-12" ng-include="vm.settings.form" toggle-editing is-editing="vm.isEditing">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12" ng-if="!vm.isEditing">
+                <div class="form-group">
+                    <div class=" col-sm-12">
+                        <div class="btn-group pull-left" ng-repeat="a in vm.actions">
+                            <a href class="btn {{ a.css }}" ng-click="a.action()" ng-if="a.condition(vm.entity)">{{a.label}}</a>
+                        </div>
+                        <div class="btn-group pull-right">
+                            <a ng-click="vm.beginEditing()" class="btn btn-primary" ng-if="vm.canEdit()">Edit</a>
+                            <a ui-sref="^.list" class="btn btn-info">Back</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12" ng-if="vm.isEditing">
+                <div class="form-group">
+                    <div class=" col-sm-12">
+                        <div class="btn-group pull-right">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <a ng-click="vm.save(true)" class="btn btn-primary">Save and Continue Editing</a>
+                            <a ng-click="vm.endEditing()" class="btn btn-info">Back</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
