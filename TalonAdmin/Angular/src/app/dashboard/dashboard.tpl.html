@@ -1,0 +1,113 @@
+<div>
+    <div class="col">
+        <div class="bg-light lter b-b wrapper-md">
+            <div class="row">
+                <div class="col-sm-6 col-xs-12">
+                    <h1 class="m-n font-thin h3 text-black">Dashboard</h1>
+                </div>
+                <div class="col-sm-6 text-right hidden-xs">
+                </div>
+            </div>
+        </div>
+        <div class="wrapper-md">
+            <div ng-repeat="program in programs">
+                <div class="panel">
+                    <div class="panel-heading no-border bg-primary">
+                        <h1 class="m-n h4 "><a class="text-black" href="">Program: {{program.Program.Name}}</a></h1>
+                    </div>
+                    <div class="panel-body">
+                        <tabset justified="true" class="tab-container">
+                            <tab heading="{{ 'Used / Issued Vouchers' }}">
+                                <div class="row" style=" padding: 1em 1em 1em 1em">
+                                    <div ui-jq="plot" style="height:240px; min-height:240px; min-width: 100px" ui-options="reports.UsedVsIssued.Data(program), reports.UsedVsIssued.Options(program)"></div>
+                                </div>
+                            </tab>
+                            <tab heading="{{ 'Vendors' }}" class="hidden-xs">
+                                <div class="row" style=" padding: 1em 1em 1em 1em">
+                                    <div ui-jq="plot" style="height:240px; min-height:240px; min-width: 100px" class="col-xs-12" ui-options="reports.Vendors.Data(program), reports.Vendors.Options(program)"></div>
+                                </div>
+                            </tab>
+                        </tabset>
+                        <div class="row text-center">
+                            <div class="col-sm-3">
+                                <div class="panel padder-v bg-primary item">
+                                    <div class="h1 text-black font-thin">{{ program.Beneficiaries }}</div>
+                                    <span class="text-xs text-black">Total Beneficiaries</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="panel padder-v bg-primary item">
+                                    <div class="h1 text-black font-thin">{{ program.TotalVouchers }}</div>
+                                    <span class="text-xs text-black">Vouchers Issued</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xs-12 m-b-md">
+                                <div class="r bg-dark item hbox no-border">
+                                    <div class="col dk padder-v r-r">
+                                        <div class="text-primary-lter font-thin h1"><span>{{ (program.IssuedAmount || 0)|currency:(country.CurrencyUnicodeSymbol||'$') }}</span></div>
+                                        <span class="text-primary-lter text-xs">Issued</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-sm-3">
+                                <div class="panel padder-v bg-primary item">
+                                    <div class="h1 text-black font-thin">{{ program.UniqueBeneficiaries }}</div>
+                                    <span class="text-xs text-black">Beneficiaries Reached</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="panel padder-v bg-primary item">
+                                    <div class="h1 text-black font-thin">{{ program.VouchersUsed }}</div>
+                                    <span class="text-xs text-black">Vouchers Used</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xs-12 m-b-md">
+                                <div class="r bg-dark item hbox no-border">
+                                    <div class="col dk padder-v r-r">
+                                        <div class="text-primary-lter font-thin h1"><span>{{ (program.ClaimedAmount || 0)|currency:(country.CurrencyUnicodeSymbol||'$') }}</span></div>
+                                        <span class="text-primary-lter text-xs">Claimed</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <table class="table" ui-jq="footable">
+                            <thead>
+                                <tr>
+                                    <th data-toggle="true">Distribution</th>
+                                    <th data-hide="phone,tablet">Location</th>
+                                    <th data-hide="phone,tablet" data-type="numeric">Beneficiaries</th>
+                                    <th data-hide="phone,tablet" data-type="numeric">Vouchers Issued</th>
+                                    <th data-hide="phone,tablet" data-type="numeric">Vouchers Used</th>
+                                    <th data-hide="phone,tablet" data-type="numeric">Vendors</th>
+                                    <th data-hide="phone,tablet" data-type="numeric">Total Claimed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="d in program.Distributions|orderBy:'Distribution.CreatedOn':'desc'">
+                                    <td>{{ d.Distribution.Title }}</td>
+                                    <td>{{ d.Location.Name }}</td>
+                                    <td>{{ d.Beneficiaries }}</td>
+                                    <td>{{ d.TotalVouchers }}</td>
+                                    <td>{{ d.VouchersUsed }}</td>
+                                    <td>{{ d.Vendors }}</td>
+                                    <td data-value="{{ d.ClaimedAmount || 0 }}">{{ (d.ClaimedAmount || 0)|currency:(country.CurrencyUnicodeSymbol||'$') }}</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="text-center">
+                                            <ul class="pagination pagination-centered"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

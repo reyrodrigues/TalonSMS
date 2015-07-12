@@ -1,0 +1,54 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Name</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder=" Name" ng-model="vm.entity.name" required />
+            </div>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!isNew">
+    <tab heading="Users">
+        <div class="panel panel-default">
+            <sub-grid style="min-width:100px; min-height:100px;"
+                      collection="UserRoles"
+                      key="roleId"
+                      default-sort="userId"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity"
+                      wait-for="vm.userQuery"
+                      select="vm.mergeUsers">
+                <sub-grid-column label="User Name" field="user.userName">
+                </sub-grid-column>
+                <sub-grid-column label="Full Name" field="user.fullName">
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="Actions">
+        <div class="panel panel-default">
+            <sub-grid style="min-width:100px; min-height:100px;"
+                      collection="Actions"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Name" field="name">
+
+
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="Menu">
+        <div class="panel panel-default">
+            <sub-grid style="min-width:100px; min-height:100px;"
+                      collection="MenuCategories"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Name" field="name"></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

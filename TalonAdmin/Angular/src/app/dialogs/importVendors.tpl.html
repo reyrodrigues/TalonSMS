@@ -1,0 +1,24 @@
+﻿<div class="modal-header">
+    <h4 class="modal-title" translate>
+        Import Vendors
+    </h4>
+
+</div>
+<div class="modal-body">
+    <form class="form-horizontal" ng-submit="done()">
+        <div class="form-group" cg-busy="uploading">
+            <div class="col-sm-11">
+                <div class="btn btn-info" ng-file-select ng-model="files" ng-multiple="multiple" translate>Select File</div>&nbsp;&nbsp;
+                {{ files.length ? files[0].name : "No file selected"|translate}} &nbsp;&nbsp;
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-success" ng-click="upload()" ng-disabled="!files.length" translate>
+        Upload File
+    </button>
+    <button class="btn btn-default" ng-click="close()" translate>
+        Back
+    </button>
+</div>

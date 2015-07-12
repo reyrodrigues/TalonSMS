@@ -1,0 +1,106 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">First Name</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="First Name" ng-model="vm.entity.firstName" required />
+            </div>
+            <label class="col-sm-2 control-label">Last Name</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="Last Name" ng-model="vm.entity.lastName" required />
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Mobile Number</label>
+            <div class="col-sm-4">
+                <div class="input-group m-b">
+                    <span class="input-group-addon">+{{ country.CountryCallingCode }}</span>
+                    <input type="text" class="form-control" placeholder="Mobile Number" ng-model="vm.entity.mobileNumber" ng-pattern="/[0-9]$/" phone-number required />
+                </div>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">National Id</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="National Id" ng-model="vm.entity.nationalId" />
+            </div>
+            <label class="col-sm-2 control-label">IRC Id</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'IRC Id' }}" ng-model="vm.entity.iRCId" disabled="disabled" />
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Birth Year</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'Birth Year' }}" ng-model="vm.entity.birthYear" />
+            </div>
+            <label class="col-sm-2 control-label">Sex</label>
+            <div class="col-sm-4">
+                <select chosen class="form-control" ng-model="vm.entity.sex"
+                        ng-options="item.id as item.name for item in vm.lists.sexes | orderBy:'item.name'"></select>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Location</label>
+            <div class="col-sm-4">
+                <select chosen class="form-control" ng-model="vm.entity.locationId"
+                        ng-options="item.id as item.name for item in vm.lists.locations | orderBy:'item.name'"></select>
+            </div>
+            <label class="col-sm-2 control-label">Group</label>
+            <div class="col-sm-4">
+                <select chosen class="form-control" ng-model="vm.entity.groupId"
+                        ng-options="item.id as item.name for item in vm.lists.beneficiaryGroups | orderBy:'item.name'"></select>
+            </div>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!isNew">
+    <tab heading="Unused Vouchers">
+        <div class="panel panel-default">
+            <sub-grid style="min-width:100px; min-height:100px;"
+                      filter="{ status: { '==': 0 } }"
+                      collection="VoucherTransactionRecords"
+                      expand="vendor, voucher"
+                      key="beneficiaryId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.cancelVoucher(row.entity, grid)" class="btn btn-default btn-xs">Cancel Voucher</a>
+                            <a href ng-click="grid.appScope.$parent.resendVoucher(row.entity, grid)" class="btn btn-default btn-xs">Resend Voucher</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="Used Vouchers">
+        <div class="panel panel-default">
+            <sub-grid style="min-width:100px; min-height:100px;"
+                      filter="{
+                          'or': [
+                           { status: { '==': 2 } },
+                           { status: { '==': 3 } }
+                          ]
+                      }"
+                      collection="VoucherTransactionRecords"
+                      expand="vendor, voucher"
+                      key="beneficiaryId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Vendor" field="vendor.name"></sub-grid-column>
+                <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Used On" field="finalizedOn"><div class="ui-grid-cell-contents">{{row.entity.finalizedOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Status" field="status"><div class="ui-grid-cell-contents">{{row.entity.statusToString()}}</div></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

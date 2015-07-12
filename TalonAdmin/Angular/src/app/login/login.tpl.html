@@ -1,0 +1,19 @@
+<div class="container w-xxl w-auto-xs">
+    <a href class="navbar-brand block m-t">Services</a>
+    <div class="m-b-lg">
+        <form name="form" class="form-validation">
+            <div class="text-danger wrapper text-center" ng-show="authError">
+                {{ authError }}
+            </div>
+            <div class="list-group list-group-sm">
+                <div class="list-group-item">
+                    <input type="text" placeholder="User Name" class="form-control no-border" ng-model="username" required>
+                </div>
+                <div class="list-group-item">
+                    <input type="password" placeholder="Password" class="form-control no-border" ng-model="password" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-lg btn-primary btn-block" ng-click="logIn()" ng-disabled='form.$invalid'>Log in</button>
+        </form>
+    </div>
+</div>
