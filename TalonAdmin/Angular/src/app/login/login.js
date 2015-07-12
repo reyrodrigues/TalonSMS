@@ -22,7 +22,12 @@ angular.module('talon.login', [
 .controller('LoginCtrl', function LoginController($scope, $state, authService, $localStorage) {
     var authData = $localStorage.authorizationData;
     if (authData) {
-        $state.go('dashboard', { location: 'replace'});
+        $state.go('dashboard', { location: 'replace' });
+    }
+    else {
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
     }
 
     $scope.logIn = function logIn() {

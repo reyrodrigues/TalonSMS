@@ -206,7 +206,7 @@ function BeneficiaryEditController($injector, $scope) {
     EditController.call(this, $injector, $scope);
 }
 
-function ImportBeneficiariesController($scope, $q, $modalInstance, Upload, $localStorage, blockUI) {
+function ImportBeneficiariesController($scope, $q, $modalInstance, Upload, $localStorage) {
     $scope.files = [];
 
     $scope.upload = function () {

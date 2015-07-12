@@ -17,7 +17,7 @@ angular.module( 'talon.dashboard', [
   });
 })
 
-.controller('DashCtrl', function DashController($scope, $http, entityManagerFactory) {
+.controller('DashCtrl', function DashController($rootScope, $scope, $http, entityManagerFactory) {
     $scope.reports = {
         UsedVsIssued: {
             Data: function (program) {
@@ -98,9 +98,10 @@ angular.module( 'talon.dashboard', [
         }
     };
 
-    loadDashboard();
     window.loadDashboard = loadDashboard;
-
+    $rootScope.authPromise.then(function () {
+        loadDashboard();
+    });
 
     function loadDashboard() {
         $http.get(serviceRoot + 'api/Dashboard/DashboardSummary')

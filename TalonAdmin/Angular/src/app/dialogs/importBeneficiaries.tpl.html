@@ -6,7 +6,7 @@
 </div>
 <div class="modal-body">
     <form class="form-horizontal" ng-submit="done()">
-        <div class="form-group" cg-busy="uploading">
+        <div class="form-group">
             <div class="col-sm-11">
                 <div class="btn btn-info" ngf-select ng-model="files" ng-multiple="multiple">Select File</div>&nbsp;&nbsp;
                 {{ (files && files.length) ? files[0].name : "No file selected"}} &nbsp;&nbsp;

@@ -89,7 +89,6 @@ GroupEditController.prototype.configure = function configure() {
     }
 };
 
-
 function GroupEditController($injector, $scope) {
     EditController.call(this, $injector, $scope);
 }

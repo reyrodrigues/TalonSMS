@@ -29,6 +29,9 @@
     }
 
     function logOut() {
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
     }
 
     function loadUserData() {
@@ -55,7 +58,19 @@
             else {
                 $rootScope.availableCountries = false;
             }
-            deferred.resolve();
+
+            if (!$localStorage.navigationItems) {
+                $http.get(serviceRoot + 'Home/NavigationItems').then(function (response) {
+                    $localStorage.navigationItems = response.data;
+                    $rootScope.navigationItems = response.data;
+
+                    deferred.resolve();
+                });
+            } else {
+                $rootScope.navigationItems = $localStorage.navigationItems;
+
+                deferred.resolve();
+            }
         })
         .catch(function () {
             console.log(arguments);

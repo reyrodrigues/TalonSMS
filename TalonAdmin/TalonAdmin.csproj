@@ -343,7 +343,18 @@
     <Content Include="Angular\lib\ui-utils-ieshiv.min.js" />
     <Content Include="Angular\lib\ui-utils.min.js" />
     <Content Include="Angular\src\app\app.js" />
+    <Content Include="Angular\src\app\country-admin\location\form.tpl.html" />
+    <Content Include="Angular\src\app\country-admin\location\location.js" />
+    <Content Include="Angular\src\app\country-admin\voucherType\form.tpl.html" />
+    <Content Include="Angular\src\app\country-admin\voucherType\voucherType.js" />
+    <Content Include="Angular\src\app\country-admin\__init__.js" />
+    <Content Include="Angular\src\app\program\program.js" />
+    <Content Include="Angular\src\app\program\form.tpl.html" />
+    <Content Include="Angular\src\app\distribution\form.tpl.html" />
+    <Content Include="Angular\src\app\distribution\distribution.js" />
     <Content Include="Angular\src\app\group\group.js" />
+    <Content Include="Angular\src\app\sys-admin\menu-item\menu-item.js" />
+    <Content Include="Angular\src\app\sys-admin\menu-item\form.tpl.html" />
     <Content Include="Angular\src\app\sys-admin\actions\form.tpl.html" />
     <Content Include="Angular\src\app\sys-admin\actions\actions.js" />
     <Content Include="Angular\src\app\sys-admin\roles\form.tpl.html" />
@@ -368,6 +379,8 @@
     <Content Include="Angular\src\app\services\__init__.js" />
     <Content Include="Angular\src\app\vendorType\form.tpl.html" />
     <Content Include="Angular\src\app\vendorType\vendorType.js" />
+    <Content Include="Angular\src\app\vendor\vendor.js" />
+    <Content Include="Angular\src\app\vendor\form.tpl.html" />
     <Content Include="Angular\src\app\__init__.js" />
     <Content Include="Angular\src\app\common\directives.js" />
     <Content Include="Angular\src\app\common\controllers.js" />
@@ -1179,7 +1192,6 @@
     <Content Include="Views\Home\ServerScript.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Angular\src\app\vendor\" />
     <Folder Include="App\" />
     <Folder Include="App_Data\uploads\" />
     <Folder Include="Source\src\tpl\vouchers\" />

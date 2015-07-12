@@ -58,10 +58,10 @@
         </div>
     </div>
 </div>
-<tabset justified="true" class="tab-container grid" ng-if="!isNew">
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
     <tab heading="Unused Vouchers">
         <div class="panel panel-default">
-            <sub-grid style="min-width:100px; min-height:100px;"
+            <sub-grid 
                       filter="{ status: { '==': 0 } }"
                       collection="VoucherTransactionRecords"
                       expand="vendor, voucher"
@@ -83,7 +83,7 @@
     </tab>
     <tab heading="Used Vouchers">
         <div class="panel panel-default">
-            <sub-grid style="min-width:100px; min-height:100px;"
+            <sub-grid 
                       filter="{
                           'or': [
                            { status: { '==': 2 } },

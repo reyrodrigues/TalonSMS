@@ -138,6 +138,17 @@
                        deferred.resolve(res.results);
                    });
                 return deferred.promise;
+            },
+            menuCategories: function () {
+                var deferred = $q.defer();
+                entityManagerFactory.entityQuery("MenuCategories")
+                   .using(adminEntityManager)
+                   .noTracking()
+                   .execute()
+                   .then(function (res) {
+                       deferred.resolve(res.results);
+                   });
+                return deferred.promise;
             }
 
         };

@@ -19,8 +19,11 @@ angular.module('talon', [
   'talon.login',
   'talon.sys-admin',
   'talon.org-admin',
+  'talon.country-admin',
   'talon.group',
   'talon.beneficiary',
+  'talon.distribution',
+  'talon.program',
   'talon.vendor',
   'talon.vendorType'
 ])
@@ -33,7 +36,7 @@ angular.module('talon', [
 
 .run(function run() {
 })
-.controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, entityManagerFactory, authService) {
+.controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, $q, entityManagerFactory, authService) {
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
         if (angular.isDefined(toState.data.pageTitle)) {
             $scope.pageTitle = 'Talon | ' + toState.data.pageTitle;
@@ -43,7 +46,7 @@ angular.module('talon', [
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
         var authData = $localStorage.authorizationData;
         if (authData && !$rootScope.currentUser) {
-            authService.loadUserData().then(function () {
+            $rootScope.authPromise = authService.loadUserData().then(function () {
                 $scope.isLoggedIn = true;
             }).catch(function () {
                 delete $localStorage.authorizationData;
@@ -53,6 +56,9 @@ angular.module('talon', [
 
         if (authData) {
             $rootScope.token = $localStorage.authorizationData.token;
+            var def = $q.defer();
+            def.resolve();
+            $rootScope.authPromise = def.promise;
         }
 
         if (!authData && !toState.data.allowAnonymous) {
@@ -65,14 +71,6 @@ angular.module('talon', [
         var entityManager = entityManagerFactory.entityManager();
         entityManager.rejectChanges();
 
-        if (!$localStorage.navigationItems) {
-            $http.get(serviceRoot + 'Home/NavigationItems').then(function (response) {
-                $localStorage.navigationItems = response.data;
-                $scope.navigationItems = response.data;
-            });
-        } else {
-            $scope.navigationItems = $localStorage.navigationItems;
-        }
     });
 
     $scope.$on('app:authenticated', function () {

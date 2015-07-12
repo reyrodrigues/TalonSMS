@@ -221,6 +221,16 @@ function ListController($injector, $scope) {
                 query = query.expand(self.settings.expand);
             }
 
+            var keyFilter = {};
+
+            if (self.settings.filter) {
+                keyFilter = angular.extend(keyFilter, self.settings.filter);
+            }
+
+            if (!window.jQuery.isEmptyObject(keyFilter)) {
+                query = query.where(keyFilter);
+            }
+
             query.orderBy(ordering)
                 .take(oData.length)
                 .skip(oData.start)
@@ -323,6 +333,9 @@ function ListController($injector, $scope) {
         console.log(msg);
     }
 }
+
+EditController.$inject = ['$injector', '$scope'];
+ListController.$inject = ['$injector', '$scope'];
 
 function noop() {
 }
