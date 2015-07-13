@@ -143,6 +143,11 @@ namespace TalonAdmin.Controllers.Breeze
             return _contextProvider.Context.UserRoles;
         }
 
+        [HttpGet]
+        public IQueryable<TalonAdmin.Models.Admin.ApplicationUserCountry> ApplicationUserCountries()
+        {
+            return _contextProvider.Context.ApplicationUserCountries;
+        }
 
         [HttpPost]
         public SaveResult SaveChanges(JObject saveBundle)

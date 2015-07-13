@@ -113,32 +113,32 @@ namespace TalonAdmin.Controllers.Api
             user.UserName = model.UserName;
             user.OrganizationId = model.OrganizationId;
 
-            await UserManager.UpdateAsync(user);
+            IdentityResult result = await UserManager.UpdateAsync(user);
 
-            if (model.CountryIds != null)
+            if (!result.Succeeded)
             {
-                var countryIds = model.CountryIds;
-                await AssignCountries(user, countryIds);
+                return GetErrorResult(result);
             }
 
-            var currentRoles = user.Roles.Select(r => r.RoleId);
-            var createdRoles = model.RoleIds;
-            var deletedRoles = currentRoles.Except(createdRoles);
-            var addedRoles = createdRoles.Except(currentRoles);
-
-            foreach (var roleId in deletedRoles)
+            if (!String.IsNullOrEmpty(model.Password))
             {
-                var role = await RoleManager.FindByIdAsync(roleId);
-                await UserManager.RemoveFromRoleAsync(user.Id, role.Name);
+                result = await UserManager.RemovePasswordAsync(user.Id);
+
+                if (!result.Succeeded)
+                {
+                    return GetErrorResult(result);
+                }
+
+                result = await UserManager.AddPasswordAsync(user.Id, model.Password);
+
+                if (!result.Succeeded)
+                {
+                    return GetErrorResult(result);
+                }
             }
 
-            foreach (var roleId in addedRoles)
-            {
-                var role = await RoleManager.FindByIdAsync(roleId);
-                await UserManager.AddToRoleAsync(user.Id, role.Name);
-            }
 
-            return Ok();
+            return Ok<ApplicationUser>(user);
         }
 
         [Route("SetPassword")]
@@ -161,14 +161,16 @@ namespace TalonAdmin.Controllers.Api
 
         [Route("RegisterOrAssignCountry")]
         [Authorize(Roles = "Country Administrator")]
-        public async Task<IHttpActionResult> RegisterOrAssignCountry(RegisterBindingModel model) {
+        public async Task<IHttpActionResult> RegisterOrAssignCountry(RegisterBindingModel model)
+        {
             var user = await UserManager.FindByNameAsync(model.UserName);
 
             if (user == null)
             {
                 return await Register(model);
             }
-            else {
+            else
+            {
                 var countries = user.Countries.Select(c => c.CountryId).ToList();
                 countries.Add(this.GetCountryId());
 
@@ -189,6 +191,7 @@ namespace TalonAdmin.Controllers.Api
 
             var user = new ApplicationUser()
             {
+                Id = Guid.NewGuid().ToString(),
                 FullName = model.FullName,
                 UserName = model.UserName,
                 Email = model.Email,
@@ -196,34 +199,12 @@ namespace TalonAdmin.Controllers.Api
             };
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
-            if (result.Succeeded)
-            {
-                if (!String.IsNullOrEmpty(model.Role))
-                {
-                    var role = await RoleManager.FindByIdAsync(model.Role);
-
-                    // Validate me
-                    await UserManager.AddToRoleAsync(user.Id, role.Name);
-                }
-
-                using (var ctx = new AdminContext())
-                {
-                    var countries = model.Countries.Select(c => new ApplicationUserCountry
-                    {
-                        CountryId = c,
-                        ApplicationUserId = user.Id
-                    }).ToArray();
-
-                    ctx.ApplicationUserCountries.AddRange(countries);
-                    await ctx.SaveChangesAsync();
-                }
-            }
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
 
-            return Ok();
+            return Ok<ApplicationUser>(user);
         }
 
         [Route("RegisterAdministrator")]
@@ -244,20 +225,14 @@ namespace TalonAdmin.Controllers.Api
             };
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
-            if (result.Succeeded)
-            {
-                if (!String.IsNullOrEmpty(model.Role))
-                {
-                    var role = await RoleManager.FindByIdAsync(model.Role);
-                    await UserManager.AddToRoleAsync(user.Id, role.Name);
-                }
-                else
-                {
-                    await UserManager.AddToRoleAsync(user.Id, "System Administrator");
-                }
 
-                await AssignCountries(user, model.Countries);
+            if (!result.Succeeded)
+            {
+                return GetErrorResult(result);
             }
+
+            result = await UserManager.AddToRoleAsync(user.Id, "System Administrator");
+
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
@@ -267,11 +242,11 @@ namespace TalonAdmin.Controllers.Api
         }
 
         [Route("AddUserToRole")]
-        public async Task<dynamic> AddUserToRole(Models.BindingModels.AddUserToRoleBindingModel request)
+        public async Task<dynamic> AddUserToRole(Models.BindingModels.RoleSubscriptionBindingModel request)
         {
-
-            var user = await UserManager.FindByEmailAsync(request.Email);
-            IdentityResult result = await UserManager.AddToRoleAsync(user.Id, request.RoleName);
+            var user = await UserManager.FindByIdAsync(request.UserId);
+            var role = await RoleManager.FindByIdAsync(request.RoleId);
+            IdentityResult result = await UserManager.AddToRoleAsync(user.Id, role.Name);
 
             if (!result.Succeeded)
             {
@@ -282,11 +257,11 @@ namespace TalonAdmin.Controllers.Api
         }
 
         [Route("RemoveUserFromRole")]
-        public async Task<dynamic> RemoveUserFromRole(Models.BindingModels.RemoveUserFromRoleBindingModel request)
+        public async Task<dynamic> RemoveUserFromRole(Models.BindingModels.RoleSubscriptionBindingModel request)
         {
-
-            var user = await UserManager.FindByEmailAsync(request.Email);
-            IdentityResult result = await UserManager.RemoveFromRoleAsync(user.Id, request.RoleName);
+            var user = await UserManager.FindByIdAsync(request.UserId);
+            var role = await RoleManager.FindByIdAsync(request.RoleId);
+            IdentityResult result = await UserManager.RemoveFromRoleAsync(user.Id, role.Name);
 
             if (!result.Succeeded)
             {

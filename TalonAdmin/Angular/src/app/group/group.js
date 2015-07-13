@@ -66,8 +66,6 @@
 
 ;
 
-angular.extend(GroupEditController.prototype, EditController.prototype);
-
 GroupEditController.prototype.configure = function configure() {
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
     var entityManager = this.entityManager;

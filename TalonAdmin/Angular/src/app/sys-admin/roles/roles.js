@@ -54,8 +54,6 @@ angular.module('talon.sys-admin')
 })
 .controller('RoleEditController', RoleEditController)
 ;
-angular.extend(RoleEditController.prototype, EditController.prototype);
-
 RoleEditController.prototype.configure = function () {
     var $q = this.$injector.get('$q');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');

@@ -1,0 +1,47 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Name</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="Name" ng-model="vm.entity.name" required />
+            </div>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="Menu Items">
+        <div class="panel panel-default">
+            <sub-grid entity-manager="adminEntityManager"
+                      collection="MenuItems"
+                      key="categoryId"
+                      entity="vm.entity"
+                      parent="vm">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Title" field="title"></sub-grid-column>
+                <sub-grid-column label="State" field="state"></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="Roles">
+        <div class="panel panel-default">
+            <sub-grid collection="Roles"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity"
+                      select="vm.mergeRoles">
+                <sub-grid-column label="#" field="id"></sub-grid-column>
+                <sub-grid-column label="Name" field="name"></sub-grid-column>
+                <sub-grid-column label="Can Access" field="isLinked"></sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions" width="100">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.allowAccess(row.entity, grid)" 
+                               class="btn btn-success btn-xs btn-block" ng-if="!row.entity.isLinked">Allow</a>
+                            <a href ng-click="grid.appScope.$parent.restrictAccess(row.entity, grid)"
+                               class="btn btn-danger btn-xs btn-block" ng-if="row.entity.isLinked">Restrict</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

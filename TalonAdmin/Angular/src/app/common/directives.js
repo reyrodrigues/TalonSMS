@@ -168,6 +168,7 @@ angular.module('talon.common')
             filter: '=',
             waitFor: '=',
             select: '=',
+            parent: '=',
             key: '@'
         },
         controller: function ($scope, $injector, entityManagerFactory) {
@@ -213,6 +214,10 @@ angular.module('talon.common')
 
                         load();
                     });
+
+                    if ($scope.parent) {
+                        $scope.parent['reload' + gridName] = load;
+                    }
                 }
             };
 

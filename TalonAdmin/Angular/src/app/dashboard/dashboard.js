@@ -99,7 +99,7 @@ angular.module( 'talon.dashboard', [
     };
 
     window.loadDashboard = loadDashboard;
-    $rootScope.authPromise.then(function () {
+    $rootScope.$watch('currentUser', function () {
         loadDashboard();
     });
 

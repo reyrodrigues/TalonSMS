@@ -56,12 +56,8 @@ namespace TalonAdmin.Models
         [Required]
         public int OrganizationId { get; set; }
 
-        public int[] Countries { get; set; }
-
         [Required]
         public string FullName { get; set; }
-
-        public string Role { get; set; }
     }
 
     public class RegisterExternalBindingModel

@@ -71,8 +71,6 @@ angular.module('talon.beneficiary', [
 .controller('ImportBeneficiariesCtrl', ImportBeneficiariesController)
 ;
 
-angular.extend(BeneficiaryListController.prototype, ListController.prototype);
-angular.extend(BeneficiaryEditController.prototype, EditController.prototype);
 
 BeneficiaryListController.prototype.configure = function configure() {
     var $localStorage = this.$injector.get('$localStorage');

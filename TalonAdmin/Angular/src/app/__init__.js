@@ -1,16 +1,5 @@
 ﻿var serviceRoot = window.location.protocol + '//' + window.location.host + '/';
 
-angular.extend(EditController.prototype, {
-    configure: noop,
-    defaults: noop,
-    preLoad: noop,
-    canEdit: noopTrue
-});
-
-angular.extend(ListController.prototype, {
-    configure: noop
-});
-
 function EditController($injector, $scope) {
     var entityManagerFactory = $injector.get('entityManagerFactory');
     var $state = $injector.get('$state');
@@ -37,12 +26,19 @@ function EditController($injector, $scope) {
 
 
     this.backToList = backToList;
-    this.save = save;
-    this.remove = remove;
     this.beginEditing = beginEditing;
     this.endEditing = endEditing;
-    this.defaults = defaults;
     this.lists = {};
+
+    // Overridable functions
+    this.configure = this.configure || noop;
+    this.defaults = this.defaults || defaults;
+    this.preLoad = this.preLoad || noop;
+    this.canEdit = this.canEdit || noopTrue;
+    this.save = this.save || save;
+    this.remove = this.remove || remove;
+    this.failure = this.failure || failure;
+    this.success = this.success || success;
 
     this.configure();
     load();
@@ -158,8 +154,6 @@ function EditController($injector, $scope) {
     }
 
     function defaults() {
-        // Application specific defaults
-        
         var def = this.settings.defaults || {};
 
         return angular.extend(def, {
@@ -173,6 +167,7 @@ function ListController($injector, $scope) {
     var entityManagerFactory = $injector.get('entityManagerFactory');
     var DTOptionsBuilder = $injector.get('DTOptionsBuilder');
     var DTColumnBuilder = $injector.get('DTColumnBuilder');
+    var $q = $injector.get('$q');
     var $compile = $injector.get('$compile');
     var $state = $injector.get('$state');
     var dialogs = $injector.get('dialogs');
@@ -184,11 +179,14 @@ function ListController($injector, $scope) {
     this.$injector = $injector;
     this.settings = angular.extend(parentSettings, currentSettings);
     this.state = $state.current;
-    this.remove = remove;
+    this.remove = this.remove || remove;
     var entityManagerFunction = this.settings.entityManager || 'entityManager';
     this.entityManager = entityManagerFactory[entityManagerFunction]();
 
     self.instance = {};
+
+    // Overridable functions
+    this.configure = this.configure || noop;
 
     this.configure();
     load();
@@ -342,5 +340,11 @@ function noop() {
 
 function noopTrue() {
     return true;
+}
+
+function resolve() {
+    var def = this.defer();
+    def.resolve.apply(def, arguments);
+    return def.promise;
 }
 

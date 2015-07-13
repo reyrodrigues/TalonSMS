@@ -21,7 +21,7 @@
             $localStorage.authorizationData = { token: response.access_token, userName: username };
             deferred.resolve(true);
         }).error(function (err, status) {
-            _logOut();
+            logOut();
             deferred.reject(false);
         });
 

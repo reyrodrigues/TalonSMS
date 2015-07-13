@@ -44,10 +44,14 @@ angular.module('talon', [
     });
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+        var def = $q.defer();
+        $rootScope.authPromise = def.promise;
+
         var authData = $localStorage.authorizationData;
         if (authData && !$rootScope.currentUser) {
-            $rootScope.authPromise = authService.loadUserData().then(function () {
+            authService.loadUserData().then(function () {
                 $scope.isLoggedIn = true;
+                def.resolve();
             }).catch(function () {
                 delete $localStorage.authorizationData;
                 $state.go('login', { location: 'replace' });
@@ -56,9 +60,7 @@ angular.module('talon', [
 
         if (authData) {
             $rootScope.token = $localStorage.authorizationData.token;
-            var def = $q.defer();
             def.resolve();
-            $rootScope.authPromise = def.promise;
         }
 
         if (!authData && !toState.data.allowAnonymous) {
@@ -66,6 +68,7 @@ angular.module('talon', [
 
             $scope.isLoggedIn = false;
             $state.go('login', { location: 'replace' });
+            def.reject();
         }
 
         var entityManager = entityManagerFactory.entityManager();

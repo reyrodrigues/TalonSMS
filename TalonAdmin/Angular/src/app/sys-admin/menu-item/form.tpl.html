@@ -31,16 +31,24 @@
     </div>
 </div>
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
-    <tab heading="Unused Vouchers">
+    <tab heading="Children">
         <div class="panel panel-default">
-            <sub-grid 
-                      entity-manager="adminEntityManager"
+            <sub-grid entity-manager="adminEntityManager"
                       collection="MenuItems"
                       key="parentId"
-                      entity="vm.entity">
+                      entity="vm.entity"
+                      parent="vm">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="Title" field="title"></sub-grid-column>
                 <sub-grid-column label="State" field="state"></sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions" width="100">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.editChild(row.entity, grid)" class="btn btn-default btn-xs">Edit</a>
+                            <a href ng-click="grid.appScope.$parent.deleteChild(row.entity, grid)" class="btn btn-default btn-xs">Delete</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
             </sub-grid>
         </div>
     </tab>

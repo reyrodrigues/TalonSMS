@@ -291,8 +291,7 @@
     <Compile Include="Models\Admin\MenuCategory.cs" />
     <Compile Include="Models\Admin\MenuItem.cs" />
     <Compile Include="Models\Admin\Organization.cs" />
-    <Compile Include="Models\BindingModels\RemoveUserFromRoleBindingModel.cs" />
-    <Compile Include="Models\BindingModels\AddUserToRoleBindingModel.cs" />
+    <Compile Include="Models\BindingModels\RoleSubscriptionBindingModel.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\Api\VendorWorkflowController.cs" />
     <Compile Include="Global.asax.cs">
@@ -343,6 +342,9 @@
     <Content Include="Angular\lib\ui-utils-ieshiv.min.js" />
     <Content Include="Angular\lib\ui-utils.min.js" />
     <Content Include="Angular\src\app\app.js" />
+    <Content Include="Angular\src\app\sys-admin\menu-category\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\menu-category\menu-category.js" />
+    <Content Include="Angular\src\app\sys-admin\menu-item\edit-child.tpl.html" />
     <Content Include="Angular\src\app\country-admin\location\form.tpl.html" />
     <Content Include="Angular\src\app\country-admin\location\location.js" />
     <Content Include="Angular\src\app\country-admin\voucherType\form.tpl.html" />
