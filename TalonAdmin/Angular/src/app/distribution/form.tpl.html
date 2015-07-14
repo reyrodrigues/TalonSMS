@@ -1,10 +1,122 @@
 ﻿<div class="panel panel-default">
     <div class="panel-body">
         <div class="form-group">
-            <label class="col-sm-2 control-label">Name</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" placeholder="Name" ng-model="vm.entity.name" required />
+            <label class="col-sm-2 control-label" translate>Title</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="Title" ng-model="vm.entity.title" required>
+            </div>
+            <label class="col-sm-2 control-label" translate>Program</label>
+            <div class="col-sm-4">
+                <select class="form-control" ng-model="vm.entity.programId"
+                        ng-options="item.id as item.name for item in vm.lists.programs | orderBy:'item.name'" required></select>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Location</label>
+            <div class="col-sm-4">
+                <select class="form-control" ng-model="vm.entity.locationId"
+                        ng-options="item.id as item.name for item in vm.lists.locations | orderBy:'item.name'"></select>
+            </div>
+            <label class="col-sm-2 control-label" translate>Number of digits in voucher</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="Value" ng-model="vm.entity.voucherCodeLength">
+            </div>
+        </div>
+        <div class="line b-b line-lg pull-in"></div>
+        <div class="form-group" ng-if="!vm.isNew">
+            <label class="col-sm-2 control-label" translate>Created On</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" ng-model="vm.entity.createdOn" disabled>
+            </div>
+            <label class="col-sm-2 control-label" translate>Last Modified On</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" ng-model="vm.entity.modifiedOn" disabled>
             </div>
         </div>
     </div>
 </div>
+<div class="panel panel-default" ng-repeat="category in vm.entity.categories" toggle-editing is-editing="isEditing">
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Type of Voucher</label>
+            <div class="col-sm-4">
+                <select class="form-control" ng-model="category.typeId"
+                        ng-options="item.id as item.name for item in vm.lists.voucherTypes | orderBy:'item.name'" required></select>
+            </div>
+            <label class="col-sm-2 control-label">Restricted Type of Vendor</label>
+            <div class="col-sm-4">
+                <select class="form-control" ng-model="category.vendorTypeId"
+                        ng-options="item.id as item.name for item in vm.lists.vendorTypes | orderBy:'item.name'"></select>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Value of Vouchers</label>
+            <div class="col-sm-4">
+                <div class="input-group m-b">
+                    <span class="input-group-addon">{{ country.CurrencyIsoCode }}</span>
+                    <input type="text" class="form-control" placeholder="Value" ng-model="category.value" required>
+                </div>
+            </div>
+            <label class="col-sm-2 control-label" translate>Vouchers Issued</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="Issued Vouchers" ng-model="category.issuedVouchers" disabled>
+            </div>
+        </div>
+    </div>
+</div>
+
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="Unused Vouchers">
+        <div class="panel panel-default">
+            <sub-grid filter="{ status: { '==': 0 } }"
+                      collection="VoucherTransactionRecords"
+                      expand="beneficiary, voucher"
+                      key="voucher.distributionId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Beneficiary" field="beneficiary.firstName">
+                    <div class="ui-grid-cell-contents">
+                        {{ row.entity.beneficiary.firstName + ' ' + row.entity.beneficiary.lastName }}
+                    </div>
+                </sub-grid-column>
+                <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.cancelVoucher(row.entity, grid)" class="btn btn-default btn-xs">Cancel Voucher</a>
+                            <a href ng-click="grid.appScope.$parent.resendVoucher(row.entity, grid)" class="btn btn-default btn-xs">Resend Voucher</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="Used Vouchers">
+        <div class="panel panel-default">
+            <sub-grid filter="{
+                          'or': [
+                           { status: { '==': 2 } },
+                           { status: { '==': 3 } }
+                          ]
+                      }"
+                      collection="VoucherTransactionRecords"
+                      expand="beneficiary, voucher"
+                      key="voucher.distributionId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Beneficiary" field="beneficiary.firstName">
+                    <div class="ui-grid-cell-contents">
+                        {{ row.entity.beneficiary.firstName + ' ' + row.entity.beneficiary.lastName }}
+                    </div>
+                </sub-grid-column>
+                <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Used On" field="finalizedOn"><div class="ui-grid-cell-contents">{{row.entity.finalizedOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Status" field="status"><div class="ui-grid-cell-contents">{{row.entity.statusToString()}}</div></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

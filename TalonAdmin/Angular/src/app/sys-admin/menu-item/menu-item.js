@@ -30,7 +30,8 @@ angular.module('talon.sys-admin')
                 columns: [
                     ['id', '#'],
                     ['title', 'Title'],
-                    ['category.name', 'Category']
+                    ['category.name', 'Category'],
+                    ['cssClass', 'CSS']
                 ]
             }
         }

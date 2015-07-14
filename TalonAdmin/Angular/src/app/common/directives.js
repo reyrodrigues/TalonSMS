@@ -400,7 +400,8 @@ angular.module('talon.common')
             name: '@',
             field: '@',
             width: '@',
-            hidden: '='
+            hidden: '=',
+            ngIf: '='
         },
         compile: function (el) {
             var html = el.html();
@@ -411,7 +412,9 @@ angular.module('talon.common')
 
             return {
                 pre: function (scope, el1, attr, ctrl) {
-                    ctrl.addColumn(scope.name, scope.field, scope.label, html, scope.width);
+                    if((scope.ngIf === undefined) || scope.ngIf === true) {
+                        ctrl.addColumn(scope.name, scope.field, scope.label, html, scope.width);
+                    }
                     $compile(angular.element('<!-- -->'))(scope);
                 }
             };

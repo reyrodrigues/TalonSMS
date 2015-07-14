@@ -73,6 +73,7 @@ angular.module('talon.beneficiary', [
 
 
 BeneficiaryListController.prototype.configure = function configure() {
+    var $rootScope = this.$injector.get('$rootScope');
     var $localStorage = this.$injector.get('$localStorage');
     var dialogs = this.$injector.get('dialogs');
     var toaster = this.$injector.get('toaster');
@@ -82,6 +83,7 @@ BeneficiaryListController.prototype.configure = function configure() {
         {
             label: "Import Excel",
             css: "btn-default",
+            condition: function () { return $rootScope.canI('Import Beneficiaries'); },
             action: function action() {
                 var dlg = dialogs.create('dialogs/importBeneficiaries.tpl.html', 'ImportBeneficiariesCtrl');
                 dlg.result.then(function (result) {
@@ -109,6 +111,7 @@ BeneficiaryListController.prototype.configure = function configure() {
     this.forms = [
         {
             label: "Export Excel",
+            condition: function () { return $rootScope.canI('Export Beneficiaries'); },
             css: "btn-info",
             url: function () {
                 return serviceRoot + 'api/Excel/ExportBeneficiaries?countryId=' + $localStorage.country.Id + '&organizationId=' + $localStorage.organization.Id;
@@ -183,12 +186,12 @@ BeneficiaryEditController.prototype.configure = function configure() {
 
         var dlg = dialogs.confirm("Confirm", "Are you sure you would like to resend this voucher?");
         dlg.result.then(function (r) {
-            var payload = { VoucherId: entity.voucherId, BeneficiaryId: entity.beneficiarId };
+            var payload = { VoucherId: entity.voucherId, BeneficiaryId: entity.beneficiaryId };
 
-            $http.post(serviceBase + 'Api/VoucherWorkflow/ResendSMS', payload)
+            $http.post(serviceRoot + 'Api/VoucherWorkflow/ResendSMS', payload)
                 .then(function () {
                     toaster.pop('success', 'Success!', 'Voucher resent successfully!');
-                    loadData();
+                    grid.api.custom.reloadData();
                 }).catch(function (res) {
                     toaster.pop('error', 'Error', res.data.Message);
                 });

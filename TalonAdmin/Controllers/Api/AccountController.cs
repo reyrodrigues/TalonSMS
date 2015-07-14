@@ -57,14 +57,20 @@ namespace TalonAdmin.Controllers.Api
                 {
                     var user = (await admin.Users
                         .Include("Countries")
+                        .Include("Roles")
                         .Include("Countries.Country")
                         .Include("Organization")
                         .Where(u => u.Id == userId)
                         .ToListAsync()).First();
+                    var roles = user.Roles.Select(r=>r.RoleId).ToArray();
 
                     var jsonUser = JObject.FromObject(user);
                     var role = await RoleManager.FindByNameAsync("System Administrator");
                     jsonUser["IsSystemAdministrator"] = role.Users.Select(r => r.UserId).Contains(user.Id);
+                    jsonUser["AvailableActions"] = JToken.FromObject(admin.ActionRoles.Include("Action")
+                        .Where(a => roles.Contains(a.RoleId))
+                        .Select(a => a.Action)
+                        .Distinct());
 
                     return Json<JObject>(jsonUser);
                 }

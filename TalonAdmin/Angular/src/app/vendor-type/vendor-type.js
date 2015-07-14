@@ -1,4 +1,4 @@
-﻿angular.module('talon.vendorType', [
+﻿angular.module('talon.vendor-type', [
   'ui.router',
   'datatables',
   'datatables.bootstrap',
@@ -23,7 +23,7 @@
                 collectionType: "VendorTypes",
                 entityType: 'VendorType',
                 expand: ['vendors'],
-                form: 'vendorType/form.tpl.html'
+                form: 'vendor-type/form.tpl.html'
             }
         }
     })

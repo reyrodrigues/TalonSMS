@@ -262,12 +262,14 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
+    <Compile Include="Controllers\Api\ApplicationUserController.cs" />
     <Compile Include="Controllers\Api\App\OTAController.cs" />
     <Compile Include="Controllers\Api\App\AdminController.cs" />
     <Compile Include="Controllers\Api\DashboardController.cs" />
     <Compile Include="Controllers\Api\App\VendorProfileController.cs" />
     <Compile Include="Models\Admin\Action.cs" />
     <Compile Include="Models\Admin\ActionRole.cs" />
+    <Compile Include="Models\BindingModels\ApplicationUserBindingModel.cs" />
     <Compile Include="Models\BindingModels\ReportRequest.cs" />
     <Compile Include="Controllers\Api\ReportsController.cs" />
     <Compile Include="Controllers\Breeze\AdminController.cs" />
@@ -347,8 +349,8 @@
     <Content Include="Angular\src\app\sys-admin\menu-item\edit-child.tpl.html" />
     <Content Include="Angular\src\app\country-admin\location\form.tpl.html" />
     <Content Include="Angular\src\app\country-admin\location\location.js" />
-    <Content Include="Angular\src\app\country-admin\voucherType\form.tpl.html" />
-    <Content Include="Angular\src\app\country-admin\voucherType\voucherType.js" />
+    <Content Include="Angular\src\app\country-admin\voucher-type\form.tpl.html" />
+    <Content Include="Angular\src\app\country-admin\voucher-type\voucher-type.js" />
     <Content Include="Angular\src\app\country-admin\__init__.js" />
     <Content Include="Angular\src\app\program\program.js" />
     <Content Include="Angular\src\app\program\form.tpl.html" />
@@ -379,8 +381,8 @@
     <Content Include="Angular\src\app\org-admin\__init__.js" />
     <Content Include="Angular\src\app\services\modelOverrides.js" />
     <Content Include="Angular\src\app\services\__init__.js" />
-    <Content Include="Angular\src\app\vendorType\form.tpl.html" />
-    <Content Include="Angular\src\app\vendorType\vendorType.js" />
+    <Content Include="Angular\src\app\vendor-type\form.tpl.html" />
+    <Content Include="Angular\src\app\vendor-type\vendor-type.js" />
     <Content Include="Angular\src\app\vendor\vendor.js" />
     <Content Include="Angular\src\app\vendor\form.tpl.html" />
     <Content Include="Angular\src\app\__init__.js" />

@@ -10,7 +10,7 @@
             settings: {
                 collectionType: "VoucherTypes",
                 entityType: 'VoucherType',
-                form: 'country-admin/voucher-types/form.tpl.html'
+                form: 'country-admin/voucher-type/form.tpl.html'
             }
         }
     })

@@ -28,26 +28,46 @@
     </tab>
     <tab heading="Actions">
         <div class="panel panel-default">
-            <sub-grid 
-                      collection="Actions"
+            <sub-grid collection="Actions"
                       entity-manager="adminEntityManager"
-                      entity="vm.entity">
+                      entity="vm.entity"
+                      select="vm.mergeActions">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="Name" field="name">
 
 
+                </sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions" width="100" ng-if="vm.canEdit">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.addAction(row.entity, grid)"
+                               class="btn btn-success btn-xs btn-block" ng-if="!row.entity.isLinked">Add</a>
+                            <a href ng-click="grid.appScope.$parent.removeAction(row.entity, grid)"
+                               class="btn btn-danger btn-xs btn-block" ng-if="row.entity.isLinked">Remove</a>
+                        </div>
+                    </div>
                 </sub-grid-column>
             </sub-grid>
         </div>
     </tab>
     <tab heading="Menu">
         <div class="panel panel-default">
-            <sub-grid 
-                      collection="MenuCategories"
+            <sub-grid collection="MenuCategories"
                       entity-manager="adminEntityManager"
-                      entity="vm.entity">
+                      entity="vm.entity"
+                      select="vm.mergeMenuCategories">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="Name" field="name"></sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions" width="100" ng-if="vm.canEdit">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.addCategory(row.entity, grid)"
+                               class="btn btn-success btn-xs btn-block" ng-if="!row.entity.isLinked">Add</a>
+                            <a href ng-click="grid.appScope.$parent.removeCategory(row.entity, grid)"
+                               class="btn btn-danger btn-xs btn-block" ng-if="row.entity.isLinked">Remove</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
             </sub-grid>
         </div>
     </tab>

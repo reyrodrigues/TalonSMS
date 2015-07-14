@@ -24,7 +24,7 @@ angular.module('talon.org-admin')
         controller: 'OrgUserListController as vm',
         templateUrl: 'index.tpl.html',
         data: {
-            pageTitle: 'Application User',
+            pageTitle: 'Organization Users',
             settings: {
                 expand: ['roles', 'claims', 'logins'],
                 columns: [
@@ -42,7 +42,7 @@ angular.module('talon.org-admin')
         controller: 'OrgUserEditController as vm',
         templateUrl: 'create.tpl.html',
         data: {
-            pageTitle: 'Application Users'
+            pageTitle: 'Organization Users'
         }
     })
     .state('org-admin.users.edit', {
@@ -50,7 +50,7 @@ angular.module('talon.org-admin')
         controller: 'OrgUserEditController as vm',
         templateUrl: 'edit.tpl.html',
         data: {
-            pageTitle: 'Application Users',
+            pageTitle: 'Organization Users',
             settings: {
             }
         }
@@ -63,34 +63,39 @@ angular.module('talon.org-admin')
 ;
 
 OrgUserListController.prototype.remove = function (id) {
+    var $rootScope = this.$injector.get('$rootScope');
     var toaster = this.$injector.get('toaster');
     var dialogs = this.$injector.get('dialogs');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
     var entityManager = entityManagerFactory.adminEntityManager();
     var self = this;
 
-    var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
-    dlg.result.then(function () {
-        entityManagerFactory.entityQuery("Users")
-                .where("id", "==", id)
-                .toType('ApplicationUser')
-                .using(entityManager)
-                .execute()
-                .then(function (response) {
-                    var entity = response.results.pop();
-                    entity.entityAspect.setDeleted();
+    if (id == $rootScope.currentUser.Id) {
+        toaster.pop('error', 'Error!', 'You can\'t delete yourself from the system.');
+    } else {
+        var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
+        dlg.result.then(function () {
+            entityManagerFactory.entityQuery("Users")
+                    .where("id", "==", id)
+                    .toType('ApplicationUser')
+                    .using(entityManager)
+                    .execute()
+                    .then(function (response) {
+                        var entity = response.results.pop();
+                        entity.entityAspect.setDeleted();
 
-                    entityManager.saveChanges([entity]).then(function () {
-                        toaster.pop('success', 'Success!', 'Record successfully deleted.');
+                        entityManager.saveChanges([entity]).then(function () {
+                            toaster.pop('success', 'Success!', 'Record successfully deleted.');
 
-                        self.instance.rerender();
+                            self.instance.rerender();
+                        }).catch(function (error) {
+                            console.log(error);
+                        });
                     }).catch(function (error) {
                         console.log(error);
                     });
-                }).catch(function (error) {
-                    console.log(error);
-                });
-    });
+        });
+    }
 };
 
 OrgUserEditController.prototype.configure = function configure() {
@@ -226,7 +231,7 @@ OrgUserEditController.prototype.save = function save(continueEditing) {
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
     var entityManager = entityManagerFactory.adminEntityManager();
 
-    var url = serviceRoot + (self.isNew ? 'Api/Account/Register' : 'Api/Account/UpdateProfile');
+    var url = serviceRoot + 'Api/ApplicationUser/';
 
     self.isEditing = false;
 
@@ -238,16 +243,22 @@ OrgUserEditController.prototype.save = function save(continueEditing) {
         password: self.password.password,
         confirmPassword: self.password.confirmPassword,
     };
+    var def = null;
+    if (self.isNew) {
+        def = $http.post(url, payload);
+    } else {
+        def = $http.put(url + self.entity.id, payload);
+    }
 
-    $http.post(url, payload)
+    def
     .then(function (ne) {
         self.success('Record successfully saved.');
         if (self.isNew) {
-            self.entity.id = ne.data.Id;
-            self.entity.entityAspect.setUnchanged();
+            self.entity.id = ne.Id;
 
             $state.go('^.edit', { id: ne.data.Id });
         }
+        self.entity.entityAspect.setUnchanged();
 
         self.isEditing = continueEditing;
     }).catch(function (error) {

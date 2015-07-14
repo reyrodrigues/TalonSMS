@@ -32,7 +32,7 @@ angular.module('talon.sys-admin')
     .state('sys-admin.actions.create', {
         url: '/create',
         controller: 'GenericEditCtrl as vm',
-        templateUrl: 'edit.tpl.html',
+        templateUrl: 'create.tpl.html',
         data: {
             pageTitle: 'Actions',
             settings: {

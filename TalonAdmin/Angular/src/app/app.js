@@ -25,7 +25,7 @@ angular.module('talon', [
   'talon.distribution',
   'talon.program',
   'talon.vendor',
-  'talon.vendorType'
+  'talon.vendor-type'
 ])
 .config(function myAppConfig($stateProvider, $urlRouterProvider, $httpProvider) {
     $urlRouterProvider.otherwise('/dashboard');
@@ -41,6 +41,10 @@ angular.module('talon', [
         if (angular.isDefined(toState.data.pageTitle)) {
             $scope.pageTitle = 'Talon | ' + toState.data.pageTitle;
         }
+
+        // NOT KOSHER, BUT MAYBE THE ONLY WAY TO DEAL WITH THIS 
+        // TODO: refactor
+        $(window).scrollTop(0);
     });
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
@@ -71,9 +75,8 @@ angular.module('talon', [
             def.reject();
         }
 
-        var entityManager = entityManagerFactory.entityManager();
-        entityManager.rejectChanges();
-
+        entityManagerFactory.entityManager().rejectChanges();
+        entityManagerFactory.adminEntityManager().rejectChanges();
     });
 
     $scope.$on('app:authenticated', function () {
@@ -82,7 +85,7 @@ angular.module('talon', [
 
     $scope.logOut = logOut;
     $scope.$state = $state;
-
+    $rootScope.canI = CanI;
 
     $scope.selectCountry = function (country) {
         if ($rootScope.country.Id != country.Id) {
@@ -124,6 +127,19 @@ angular.module('talon', [
         }
     };
 
+    function CanI(action) {
+        if (!$rootScope.currentUser && !$rootScope.currentUser.AvailableActions) {
+            return false;
+        }
+
+        if ($rootScope.currentUser.IsSystemAdministrator) {
+            //return true;
+        }
+
+        var result = $rootScope.currentUser.AvailableActions.filter(function (a) { return a.Name == action; }).length > 0;
+
+        return result;
+    }
 
     function logOut() {
         $scope.isLoggedIn = false;

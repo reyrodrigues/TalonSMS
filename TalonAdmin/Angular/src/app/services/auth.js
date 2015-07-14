@@ -30,7 +30,10 @@
 
     function logOut() {
         if (window.localStorage) {
-            window.localStorage.clear();
+            delete window.localStorage['ngStorage-navigationItems'];
+            delete window.localStorage['ngStorage-country'];
+            delete window.localStorage['ngStorage-organization'];
+            delete window.localStorage['ngStorage-authorizationData'];
         }
     }
 

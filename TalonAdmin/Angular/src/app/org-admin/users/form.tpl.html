@@ -72,7 +72,8 @@
             <sub-grid collection="Roles"
                       entity-manager="adminEntityManager"
                       entity="vm.entity"
-                      select="vm.mergeRoles">
+                      select="vm.mergeRoles"
+                      filter="{ 'name': {'!=': 'System Administrator'}}">
                 <sub-grid-column label="#" field="id"></sub-grid-column>
                 <sub-grid-column label="Name" field="name"></sub-grid-column>
                 <sub-grid-column label="Actions" name="Actions" width="100">

@@ -32,7 +32,7 @@ angular.module('talon.sys-admin')
     .state('sys-admin.roles.create', {
         url: '/create',
         controller: 'GenericEditCtrl as vm',
-        templateUrl: 'edit.tpl.html',
+        templateUrl: 'create.tpl.html',
         data: {
             pageTitle: 'Application Role',
             settings: {
@@ -54,6 +54,7 @@ angular.module('talon.sys-admin')
 })
 .controller('RoleEditController', RoleEditController)
 ;
+
 RoleEditController.prototype.configure = function () {
     var $q = this.$injector.get('$q');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
@@ -66,7 +67,145 @@ RoleEditController.prototype.configure = function () {
             self.$scope.users = r.results;
         });
 
-    this.mergeUsers = function (results) {
+    this.mergeUsers = MergeUsers;
+    this.mergeActions = MergeActions;
+    this.mergeMenuCategories = MergeMenuCategories;
+
+    this.$scope.removeAction = RemoveAction;
+    this.$scope.addAction = AddAction;
+    this.$scope.removeCategory = RemoveCategory;
+    this.$scope.addCategory = AddCategory;
+
+
+    function userById(id) {
+        if (self.$scope.users) {
+            return self.$scope.users.filter(function (u) { return u.id == id; })[0];
+        }
+        return {};
+    }
+
+    function RemoveAction(action, grid) {
+        entityManagerFactory.entityQuery('ActionRoles')
+            .where({
+                and: [
+                    { actionId: { '==': action.id } }, ,
+                    { roleId: { '==': self.entity.id } },
+                ]
+            })
+            .using(entityManager)
+            .execute()
+            .then(function (r) {
+                var entity = r.results[0];
+                entity.entityAspect.setDeleted();
+
+                entityManager.saveChanges([entity]).then(function () {
+                    grid.api.custom.reloadData();
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            });
+    }
+
+    function AddAction(action, grid) {
+        var entity = entityManager.createEntity('ActionRole', {
+            actionId: action.id,
+            roleId: self.entity.id
+        });
+
+        entityManager.saveChanges([entity]).then(function () {
+            grid.api.custom.reloadData();
+        }).catch(function (error) {
+            console.log(error);
+
+        });
+    }
+
+    function RemoveCategory(category, grid) {
+        entityManagerFactory.entityQuery('MenuCategoryRoles')
+            .where({
+                and: [
+                    { categoryId: { '==': category.id } }, ,
+                    { roleId: { '==': self.entity.id } },
+                ]
+            })
+            .using(entityManager)
+            .execute()
+            .then(function (r) {
+                var entity = r.results[0];
+                entity.entityAspect.setDeleted();
+
+                entityManager.saveChanges([entity]).then(function () {
+                    grid.api.custom.reloadData();
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            });
+    }
+
+    function AddCategory(category, grid) {
+        var entity = entityManager.createEntity('MenuCategoryRole', {
+            categoryId: category.id,
+            roleId: self.entity.id
+        });
+
+        entityManager.saveChanges([entity]).then(function () {
+            grid.api.custom.reloadData();
+        }).catch(function (error) {
+            console.log(error);
+
+        });
+    }
+
+    function MergeActions(q) {
+        var def = $q.defer();
+
+        entityManagerFactory.entityQuery('ActionRoles')
+            .where({
+                and: [
+                    { roleId: { '==': self.entity.id } },
+                ]
+            })
+            .using(entityManager)
+            .execute()
+            .then(function (response) {
+                var ids = response.results.map(function (r) { return r.actionId; });
+                var results = q.map(function (r) {
+                    r.isLinked = ids.indexOf(r.id) > -1;
+                    return r;
+                });
+
+                def.resolve(results);
+            });
+
+        return def.promise;
+    }
+
+    function MergeMenuCategories(q) {
+        var def = $q.defer();
+
+        entityManagerFactory.entityQuery('MenuCategoryRoles')
+            .where({
+                and: [
+                    { roleId: { '==': self.entity.id } },
+                ]
+            })
+            .using(entityManager)
+            .execute()
+            .then(function (response) {
+                var ids = response.results.map(function (r) { return r.categoryId; });
+                var results = q.map(function (r) {
+                    r.isLinked = ids.indexOf(r.id) > -1;
+                    return r;
+                });
+
+                def.resolve(results);
+            })
+            .catch(console.log.bind(console));
+
+        return def.promise;
+    }
+
+    function MergeUsers(results) {
         var def = $q.defer();
 
         def.resolve(results.map(function (r) {
@@ -75,16 +214,8 @@ RoleEditController.prototype.configure = function () {
         }));
 
         return def.promise;
-    };
-
-    function userById(id) {
-        if (self.$scope.users) {
-            return self.$scope.users.filter(function (u) { return u.id == id; })[0];
-        }
-        return {};
     }
 };
-
 
 function RoleEditController($injector, $scope) {
     EditController.call(this, $injector, $scope);

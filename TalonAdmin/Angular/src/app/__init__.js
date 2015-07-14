@@ -3,6 +3,7 @@
 function EditController($injector, $scope) {
     var entityManagerFactory = $injector.get('entityManagerFactory');
     var $state = $injector.get('$state');
+    var $rootScope = $injector.get('$rootScope');
     var $q = $injector.get('$q');
     var dialogs = $injector.get('dialogs');
     var toaster = $injector.get('toaster');
@@ -21,6 +22,9 @@ function EditController($injector, $scope) {
     this.entity = {};
     this.settings = angular.extend(parentSettings, currentSettings);
 
+    this.canEdit = $rootScope.canI('Edit ' + this.settings.collectionType);
+    this.canCreate = $rootScope.canI('Create ' + this.settings.collectionType);
+
     var entityManagerFunction = this.settings.entityManager || 'entityManager';
     this.entityManager = entityManagerFactory[entityManagerFunction]();
 
@@ -34,7 +38,6 @@ function EditController($injector, $scope) {
     this.configure = this.configure || noop;
     this.defaults = this.defaults || defaults;
     this.preLoad = this.preLoad || noop;
-    this.canEdit = this.canEdit || noopTrue;
     this.save = this.save || save;
     this.remove = this.remove || remove;
     this.failure = this.failure || failure;
@@ -89,6 +92,9 @@ function EditController($injector, $scope) {
                         console.log(arguments);
                     });
             } else {
+                if (!self.canCreate) {
+                    $state.go('^.list');
+                }
                 self.isNew = true;
                 self.isEditing = true;
 
@@ -170,11 +176,14 @@ function ListController($injector, $scope) {
     var $q = $injector.get('$q');
     var $compile = $injector.get('$compile');
     var $state = $injector.get('$state');
+    var $rootScope = $injector.get('$rootScope');
     var dialogs = $injector.get('dialogs');
     var toaster = $injector.get('toaster');
+    var $localStorage = $injector.get('$localStorage');
     var self = this;
     var currentSettings = ($state.current.data ? $state.current.data.settings : false) || {};
     var parentSettings = angular.extend({}, ($state.$current.parent.data ? $state.$current.parent.data.settings : false) || {});
+    var stateName = $state.current.name;
 
     this.$injector = $injector;
     this.settings = angular.extend(parentSettings, currentSettings);
@@ -183,8 +192,11 @@ function ListController($injector, $scope) {
     var entityManagerFunction = this.settings.entityManager || 'entityManager';
     this.entityManager = entityManagerFactory[entityManagerFunction]();
 
-    self.instance = {};
+    this.canEdit = $rootScope.canI('Edit ' + this.settings.collectionType);
+    this.canDelete = $rootScope.canI('Delete ' + this.settings.collectionType);
+    this.canCreate = $rootScope.canI('Create ' + this.settings.collectionType);
 
+    self.instance = {};
     // Overridable functions
     this.configure = this.configure || noop;
 
@@ -203,6 +215,10 @@ function ListController($injector, $scope) {
             var ordering = oData.order.map(function (o) {
                 return oData.columns[o.column].data + ' ' + o.dir;
             }).join(',');
+
+            $localStorage[stateName + '_Order'] = oData.order.map(function (o) {
+                return [o.column, o.dir];
+            });
 
             if (!ordering) {
                 ordering = 'id';
@@ -246,8 +262,8 @@ function ListController($injector, $scope) {
         })
         .withDataProp('data')
         .withOption('filter', false)
-        .withOption('processing', true)
         .withOption('serverSide', true)
+        .withOption('order', $localStorage[stateName + '_Order'] )
         .withBootstrap()
         .withDisplayLength(25)
         .withOption('createdRow', createdRow)
@@ -286,10 +302,14 @@ function ListController($injector, $scope) {
     }
 
     function actionsHtml(data, type, full, meta) {
-        return '<div class="btn-group"><button class="btn btn-success btn-xs" ui-sref="^.edit({ id: \'' + data.id + '\'})">' +
+        return '<div class="btn-group">' +
+            '<button class="btn btn-success btn-xs" ng-if="vm.canEdit" ui-sref="^.edit({ id: \'' + data.id + '\'})">' +
             '   <i class="fa fa-edit"></i> Edit' +
             '</button>' +
-            '<button class="btn btn-danger btn-xs" ng-click="vm.remove(\'' + data.id + '\')">' +
+            '<button class="btn btn-success btn-xs" ng-if="!vm.canEdit" ui-sref="^.edit({ id: \'' + data.id + '\'})">' +
+            '    View' +
+            '</button>' +
+            '<button class="btn btn-danger btn-xs" ng-if="vm.canDelete" ng-click="vm.remove(\'' + data.id + '\')">' +
             '   <i class="fa fa-trash-o"></i> Delete' +
             '</button></div>';
     }
