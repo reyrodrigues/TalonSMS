@@ -43,6 +43,7 @@ function EditController($injector, $scope) {
     this.failure = this.failure || failure;
     this.success = this.success || success;
     this.load = this.load || load;
+    this.getEntities = this.getEntities || getEntities;
 
     this.configure();
     this.load();
@@ -123,7 +124,7 @@ function EditController($injector, $scope) {
         var self = this;
         self.isEditing = false;
 
-        self.entityManager.saveChanges([self.entity]).then(function (ne) {
+        self.entityManager.saveChanges(self.getEntities()).then(function (ne) {
             success('Record successfully saved.');
             if (self.isNew) {
                 $state.go('^.edit', { id: self.entity.id });
@@ -167,6 +168,12 @@ function EditController($injector, $scope) {
             organizationId: $localStorage.organization.Id,
             countryId: $localStorage.country.Id
         });
+    }
+
+    function getEntities() {
+        var self = this;
+
+        return [self.entity];
     }
 }
 

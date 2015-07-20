@@ -4,7 +4,8 @@
 function ModelOverrides() {
     return {
         VoucherTransactionRecord: VoucherTransactionRecord,
-        Beneficiary: Beneficiary
+        Beneficiary: Beneficiary,
+        CountrySettings: CountrySettings
     };
 
     function VoucherTransactionRecord() {
@@ -28,4 +29,7 @@ function ModelOverrides() {
         this.name = "";
     }
 
+    function CountrySettings() {
+        this.properties = {};
+    }
 }

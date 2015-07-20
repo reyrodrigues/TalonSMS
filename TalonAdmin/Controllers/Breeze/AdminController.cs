@@ -75,13 +75,22 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
-        [Authorize(Roles = "Organization Administrator,System Administrator"), AuthorizeTenant]
+        [Authorize(Roles = "Organization Administrator,System Administrator")]
         public async Task<IQueryable<TalonAdmin.Models.Admin.OrganizationCountry>> OrganizationCountries()
         {
             return _contextProvider.Context.OrganizationCountries
                 .Include("Country")
                 .Include("Settings")
                 .FilterOrganization(this);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Organization Administrator,System Administrator")]
+        public async Task<IQueryable<TalonAdmin.Models.Admin.OrganizationCountry>> UnfilteredOrganizationCountries()
+        {
+            return _contextProvider.Context.OrganizationCountries
+                .Include("Country")
+                .Include("Settings");
         }
 
         [HttpGet]

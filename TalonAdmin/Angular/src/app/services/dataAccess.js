@@ -21,7 +21,8 @@ function emFactory(breeze, modelOverrides) {
 
     var entityManager = new breeze.EntityManager({
         dataService: dataService,
-        metadataStore: metadataStore
+        metadataStore: metadataStore,
+        queryOptions: new breeze.QueryOptions({ mergeStrategy: breeze.MergeStrategy.OverwriteChanges })
     });
 
     entityManager.setProperties({
@@ -37,10 +38,12 @@ function emFactory(breeze, modelOverrides) {
 
     var adminMetadataStore = new breeze.MetadataStore({});
     adminMetadataStore.importMetadata(window.AdminMetadata);
+    adminMetadataStore.registerEntityTypeCtor("CountrySettings", modelOverrides.CountrySettings);
 
     var adminEntityManager = new breeze.EntityManager({
         dataService: adminDataService,
-        metadataStore: adminMetadataStore
+        metadataStore: adminMetadataStore,
+        queryOptions: new breeze.QueryOptions({ mergeStrategy: breeze.MergeStrategy.OverwriteChanges })
     });
 
     adminEntityManager.setProperties({

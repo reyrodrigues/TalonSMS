@@ -118,6 +118,7 @@ namespace TalonAdmin.Models.Admin
                 return _propertyDictionary;
             }
         }
+
     }
 
     public class CountrySettingsProperty

@@ -6,6 +6,15 @@
         var adminEntityManager = entityManagerFactory.adminEntityManager();
 
         return {
+            smsBackends: function () {
+                var deferred = $q.defer();
+                deferred.resolve([
+                    { id: 0, name: 'RescueSMS' },
+                    { id: 1, name: 'TurboSMS' },
+                    { id: 2, name: 'Clickatell' }
+                ]);
+                return deferred.promise;
+            },
             sexes: function () {
                 var deferred = $q.defer();
                 deferred.resolve([

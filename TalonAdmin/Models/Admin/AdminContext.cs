@@ -78,6 +78,7 @@ namespace TalonAdmin.Models.Admin
                 .HasMany(p => p.Children)
                 .WithOptional(p => p.Parent);
 
+
             Database.SetInitializer(new NullDatabaseInitializer<AdminContext>());
         }
     }

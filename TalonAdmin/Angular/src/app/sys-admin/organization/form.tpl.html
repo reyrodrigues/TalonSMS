@@ -1,0 +1,37 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Name</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'Name'}}" ng-model="vm.entity.name" required>
+            </div>
+            <label class="col-sm-2 control-label" translate>Abbreviation</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" placeholder="{{'Abbreviation'}}" ng-model="vm.entity.abbreviation" required>
+            </div>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="Countries">
+        <div class="panel panel-default">
+            <sub-grid collection="Countries"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity"
+                      select="vm.mergeCountries">
+                <sub-grid-column label="#" field="id"></sub-grid-column>
+                <sub-grid-column label="Name" field="name"></sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions" width="150">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.addCountry(row.entity, grid)"
+                               class="btn btn-success btn-xs btn-block" ng-if="!row.entity.isLinked">Add</a>
+                            <a href ng-click="grid.appScope.$parent.removeCountry(row.entity, grid)"
+                               class="btn btn-danger btn-xs" ng-if="row.entity.isLinked">Remove</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>
