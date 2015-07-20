@@ -40,7 +40,7 @@ namespace TalonAdmin.Controllers
 
         public ActionResult Index()
         {
-            return View(); // Redirect("~/App/");
+            return  Redirect("~/App/");
         }
 
         public ActionResult TestReport(int vendorId, int distributionId, string period)
