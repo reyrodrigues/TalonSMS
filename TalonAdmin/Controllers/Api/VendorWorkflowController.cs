@@ -22,6 +22,11 @@ using RazorEngine;
 using System.Net;
 using System.Net.Http;
 
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.EntityFramework;
+using Microsoft.AspNet.Identity.Owin;
+
+
 namespace TalonAdmin.Controllers.Api
 {
     public static class RandomNumber
@@ -143,11 +148,83 @@ namespace TalonAdmin.Controllers.Api
 
             using (var ctx = new Models.Vouchers.Context())
             {
-                var voucher = ctx.Vouchers.Where(v => v.Id == voucherId).First();
+                var voucher = await ctx.Vouchers.Where(v => v.Id == voucherId).FirstAsync();
                 SendCancelledVoucher(voucher);
             }
 
             return Ok();
+        }
+
+        [Route("DistributeVouchers")]
+        public async Task<IHttpActionResult> DistributeVouchers(DistributeVouchersBindingModel request)
+        {
+            int programId = request.ProgramId;
+            int groupId = request.GroupId;
+            int locationId = request.LocationId;
+            var user = await CurrentUser();
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                var program = await ctx.Programs
+                    .Include("Categories")
+                    .Where(v => v.Id == programId).FirstAsync();
+
+                var group = await ctx.BeneficiaryGroups.Where(g => g.Id == groupId).FirstAsync();
+                var location = await ctx.Locations.Where(g => g.Id == locationId).FirstAsync();
+                var distributionCount = await ctx.Distributions.Where(d => d.GroupId == groupId).CountAsync();
+
+                var distribution = new Distribution
+                {
+                    Title = String.Format("Distribution {0} - {1}", distributionCount + 1, group.Name),
+
+                    CountryId = program.CountryId,
+                    OrganizationId = program.OrganizationId,
+
+                    ProgramId = program.Id,
+                    GroupId = groupId,
+                    LocationId = locationId,
+                    VoucherCodeLength = program.VoucherCodeLength,
+
+                    CreatedBy = user.UserName,
+                    ModifiedBy = user.UserName,
+                    CreatedOn = DateTime.UtcNow,
+                    ModifiedOn = DateTime.UtcNow,
+
+                    Categories = program.Categories.Select(c => new DistributionVoucherCategory
+                    {
+                        CountryId = c.CountryId,
+                        OrganizationId = c.OrganizationId,
+                        TypeId = c.TypeId,
+                        Value = c.Value,
+                        VendorTypeId = c.VendorTypeId,
+                        IssuedVouchers = 0,
+                        NumberOfVouchers = 0
+                    }).ToList()
+                };
+                ctx.Distributions.Add(distribution);
+
+                int result = await ctx.SaveChangesAsync();
+                if (result == 0)
+                {
+                    return InternalServerError();
+                }
+
+                return await AssignToGroup(JObject.FromObject(new
+                {
+                    DistributionId = distribution.Id,
+                    GroupId = groupId
+                }));
+            }
         }
 
         [Route("AssignToGroup")]
@@ -173,7 +250,7 @@ namespace TalonAdmin.Controllers.Api
                 var count = await ctx.Beneficiaries
                             .Include("Group")
                             .Where(b => b.GroupId == groupId && b.Disabled != true).CountAsync();
-                var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
+                var distribution = ctx.Distributions.Include("Program").Where(d => d.Id == distributionId).First();
                 foreach (var category in distribution.Categories)
                 {
                     category.NumberOfVouchers += count;
@@ -244,16 +321,19 @@ namespace TalonAdmin.Controllers.Api
 
                 await ctx.SaveChangesAsync();
 
-                try
+                if (distribution.Program.DistributionMechanism == 1) // SMS
                 {
-                    foreach (var tr in transactionRecords)
+                    try
                     {
-                        SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id);
+                        foreach (var tr in transactionRecords)
+                        {
+                            SendVoucherSms(tr.Beneficiary.Id, tr.Voucher.Id);
+                        }
                     }
-                }
-                catch
-                {
+                    catch
+                    {
 
+                    }
                 }
             }
 
@@ -423,6 +503,33 @@ namespace TalonAdmin.Controllers.Api
             }
 
             return Ok();
+        }
+
+        private async Task<TalonAdmin.Models.Admin.ApplicationUser> CurrentUser()
+        {
+            var userManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+
+            using (var admin = new Models.Admin.AdminContext())
+            {
+                admin.Configuration.ProxyCreationEnabled = false;
+                admin.Configuration.LazyLoadingEnabled = false;
+
+                string userId = User.Identity.GetUserId();
+                if (admin.Users.Where(u => u.Id == userId).Any())
+                {
+                    var user = (await admin.Users
+                        .Include("Countries")
+                        .Include("Roles")
+                        .Include("Countries.Country")
+                        .Include("Organization")
+                        .Where(u => u.Id == userId)
+                        .ToListAsync()).First();
+
+                    return user;
+                }
+            }
+
+            return null;
         }
 
         private void ResendConfirmationCode(Voucher voucher, Vendor vendor)

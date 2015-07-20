@@ -9,7 +9,7 @@
                         <span class="font-bold ">Dashboard</span>
                     </a>
                 </li>
-                <li class="hidden-folded padder m-t m-b-sm text-muted text-xs" ng-repeat-start="category in navigationItems" ng-if="!category.NeedsCountry || country">
+                <li class="hidden-folded padder m-t m-b-sm text-muted text-xs" ng-repeat-start="category in navigationItems | orderBy: 'sortOrder'" ng-if="!category.NeedsCountry || country">
                     <span>{{ category.Name }}</span>
                 </li>
 

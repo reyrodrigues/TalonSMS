@@ -51,7 +51,7 @@ namespace TalonAdmin.Controllers.Api
                 .Include("Distributions.Vouchers.TransactionRecords")
                 .Include("Distributions.Vouchers.Category")
                 .FilterCountry(this)
-                .FilterOrganization(this);
+                .FilterOrganization(this).ToArray();
 
             var distributionSummary = programs.Select(p => p.Distributions.Select(d => new
             {
@@ -89,15 +89,13 @@ namespace TalonAdmin.Controllers.Api
                     .Distinct(),
                 ClaimedAmount =
                     d.Vouchers
-                    .Where(v => v.Category.Value != null)
-                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
-                    .Select(v => v.Category.Value.Value)
+                    .Where(v => v.Category != null && v.Category.Value != null && v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    .Select(v => (v.Category.Value ?? 0))
                 .Sum(),
                 IssuedAmount =
                     d.Vouchers
-                    .Where(v => v.Category.Value != null)
-                    .Where(v => v.TransactionRecords.Any())
-                    .Select(v => v.Category.Value.Value)
+                    .Where(v => v.Category != null && v.Category.Value != null && v.TransactionRecords.Any())
+                    .Select(v => (v.Category.Value ?? 0))
                 .Sum(),
                 TotalVendors =
                     d.Vouchers

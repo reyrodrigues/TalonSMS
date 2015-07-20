@@ -17,7 +17,7 @@ angular.module('talon.sys-admin')
 
     .state('sys-admin.roles.list', {
         url: '/index',
-        controller: 'GenericListCtrl as vm',
+        controller: 'RoleListController as vm',
         templateUrl: 'index.tpl.html',
         data: {
             pageTitle: 'Application Role',
@@ -31,7 +31,7 @@ angular.module('talon.sys-admin')
     })
     .state('sys-admin.roles.create', {
         url: '/create',
-        controller: 'GenericEditCtrl as vm',
+        controller: 'RoleEditController as vm',
         templateUrl: 'create.tpl.html',
         data: {
             pageTitle: 'Application Role',
@@ -53,7 +53,90 @@ angular.module('talon.sys-admin')
 
 })
 .controller('RoleEditController', RoleEditController)
+.controller('RoleListController', RoleListController)
 ;
+
+RoleListController.prototype.remove = function (id) {
+    var self = this;
+    var $state = this.$injector.get('$state');
+    var dialogs = this.$injector.get('dialogs');
+    var $http = this.$injector.get('$http');
+    var url = serviceRoot + 'Api/ApplicationRole/';
+    var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
+    dlg.result.then(function () {
+        $http.delete(url + id)
+           .then(function (ne) {
+               self.success('Record successfully deleted.');
+
+               self.instance.rerender();
+           }).catch(function (error) {
+               self.failure(error);
+           });
+    });
+};
+
+RoleEditController.prototype.load = function () {
+    var $state = this.$injector.get('$state');
+    var $q = this.$injector.get('$q');
+    var entityManagerFactory = this.$injector.get('entityManagerFactory');
+    var self = this;
+
+    if (self.settings.controlledLists) {
+        self.settings.controlledLists.forEach(function (l) {
+            controlledLists[l]().then(function (list) {
+                self.lists[l] = list;
+            });
+        });
+    }
+
+    var defer = $q.defer();
+    $q.when(self.preLoad()).then(function () {
+        if ($state.params.id) {
+            self.isNew = false;
+            self.isEditing = false;
+
+            var query = entityManagerFactory.entityQuery(self.settings.collectionType)
+                .using(self.entityManager);
+
+            if (self.settings.expand) {
+                query = query.expand(self.settings.expand);
+            }
+
+            query = query.where("id", "==", $state.params.id)
+                .take(1);
+
+            if (self.settings.entityType) {
+                var entityType = self.entityManager.metadataStore.getEntityType(self.settings.entityType);
+                query = query.toType(entityType);
+            }
+
+            query.execute()
+                .then(function (res) {
+                    if (res.results) {
+                        var entity = res.results.pop();
+
+                        self.entity = entity;
+                        defer.resolve(entity);
+                    }
+                }).catch(function () {
+                    console.log(arguments);
+                });
+        } else {
+            if (!self.canCreate) {
+                $state.go('^.list');
+            }
+            self.isNew = true;
+            self.isEditing = true;
+
+            var defaults = self.defaults();
+
+            self.entity = {};
+            defer.resolve(self.entity);
+        }
+    });
+
+    return defer.promise;
+};
 
 RoleEditController.prototype.configure = function () {
     var $q = this.$injector.get('$q');
@@ -217,6 +300,49 @@ RoleEditController.prototype.configure = function () {
     }
 };
 
+RoleEditController.prototype.save = function save(continueEditing) {
+    var self = this;
+    var $state = this.$injector.get('$state');
+    var $http = this.$injector.get('$http');
+    var entityManagerFactory = this.$injector.get('entityManagerFactory');
+    var entityManager = entityManagerFactory.adminEntityManager();
+
+    var url = serviceRoot + 'Api/ApplicationRole/';
+
+    self.isEditing = false;
+
+    var payload = {
+        name: self.entity.name
+    };
+    var def = null;
+    if (self.isNew) {
+        def = $http.post(url, payload);
+    } else {
+        def = $http.put(url + self.entity.id, payload);
+    }
+
+    def
+    .then(function (ne) {
+        self.success('Record successfully saved.');
+        if (self.isNew) {
+            self.entity.id = ne.Id;
+
+            $state.go('^.edit', { id: ne.data.Id });
+        }
+        if (self.entity.entityAspect) {
+            self.entity.entityAspect.setUnchanged();
+        }
+
+        self.isEditing = continueEditing;
+    }).catch(function (error) {
+        console.log(error);
+    });
+};
+
 function RoleEditController($injector, $scope) {
     EditController.call(this, $injector, $scope);
+}
+
+function RoleListController($injector, $scope) {
+    ListController.call(this, $injector, $scope);
 }

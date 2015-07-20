@@ -14,6 +14,15 @@
                 ]);
                 return deferred.promise;
             },
+            distributionMechanisms: function () {
+                var deferred = $q.defer();
+                deferred.resolve([
+                    { id: 1, name: 'SMS' },
+                    { id: 2, name: 'NFC' },
+                    { id: 3, name: 'QR-Code' }
+                ]);
+                return deferred.promise;
+            },
             locations: function () {
                 var deferred = $q.defer();
                 entityManagerFactory.entityQuery("Locations")

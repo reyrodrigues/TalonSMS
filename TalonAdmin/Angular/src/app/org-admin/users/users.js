@@ -258,7 +258,9 @@ OrgUserEditController.prototype.save = function save(continueEditing) {
 
             $state.go('^.edit', { id: ne.data.Id });
         }
-        self.entity.entityAspect.setUnchanged();
+        if(self.entity.entityAspect) {
+            self.entity.entityAspect.setUnchanged();
+        }
 
         self.isEditing = continueEditing;
     }).catch(function (error) {

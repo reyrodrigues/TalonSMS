@@ -23,4 +23,14 @@
           }
       };
   })
+  .filter('unixTime', function () {
+      return function (date) {
+          if (date) {
+              return moment(date).format("x");
+          }
+          else {
+              return "";
+          }
+      };
+  })
 ;

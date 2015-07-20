@@ -262,6 +262,8 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
+    <Compile Include="Models\BindingModels\ApplicationRoleBindingModel.cs" />
+    <Compile Include="Controllers\Api\ApplicationRoleController.cs" />
     <Compile Include="Controllers\Api\ApplicationUserController.cs" />
     <Compile Include="Controllers\Api\App\OTAController.cs" />
     <Compile Include="Controllers\Api\App\AdminController.cs" />
@@ -270,6 +272,7 @@
     <Compile Include="Models\Admin\Action.cs" />
     <Compile Include="Models\Admin\ActionRole.cs" />
     <Compile Include="Models\BindingModels\ApplicationUserBindingModel.cs" />
+    <Compile Include="Models\BindingModels\DistributeVouchersBindingModel.cs" />
     <Compile Include="Models\BindingModels\ReportRequest.cs" />
     <Compile Include="Controllers\Api\ReportsController.cs" />
     <Compile Include="Controllers\Breeze\AdminController.cs" />
@@ -344,6 +347,12 @@
     <Content Include="Angular\lib\ui-utils-ieshiv.min.js" />
     <Content Include="Angular\lib\ui-utils.min.js" />
     <Content Include="Angular\src\app\app.js" />
+    <Content Include="Angular\src\app\program\distribute-vouchers.tpl.html" />
+    <Content Include="Angular\src\app\reporting\vendor-receipt.tpl.html" />
+    <Content Include="Angular\src\app\reporting\report-history.tpl.html" />
+    <Content Include="Angular\src\app\reporting\vendor-financial.tpl.html" />
+    <Content Include="Angular\src\app\reporting\distribution.tpl.html" />
+    <Content Include="Angular\src\app\reporting\reporting.js" />
     <Content Include="Angular\src\app\sys-admin\menu-category\form.tpl.html" />
     <Content Include="Angular\src\app\sys-admin\menu-category\menu-category.js" />
     <Content Include="Angular\src\app\sys-admin\menu-item\edit-child.tpl.html" />
@@ -399,6 +408,7 @@
     <Content Include="Angular\src\assets\glyphicons-halflings-regular.svg" />
     <Content Include="Angular\src\assets\Simple-Line-Icons.svg" />
     <Content Include="Angular\src\common\create.tpl.html" />
+    <Content Include="Angular\src\common\edit.toolbar.tpl.html" />
     <Content Include="Angular\src\common\edit.tpl.html" />
     <Content Include="Angular\src\common\index.tpl.html" />
     <Content Include="Angular\src\index.html" />

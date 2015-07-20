@@ -3,9 +3,10 @@
 
 function ModelOverrides() {
     return {
-        VoucherTransactionRecord: VoucherTransactionRecord
+        VoucherTransactionRecord: VoucherTransactionRecord,
+        Beneficiary: Beneficiary
     };
-    
+
     function VoucherTransactionRecord() {
         var self = this;
 
@@ -22,4 +23,9 @@ function ModelOverrides() {
             }
         };
     }
+
+    function Beneficiary() {
+        this.name = "";
+    }
+
 }

@@ -91,6 +91,21 @@ namespace TalonAdmin.Controllers.Api
             return Json<ApplicationUser>(user, new Newtonsoft.Json.JsonSerializerSettings {  ReferenceLoopHandling  = Newtonsoft.Json.ReferenceLoopHandling.Ignore });
         }
 
+        public async Task<IHttpActionResult> Delete([FromUri]string id)
+        {
+            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+
+            var user = await UserManager.FindByIdAsync(id);
+            var result = await UserManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                return GetErrorResult(result);
+            }
+
+            return Ok();
+        }
+
         private IHttpActionResult GetErrorResult(IdentityResult result)
         {
             if (result == null)

@@ -1,23 +1,18 @@
 <div class="bg-light lter b-b wrapper-md">
     <h1 class="m-n font-thin h3">{{ vm.state.data.pageTitle }}</h1>
 </div>
-<div class="wrapper-md">
-    <form class="bs-example form-horizontal form-validation" ng-submit="vm.save()">
+<div class="vbox ">
+    <div class="bg-light lter b-b">
+        <div class="btn-toolbar wrapper-xs" ng-include="'edit.toolbar.tpl.html'">
+        </div>
+    </div>
+    <div class="wrapper-md col">
         <div class="row">
-            <div class="col-sm-12" ng-include="vm.settings.form">
+            <div class="col-sm-12" ng-include="vm.settings.form" toggle-editing is-editing="vm.isEditing">
             </div>
         </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="form-group">
-                    <div class=" col-sm-12">
-                        <div class="btn-group pull-right">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                            <a ui-sref="^.list" href class="btn btn-info">Back</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
+    </div>
+    <div class="btn-toolbar wrapper-xs" ng-include="'edit.toolbar.tpl.html'">
+    </div>
 </div>
+

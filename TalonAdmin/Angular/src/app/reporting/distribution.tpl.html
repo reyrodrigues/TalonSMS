@@ -1,0 +1,41 @@
+﻿<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">Distribution Report</h1>
+</div>
+<div class="wrapper-md">
+    <form class="form-horizontal form-validation" action="{{ url }}" method="POST" target="_blank">
+        <input type="hidden" name="OrganizationId" value="{{report.OrganizationId}}" />
+        <input type="hidden" name="CountryId" value="{{report.CountryId}}" />
+        <input type="hidden" name="DistributionId" value="{{report.DistributionId}}" />
+        <input type="hidden" name="__authorization" value="Bearer {{token}}" />
+
+        <div class="row">
+            <div class="col-sm-12">
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" translate>Distribution</label>
+                            <div class="col-sm-10">
+                                <select chosen class="form-control" ng-model="report.DistributionId"
+                                        ng-options="item.id as item.title for item in distributions | orderBy:'item.title'"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <div class=" col-sm-12">
+                        <div class="btn-group pull-right">
+                            <button type="submit" class="btn btn-primary" ng-disabled="!report.DistributionId">Generate Report</button>
+                            <button ui-sref="app.dashboard" class="btn btn-info">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>

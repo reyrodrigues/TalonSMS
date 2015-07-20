@@ -13,14 +13,15 @@
         </div>
         <div class="line line-dashed b-b line-lg pull-in"></div>
         <div class="form-group">
+            <label class="col-sm-2 control-label" translate>Cycle</label>
+            <div class="col-sm-4">
+                <select class="form-control" ng-model="vm.entity.groupId"
+                        ng-options="item.id as item.name for item in vm.lists.beneficiaryGroups | orderBy:'item.name'"></select>
+            </div>
             <label class="col-sm-2 control-label" translate>Location</label>
             <div class="col-sm-4">
                 <select class="form-control" ng-model="vm.entity.locationId"
                         ng-options="item.id as item.name for item in vm.lists.locations | orderBy:'item.name'"></select>
-            </div>
-            <label class="col-sm-2 control-label" translate>Number of digits in voucher</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Value" ng-model="vm.entity.voucherCodeLength">
             </div>
         </div>
         <div class="line b-b line-lg pull-in"></div>

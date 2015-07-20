@@ -245,7 +245,7 @@ angular.module('talon.common')
             };
 
             var isLoading = false;
-            
+
 
             function addColumn(name, field, label, cellTemplate, width) {
                 var col = {
@@ -274,78 +274,78 @@ angular.module('talon.common')
                     return;
                 }
 
-                waitForDependencies().then(function(){
+                waitForDependencies().then(function () {
 
-                var fields = [];
-                var gridOptions = $scope.gridOptions;
+                    var fields = [];
+                    var gridOptions = $scope.gridOptions;
 
-                if (sortOptions) {
-                    fields = sortOptions
-                        .sort(function (a, b) {
-                            return a.sort.direction > b.sort.direction;
-                        })
-                        .map(function (d) {
-                            return d.name + ' ' + d.sort.direction;
-                        });
-                }
-                var order = fields.join(',');
-
-                var entityQuery = entityManagerFactory.entityQuery($scope.collection);
-
-                if ($scope.parameters) {
-                    entityQuery = entityQuery.withParameters($scope.parameters);
-                }
-
-                if ($scope.expand) {
-                    entityQuery = entityQuery.expand($scope.expand.split(','));
-                }
-
-                if (order) {
-                    entityQuery = entityQuery.orderBy(order.split(','));
-                } else {
-                    if ($scope.defaultSort) {
-                        entityQuery = entityQuery.orderBy([$scope.defaultSort]);
-                    } else {
-                        var firstField = $scope.gridOptions.columnDefs.map(function (c) { return c.field; }).filter(function (c) { return c; })[0];
-                        entityQuery = entityQuery.orderBy([firstField]);
+                    if (sortOptions) {
+                        fields = sortOptions
+                            .sort(function (a, b) {
+                                return a.sort.direction > b.sort.direction;
+                            })
+                            .map(function (d) {
+                                return d.name + ' ' + d.sort.direction;
+                            });
                     }
-                }
+                    var order = fields.join(',');
 
-                entityQuery = entityQuery
-                    .skip(parseInt(pagingOptions.pageSize * (pagingOptions.pageNumber - 1), 10))
-                    .take(parseInt(pagingOptions.pageSize, 10))
-                    .inlineCount(true)
-                    .using(entityManager);
+                    var entityQuery = entityManagerFactory.entityQuery($scope.collection);
 
-                var keyFilter = {};
-                if ($scope.key) {
-                    keyFilter[$scope.key] = { '==': $scope.entity.id };
-                }
+                    if ($scope.parameters) {
+                        entityQuery = entityQuery.withParameters($scope.parameters);
+                    }
 
-                if ($scope.filter) {
-                    keyFilter = angular.extend(keyFilter, $scope.filter);
-                }
+                    if ($scope.expand) {
+                        entityQuery = entityQuery.expand($scope.expand.split(','));
+                    }
 
-                if (!window.jQuery.isEmptyObject(keyFilter)) {
-                    entityQuery = entityQuery.where(keyFilter);
-                }
+                    if (order) {
+                        entityQuery = entityQuery.orderBy(order.split(','));
+                    } else {
+                        if ($scope.defaultSort) {
+                            entityQuery = entityQuery.orderBy([$scope.defaultSort]);
+                        } else {
+                            var firstField = $scope.gridOptions.columnDefs.map(function (c) { return c.field; }).filter(function (c) { return c; })[0];
+                            entityQuery = entityQuery.orderBy([firstField]);
+                        }
+                    }
 
-                if ($scope.entityType) {
-                    var entityType = entityManager.metadataStore.getEntityType($scope.entityType);
-                    entityQuery = entityQuery.toType(entityType);
-                }
-                entityQuery.execute()
-                    .then(function (res) {
-                        $scope.gridOptions.totalItems = res.inlineCount;
-                        selectMerge(res.results).then(function (data) {
-                            $scope[gridName + '_Data'] = data;
-                        });
-                        isLoading = false;
-                    })
-                  .catch(function () {
-                      console.log(arguments);
-                      isLoading = false;
-                  });
+                    entityQuery = entityQuery
+                        .skip(parseInt(pagingOptions.pageSize * (pagingOptions.pageNumber - 1), 10))
+                        .take(parseInt(pagingOptions.pageSize, 10))
+                        .inlineCount(true)
+                        .using(entityManager);
+
+                    var keyFilter = {};
+                    if ($scope.key) {
+                        keyFilter[$scope.key] = { '==': $scope.entity.id };
+                    }
+
+                    if ($scope.filter) {
+                        keyFilter = angular.extend(keyFilter, $scope.filter);
+                    }
+
+                    if (!window.jQuery.isEmptyObject(keyFilter)) {
+                        entityQuery = entityQuery.where(keyFilter);
+                    }
+
+                    if ($scope.entityType) {
+                        var entityType = entityManager.metadataStore.getEntityType($scope.entityType);
+                        entityQuery = entityQuery.toType(entityType);
+                    }
+                    entityQuery.execute()
+                        .then(function (res) {
+                            $scope.gridOptions.totalItems = res.inlineCount;
+                            selectMerge(res.results).then(function (data) {
+                                $scope[gridName + '_Data'] = data;
+                            });
+                            isLoading = false;
+                        })
+                      .catch(function () {
+                          console.log(arguments);
+                          isLoading = false;
+                      });
                 });
             }
         },
@@ -412,14 +412,14 @@ angular.module('talon.common')
 
             return {
                 pre: function (scope, el1, attr, ctrl) {
-                    if((scope.ngIf === undefined) || scope.ngIf === true) {
+                    if ((scope.ngIf === undefined) || scope.ngIf === true) {
                         ctrl.addColumn(scope.name, scope.field, scope.label, html, scope.width);
                     }
                     $compile(angular.element('<!-- -->'))(scope);
                 }
             };
-        } 
-};
+        }
+    };
 })
 
 .directive('chosen', function () {
@@ -534,5 +534,25 @@ angular.module('talon.common')
         }
     };
 })
+
+.directive('fileDownload', ['$timeout', function ($timeout) {
+    return {
+        restrict: 'A',
+        require: '?ngModel',
+        link: function (scope, element, attrs, ngModel) {
+            var a = $(element);
+            if (ngModel) {
+                viewWatch = function () {
+                    return ngModel.$viewValue;
+                };
+                scope.$watch(viewWatch, function () {
+                    if (ngModel.$viewValue) {
+                        a.attr('href', 'data:' + (attrs['mimeType'] || 'text/plain') + ';base64,' + ngModel.$viewValue);
+                    }
+                }, true);
+            }
+        }
+    };
+}])
 ;
 

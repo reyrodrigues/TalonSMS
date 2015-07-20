@@ -32,5 +32,4 @@ namespace TalonAdmin.Models.BindingModels
         [Required]
         public string FullName { get; set; }
     }
-
 }

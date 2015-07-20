@@ -25,7 +25,8 @@ angular.module('talon', [
   'talon.distribution',
   'talon.program',
   'talon.vendor',
-  'talon.vendor-type'
+  'talon.vendor-type',
+  'talon.reporting'
 ])
 .config(function myAppConfig($stateProvider, $urlRouterProvider, $httpProvider) {
     $urlRouterProvider.otherwise('/dashboard');

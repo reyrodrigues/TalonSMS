@@ -1,0 +1,40 @@
+﻿<form class=form-horizontal form-validation" ng-submit="vm.save()">
+    <div class="row" ng-if="!vm.isNew">
+        <div class="col-sm-12" ng-if="!vm.isEditing">
+            <div class=" col-sm-12">
+                <div class="btn-group pull-left" ng-repeat="a in vm.actions">
+                    <a href class="btn btn-sm {{ a.css }}" ng-click="a.action()" ng-if="!a.condition || a.condition(vm.entity)">{{a.label}}</a>
+                </div>
+                <a ui-sref="^.create" class="btn btn-primary btn-sm " ng-if="vm.canCreate">Add Another</a>
+
+                <div class=" pull-right">
+                    <div class="btn-group">
+                        <a ng-click="vm.beginEditing()" class="btn btn-primary btn-sm" ng-if="vm.canEdit">Edit</a>
+                        <a ui-sref="^.list" class="btn btn-info btn-sm">Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-if="!vm.isNew">
+        <div class="col-sm-12" ng-if="vm.isEditing">
+            <div class=" col-sm-12">
+                <div class="btn-group pull-right">
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    <a ng-click="vm.save(true)" class="btn btn-primary btn-sm">Save and Continue Editing</a>
+                    <a ng-click="vm.endEditing()" class="btn btn-info btn-sm">Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-if="vm.isNew">
+        <div class=" col-sm-12">
+            <div class=" col-sm-12">
+                <div class="btn-group pull-right">
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    <a ui-sref="^.list" href class="btn btn-info btn-sm">Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

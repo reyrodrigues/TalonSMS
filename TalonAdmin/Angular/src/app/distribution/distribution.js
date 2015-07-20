@@ -24,7 +24,7 @@
                 entityType: 'Distribution',
                 expand: ['vouchers', 'categories'],
                 form: 'distribution/form.tpl.html',
-                controlledLists: ['programs', 'locations', 'voucherTypes', 'vendorTypes']
+                controlledLists: ['programs', 'locations', 'voucherTypes', 'vendorTypes', 'beneficiaryGroups']
             }
         }
     })
@@ -112,7 +112,7 @@ DistributionEditController.prototype.configure = function () {
                 });
         });
     }
-}
+};
 
 function DistributionEditController($injector, $scope) {
     EditController.call(this, $injector, $scope);

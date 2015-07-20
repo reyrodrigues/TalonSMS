@@ -42,9 +42,10 @@ function EditController($injector, $scope) {
     this.remove = this.remove || remove;
     this.failure = this.failure || failure;
     this.success = this.success || success;
+    this.load = this.load || load;
 
     this.configure();
-    load();
+    this.load();
 
     function backToList() {
         $state.go(self.settings.listState);
@@ -188,9 +189,10 @@ function ListController($injector, $scope) {
     this.$injector = $injector;
     this.settings = angular.extend(parentSettings, currentSettings);
     this.state = $state.current;
-    this.remove = this.remove || remove;
     var entityManagerFunction = this.settings.entityManager || 'entityManager';
     this.entityManager = entityManagerFactory[entityManagerFunction]();
+    this.success = success;
+    this.failure = failure;
 
     this.canEdit = $rootScope.canI('Edit ' + this.settings.collectionType);
     this.canDelete = $rootScope.canI('Delete ' + this.settings.collectionType);
@@ -199,9 +201,11 @@ function ListController($injector, $scope) {
     self.instance = {};
     // Overridable functions
     this.configure = this.configure || noop;
+    this.load = this.load || load;
+    this.remove = this.remove || remove;
 
     this.configure();
-    load();
+    this.load();
 
     function load() {
         self.options = DTOptionsBuilder

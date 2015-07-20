@@ -71,31 +71,22 @@ SysUserListController.prototype.remove = function (id) {
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
     var entityManager = entityManagerFactory.adminEntityManager();
     var self = this;
+    var url = serviceRoot + 'Api/ApplicationUser/';
+    var $http = this.$injector.get('$http');
 
     if (id == $rootScope.currentUser.Id) {
         toaster.pop('error', 'Error!', 'You can\'t delete yourself from the system.');
     } else {
         var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
         dlg.result.then(function () {
-            entityManagerFactory.entityQuery("Users")
-                    .where("id", "==", id)
-                    .toType('ApplicationUser')
-                    .using(entityManager)
-                    .execute()
-                    .then(function (response) {
-                        var entity = response.results.pop();
-                        entity.entityAspect.setDeleted();
+            $http.delete(url + id)
+              .then(function (ne) {
+                  self.success('Record successfully deleted.');
 
-                        entityManager.saveChanges([entity]).then(function () {
-                            toaster.pop('success', 'Success!', 'Record successfully deleted.');
-
-                            self.instance.rerender();
-                        }).catch(function (error) {
-                            console.log(error);
-                        });
-                    }).catch(function (error) {
-                        console.log(error);
-                    });
+                  self.instance.rerender();
+              }).catch(function (error) {
+                  self.failure(error);
+              });
         });
     }
 };
@@ -260,7 +251,9 @@ SysUserEditController.prototype.save = function save(continueEditing) {
 
             $state.go('^.edit', { id: ne.data.Id });
         }
-        self.entity.entityAspect.setUnchanged();
+        if (self.entity.entityAspect) {
+            self.entity.entityAspect.setUnchanged();
+        }
 
         self.isEditing = continueEditing;
     }).catch(function (error) {
