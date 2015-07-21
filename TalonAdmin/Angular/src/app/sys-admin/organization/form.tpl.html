@@ -12,6 +12,27 @@
         </div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">Logo</div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="col-sm-2">
+                        <img src="{{ vm.entity.logoSVG ? vm.entity.logoSVG : '' }}" class="" style="max-height: 100px;" />
+                    </div>
+                    <label class="col-sm-2 control-label" translate ng-if="vm.isEditing">Update Logo</label>
+                    <div class="col-sm-8" ng-if="vm.isEditing">
+                        <input type="file" class="form-control" placeholder="{{'Logo'}}" ng-model="vm.entity.logoSVG" file-reader required>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
     <tab heading="Countries">
         <div class="panel panel-default">

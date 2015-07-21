@@ -17,6 +17,7 @@ namespace TalonAdmin.Models.Vouchers
             ModifiedOn = DateTime.UtcNow;
         }
 
+        public virtual int? Number { get; set; }
         public virtual string Title { get; set; }
         public virtual string FundCodes { get; set; }
         public virtual string ClosedBy { get; set; }
@@ -36,10 +37,12 @@ namespace TalonAdmin.Models.Vouchers
 
         [JsonIgnore]
         public virtual Program Program { get; set; }
+        public virtual BeneficiaryGroup Group { get; set; }
         public virtual Location Location { get; set; }
         public virtual ICollection<DistributionVoucherCategory> Categories { get; set; }
         public virtual ICollection<Voucher> Vouchers { get; set; }
         public virtual ICollection<BeneficiaryDistribution> Beneficiaries { get; set; }
+
     }
 
     public enum DistributionStatus

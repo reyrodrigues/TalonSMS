@@ -9,7 +9,8 @@ namespace TalonAdmin.Models.Vouchers
 {
     public class VoucherTransactionRecord : TenantEntity
     {
-        public VoucherTransactionRecord() {
+        public VoucherTransactionRecord()
+        {
             this.CreatedOn = DateTime.UtcNow;
         }
 
@@ -29,6 +30,24 @@ namespace TalonAdmin.Models.Vouchers
         /// 2. Invalid
         /// </summary>
         public virtual int Status { get; set; }
+
+        public string StatusString
+        {
+            get
+            {
+                switch (Status)
+                {
+                    case 0:
+                        return "Unclaimed";
+                    case 2:
+                        return "Claimed";
+                    case 3:
+                        return "Cancelled";
+                    default:
+                        return "";
+                }
+            }
+        }
 
         public virtual Beneficiary Beneficiary { get; set; }
 

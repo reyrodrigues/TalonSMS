@@ -89,6 +89,7 @@ function ReportHistoryController($scope, $rootScope, $q, toaster, entityManagerF
     var entityManager = entityManagerFactory.entityManager();
 
     $scope.report = {
+        PaperSize: 'A4'
     };
 
     $scope.listReports = function () {
@@ -178,6 +179,7 @@ function VendorFinancialReportController ($scope, $rootScope, $q, toaster, contr
     $scope.url = serviceRoot + 'api/Reports/VendorProgramFinancialReport';
 
     $scope.report = {
+        PaperSize: 'A4'
     };
 
     $rootScope.$watch('currentUser', function () {
@@ -205,6 +207,7 @@ function DistributionReportController($scope, $rootScope, $q, toaster, controlle
     $scope.url = serviceRoot + 'api/Reports/DistributionReport';
 
     $scope.report = {
+        PaperSize: 'A4'
     };
 
     $scope.$watch('report.PeriodStart', function () {

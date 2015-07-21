@@ -98,12 +98,13 @@ angular.module('talon', [
     };
 
 
-    $scope.app = {
+    $rootScope.app = {
         name: 'Talon',
         currentYear: moment().year(),
         fullName: 'Talon',
         version: '1.0.0b',
         serviceRoot: serviceRoot,
+        timezoneOffset: moment().utcOffset() / 60,
         // for chart colors
         color: {
             primary: '#7266ba',

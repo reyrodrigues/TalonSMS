@@ -116,7 +116,7 @@
                 <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
                 <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="Used On" field="finalizedOn"><div class="ui-grid-cell-contents">{{row.entity.finalizedOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Status" field="status"><div class="ui-grid-cell-contents">{{row.entity.statusToString()}}</div></sub-grid-column>
+                <sub-grid-column label="Status" field="status"><div class="ui-grid-cell-contents">{{row.entity.statusString}}</div></sub-grid-column>
             </sub-grid>
         </div>
     </tab>

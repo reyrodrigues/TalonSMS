@@ -106,8 +106,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="RazorEngine">
-      <HintPath>..\packages\RazorEngine.3.6.1\lib\net45\RazorEngine.dll</HintPath>
+    <Reference Include="RazorEngine, Version=3.7.0.0, Culture=neutral, PublicKeyToken=9ee697374c7e744a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\RazorEngine.3.7.0\lib\net45\RazorEngine.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -262,6 +263,7 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
+    <Compile Include="Extensions\ReportExtensions.cs" />
     <Compile Include="Models\BindingModels\ApplicationRoleBindingModel.cs" />
     <Compile Include="Controllers\Api\ApplicationRoleController.cs" />
     <Compile Include="Controllers\Api\ApplicationUserController.cs" />
@@ -973,9 +975,9 @@
     <Content Include="Angular\src\less\app.widgets.less" />
     <Content Include="Angular\src\app\group\form.tpl.html" />
     <None Include="Properties\PublishProfiles\EVM.pubxml" />
-    <Content Include="Reports\VendorReceiptReport.cshtml" />
     <Content Include="Reports\DistributionReport.cshtml" />
     <Content Include="Reports\VendorProgramReceiptReport.cshtml" />
+    <Content Include="Reports\ReportLayout.cshtml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />

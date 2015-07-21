@@ -9,7 +9,8 @@ function ModelOverrides() {
     };
 
     function VoucherTransactionRecord() {
-        var self = this;
+        this.statusString = "";
+
 
         this.statusToString = function () {
             switch (self.status) {

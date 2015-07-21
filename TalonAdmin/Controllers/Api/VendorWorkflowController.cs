@@ -189,6 +189,7 @@ namespace TalonAdmin.Controllers.Api
 
                     CountryId = program.CountryId,
                     OrganizationId = program.OrganizationId,
+                    Number = distributionCount + 1,
 
                     ProgramId = program.Id,
                     GroupId = groupId,

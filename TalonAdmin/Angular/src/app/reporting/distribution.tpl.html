@@ -6,6 +6,8 @@
         <input type="hidden" name="OrganizationId" value="{{report.OrganizationId}}" />
         <input type="hidden" name="CountryId" value="{{report.CountryId}}" />
         <input type="hidden" name="DistributionId" value="{{report.DistributionId}}" />
+        <input type="hidden" name="PaperSize" value="{{report.PaperSize||'A4'}}" />
+        <input type="hidden" name="TimezoneOffset" value="{{app.timezoneOffset}}" />
         <input type="hidden" name="__authorization" value="Bearer {{token}}" />
 
         <div class="row">
@@ -15,9 +17,16 @@
                     <div class="panel-body">
                         <div class="form-group">
                             <label class="col-sm-2 control-label" translate>Distribution</label>
-                            <div class="col-sm-10">
+                            <div class="col-sm-4">
                                 <select chosen class="form-control" ng-model="report.DistributionId"
                                         ng-options="item.id as item.title for item in distributions | orderBy:'item.title'"></select>
+                            </div>
+                            <label class="col-sm-2 control-label" translate>Paper Size</label>
+                            <div class="col-sm-4">
+                                <select  class="form-control" ng-model="report.PaperSize">
+                                    <option value="A4" selected>A4</option>
+                                    <option value="Letter">US Letter</option>
+                                </select>
                             </div>
                         </div>
                     </div>

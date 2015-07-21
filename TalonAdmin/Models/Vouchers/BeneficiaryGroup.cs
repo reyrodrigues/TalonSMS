@@ -11,6 +11,7 @@ namespace TalonAdmin.Models.Vouchers
     public class BeneficiaryGroup : TenantEntity
     {
         public virtual string Name { get; set; }
+        public virtual int? Number { get; set; }
         public virtual ICollection<Beneficiary> Beneficiaries { get; set; }
     }
 }
