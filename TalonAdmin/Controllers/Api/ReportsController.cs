@@ -97,8 +97,9 @@ namespace TalonAdmin.Controllers.Api
                 var items = (await ctx.VoucherTransactionRecords
                                     .Where((v) => (v.VendorId == vendorId || v.Vendor.ParentRecordId == vendorId)
                                     && v.Voucher.Distribution.ProgramId == programId
-                    //&& v.Voucher.ReconciledOn != null
-                    //&& v.Voucher.IsFinalized != true
+                                    && (v.Type == 2 || v.Type == 3) // Either cancelled or claimed
+                                    && v.ReconciledOn != null
+                                    && v.IsFinalized != true
                                     )
                                     .ToArrayAsync())
                                      .Select(v =>
@@ -107,10 +108,10 @@ namespace TalonAdmin.Controllers.Api
                                         Name = v.Beneficiary.FirstName + " " + v.Beneficiary.LastName,
                                         v.Beneficiary.MobileNumber,
                                         v.Beneficiary.NationalId,
-                                        v.FinalizedOn,
+                                        FinalizedOn = v.LastModifiedOn,
                                         v.Voucher.VoucherCode,
                                         v.ConfirmationCode,
-                                        v.Voucher.Category.Value,
+                                        v.Value,
                                         v.VoucherId,
                                         v.Voucher.DistributionId,
                                         DistributionNumber = createDistributionNumber(v.Voucher.DistributionId),
@@ -148,7 +149,7 @@ namespace TalonAdmin.Controllers.Api
                     PageSize = pageSize,
                     PaperSize = Enum.GetName(typeof(PaperKind), paperSize),
                     Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
-                    TimezoneOffset = request.TimezoneOffset != null? request.TimezoneOffset : DateTimeOffset.Now.Offset.TotalHours,
+                    TimezoneOffset = request.TimezoneOffset != null ? request.TimezoneOffset : DateTimeOffset.Now.Offset.TotalHours,
                     Total = items.Select(i => i.Value).Sum()
                 };
 
@@ -191,7 +192,15 @@ namespace TalonAdmin.Controllers.Api
 
                 var voucherIds = items.Where(v => v.VoucherId.HasValue).Select(v => v.VoucherId.Value).ToArray();
 
-                foreach (var finalizedVoucher in ctx.Vouchers.Where(v => voucherIds.Contains(v.Id)))
+                var transactionRecords  = await ctx.VoucherTransactionRecords
+                                    .Where((v) => (v.VendorId == vendorId || v.Vendor.ParentRecordId == vendorId)
+                                    && v.Voucher.Distribution.ProgramId == programId
+                                    && (v.Type == 2 || v.Type == 3) // Either cancelled or claimed
+                                    && v.ReconciledOn != null
+                                    && v.IsFinalized != true)
+                                    .ToArrayAsync();
+
+                foreach (var finalizedVoucher in transactionRecords)
                 {
                     finalizedVoucher.IsFinalized = true;
                 }
@@ -241,10 +250,17 @@ namespace TalonAdmin.Controllers.Api
             var countryId = request.CountryId;
             var organizationId = request.OrganizationId;
 
+
             using (var ctx = new Models.Vouchers.Context())
             {
                 Models.Admin.Organization organization = null;
                 Models.Admin.Country country = null;
+                Func<int?, string> fetchLatestConfirmationCode =  (i) => ctx.VoucherTransactionRecords
+                                                        .Where(t => t.VoucherId == i && t.Type == 2)
+                                                        .OrderByDescending(t => t.LastModifiedOn)
+                                                        .Select(t => t.ConfirmationCode)
+                                                        .FirstOrDefault();
+
 
                 using (var actx = new Models.Admin.AdminContext())
                 {
@@ -252,7 +268,9 @@ namespace TalonAdmin.Controllers.Api
                     country = await actx.Countries.Where(c => c.Id == countryId).FirstOrDefaultAsync();
                 }
                 var items = (await ctx.VoucherTransactionRecords
-                                    .Where((v) => v.Voucher.DistributionId == distributionId)
+                                    .Where((v) => v.Voucher.DistributionId == distributionId
+                                     && v.Type == 1
+                                    )
                                     .ToArrayAsync())
                                     .Select(v => new
                                     {
@@ -262,9 +280,9 @@ namespace TalonAdmin.Controllers.Api
                                         v.Beneficiary.MobileNumber,
                                         Location = v.Beneficiary.Location != null ? v.Beneficiary.Location.Name : "",
                                         v.Voucher.VoucherCode,
-                                        v.Voucher.Category.Value,
-                                        v.StatusString,
-                                        v.ConfirmationCode,
+                                        v.Voucher.Value,
+                                        v.Voucher.StatusString,
+                                        ConfirmationCode = fetchLatestConfirmationCode(v.VoucherId),
                                     }).OrderBy(a => a.Name).ToArray();
 
                 int pageSize = 20;
@@ -356,14 +374,14 @@ namespace TalonAdmin.Controllers.Api
                 var query = from v in ctx.VoucherTransactionRecords
                             where
                                 v.Voucher.Distribution.ProgramId == request.ProgramId
-                                && v.Voucher.ReconciledOn != null
-                                && v.Voucher.ReconciledOn.Value > periodStart
-                                && v.Voucher.ReconciledOn.Value < periodEnd
-                                && v.Voucher.IsFinalized == true
+                                && v.ReconciledOn != null
+                                && v.ReconciledOn.Value > periodStart
+                                && v.ReconciledOn.Value < periodEnd
+                                && v.IsFinalized == true
                             select
                                 new
                                 {
-                                    v.Voucher.ReconciledOn,
+                                    v.ReconciledOn,
                                     VoucherName = v.Vendor.ParentRecordId == null ? v.Vendor.Name : v.Vendor.ParentRecord.Name,
                                     v.Voucher.Category.Value
                                 };

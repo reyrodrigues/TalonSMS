@@ -30,39 +30,7 @@ namespace TalonAdmin.Controllers.Api
                 ctx.Configuration.ProxyCreationEnabled = false;
                 // Filter Country
 
-                var query = ctx.VoucherTransactionRecords
-                    .Include("Beneficiary")
-                    .Include("Voucher")
-                    .Include("Voucher.Category")
-                    .Where(v => v.Status < 2);
-
-                using (MD5 md5Hash = MD5.Create())
-                {
-                    var records = (await query.ToArrayAsync())
-                        .Where(v => v.Beneficiary != null)
-                        .Select(v =>
-                        {
-                            var iv = new byte[16];
-                            _generator.GetBytes(iv);
-                            byte[] key = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(v.Beneficiary.NationalId + ":" + v.Voucher.VoucherCode));
-                            return new
-                            {
-                                IV = Convert.ToBase64String(iv),
-                                RecordKey = Convert.ToBase64String(key),
-                                Encrypted = String.Format(
-                                    "{0}:{1}:{2}", 
-                                    v.Voucher.VoucherCode, 
-                                    v.Voucher.Category.Value,
-                                    v.CreatedOn.ToBinary()
-                                ).Encrypt(iv, HashPin(v.Beneficiary)),
-                                Date = v.CreatedOn
-                            };
-                        })
-                        .OrderByDescending(v => v.Date);
-
-
-                    return Ok<JToken>(JToken.FromObject(records));
-                }
+                return Ok();
             }
         }
 

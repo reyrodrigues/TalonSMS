@@ -91,7 +91,7 @@
                                     <td>{{ d.Beneficiaries }}</td>
                                     <td>{{ d.TotalVouchers }}</td>
                                     <td>{{ d.VouchersUsed }}</td>
-                                    <td>{{ d.Vendors }}</td>
+                                    <td>{{ d.VendorIds.length }}</td>
                                     <td data-value="{{ d.ClaimedAmount || 0 }}">{{ (d.ClaimedAmount || 0)|currency:(country.CurrencyUnicodeSymbol||'$') }}</td>
                                 </tr>
                             </tbody>

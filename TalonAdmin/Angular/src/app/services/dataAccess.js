@@ -18,6 +18,7 @@ function emFactory(breeze, modelOverrides) {
     metadataStore.importMetadata(window.ContextMetadata);
     metadataStore.registerEntityTypeCtor("VoucherTransactionRecord", modelOverrides.VoucherTransactionRecord);
     metadataStore.registerEntityTypeCtor("Beneficiary", modelOverrides.Beneficiary);
+    metadataStore.registerEntityTypeCtor("Voucher", modelOverrides.Voucher);
 
     var entityManager = new breeze.EntityManager({
         dataService: dataService,

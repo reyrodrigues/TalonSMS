@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -21,38 +22,24 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual DateTime CreatedOn { get; set; }
         public virtual DateTime? LastModifiedOn { get; set; }
-        public virtual DateTime? FinalizedOn { get; set; }
 
         public virtual string ConfirmationCode { get; set; }
 
         /// <summary>
-        /// 1. Valid
-        /// 2. Invalid
+        /// 1. Credit
+        /// 2. Debit
+        /// 3. Cancellation 
         /// </summary>
-        public virtual int Status { get; set; }
+        [DefaultValue(1)]
+        public virtual int Type { get; set; }
+        public virtual decimal? Value { get; set; }
 
-        public string StatusString
-        {
-            get
-            {
-                switch (Status)
-                {
-                    case 0:
-                        return "Unclaimed";
-                    case 2:
-                        return "Claimed";
-                    case 3:
-                        return "Cancelled";
-                    default:
-                        return "";
-                }
-            }
-        }
+        public virtual string ReconciledBy { get; set; }
+        public virtual DateTime? ReconciledOn { get; set; }
+        public virtual bool? IsFinalized { get; set; }
 
         public virtual Beneficiary Beneficiary { get; set; }
-
         public virtual Vendor Vendor { get; set; }
         public virtual Voucher Voucher { get; set; }
-
     }
 }

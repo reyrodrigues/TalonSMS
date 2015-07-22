@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
@@ -32,87 +33,88 @@ namespace TalonAdmin.Controllers.Api
         [HttpGet, EnableQuery]
         public async Task<IHttpActionResult> DashboardSummary()
         {
-            var vendorCount = ctx.Vendors.Count();
-            var voucherQuery = ctx.Vouchers.FilterCountry(this).FilterOrganization(this);
-            var distributionQuery = ctx.Distributions.Include("Program").Include("Location").FilterCountry(this).FilterOrganization(this);
-            var transactionRecordQuery = ctx.VoucherTransactionRecords.FilterCountry(this).FilterOrganization(this);
-
-            var distributions = ctx.Distributions
+            var programs = await ctx.Programs
+                .Include("Distributions")
                 .FilterCountry(this)
                 .FilterOrganization(this)
-                .Select(s => s.Id)
-                .ToArray();
-
-
-            var programs = ctx.Programs
-                .Include("Distributions")
-                .Include("Distributions.Location")
-                .Include("Distributions.Vouchers")
-                .Include("Distributions.Vouchers.TransactionRecords")
-                .Include("Distributions.Vouchers.Category")
-                .FilterCountry(this)
-                .FilterOrganization(this).ToArray();
+                .Where(p => p.Distributions.Any(d => d.Vouchers.Any(v => v.Status == 2 || v.Status == 3)))
+                .ToArrayAsync();
 
             var distributionSummary = programs.Select(p => p.Distributions.Select(d => new
             {
-                Program = p,
-                Distribution = new
-                {
-                    Id = d.Id,
-                    Title = d.Title,
-                    Location = d.Location != null ? new
-                    {
-                        Id = d.Location.Id,
-                        Name = d.Location.Name
-                    } : null,
-                },
-                Location = d.Location != null ? d.Location : null,
-                TotalVouchers = d.Vouchers.Count(),
-                VouchersUsed = d.Vouchers.Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any()).Count(),
+                ProgramId = p.Id,
+                DistributionId = d.Id,
+                LocationId = d.LocationId,
+                TotalVouchers = ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id).Count(),
+                VouchersUsed = ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id).Where(v => v.Status == 2 || v.Status == 3).Count(),
                 UniqueBeneficiaries =
-                    d.Vouchers
-                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Status == 3 || v.Status == 2)
                     .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
                     .SelectMany(r => r)
                     .Distinct()
                     .Count(),
                 Beneficiaries =
-                    d.Vouchers
-                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Select(v => v.TransactionRecords.Where(t => t.Type == 1).Select(t => t.BeneficiaryId))
                     .SelectMany(r => r)
                     .Distinct()
                     .Count(),
-                BeneficiariyIds =
-                    d.Vouchers
+                BeneficiaryIds =
+                    ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id)
                     .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
                     .SelectMany(r => r)
                     .Distinct(),
                 ClaimedAmount =
-                    d.Vouchers
-                    .Where(v => v.Category != null && v.Category.Value != null && v.TransactionRecords.Where(t => t.Status == 2).Any())
-                    .Select(v => (v.Category.Value ?? 0))
+                    ctx.Vouchers
+                    .Where(v => v.Status == 2 || v.Status == 3)
+                    .Where(v => v.DistributionId == d.Id && v.TransactionRecords.Where(t => t.Type == 2).Any())
+                    .Select(v => v.TransactionRecords.Where(t => t.Type == 2).Select(t => t.Value ?? 0m).Sum())
                 .Sum(),
                 IssuedAmount =
-                    d.Vouchers
-                    .Where(v => v.Category != null && v.Category.Value != null && v.TransactionRecords.Any())
-                    .Select(v => (v.Category.Value ?? 0))
+                    ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Value != null && v.TransactionRecords.Any())
+                    .Select(v => (v.Value ?? 0))
                 .Sum(),
                 TotalVendors =
-                    d.Vouchers
-                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Status == 2 || v.Status == 3)
                     .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
                     .SelectMany(r => r)
                     .Distinct()
                 .Sum(),
                 VendorIds =
-                    d.Vouchers
-                    .Where(v => v.TransactionRecords.Where(t => t.Status == 2).Any())
+                    ctx.Vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Status == 2 || v.Status == 3)
                     .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
                     .SelectMany(r => r)
                     .Distinct(),
-            }));
+            }).ToArray()).ToArray();
 
-            var dashboardQuery = distributionSummary.SelectMany(r => r).ToArray().GroupBy(k => k.Program).Select(g => new
+            var dashboardQuery = distributionSummary
+                .SelectMany(r => r.Select(d => new
+                {
+                    Program = ctx.Programs.Where(p => p.Id == d.ProgramId).FirstOrDefault(),
+                    Distribution = ctx.Distributions.Where(p => p.Id == d.DistributionId).FirstOrDefault(),
+                    Location = ctx.Locations.Where(p => p.Id == d.LocationId).FirstOrDefault(),
+                    d.TotalVouchers,
+                    d.VouchersUsed,
+                    d.UniqueBeneficiaries,
+                    d.Beneficiaries,
+                    d.BeneficiaryIds,
+                    d.ClaimedAmount,
+                    d.IssuedAmount,
+                    d.TotalVendors,
+                    d.VendorIds,
+                })).ToArray().GroupBy(k => k.Program).Select(g => new
             {
                 Program = new
                 {
@@ -123,7 +125,7 @@ namespace TalonAdmin.Controllers.Api
                 TotalVouchers = g.Select(d => d.TotalVouchers).Sum(),
                 VouchersUsed = g.Select(d => d.VouchersUsed).Sum(),
                 UniqueBeneficiaries = g.Select(d => d.UniqueBeneficiaries).Sum(),
-                Beneficiaries = g.Select(d => d.BeneficiariyIds).SelectMany(r => r).Distinct().Count(),
+                Beneficiaries = g.Select(d => d.BeneficiaryIds).SelectMany(r => r).Distinct().Count(),
                 ClaimedAmount = g.Select(d => d.ClaimedAmount).Sum(),
                 IssuedAmount = g.Select(d => d.IssuedAmount).Sum(),
                 TotalVendors = g.Select(d => d.VendorIds).SelectMany(r => r).Distinct().Count(),
@@ -140,7 +142,6 @@ namespace TalonAdmin.Controllers.Api
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
 
                 });
-
 
             return Ok<JToken>(JToken.Parse(jsonString));
         }
@@ -166,7 +167,7 @@ namespace TalonAdmin.Controllers.Api
             if (start == null)
                 start = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == program.Id).Select(c => c.CreatedOn).ToArray().Select(c => c.ToUniversalTime()).Min();
             if (end == null)
-                end = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == program.Id && d.FinalizedOn != null).Select(c => c.FinalizedOn.Value).ToArray().Select(c => c.ToUniversalTime()).Max();
+                end = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == program.Id && d.LastModifiedOn != null).Select(c => c.LastModifiedOn.Value).ToArray().Select(c => c.ToUniversalTime()).Max();
 
 
             return Enumerable
@@ -183,20 +184,20 @@ namespace TalonAdmin.Controllers.Api
                         .Where(v => v.Distribution.ProgramId == program.Id)
                         .Where(v=>v.TransactionRecords.Where(t=> 
                             t.CreatedOn > d.Date && t.CreatedOn < d.DatePlusOne && 
-                            (t.FinalizedOn >= d.Date || t.FinalizedOn == null))
+                            (t.LastModifiedOn >= d.Date || t.LastModifiedOn == null))
                         .Any())
                         .Count(),
                     voucherQuery
                         .Where(v => v.Distribution.ProgramId == program.Id)
                         .Where(v=>v.TransactionRecords.Where(t=> 
                            t.CreatedOn < d.DatePlusOne && 
-                            (t.FinalizedOn >= d.Date || t.FinalizedOn == null))
+                            (t.LastModifiedOn >= d.Date || t.LastModifiedOn == null))
                         .Any())
                         .Count(),
                     voucherQuery
                         .Where(v => v.Distribution.ProgramId == program.Id)
                         .Where(v=>v.TransactionRecords.Where(t =>
-                            t.FinalizedOn > d.Date && t.FinalizedOn < d.DatePlusOne 
+                            t.LastModifiedOn > d.Date && t.LastModifiedOn < d.DatePlusOne 
                             
                             ).Any())
                         .Count()

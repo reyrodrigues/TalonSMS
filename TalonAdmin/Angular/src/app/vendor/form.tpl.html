@@ -96,15 +96,21 @@
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
     <tab heading="Used Vouchers">
         <div class="panel panel-default">
-            <sub-grid filter="{
-                       'and': [
-                        { status: { '==': 2 } },
+            <sub-grid filter="
+                      {'and': [
+                        { 'type': {'==': 2} },
                         { 'or': [
-                            {'vendorId': { '==': vm.entity.id }},
-                            {'vendor.parentRecordId': { '==': vm.entity.id }}
-                          ]
-                        }]
-                      }"
+                               { 'voucher.status': { '==': 2 } },
+                               { 'voucher.status': { '==': 3 } },
+                               { 'voucher.status': { '==': 4 } }
+                              ]
+                          },
+                        { 'or': [
+                                {'vendorId': { '==': vm.entity.id }},
+                                {'vendor.parentRecordId': { '==': vm.entity.id }}
+                              ]
+                            }
+                       ]}"
                       collection="VoucherTransactionRecords"
                       expand="beneficiary, voucher, voucher.category"
                       entity="vm.entity">
@@ -115,10 +121,10 @@
                     </div>
                 </sub-grid-column>
                 <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
-                <sub-grid-column label="Value" field="voucher.category.value"></sub-grid-column>
-                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Used On" field="finalizedOn"><div class="ui-grid-cell-contents">{{row.entity.finalizedOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Status" field="status"><div class="ui-grid-cell-contents">{{row.entity.statusString}}</div></sub-grid-column>
+                <sub-grid-column label="Value" field="value"></sub-grid-column>
+                <sub-grid-column label="Claimed On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Used On" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="Status" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
             </sub-grid>
         </div>
     </tab>

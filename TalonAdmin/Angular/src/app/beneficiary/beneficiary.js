@@ -164,7 +164,7 @@ BeneficiaryEditController.prototype.configure = function configure() {
     function cancelVoucher(entity, grid) {
         var dlg = dialogs.confirm("Confirm", "Are you sure you would like to cancel this voucher?");
         dlg.result.then(function (r) {
-            var query = entityManagerFactory.entityQuery('VoucherTransactionRecords')
+            var query = entityManagerFactory.entityQuery('IssuedVoucherTransactionRecords')
                 .where("voucher.id", "==", entity.voucherId)
                 .using(entityManager)
                 .execute()

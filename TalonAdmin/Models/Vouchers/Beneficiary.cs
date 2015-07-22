@@ -40,7 +40,5 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual int? LocationId { get; set; }
         public virtual Location Location { get; set; }
-
-        public virtual ICollection<BeneficiaryDistribution> Distributions { get; set; }
     }
 }

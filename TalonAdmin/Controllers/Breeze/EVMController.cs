@@ -62,7 +62,6 @@ namespace TalonAdmin.Controllers.Breeze
         }
         
 
-
         [HttpGet]
         public IQueryable<Models.Vouchers.ProgramVendorReconciliation> ProgramVendorReconciliations()
         {
@@ -75,14 +74,6 @@ namespace TalonAdmin.Controllers.Breeze
         public IQueryable<Models.Vouchers.DistributionLog> DistributionLogs()
         {
             return _contextProvider.Context.DistributionLogs
-                .FilterCountry(this)
-                .FilterOrganization(this);
-        }
-
-        [HttpGet]
-        public IQueryable<Models.Vouchers.BeneficiaryDistribution> BeneficiaryDistributions()
-        {
-            return _contextProvider.Context.BeneficiaryDistributions
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
@@ -142,6 +133,18 @@ namespace TalonAdmin.Controllers.Breeze
         public IQueryable<Models.Vouchers.VoucherTransactionRecord> VoucherTransactionRecords()
         {
             return _contextProvider.Context.VoucherTransactionRecords
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
+        /// <summary>
+        /// Filtered Voucher Transactions limited to just vouchers issued.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IQueryable<Models.Vouchers.VoucherTransactionRecord> IssuedVoucherTransactionRecords()
+        {
+            return _contextProvider.Context.VoucherTransactionRecords
+                .Where(v=> v.Type == 1)
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }

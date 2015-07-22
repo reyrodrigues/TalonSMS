@@ -71,7 +71,7 @@ namespace TalonAdmin.Controllers
                         Page = i + 1,
                         IsLastPage = (i + 1) == numberOfPages,
                         Items = items.Skip(i * pageSize).Take(pageSize).ToArray(),
-                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Category.Value).Sum()
+                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Value).Sum()
                     });
                 }
                 var user = UserManager.FindByName(User.Identity.Name);
@@ -87,7 +87,7 @@ namespace TalonAdmin.Controllers
                     Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
                     Logo = Convert.ToBase64String(image),
                     LogoMimeType = "image/svg+xml",
-                    Total = items.Select(i => i.Voucher.Category.Value).Sum()
+                    Total = items.Select(i => i.Voucher.Value).Sum()
                 };
                 var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
 

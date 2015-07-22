@@ -5,8 +5,14 @@ function ModelOverrides() {
     return {
         VoucherTransactionRecord: VoucherTransactionRecord,
         Beneficiary: Beneficiary,
-        CountrySettings: CountrySettings
+        CountrySettings: CountrySettings,
+        Voucher: Voucher
     };
+
+    function Voucher() {
+        this.statusString = "";
+
+    }
 
     function VoucherTransactionRecord() {
         this.statusString = "";

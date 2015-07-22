@@ -66,8 +66,13 @@ namespace TalonAdmin.Models.Vouchers
             //modelBuilder.Conventions.Add(new DataTypePropertyAttributeConvention());
 
 #if !DEBUG
-#endif
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
+#endif
+#if DEBUG
+            //Database.SetInitializer(new NullDatabaseInitializer<Context>());
+
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<Context>());
+#endif
 
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
@@ -83,14 +88,6 @@ namespace TalonAdmin.Models.Vouchers
                 .WithMany(p => p.TransactionRecords)
                 .WillCascadeOnDelete(false);
 
-            modelBuilder.Entity<BeneficiaryDistribution>()
-                .HasRequired(p => p.Beneficiary)
-                .WithMany(p => p.Distributions);
-
-            modelBuilder.Entity<BeneficiaryDistribution>()
-                .HasRequired(p => p.Distribution)
-                .WithMany(p => p.Beneficiaries);
-
             modelBuilder.Entity<Beneficiary>()
                 .HasOptional(p => p.Group)
                 .WithMany(p => p.Beneficiaries);
@@ -101,7 +98,6 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<VendorType> VendorTypes { get; set; }
         public DbSet<Beneficiary> Beneficiaries { get; set; }
         public DbSet<BeneficiaryGroup> BeneficiaryGroups { get; set; }
-        public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Program> Programs { get; set; }
         public DbSet<ProgramVoucherCategory> ProgramVoucherCategories { get; set; }

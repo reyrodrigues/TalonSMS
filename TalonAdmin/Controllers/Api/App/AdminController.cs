@@ -60,12 +60,8 @@ namespace TalonAdmin.Controllers.Api
                     return BadRequest("Invalid National Id");
                 }
 
-                var vouchers = await ctx.VoucherTransactionRecords
-                    .Where(v => v.BeneficiaryId == beneficiary.Id && v.Status < 2)
-                    .Select(v => v.Voucher.VoucherCode)
-                    .ToArrayAsync();
 
-                return Ok<JToken>(JToken.FromObject(vouchers));
+                return Ok();
             }
         }
     }

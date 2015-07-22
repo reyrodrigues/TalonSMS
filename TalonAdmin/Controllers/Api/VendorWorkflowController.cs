@@ -111,14 +111,16 @@ namespace TalonAdmin.Controllers.Api
                         new Models.Vouchers.Voucher
                         {
                             CategoryId = category.Id,
+                            Value = value,
                             DistributionId = distributionId,
                             VoucherCode = codeStack.Pop(),
                             CountryId = distribution.CountryId,
-                            OrganizationId = distribution.OrganizationId
+                            OrganizationId = distribution.OrganizationId,
+                            Status = 1,
                         }
                     ).ToArray();
 
-                    ctx.BulkInsert(vouchers);
+                    ctx.Vouchers.AddRange(vouchers);
 
                     category.IssuedVouchers = category.NumberOfVouchers;
                 }
@@ -298,11 +300,11 @@ namespace TalonAdmin.Controllers.Api
                         var transactionRecord = new Models.Vouchers.VoucherTransactionRecord();
 
                         transactionRecord.Beneficiary = beneficiary;
-
                         transactionRecord.BeneficiaryId = beneficiary.Id;
-                        transactionRecord.Status = 0;
+                        transactionRecord.Type = 1;
                         transactionRecord.VoucherId = voucher.Id;
                         transactionRecord.Voucher = voucher;
+                        transactionRecord.Value = voucher.Value;
                         transactionRecord.OrganizationId = voucher.OrganizationId;
                         transactionRecord.CountryId = voucher.CountryId;
 
@@ -311,14 +313,7 @@ namespace TalonAdmin.Controllers.Api
                     }
                 }
 
-                ctx.BulkInsert(transactionRecords);
-
-                ctx.BulkInsert(beneficiaries.Select(b =>
-                    new Models.Vouchers.BeneficiaryDistribution
-                    {
-                        BeneficiaryId = b.Id,
-                        DistributionId = distribution.Id
-                    }));
+                ctx.VoucherTransactionRecords.AddRange(transactionRecords);
 
                 await ctx.SaveChangesAsync();
 
@@ -449,9 +444,6 @@ namespace TalonAdmin.Controllers.Api
                 }
 
 
-                var transactionRecord = voucher.TransactionRecords.FirstOrDefault();
-                transactionRecord.LastModifiedOn = DateTime.UtcNow;
-                db.SaveChanges();
 
                 if (voucher.Category.VendorTypeId != null &&
                     voucher.Category.VendorTypeId != vendor.TypeId)
@@ -461,28 +453,28 @@ namespace TalonAdmin.Controllers.Api
 
                     return Ok("Wrong Vendor Type");
                 }
-                else if (transactionRecord.Status == 2 && (DateTime.UtcNow - transactionRecord.FinalizedOn.Value).TotalMinutes > 30)
+                else if (voucher.Status == 3 && (DateTime.UtcNow - voucher.LatestCreditTransactionRecords.LastModifiedOn.Value).TotalMinutes > 30)
                 {
                     // Voucher used already
                     VoucherAlreadyUsed(voucher, vendor);
 
                     return Ok("Voucher Already Used");
                 }
-                else if (transactionRecord.Status == 2 && (DateTime.UtcNow - transactionRecord.FinalizedOn.Value).TotalMinutes < 30)
+                else if (voucher.Status == 3 && (DateTime.UtcNow - voucher.LatestCreditTransactionRecords.LastModifiedOn.Value).TotalMinutes < 30)
                 {
                     // Voucher used already
                     ResendConfirmationCode(voucher, vendor);
 
                     return Ok("Confirmation code resent");
                 }
-                else if (transactionRecord.Status == 3)
+                else if (voucher.Status == 4)
                 {
                     // Voucher canceled
                     VoucherCancelled(voucher, vendor);
 
                     return Ok("Voucher Canceled");
                 }
-                else if (onlyNumbers.Replace(transactionRecord.Beneficiary.NationalId, "") != onlyNumbers.Replace(nationalId, ""))
+                else if (onlyNumbers.Replace(voucher.IssuingTransactionRecord.Beneficiary.NationalId, "") != onlyNumbers.Replace(nationalId, ""))
                 {
                     // Wrong national id
                     WrongNationalId(voucher, vendor);
@@ -491,10 +483,19 @@ namespace TalonAdmin.Controllers.Api
                 }
                 else
                 {
-                    transactionRecord.VendorId = vendor.Id;
-                    transactionRecord.Status = 2;
-                    transactionRecord.ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6");
-                    transactionRecord.FinalizedOn = DateTime.UtcNow;
+                    var transactionRecord = new VoucherTransactionRecord()
+                    {
+                        VendorId = vendor.Id,
+                        Type = 2,
+                        ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6"),
+                        LastModifiedOn = DateTime.UtcNow,
+                        CreatedOn = DateTime.UtcNow,
+                        Value = voucher.Value, // SMS claims full price
+                    };
+
+                    db.VoucherTransactionRecords.Add(transactionRecord);
+                    voucher.Status = 3;
+
                     db.SaveChanges();
 
                     ConfirmTransaction(voucher);
@@ -535,7 +536,7 @@ namespace TalonAdmin.Controllers.Api
 
         private void ResendConfirmationCode(Voucher voucher, Vendor vendor)
         {
-            var transactionRecord = voucher.TransactionRecords.First();
+            var transactionRecord = voucher.IssuingTransactionRecord;
             var model = new
             {
                 Voucher = voucher,
@@ -556,7 +557,7 @@ namespace TalonAdmin.Controllers.Api
                 var beneficiary = ctx.Beneficiaries.Include("Group").Where(b => b.Id == beneficiaryId).First();
                 var voucher = ctx.Vouchers.Include("Category").Include("Category.Type").Where(b => b.Id == voucherId).First();
 
-                var transactionRecord = voucher.TransactionRecords.First();
+                var transactionRecord = voucher.IssuingTransactionRecord;
                 var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
 
                 var beneficiaryMessage = CompileMessage("Beneficiary Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
@@ -567,7 +568,7 @@ namespace TalonAdmin.Controllers.Api
 
         private void SendCancelledVoucher(Models.Vouchers.Voucher voucher)
         {
-            var transactionRecord = voucher.TransactionRecords.First();
+            var transactionRecord = voucher.IssuingTransactionRecord;
             var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
 
             var message = CompileMessage("Beneficiary Canceled Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
@@ -577,7 +578,7 @@ namespace TalonAdmin.Controllers.Api
 
         private void VoucherCancelled(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
         {
-            var transactionRecord = voucher.TransactionRecords.First();
+            var transactionRecord = voucher.IssuingTransactionRecord;
             var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = transactionRecord.Beneficiary };
 
             var vendorMessage = CompileMessage("Vendor Cancelled Message", voucher.CountryId, voucher.OrganizationId, model);
@@ -587,7 +588,7 @@ namespace TalonAdmin.Controllers.Api
 
         private void VoucherAlreadyUsed(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
         {
-            var transactionRecord = voucher.TransactionRecords.First();
+            var transactionRecord = voucher.IssuingTransactionRecord;
             var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
 
             var vendorMessage = CompileMessage("Vendor Already Used Message", voucher.CountryId, voucher.OrganizationId, model);
@@ -599,7 +600,7 @@ namespace TalonAdmin.Controllers.Api
 
         private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
         {
-            var transactionRecord = voucher.TransactionRecords.First();
+            var transactionRecord = voucher.IssuingTransactionRecord;
             var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = transactionRecord.Beneficiary };
 
             var vendorMessage = CompileMessage("Vendor Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
@@ -638,7 +639,7 @@ namespace TalonAdmin.Controllers.Api
             context.Clients.All.message("success", "Incoming voucher", "Confirmed voucher!");
             context.Clients.All.updateDashboard();
 
-            var transactionRecord = voucher.TransactionRecords.First();
+            var transactionRecord = voucher.IssuingTransactionRecord;
             var model = new
             {
                 Voucher = voucher,

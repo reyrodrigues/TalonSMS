@@ -131,10 +131,10 @@ function VendorReceiptController($scope, $rootScope, $q, toaster, entityManagerF
 
 
     $scope.reconcileVoucher = function (transactionRecord) {
-        transactionRecord.voucher.reconciledOn = moment().utc().toDate();
-        transactionRecord.voucher.reconciledBy = $rootScope.currentUser.UserName;
+        transactionRecord.reconciledOn = moment().utc().toDate();
+        transactionRecord.reconciledBy = $rootScope.currentUser.UserName;
 
-        entityManager.saveChanges([transactionRecord.voucher])
+        entityManager.saveChanges([transactionRecord])
             .then(function () { })
             .catch(function (response) { toaster.pop('error', 'Error', res.data); });
     };
@@ -154,7 +154,13 @@ function VendorReceiptController($scope, $rootScope, $q, toaster, entityManagerF
                         ]
                     },
                     { "voucher.distribution.program.id": { "==": $scope.reconciliation.Program.id } },
-                    { "voucher.isFinalized": { "==": null } }
+                    { "isFinalized": { "==": null } },
+                    {
+                        "or": [
+                            { "type": { "==": 2 } },
+                            { "type": { "==": 3 } }
+                        ]
+                    },
                 ]
             })
             .execute()

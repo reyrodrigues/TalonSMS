@@ -66,19 +66,19 @@
                                     <div class="col-sm-3"><strong>Received On</strong></div>
                                     <div class="col-sm-3">{{ voucher.createdOn|date:"medium" }}</div>
                                     <div class="col-sm-3"><strong>Redeemed On</strong></div>
-                                    <div class="col-sm-3">{{ voucher.finalizedOn|date:"medium" }}</div>
+                                    <div class="col-sm-3">{{ voucher.lastModifiedOn|date:"medium" }}</div>
                                 </div>
                             </div>
                             <div class="col-sm-2">
                                 <div class="row">
                                     <div class="col-sm-12">
-                                        <span class="col-sm-12 label bg-info" ng-if="!voucher.voucher.isFinalized && voucher.voucher.reconciledOn">Reconciled</span>
-                                        <span class="col-sm-12 label bg-warning" ng-if="!voucher.voucher.reconciledOn">Not Reconciled</span>
+                                        <span class="col-sm-12 label bg-info" ng-if="!voucher.isFinalized && voucher.reconciledOn">Reconciled</span>
+                                        <span class="col-sm-12 label bg-warning" ng-if="!voucher.reconciledOn">Not Reconciled</span>
                                     </div>
                                     <div class="col-sm-12">
                                         &nbsp;
                                     </div>
-                                    <div class="col-sm-12" ng-if="!voucher.voucher.reconciledOn">
+                                    <div class="col-sm-12" ng-if="!voucher.reconciledOn">
                                         <button class="btn btn-xs btn-block btn-success" ng-click="reconcileVoucher(voucher)">Reconcile</button>
                                     </div>
                                 </div>
