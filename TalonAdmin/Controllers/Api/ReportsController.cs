@@ -55,6 +55,111 @@ namespace TalonAdmin.Controllers.Api
             }
         }
 
+        [Route("ProgramClosureReport")]
+        public async Task<IHttpActionResult> ProgramClosureReport([FromBody] ReportRequestBindingModel request)
+        {
+            var paperSizeString = "A4";
+            if (!String.IsNullOrEmpty(request.PaperSize))
+            {
+                paperSizeString = request.PaperSize;
+            }
+            var paperSize = (PaperKind)Enum.Parse(typeof(PaperKind), paperSizeString);
+
+            var reportData = new byte[0];
+            var content = new StringBuilder();
+
+            var vendorId = request.VendorId ?? 0;
+            var programId = request.ProgramId ?? 0;
+            var countryId = request.CountryId;
+            var organizationId = request.OrganizationId;
+            var itemCount = 0;
+
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                Models.Admin.Organization organization = null;
+                Models.Admin.Country country = null;
+                Func<int, string> createDistributionNumber = (distributionId) =>
+                {
+                    var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
+                    var cycleNumber = distribution.Group != null ? distribution.Group.Number : 0;
+                    var distributionNumber = String.Format("{0:D3}-{1:D3}", distribution.Number ?? 0, cycleNumber);
+                    return distributionNumber;
+                };
+
+
+
+                using (var actx = new Models.Admin.AdminContext())
+                {
+                    organization = await actx.Organizations.Where(o => o.Id == organizationId).FirstOrDefaultAsync();
+                    country = await actx.Countries.Where(c => c.Id == countryId).FirstOrDefaultAsync();
+                }
+
+                var items = (await ctx.VoucherTransactionRecords
+                                    .Where((v) =>
+                                    v.Voucher.Distribution.ProgramId == programId
+                                    && (v.Type == 2)
+                                    && v.ReconciledOn != null
+                                    && v.IsFinalized == true
+                                    )
+                                    .ToArrayAsync())
+                                     .Select(v =>
+                                     new
+                                     {
+                                         Vendor = v.Vendor.ParentRecordId == null ? v.Vendor : v.Vendor.ParentRecord,
+                                         v.Value,
+                                     })
+                                     .GroupBy(g => g.Vendor)
+                                     .Select(g => new
+                                     {
+                                         Vendor = g.Key,
+                                         NumberOfVouchers = g.Count(),
+                                         TotalValue = g.Sum(a => a.Value),
+                                     })
+                                     .OrderBy(a => a.Vendor.Name)
+                                     .ToArray();
+                itemCount = items.Count();
+
+                int pageSize = 20;
+                var pages = new List<dynamic>();
+                var numberOfPages = (int)Math.Ceiling(items.Length / (double)pageSize);
+
+                if (numberOfPages == 0)
+                {
+                    numberOfPages = 1;
+                }
+                for (int i = 0; i < numberOfPages; i++)
+                {
+                    pages.Add(new
+                    {
+                        Page = i + 1,
+                        IsLastPage = (i + 1) == numberOfPages,
+                        Items = items.Skip(i * pageSize).Take(pageSize).ToArray(),
+                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.TotalValue).Sum()
+                    });
+                }
+                var user = UserManager.FindByName(User.Identity.Name);
+
+                dynamic model = new
+                {
+                    User = user,
+                    Program = ctx.Programs.Where(d => d.Id == programId).First(),
+                    Organization = organization,
+                    Country = country,
+                    Pages = pages,
+                    Items = items,
+                    PageSize = pageSize,
+                    PaperSize = Enum.GetName(typeof(PaperKind), paperSize),
+                    Vendor = new Vendor(),
+                    TimezoneOffset = request.TimezoneOffset != null ? request.TimezoneOffset : DateTimeOffset.Now.Offset.TotalHours,
+                    Total = items.Select(i => i.TotalValue).Sum()
+                };
+
+                reportData = GenerateReport("ProgramClosureReport.cshtml", "Program Closure Report", (object)model, paperSize);
+            }
+
+            return this.File(reportData, null, "application/pdf");
+        }
+
         [Route("VendorProgramFinancialReport")]
         public async Task<IHttpActionResult> VendorProgramFinancialReport([FromBody] ReportRequestBindingModel request)
         {
@@ -97,7 +202,7 @@ namespace TalonAdmin.Controllers.Api
                 var items = (await ctx.VoucherTransactionRecords
                                     .Where((v) => (v.VendorId == vendorId || v.Vendor.ParentRecordId == vendorId)
                                     && v.Voucher.Distribution.ProgramId == programId
-                                    && (v.Type == 2 || v.Type == 3) // Either cancelled or claimed
+                                    && (v.Type == 2 ) 
                                     && v.ReconciledOn != null
                                     && v.IsFinalized != true
                                     )
@@ -138,7 +243,7 @@ namespace TalonAdmin.Controllers.Api
                 }
                 var user = UserManager.FindByName(User.Identity.Name);
 
-                var model = new
+                dynamic model = new
                 {
                     User = user,
                     Program = ctx.Programs.Where(d => d.Id == programId).First(),
@@ -153,49 +258,14 @@ namespace TalonAdmin.Controllers.Api
                     Total = items.Select(i => i.Value).Sum()
                 };
 
-
-                if (!_service.IsTemplateCached("VendorProgramReceiptReport.cshtml", null))
-                {
-                    _service.Compile("VendorProgramReceiptReport.cshtml");
-                }
-
-                var compiled = _service.RunCompile("VendorProgramReceiptReport.cshtml", null, model);
-
-                content.Append(compiled);
-
-
-                var document = new HtmlToPdfDocument
-                {
-                    GlobalSettings =
-                    {
-                        ProduceOutline = true,
-                        DocumentTitle = "Vendor Financial Report",
-                        PaperSize = PaperKind.A4,
-                        Margins =
-                        {
-                            All = 1,
-                            Unit = Unit.Centimeters
-                        },
-                        Orientation = TuesPechkin.GlobalSettings.PaperOrientation.Landscape
-                    },
-                    Objects = {
-                    new ObjectSettings { 
-                        HtmlText = content.ToString(),
-                        WebSettings = new WebSettings {
-                            DefaultEncoding = "utf-8"
-                        }
-                    },
-                }
-                };
-
-                reportData = WebApiApplication.converter.Convert(document);
+                reportData = GenerateReport("VendorProgramReceiptReport.cshtml", "Vendor Financial Report", (object)model, paperSize);
 
                 var voucherIds = items.Where(v => v.VoucherId.HasValue).Select(v => v.VoucherId.Value).ToArray();
 
                 var transactionRecords  = await ctx.VoucherTransactionRecords
                                     .Where((v) => (v.VendorId == vendorId || v.Vendor.ParentRecordId == vendorId)
                                     && v.Voucher.Distribution.ProgramId == programId
-                                    && (v.Type == 2 || v.Type == 3) // Either cancelled or claimed
+                                    && (v.Type == 2)
                                     && v.ReconciledOn != null
                                     && v.IsFinalized != true)
                                     .ToArrayAsync();
@@ -322,42 +392,11 @@ namespace TalonAdmin.Controllers.Api
                     TimezoneOffset = request.TimezoneOffset != null ? request.TimezoneOffset : DateTimeOffset.Now.Offset.TotalHours,
                     Total = items.Select(i => i.Value).Sum()
                 };
+                
+                var reportData = GenerateReport("DistributionReport.cshtml", "Distribution Report", (object)model, paperSize);
 
-                if (!_service.IsTemplateCached("DistributionReport.cshtml", null))
-                {
-                    _service.Compile("DistributionReport.cshtml");
-                }
-
-                var compiled = _service.RunCompile("DistributionReport.cshtml", null, model);
-
-                content.Append(compiled);
+                return this.File(reportData, null, "application/pdf");
             }
-
-            var document = new HtmlToPdfDocument
-            {
-                GlobalSettings =
-                {
-                    ProduceOutline = true,
-                    DocumentTitle = "Vendor Financial Report",
-                    PaperSize = paperSize,
-                    Margins =
-                    {
-                        All = 1,
-                        Unit = Unit.Centimeters
-                    },
-                    Orientation = TuesPechkin.GlobalSettings.PaperOrientation.Landscape
-                },
-                Objects = {
-                    new ObjectSettings { 
-                        HtmlText = content.ToString(),
-                        WebSettings = new WebSettings {
-                            DefaultEncoding = "utf-8"
-                        }
-                    },
-                }
-            };
-
-            return this.File(WebApiApplication.converter.Convert(document), null, "application/pdf");
         }
 
         [Route("PaymentScheduleReport")]
@@ -417,5 +456,47 @@ namespace TalonAdmin.Controllers.Api
             }
         }
 
+        private byte[] GenerateReport(string reportName, string reportTitle, object model, PaperKind paperKind = PaperKind.A4)
+        {
+            byte[] reportData = null;
+            var content = new StringBuilder();
+
+            if (!_service.IsTemplateCached(reportName, null))
+            {
+                _service.Compile(reportName);
+            }
+
+            var compiled = _service.RunCompile(reportName, null, model);
+
+            content.Append(compiled);
+
+
+            var document = new HtmlToPdfDocument
+            {
+                GlobalSettings =
+                {
+                    ProduceOutline = true,
+                    DocumentTitle = reportTitle,
+                    PaperSize = PaperKind.A4,
+                    Margins =
+                    {
+                        All = 1,
+                        Unit = Unit.Centimeters
+                    },
+                    Orientation = TuesPechkin.GlobalSettings.PaperOrientation.Landscape
+                },
+                Objects = {
+                    new ObjectSettings { 
+                        HtmlText = content.ToString(),
+                        WebSettings = new WebSettings {
+                            DefaultEncoding = "utf-8"
+                        }
+                    },
+                }
+            };
+
+            reportData = WebApiApplication.converter.Convert(document);
+            return reportData;
+        }
     }
 }

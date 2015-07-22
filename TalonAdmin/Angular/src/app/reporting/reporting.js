@@ -70,12 +70,21 @@
             pageTitle: 'Vendor Financial Report',
         }
     })
+    .state('reporting.program-closure', {
+        url: '/program-closure',
+        controller: 'ProgramClosureController as vm',
+        templateUrl: 'reporting/program-closure.tpl.html',
+        data: {
+            pageTitle: 'Vendor Financial Report',
+        }
+    })
     ;
 })
 .controller('VendorFinancialReportController', VendorFinancialReportController)
 .controller('DistributionReportController', DistributionReportController)
 .controller('VendorReceiptController', VendorReceiptController)
 .controller('ReportHistoryController', ReportHistoryController)
+.controller('ProgramClosureController', ProgramClosureController)
 
 ;
 
@@ -171,6 +180,34 @@ function VendorReceiptController($scope, $rootScope, $q, toaster, entityManagerF
             .catch(function () { console.log(arguments); });
     };
 }
+
+function ProgramClosureController($scope, $rootScope, $q, toaster, controlledLists, authService, $injector) {
+    $q.all([controlledLists.programs()]).then(function (promises) {
+        $scope.programs = promises[0];
+    });
+    var $localStorage = $injector.get('$localStorage');
+    var authData = $localStorage.authorizationData;
+    $scope.token = authData.token;
+
+    $scope.url = serviceRoot + 'api/Reports/ProgramClosureReport';
+
+    $scope.report = {
+        PaperSize: 'A4'
+    };
+
+    $rootScope.$watch('currentUser', function () {
+        if ($rootScope.currentUser) {
+            $scope.report.OrganizationId = $rootScope.currentUser.OrganizationId;
+        }
+    });
+
+    $rootScope.$watch('country', function () {
+        if ($rootScope.country) {
+            $scope.report.CountryId = $rootScope.country.Id;
+        }
+    });
+}
+
 
 function VendorFinancialReportController ($scope, $rootScope, $q, toaster, controlledLists, authService, $injector) {
     $q.all([controlledLists.vendors(), controlledLists.distributions(), controlledLists.programs()]).then(function (promises) {

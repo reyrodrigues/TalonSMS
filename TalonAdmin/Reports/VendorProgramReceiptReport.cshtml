@@ -15,7 +15,8 @@
                 </div>
                 <div class="row">
                     <div class="col-xs-6">
-                        <h5><strong>Vendor Partner:&nbsp;</strong>@Model.Vendor.Name</h5>
+                        <h5><strong>Country Office:&nbsp;</strong>@Model.Country.Name</h5>
+                        <h5><strong>Vendor:&nbsp;</strong>@Model.Vendor.Name</h5>
                         <h5><strong>Vendor Mobile Number:&nbsp;</strong>@(Model.Vendor.MobileNumber)</h5>
                     </div>
                     <div class="col-xs-2">
@@ -52,13 +53,13 @@
                         <tr>
                             <td>@(((page.Page - 1) * Model.PageSize) + i + 1)</td>
                             <td>@item.Name</td>
-                            <td>@item.NationalId</td>
+                            <td>@(String.IsNullOrEmpty(item.NationalId) ? "Not Recorded" : item.NationalId)</td>
                             <td>@this.DateToOffsetString((DateTime?)item.FinalizedOn, (int)Model.TimezoneOffset)</td>
                             <td>@item.DistributionNumber</td>
                             <td>@item.VoucherCode</td>
                             <td>@item.ConfirmationCode</td>
                             <td>@Model.Vendor.MobileNumber</td>
-                            <td>@Model.Country.CurrencyIsoCode @item.Value</td>
+                            <td class="text-right">@Model.Country.CurrencyIsoCode @item.Value</td>
                         </tr>
                     }
                 </tbody>

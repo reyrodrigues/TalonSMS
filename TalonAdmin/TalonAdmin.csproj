@@ -351,6 +351,7 @@
     <Content Include="Angular\src\app\org-admin\country-settings\form.tpl.html" />
     <Content Include="Angular\src\app\org-admin\country-settings\country-settings.js" />
     <Content Include="Angular\src\app\program\distribute-vouchers.tpl.html" />
+    <Content Include="Angular\src\app\reporting\program-closure.tpl.html" />
     <Content Include="Angular\src\app\reporting\vendor-receipt.tpl.html" />
     <Content Include="Angular\src\app\reporting\report-history.tpl.html" />
     <Content Include="Angular\src\app\reporting\vendor-financial.tpl.html" />
@@ -977,6 +978,7 @@
     <Content Include="Reports\DistributionReport.cshtml" />
     <Content Include="Reports\VendorProgramReceiptReport.cshtml" />
     <Content Include="Reports\ReportLayout.cshtml" />
+    <Content Include="Reports\ProgramClosureReport.cshtml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
