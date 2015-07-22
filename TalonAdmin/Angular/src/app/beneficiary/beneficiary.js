@@ -22,7 +22,7 @@ angular.module('talon.beneficiary', [
             settings: {
                 collectionType: "Beneficiaries",
                 entityType: 'Beneficiary',
-                expand: ['group', 'distributions', 'location'],
+                expand: ['group', 'location'],
                 controlledLists: ['locations', 'beneficiaryGroups', 'sexes'],
                 form: 'beneficiary/form.tpl.html'
             }
@@ -42,7 +42,8 @@ angular.module('talon.beneficiary', [
                     ['lastName', 'Last Name'],
                     ['mobileNumber', 'Mobile Number'],
                     ['group.name', 'Cycle'],
-                    ['location.name', 'Location']
+                    ['location.name', 'Location'],
+                    ['disabled', 'Is Disabled']
                 ]
             }
         }
@@ -129,6 +130,7 @@ BeneficiaryEditController.prototype.configure = function configure() {
     this.$scope.resendVoucher = resendVoucher.bind(this.$scope);
 
     var dialogs = this.$injector.get('dialogs');
+    var $rootScope = this.$injector.get('$rootScope');
     var $http = this.$injector.get('$http');
     var toaster = this.$injector.get('toaster');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
@@ -145,7 +147,6 @@ BeneficiaryEditController.prototype.configure = function configure() {
             action: function action() {
                 self.entity.disabled = true;
                 entityManager.saveChanges([self.entity]);
-
             }
         },
         {

@@ -69,9 +69,7 @@ namespace TalonAdmin.Models.Vouchers
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
 #endif
 #if DEBUG
-            //Database.SetInitializer(new NullDatabaseInitializer<Context>());
-
-            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<Context>());
+            Database.SetInitializer(new NullDatabaseInitializer<Context>());
 #endif
 
             modelBuilder.Entity<DistributionVoucherCategory>()

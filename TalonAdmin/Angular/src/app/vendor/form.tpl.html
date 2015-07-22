@@ -16,7 +16,7 @@
                         <option value=""></option>
                     </select>
                 </div>
-                <div class="col-sm-6">
+                <div class="col-sm-6" ng-if="vm.entity.parentRecordId">
                     <a href ui-sref="vendors.edit({ id: vm.entity.parentRecordId })"
                        class="btn btn-default">Open Parent</a>
                 </div>

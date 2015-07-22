@@ -74,13 +74,13 @@ namespace TalonAdmin.Controllers.Api
                     ctx.Vouchers
                     .Where(v => v.Status == 2 || v.Status == 3)
                     .Where(v => v.DistributionId == d.Id && v.TransactionRecords.Where(t => t.Type == 2).Any())
-                    .Select(v => v.TransactionRecords.Where(t => t.Type == 2).Select(t => t.Value ?? 0m).Sum())
+                    .Select(v => v.TransactionRecords.Where(t => t.Type == 2 && t.Value != null).Select(t => t.Value).Sum())
                 .Sum(),
                 IssuedAmount =
                     ctx.Vouchers
                     .Where(v => v.DistributionId == d.Id)
                     .Where(v => v.Value != null && v.TransactionRecords.Any())
-                    .Select(v => (v.Value ?? 0))
+                    .Select(v => v.Value)
                 .Sum(),
                 TotalVendors =
                     ctx.Vouchers
