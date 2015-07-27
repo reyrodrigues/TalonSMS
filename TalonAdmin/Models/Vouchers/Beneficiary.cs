@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
+using System.Xml.Serialization;
 
 namespace TalonAdmin.Models.Vouchers
 {
@@ -32,13 +34,18 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual bool? Disabled { get; set; }
         public virtual bool? WasWelcomeMessageSent { get; set; }
+        public virtual int? GroupId { get; set; }
+        public virtual int? LocationId { get; set; }
 
         public virtual string PIN { get; set; }
 
-        public virtual int? GroupId { get; set; }
-        public virtual BeneficiaryGroup Group { get; set; }
+        [JsonIgnore, XmlIgnore]
+        public virtual string CardId { get; set; }
 
-        public virtual int? LocationId { get; set; }
+        [JsonIgnore, XmlIgnore]
+        public virtual string CardKey { get; set; }
+
+        public virtual BeneficiaryGroup Group { get; set; }
         public virtual Location Location { get; set; }
     }
 }

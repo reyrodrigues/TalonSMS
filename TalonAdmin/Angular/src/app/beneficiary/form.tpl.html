@@ -56,7 +56,15 @@
                         ng-options="item.id as item.name for item in vm.lists.beneficiaryGroups | orderBy:'item.name'"></select>
             </div>
         </div>
-    </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">PIN</label>
+            <div class="col-sm-4">
+                <div class="input-group m-b">
+                    <input type="text" class="form-control" placeholder="PIN" ng-model="vm.entity.pIN" />
+                </div>
+            </div>
+        </div></div>
 </div>
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
     <tab heading="Unused Vouchers">

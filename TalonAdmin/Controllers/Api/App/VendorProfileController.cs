@@ -67,11 +67,16 @@ namespace TalonAdmin.Controllers.Api
                     }
                     await ctx.SaveChangesAsync();
 
+
+                    var saltAndHash =vendor. Password.Split(':');
+                    var salt  = saltAndHash[0];
+
                     using (var md5 = MD5.Create())
                     {
                         return Ok<JToken>(JToken.FromObject(new
                         {
-                            token = Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(deviceUUID)))
+                            // TODO Change this!
+                            token = Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(deviceUUID + ":" + salt)))
                         }));
                     }
                 }

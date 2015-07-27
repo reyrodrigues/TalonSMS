@@ -44,6 +44,7 @@ function EditController($injector, $scope) {
     this.success = this.success || success;
     this.load = this.load || load;
     this.getEntities = this.getEntities || getEntities;
+    this.postSave = this.postSave || noopTrue;
 
     this.configure();
     this.load();
@@ -124,7 +125,7 @@ function EditController($injector, $scope) {
         var self = this;
         self.isEditing = false;
 
-        self.entityManager.saveChanges(self.getEntities()).then(function (ne) {
+        self.entityManager.saveChanges(self.getEntities()).then(self.postSave()).then(function (ne) {
             success('Record successfully saved.');
             if (self.isNew) {
                 $state.go('^.edit', { id: self.entity.id });

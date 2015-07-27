@@ -111,11 +111,38 @@ VendorListController.prototype.configure = function configure() {
     ];
 };
 
+VendorEditController.prototype.postSave = function postSave() {
+    var self = this;
+    var $state = this.$injector.get('$state');
+    var $http = this.$injector.get('$http');
+    var $q = this.$injector.get('$q');
+    var entityManagerFactory = this.$injector.get('entityManagerFactory');
+    var entityManager = entityManagerFactory.adminEntityManager();
+
+    var url = serviceRoot + 'Api/App/VendorProfile/UpdatePassword';
+
+    var def = $q.defer();
+    if (self.password.NewPassword && (self.password.NewPassword == self.password.ConfirmPassword)) {
+        $http.post(url, {
+            VendorId: self.entity.id,
+            Password: self.password.NewPassword
+        }).then(function () {
+            def.resolve();
+        });
+    } else {
+        def.resolve();
+    }
+
+    return def.promise;
+
+};
+
 VendorEditController.prototype.configure = function configure() {
     var $state = this.$injector.get('$state');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
     var entityManager = this.entityManager;
     var self = this;
+    this.password = {};
 
     var otherVendors = entityManagerFactory.entityQuery('Vendors');
 

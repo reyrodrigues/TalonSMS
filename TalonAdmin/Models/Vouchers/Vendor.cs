@@ -20,13 +20,13 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual int? LocationId { get; set; }
         public virtual int? TypeId { get; set; }
+        public virtual int? ParentRecordId { get; set; }
 
         public virtual string GPSCoordinates { get; set; }
 
         public virtual VendorType Type { get; set; }
         public virtual Location Location { get; set; }
 
-        public virtual int? ParentRecordId { get; set; }
         public virtual Vendor ParentRecord { get; set; }
 
         public void SetPassword(string plainText)
