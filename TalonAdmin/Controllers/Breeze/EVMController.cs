@@ -60,7 +60,17 @@ namespace TalonAdmin.Controllers.Breeze
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
-        
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.Beneficiary> DistributionBeneficiaries(int distributionId)
+        {
+            return _contextProvider.Context.VoucherTransactionRecords
+                .FilterCountry(this)
+                .Where(v=> v.Type == 1)
+                .Where(v=>v.Voucher.DistributionId == distributionId)
+                .Select(v=>v.Beneficiary)
+                .Distinct();
+        }
 
         [HttpGet]
         public IQueryable<Models.Vouchers.ProgramVendorReconciliation> ProgramVendorReconciliations()

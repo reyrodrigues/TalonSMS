@@ -22,7 +22,7 @@
             settings: {
                 collectionType: "Distributions",
                 entityType: 'Distribution',
-                expand: ['vouchers', 'categories'],
+                expand: ['vouchers', 'categories', 'program'],
                 form: 'distribution/form.tpl.html',
                 controlledLists: ['programs', 'locations', 'voucherTypes', 'vendorTypes', 'beneficiaryGroups']
             }
@@ -68,13 +68,60 @@
 DistributionEditController.prototype.configure = function () {
     this.$scope.cancelVoucher = cancelVoucher;
     this.$scope.resendVoucher = resendVoucher;
+    this.$scope.assignVoucherBook = AssignVoucherBook;
 
     var dialogs = this.$injector.get('dialogs');
     var $http = this.$injector.get('$http');
+    var $rootScope = this.$injector.get('$rootScope');
     var toaster = this.$injector.get('toaster');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
     var entityManager = this.entityManager;
     var self = this;
+
+    this.forms = [
+        {
+            label: "Download Test Sheet",
+            css: "btn-info",
+            condition: function (entity) {
+                return $rootScope.canI('Generate Test Sheet');
+            },
+            url: function action() {
+                return serviceRoot + 'Api/Reports/GenerateTestSheet?DistributionId=' + self.entity.id;
+            }
+        }
+    ];
+
+    function AssignVoucherBook(beneficiary, grid) {
+        var dlg = dialogs.create('distribution/assign-voucher-book.tpl.html', function ($scope, $modalInstance) {
+            $scope.serialNumber = "";
+
+            $scope.save = function () {
+                $modalInstance.close($scope.serialNumber);
+            };
+
+            $scope.close = function () {
+                $modalInstance.close(false);
+            };
+        });
+
+        dlg.result.then(function (result) {
+            if (result) {
+                var payload = {
+                    BeneficiaryId: beneficiary.id,
+                    DistributionId: self.entity.id,
+                    SerialNumber: result
+                };
+
+                $http.post(serviceRoot + 'Api/VoucherWorkflow/AssignVoucherBook', payload)
+                .then(function () {
+                    toaster.pop('success', 'Success!', 'Voucher assigned successfully!');
+                    grid.api.custom.reloadData();
+                }).catch(function (res) {
+                    toaster.pop('error', 'Error', res);
+                });
+            }
+        });
+    }
 
     function cancelVoucher(entity, grid) {
         var dlg = dialogs.confirm("Confirm", "Are you sure you would like to cancel this voucher?");

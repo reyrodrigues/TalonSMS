@@ -33,43 +33,57 @@
 
 
 </div>
-<div class="panel panel-default" ng-repeat="category in vm.entity.categories" toggle-editing is-editing="vm.isEditing">
-    <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Type of Voucher</label>
-            <div class="col-sm-4">
-                <select class="form-control" ng-model="category.typeId"
-                        ng-options="item.id as item.name for item in vm.lists.voucherTypes | orderBy:'item.name'" required></select>
-            </div>
-            <label class="col-sm-2 control-label">Restricted Type of Vendor</label>
-            <div class="col-sm-4">
-                <select class="form-control" ng-model="category.vendorTypeId"
-                        ng-options="item.id as item.name for item in vm.lists.vendorTypes | orderBy:'item.name'"></select>
-            </div>
-        </div>
-        <div class="line line-dashed b-b line-lg pull-in"></div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Value of Vouchers</label>
-            <div class="col-sm-4">
-                <div class="input-group m-b">
-                    <span class="input-group-addon">{{ country.CurrencyIsoCode }}</span>
-                    <input type="text" class="form-control" placeholder="Value" ng-model="category.value" required>
-                </div>
-            </div>
-            <label class="col-sm-2 control-label" translate>Vouchers Issued</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Issued Vouchers" ng-model="category.issuedVouchers" disabled>
-            </div>
-        </div>
-        <div class="line line-dashed b-b line-lg pull-in" ng-if="vm.isEditing && !vm.isNew"></div>
-        <div class="col-sm-12" ng-if="vm.isEditing && !vm.isNew">
-            <a href ng-click="removeCategory(category)" class="btn btn-info btn-dark pull-right" translate>Remove</a>
-        </div>
-    </div>
+
+<div class="panel panel-default" ng-if="!vm.isNew">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th class="">#</th>
+                <th class="col-sm-2">Type of Voucher</th>
+                <th class="col-sm-2">Type of Vendor</th>
+                <th class="">Value</th>
+                <th class="col-sm-2" ng-if="vm.entity.distributionMechanism == 3" colspan="2">Valid only after </th>
+                <th class="col-sm-2" ng-if="vm.isEditing && !vm.isNew"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="category in vm.entity.categories|orderBy:(vm.entity.distributionMechanism == 3 ? ['validAfterOffsetType', 'validAfterOffset'] : 'id')" toggle-editing is-editing="vm.isEditing">
+                <td>{{$index + 1}}</td>
+                <td>
+                    <select class="form-control" ng-model="category.typeId"
+                            ng-options="item.id as item.name for item in vm.lists.voucherTypes | orderBy:'item.name'" required></select>
+                </td>
+                <td>
+                    <select class="form-control" ng-model="category.vendorTypeId"
+                            ng-options="item.id as item.name for item in vm.lists.vendorTypes | orderBy:'item.name'"></select>
+                </td>
+                <td>
+                    <div class="input-group">
+                        <span class="input-group-addon">{{ country.CurrencyIsoCode }}</span>
+                        <input type="text" class="form-control" placeholder="Value" ng-model="category.value" required>
+                    </div>
+                </td>
+                <td ng-if="vm.entity.distributionMechanism == 3 && category.validAfterOffsetType != 1">
+                    <input type="number" class="form-control" placeholder="" ng-model="category.validAfterOffset">
+
+                </td>
+                <td ng-if="vm.entity.distributionMechanism == 3" colspan="{{ category.validAfterOffsetType != 1 ? 1 : 2}}">
+                    <select class="form-control" ng-model="category.validAfterOffsetType"
+                            ng-options="item.id as item.name for item in vm.lists.validAfterOffsetTypes | orderBy:'item.name'"></select>
+                </td>
+                <td ng-if="vm.isEditing && !vm.isNew">
+                    <div class="btn-group pull-right">
+                        <a href ng-click="copyCategory(category)" class="btn btn-xs btn-info btn-success" translate ng-if="vm.entity.distributionMechanism == 3">Copy</a>
+                        <a href ng-click="removeCategory(category)" class="btn btn-xs btn-info btn-dark" translate>Remove</a>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 <div class="row wrapper-sm" ng-if="vm.isEditing && !vm.isNew">
     <div class="col-sm-12">
-        <a href ng-click="addCategory()" class="btn btn-info btn-dark pull-right" translate>Add</a>
+        <a href ng-click="addCategory()" class="btn btn-xs btn-info btn-dark pull-right" translate>Add</a>
     </div>
 </div>
 
@@ -85,7 +99,7 @@
                 <sub-grid-column label="Location" field="location.name"></sub-grid-column>
                 <sub-grid-column label="Cycle" field="group.name"></sub-grid-column>
                 <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions">
+                <sub-grid-column label="Actions" name="Actions" disable-sorting="true">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group">
                             <a href ui-sref="distributions.edit({id:row.entity.id})" class="btn btn-default btn-xs">Open</a>

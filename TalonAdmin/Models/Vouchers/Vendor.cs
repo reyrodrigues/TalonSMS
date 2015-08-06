@@ -22,6 +22,7 @@ namespace TalonAdmin.Models.Vouchers
         public virtual int? TypeId { get; set; }
         public virtual int? ParentRecordId { get; set; }
 
+        public virtual string AuthorizationToken { get; set; }
         public virtual string GPSCoordinates { get; set; }
 
         public virtual VendorType Type { get; set; }

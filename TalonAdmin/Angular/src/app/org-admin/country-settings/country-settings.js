@@ -81,6 +81,24 @@ CountrySettingsController.prototype.getEntities = function () {
     return entities;
 };
 
+CountrySettingsController.prototype.configure = function () {
+    var $rootScope = this.$injector.get('$rootScope');
+    var $localStorage = this.$injector.get('$localStorage');
+    var self = this;
+
+    this.forms = [
+        {
+            label: "Export Card Loads",
+            condition: function () { return $rootScope.canI('Export CardLoads'); },
+            css: "btn-info",
+            countryId: function () { return self.entity.country ? self.entity.country.id : null; },
+            url: function () {
+                return serviceRoot + 'api/App/MobileClient/DownloadOfflinePayload';
+            }
+        }
+    ];
+};
+
 function CountrySettingsController($injector, $scope) {
     EditController.call(this, $injector, $scope);
 }

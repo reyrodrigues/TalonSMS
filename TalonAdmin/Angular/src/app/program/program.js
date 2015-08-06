@@ -22,7 +22,7 @@
             settings: {
                 collectionType: "Programs",
                 entityType: 'Program',
-                controlledLists: ['programs', 'locations', 'voucherTypes', 'vendorTypes', 'beneficiaryGroups', 'distributionMechanisms'],
+                controlledLists: ['programs', 'locations', 'voucherTypes', 'vendorTypes', 'beneficiaryGroups', 'distributionMechanisms', 'validAfterOffsetTypes'],
                 expand: ['distributions', 'categories'],
                 form: 'program/form.tpl.html'
             }
@@ -55,7 +55,7 @@
 
     .state('programs.create', {
         url: '/create',
-        controller: 'GenericEditCtrl as vm',
+        controller: 'ProgramEditController as vm',
         templateUrl: 'create.tpl.html',
         data: {
             pageTitle: 'Programs'
@@ -68,6 +68,7 @@
 ProgramEditController.prototype.configure = function configure() {
     this.$scope.addCategory = AddCategory;
     this.$scope.removeCategory = RemoveCategory;
+    this.$scope.copyCategory = CopyCategory;
 
     var dialogs = this.$injector.get('dialogs');
     var $http = this.$injector.get('$http');
@@ -85,6 +86,11 @@ ProgramEditController.prototype.configure = function configure() {
                 return $rootScope.canI('Distribute Vouchers');
             },
             action: function action() {
+                if (self.entity.categories.length === 0) {
+                    alert('To distribute vouchers, please add at least one category. To add a category, edit this program and click on the "add" button.');
+                    return;
+                }
+
                 var dlg = dialogs.create('program/distribute-vouchers.tpl.html', DistributeVouchersController);
                 dlg.result.then(function (result) {
                 });
@@ -92,9 +98,51 @@ ProgramEditController.prototype.configure = function configure() {
         }
     ];
 
+    function CopyCategory(category) {
+        var dlg = dialogs.create('program/copy-categories.tpl.html', function ($scope, $modalInstance) {
+            $scope.copies = {
+                numberOfCopies: 1,
+                dateOffset: 0
+            };
+            $scope.dateOffsetOptions = [
+                { id: 1, name: 'No Offset' },
+                { id: 2, name: 'Every Day' },
+                { id: 3, name: 'Every Week' }
+            ];
+
+            $scope.save = function () {
+                $modalInstance.close($scope.copies);
+            };
+
+            $scope.close = function () {
+                $modalInstance.close(false);
+            };
+        });
+
+        dlg.result.then(function (result) {
+            if (result) {
+                for (var i = 1; i <= result.numberOfCopies; i++) {
+                    self.entity.categories.push(entityManager.createEntity('ProgramVoucherCategory', {
+                        programId: self.entity.id,
+                        organizationId: self.entity.organizationId,
+                        countryId: self.entity.countryId,
+                        typeId: category.typeId,
+                        value: category.value,
+                        vendorTypeId: category.vendorTypeId,
+                        validAfterOffsetType: result.dateOffset,
+                        validAfterOffset:  i
+                    }));
+                }
+            }
+        });
+    }
+
     function AddCategory() {
         self.entity.categories.push(entityManager.createEntity('ProgramVoucherCategory', {
-            programId: self.entity.id
+            programId: self.entity.id,
+            organizationId: self.entity.organizationId,
+            countryId: self.entity.countryId,
+            validAfterOffsetType: 1
         }));
     }
 
@@ -112,7 +160,6 @@ ProgramEditController.prototype.configure = function configure() {
         
 
         $scope.save = function () {
-            console.log($scope.distributeForm);
             if ($scope.distributeForm.$valid) {
                 $http.post(serviceRoot + 'Api/VoucherWorkflow/DistributeVouchers', $scope.entity)
                     .then(function () {
@@ -133,6 +180,19 @@ ProgramEditController.prototype.configure = function configure() {
 function ProgramEditController($injector, $scope) {
     this.save = save;
     this.deleted = [];
+    this.defaults = function () {
+        return {
+            organizationId: $scope.organization.Id,
+            countryId: $scope.country.Id,
+            createdOn: moment().utc().toJSON(),
+            createdBy: $scope.currentUser.Id,
+            modifiedOn: moment().utc().toJSON(),
+            modifiedBy: $scope.currentUser.Id,
+            voucherCodeLength: 6
+        };
+    };
+
+    var $state = $injector.get('$state');
 
     EditController.call(this, $injector, $scope);
 
@@ -140,6 +200,8 @@ function ProgramEditController($injector, $scope) {
     function save(continueEditing) {
         var self = this;
         self.isEditing = false;
+        self.entity.modifiedOn = moment().utc().toJSON();
+        self.entity.modifiedBy = $scope.currentUser.Id;
 
         self.entityManager.saveChanges([self.entity].concat(self.entity.categories).concat(self.deleted)).then(function (ne) {
             self.success('Record successfully saved.');

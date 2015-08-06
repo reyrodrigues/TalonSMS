@@ -53,6 +53,37 @@ namespace TalonAdmin.Controllers.Api
     {
         private static object syncObj = new Object();
 
+        [Route("AssignVoucherBook")]
+        public async Task<IHttpActionResult> AssignVoucherBook(dynamic request)
+        {
+            int beneficiaryId = request.BeneficiaryId;
+            int distributionId = request.DistributionId;
+            int serialNumber = request.SerialNumber;
+
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
+                var vouchers = await ctx.VoucherTransactionRecords.Where(t =>
+                    t.Type == 1 &&
+                    t.Voucher.DistributionId == distribution.Id &&
+                    t.BeneficiaryId == beneficiaryId
+                    )
+                    .Select(v => v.Voucher)
+                    .Distinct()
+                    .ToArrayAsync();
+
+                for (int i = 0; i < vouchers.Count(); i++)
+                {
+                    var currentSerialNumber = serialNumber + i;
+                    var voucher = vouchers[i];
+                    voucher.SequentialCode = currentSerialNumber.ToString();
+                }
+
+                await ctx.SaveChangesAsync();
+            }
+            return Ok();
+        }
+
         [Route("GenerateVouchers")]
         public async Task GenerateVouchers(dynamic request)
         {
@@ -120,7 +151,7 @@ namespace TalonAdmin.Controllers.Api
                         }
                     ).ToArray();
 
-                        ctx.Vouchers.AddRange(vouchers);
+                    ctx.Vouchers.AddRange(vouchers);
 
                     category.IssuedVouchers = category.NumberOfVouchers;
                 }
@@ -183,7 +214,7 @@ namespace TalonAdmin.Controllers.Api
 
                 var group = await ctx.BeneficiaryGroups.Where(g => g.Id == groupId).FirstAsync();
                 var location = await ctx.Locations.Where(g => g.Id == locationId).FirstOrDefaultAsync();
-                var distributionCount = await ctx.Distributions.Where(d => d.GroupId == groupId).CountAsync();
+                var distributionCount = await ctx.Distributions.Where(d => d.GroupId == groupId && d.ProgramId == programId).CountAsync();
 
                 var distribution = new Distribution
                 {
@@ -198,12 +229,14 @@ namespace TalonAdmin.Controllers.Api
                     Location = location,
                     VoucherCodeLength = program.VoucherCodeLength,
 
+
+
                     CreatedBy = user.UserName,
                     ModifiedBy = user.UserName,
                     CreatedOn = DateTime.UtcNow,
                     ModifiedOn = DateTime.UtcNow,
 
-                    Categories = program.Categories.Select(c => new DistributionVoucherCategory
+                    Categories = program.Categories.ToArray().Select(c => new DistributionVoucherCategory
                     {
                         CountryId = c.CountryId,
                         OrganizationId = c.OrganizationId,
@@ -211,7 +244,8 @@ namespace TalonAdmin.Controllers.Api
                         Value = c.Value,
                         VendorTypeId = c.VendorTypeId,
                         IssuedVouchers = 0,
-                        NumberOfVouchers = 0
+                        NumberOfVouchers = 0,
+                        ValidAfter = CalculateOffset(DateTime.Now, c.ValidAfterOffsetType, c.ValidAfterOffset)
                     }).ToList()
                 };
                 ctx.Distributions.Add(distribution);
@@ -512,6 +546,22 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
+
+        #region Private Functions and Methods
+
+        private DateTime? CalculateOffset(DateTime date, int? offsetType, int? offset)
+        {
+            if (offsetType == null || offset == null)
+                return null;
+
+            if (offsetType == 2)
+                return date.AddDays((double)offset);
+            else if (offsetType == 3)
+                return date.AddDays((double)offset * 7d);
+
+            return date;
+        }
+
         private async Task<TalonAdmin.Models.Admin.ApplicationUser> CurrentUser()
         {
             var userManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
@@ -644,7 +694,7 @@ namespace TalonAdmin.Controllers.Api
             context.Clients.All.message("success", "Incoming voucher", "Confirmed voucher!");
             context.Clients.All.updateDashboard();
 
-            var transactionRecord = voucher.TransactionRecords.Where(t=>t.Type==2).OrderByDescending(o=>o.LastModifiedOn).FirstOrDefault();
+            var transactionRecord = voucher.TransactionRecords.Where(t => t.Type == 2).OrderByDescending(o => o.LastModifiedOn).FirstOrDefault();
             var model = new
             {
                 Voucher = voucher,
@@ -788,5 +838,6 @@ namespace TalonAdmin.Controllers.Api
             {
             }
         }
+        #endregion
     }
 }

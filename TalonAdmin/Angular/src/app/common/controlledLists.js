@@ -23,6 +23,15 @@
                 ]);
                 return deferred.promise;
             },
+            validAfterOffsetTypes: function () {
+                var deferred = $q.defer();
+                deferred.resolve([
+                    { id: 1, name: 'Voucher is distributed' },
+                    { id: 2, name: 'Day(s)' },
+                    { id: 3, name: 'Week(s)' }
+                ]);
+                return deferred.promise;
+            },
             distributionMechanisms: function () {
                 var deferred = $q.defer();
                 deferred.resolve([

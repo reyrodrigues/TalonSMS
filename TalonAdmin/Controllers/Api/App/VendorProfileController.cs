@@ -65,22 +65,59 @@ namespace TalonAdmin.Controllers.Api
                         vendorDevice.LastAccessed = DateTime.UtcNow;
 
                     }
+                    using (var md5 = MD5.Create())
+                    {
+                        vendor.AuthorizationToken = Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(RandomNumber.RandomLong(10).ToString())));
+                    }
                     await ctx.SaveChangesAsync();
 
 
-                    var saltAndHash =vendor. Password.Split(':');
-                    var salt  = saltAndHash[0];
+                    var saltAndHash = vendor.Password.Split(':');
+                    var salt = saltAndHash[0];
 
-                    using (var md5 = MD5.Create())
+                    return Ok<JToken>(JToken.FromObject(new
                     {
-                        return Ok<JToken>(JToken.FromObject(new
-                        {
-                            // TODO Change this!
-                            token = Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(deviceUUID + ":" + salt)))
-                        }));
-                    }
+                        token = vendor.AuthorizationToken,
+                    }));
                 }
                 return BadRequest("Invalid username or password");
+            }
+        }
+
+        [HttpGet]
+        [Route("LoadProfile")]
+        public async Task<IHttpActionResult> LoadProfile()
+        {
+            using (var ctx = new Models.Vouchers.Context())
+            using (var admin = new Models.Admin.AdminContext())
+            {
+                ctx.Configuration.ProxyCreationEnabled = false;
+                ctx.Configuration.LazyLoadingEnabled = false;
+                admin.Configuration.ProxyCreationEnabled = false;
+                admin.Configuration.LazyLoadingEnabled = false;
+
+                if (Request.Headers.Authorization.Scheme.ToLower() != "token")
+                {
+                    return NotFound();
+                }
+
+                var authToken = Request.Headers.Authorization.Parameter;
+
+                var vendor = await ctx.Vendors
+                    .Where(v => v.AuthorizationToken == authToken)
+                    .FirstOrDefaultAsync();
+                var country = await admin.Countries
+                    .Where(c => c.Id == vendor.CountryId)
+                    .FirstOrDefaultAsync();
+
+                return Ok<JToken>(JToken.FromObject(new
+                {
+                    vendor.Id,
+                    vendor.Name,
+                    vendor.UserName,
+                    vendor.CountryId,
+                    Country = country,
+                }));
             }
         }
 

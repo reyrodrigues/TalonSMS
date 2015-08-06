@@ -27,6 +27,8 @@ namespace TalonAdmin.Models.Vouchers
         public virtual Program Program { get; set; }
         public virtual VoucherType Type { get; set; }
         public virtual VendorType VendorType { get; set; }
+        public virtual int? ValidAfterOffset { get; set; }
+        public virtual int? ValidAfterOffsetType { get; set; }
 
         [DefaultValue(0)]
         public virtual int IssuedVouchers { get; set; }

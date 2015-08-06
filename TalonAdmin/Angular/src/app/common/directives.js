@@ -169,13 +169,14 @@ angular.module('talon.common')
             waitFor: '=',
             select: '=',
             parent: '=',
+            parameters: '=',
+            parameter: '@',
             key: '@'
         },
         controller: function ($scope, $injector, entityManagerFactory) {
             var $q = $injector.get('$q');
             var gridName = $scope.name || $scope.collection;
             var entityManager = entityManagerFactory[$scope.entityManager || 'entityManager']();
-
 
             $scope.gridName = gridName;
 
@@ -247,7 +248,7 @@ angular.module('talon.common')
             var isLoading = false;
 
 
-            function addColumn(name, field, label, cellTemplate, width) {
+            function addColumn(name, field, label, cellTemplate, width, disableSorting) {
                 var col = {
                     name: name,
                     field: field,
@@ -257,6 +258,10 @@ angular.module('talon.common')
 
                 if (width) {
                     col.width = width;
+                }
+
+                if(disableSorting) {
+                    col.enableSorting = false;
                 }
 
                 $scope.gridOptions.columnDefs.push(col);
@@ -294,6 +299,11 @@ angular.module('talon.common')
 
                     if ($scope.parameters) {
                         entityQuery = entityQuery.withParameters($scope.parameters);
+                    }
+                    if ($scope.parameter) {
+                        var parameters = {};
+                        parameters[$scope.parameter] = $scope.entity.id;
+                        entityQuery = entityQuery.withParameters(parameters);
                     }
 
                     if ($scope.expand) {
@@ -400,6 +410,7 @@ angular.module('talon.common')
             name: '@',
             field: '@',
             width: '@',
+            disableSorting: '=',
             hidden: '=',
             ngIf: '='
         },
@@ -413,7 +424,7 @@ angular.module('talon.common')
             return {
                 pre: function (scope, el1, attr, ctrl) {
                     if ((scope.ngIf === undefined) || scope.ngIf === true) {
-                        ctrl.addColumn(scope.name, scope.field, scope.label, html, scope.width);
+                        ctrl.addColumn(scope.name, scope.field, scope.label, html, scope.width, scope.disableSorting);
                     }
                     $compile(angular.element('<!-- -->'))(scope);
                 }

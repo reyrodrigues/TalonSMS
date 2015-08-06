@@ -35,7 +35,6 @@ namespace TalonAdmin.Models.Vouchers
         public virtual DateTime CreatedOn { get; set; }
         public virtual DateTime ModifiedOn { get; set; }
 
-        [JsonIgnore]
         public virtual Program Program { get; set; }
         public virtual BeneficiaryGroup Group { get; set; }
         public virtual Location Location { get; set; }

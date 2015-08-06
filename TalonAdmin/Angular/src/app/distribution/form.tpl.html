@@ -37,37 +37,41 @@
         </div>
     </div>
 </div>
-<div class="panel panel-default" ng-repeat="category in vm.entity.categories" toggle-editing is-editing="isEditing">
-    <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Type of Voucher</label>
-            <div class="col-sm-4">
-                <select class="form-control" ng-model="category.typeId"
-                        ng-options="item.id as item.name for item in vm.lists.voucherTypes | orderBy:'item.name'" required></select>
-            </div>
-            <label class="col-sm-2 control-label">Restricted Type of Vendor</label>
-            <div class="col-sm-4">
-                <select class="form-control" ng-model="category.vendorTypeId"
-                        ng-options="item.id as item.name for item in vm.lists.vendorTypes | orderBy:'item.name'"></select>
-            </div>
-        </div>
-        <div class="line line-dashed b-b line-lg pull-in"></div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Value of Vouchers</label>
-            <div class="col-sm-4">
-                <div class="input-group m-b">
-                    <span class="input-group-addon">{{ country.CurrencyIsoCode }}</span>
-                    <input type="text" class="form-control" placeholder="Value" ng-model="category.value" required>
-                </div>
-            </div>
-            <label class="col-sm-2 control-label" translate>Vouchers Issued</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Issued Vouchers" ng-model="category.issuedVouchers" disabled>
-            </div>
-        </div>
-    </div>
+<div class="panel panel-default">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th class="">#</th>
+                <th class="col-sm-2">Type of Voucher</th>
+                <th class="col-sm-2">Type of Vendor</th>
+                <th class="">Value</th>
+                <th class="col-sm-3" ng-if="vm.entity.program.distributionMechanism == 3">Valid After</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="category in vm.entity.categories|orderBy:(vm.entity.program.distributionMechanism == 3 ? 'validAfter' : 'id')" toggle-editing is-editing="isEditing">
+                <td>{{$index + 1}}</td>
+                <td>
+                    <select class="form-control" ng-model="category.typeId"
+                            ng-options="item.id as item.name for item in vm.lists.voucherTypes | orderBy:'item.name'" required></select>
+                </td>
+                <td>
+                    <select class="form-control" ng-model="category.vendorTypeId"
+                            ng-options="item.id as item.name for item in vm.lists.vendorTypes | orderBy:'item.name'"></select>
+                </td>
+                <td>
+                    <div class="input-group">
+                        <span class="input-group-addon">{{ country.CurrencyIsoCode }}</span>
+                        <input type="text" class="form-control" placeholder="Value" ng-model="category.value" required>
+                    </div>
+                </td>
+                <td ng-if="vm.entity.program.distributionMechanism == 3">
+                    <input type="date" class="form-control" placeholder="Valid After" ng-model="category.validAfter">
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
-
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
     <tab heading="Unused Vouchers">
         <div class="panel panel-default">
@@ -86,10 +90,11 @@
                     </div>
                 </sub-grid-column>
                 <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="Serial Number" field="voucher.sequentialCode"></sub-grid-column>
                 <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions">
+                <sub-grid-column label="Actions" name="Actions" disable-sorting="true">
                     <div class="ui-grid-cell-contents">
-                        <div class="btn-group">
+                        <div class="btn-group" ng-if="grid.appScope.$parent.vm.entity.program.distributionMechanism == 1">
                             <a href ng-click="grid.appScope.$parent.cancelVoucher(row.entity, grid)" class="btn btn-default btn-xs">Cancel Voucher</a>
                             <a href ng-click="grid.appScope.$parent.resendVoucher(row.entity, grid)" class="btn btn-default btn-xs">Resend Voucher</a>
                         </div>
@@ -122,6 +127,27 @@
                 <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="Used On" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="Status" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="Beneficiaries" ng-if="vm.entity.program.distributionMechanism == 3">
+        <div class="panel panel-default">
+            <sub-grid collection="DistributionBeneficiaries"
+                      parameter="distributionId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="Beneficiary" field="firstName">
+                    <div class="ui-grid-cell-contents">
+                        {{ row.entity.name }}
+                    </div>
+                </sub-grid-column>
+                <sub-grid-column label="Actions" name="Actions" disable-sorting="true">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.assignVoucherBook(row.entity, grid)" class="btn btn-default btn-xs">Assign Voucher Book</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
             </sub-grid>
         </div>
     </tab>

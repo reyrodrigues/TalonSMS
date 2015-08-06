@@ -14,8 +14,16 @@ namespace TalonAdmin.Models.Vouchers
         public virtual int CategoryId { get; set; }
         public virtual int DistributionId { get; set; }
 
-        [Index(IsUnique = true), StringLength(30)]
+        [Index(IsUnique = false), StringLength(30)]
         public virtual string VoucherCode { get; set; }
+
+        /// <summary>
+        /// This code is used for backwards compatibility.
+        /// This is used to link a paper voucher printed out outside of the system and it is used to correlate with a real voucher in the POSs
+        /// </summary>
+        [Index(IsUnique = false), StringLength(30)]
+        public virtual string SequentialCode { get; set; }
+
 
         /// <summary>
         /// 1. Unclaimed

@@ -1,0 +1,23 @@
+﻿@{
+    Layout = null;
+}
+@foreach (var code in Model.Codes)
+{
+<div style="width: 400px; display: block; float:left;">
+    <img src="@code.QR" style="float: left; display:block; width: 200px;" />
+    <table style="float:right; display:block; width:200px">
+        <tr>
+            <td>Beneficiary Name</td>
+            <td>@code.Beneficiary</td>
+        </tr>
+        <tr>
+            <td>Value</td>
+            <td>@code.Value</td>
+        </tr>
+        <tr>
+            <td>Valid After</td>
+            <td>@code.ValidAfter</td>
+        </tr>
+    </table>
+</div>
+}

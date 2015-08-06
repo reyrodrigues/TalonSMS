@@ -29,6 +29,8 @@ using TalonAdmin.Controllers.BindingModels;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
 using RazorEngine.Configuration;
+using ZXing;
+
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -52,6 +54,45 @@ namespace TalonAdmin.Controllers.Api
             get
             {
                 return Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            }
+        }
+
+        [Route("GenerateTestSheet")]
+        public async Task<IHttpActionResult> GenerateTestSheet([FromUri]int distributionId)
+        {
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                var distribution = await ctx.Distributions.Where(d => d.Id == distributionId).FirstAsync();
+                var vouchers = await ctx.Vouchers.Where(v => v.DistributionId == distribution.Id).ToListAsync();
+                var codeWriter = new ZXing.QrCode.QRCodeWriter();
+                var writer = new BarcodeWriter();
+
+                var qrCodes = vouchers.Select(v =>
+                {
+                    var code = String.IsNullOrEmpty(v.SequentialCode) ? v.VoucherCode : v.SequentialCode;
+                    var barcode = codeWriter.encode(code, BarcodeFormat.QR_CODE, 200, 200);
+                    var bitmap = writer.Write(barcode);
+                    var memoryStream = new MemoryStream();
+                    bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+
+                    return new
+                    {
+                        QR = "data:image/png;base64," + Convert.ToBase64String(memoryStream.ToArray()),
+                        Beneficiary = v.IssuingTransactionRecord.Beneficiary.Name,
+                        Value = v.Value,
+                        ValidAfter = v.Category.ValidAfter,
+                    };
+                }).OrderBy(d=>d.Beneficiary).ThenBy(d=>d.ValidAfter);
+
+
+                dynamic model = new
+                 {
+                     Codes = qrCodes.ToArray()
+                 };
+
+                var reportData = GenerateReport("TestSheet.cshtml", "Test Sheet", (object)model, PaperKind.Letter);
+
+                return this.File(reportData, null, "application/pdf");
             }
         }
 
@@ -202,7 +243,7 @@ namespace TalonAdmin.Controllers.Api
                 var items = (await ctx.VoucherTransactionRecords
                                     .Where((v) => (v.VendorId == vendorId || v.Vendor.ParentRecordId == vendorId)
                                     && v.Voucher.Distribution.ProgramId == programId
-                                    && (v.Type == 2 ) 
+                                    && (v.Type == 2)
                                     && v.ReconciledOn != null
                                     && v.IsFinalized != true
                                     )
@@ -262,7 +303,7 @@ namespace TalonAdmin.Controllers.Api
 
                 var voucherIds = items.Where(v => v.VoucherId.HasValue).Select(v => v.VoucherId.Value).ToArray();
 
-                var transactionRecords  = await ctx.VoucherTransactionRecords
+                var transactionRecords = await ctx.VoucherTransactionRecords
                                     .Where((v) => (v.VendorId == vendorId || v.Vendor.ParentRecordId == vendorId)
                                     && v.Voucher.Distribution.ProgramId == programId
                                     && (v.Type == 2)
@@ -325,7 +366,7 @@ namespace TalonAdmin.Controllers.Api
             {
                 Models.Admin.Organization organization = null;
                 Models.Admin.Country country = null;
-                Func<int?, string> fetchLatestConfirmationCode =  (i) => ctx.VoucherTransactionRecords
+                Func<int?, string> fetchLatestConfirmationCode = (i) => ctx.VoucherTransactionRecords
                                                         .Where(t => t.VoucherId == i && t.Type == 2)
                                                         .OrderByDescending(t => t.LastModifiedOn)
                                                         .Select(t => t.ConfirmationCode)
@@ -392,7 +433,7 @@ namespace TalonAdmin.Controllers.Api
                     TimezoneOffset = request.TimezoneOffset != null ? request.TimezoneOffset : DateTimeOffset.Now.Offset.TotalHours,
                     Total = items.Select(i => i.Value).Sum()
                 };
-                
+
                 var reportData = GenerateReport("DistributionReport.cshtml", "Distribution Report", (object)model, paperSize);
 
                 return this.File(reportData, null, "application/pdf");

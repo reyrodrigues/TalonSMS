@@ -24,6 +24,7 @@ namespace TalonAdmin.Models.Vouchers
         public virtual Distribution Distribution { get; set; }
         public virtual VoucherType Type { get; set; }
         public virtual VendorType VendorType { get; set; }
+        public virtual DateTime? ValidAfter { get; set; }
 
         [DefaultValue(0)]
         public virtual int IssuedVouchers { get; set; }
