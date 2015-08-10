@@ -97,7 +97,6 @@ angular.module('talon', [
         }
     };
 
-
     $rootScope.app = {
         name: 'Talon',
         currentYear: moment().year(),

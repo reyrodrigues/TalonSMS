@@ -22,6 +22,7 @@
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <TypeScriptToolsVersion>1.0</TypeScriptToolsVersion>
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -356,6 +357,7 @@
     <Content Include="Angular\lib\ui-utils-ieshiv.min.js" />
     <Content Include="Angular\lib\ui-utils.min.js" />
     <Content Include="Angular\src\app\app.js" />
+    <Content Include="Angular\src\app\country-admin\transaction\transaction.js" />
     <Content Include="Angular\src\app\distribution\assign-voucher-book.tpl.html" />
     <Content Include="Angular\src\app\org-admin\country-settings\form.tpl.html" />
     <Content Include="Angular\src\app\org-admin\country-settings\country-settings.js" />
@@ -1048,7 +1050,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>1099</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost/EmergencyVoucherManagement</IISUrl>
+          <IISUrl>http://localhost:9091/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

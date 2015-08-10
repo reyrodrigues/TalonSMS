@@ -433,7 +433,7 @@ angular.module('talon.common')
     };
 })
 
-.directive('chosen', function () {
+.directive('chosen', function ($timeout) {
     var CHOSEN_OPTION_WHITELIST, NG_OPTIONS_REGEXP, isEmpty, snakeCase;
     NG_OPTIONS_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w]*)|(?:\(\s*([\$\w][\$\w]*)\s*,\s*([\$\w][\$\w]*)\s*\)))\s+in\s+(.*?)(?:\s+track\s+by\s+(.*?))?$/;
     CHOSEN_OPTION_WHITELIST = [
@@ -487,6 +487,10 @@ angular.module('talon.common')
             startLoading = function () {
             };
             stopLoading = function () {
+                $timeout(function () {
+                    var $element = $(element);
+                    $element.trigger('chosen:updated');
+                });
             };
             chosen = null;
             defaultText = null;
