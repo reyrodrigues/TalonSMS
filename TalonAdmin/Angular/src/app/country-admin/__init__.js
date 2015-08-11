@@ -6,7 +6,7 @@
   'talon.common',
   'dialogs.main',
   'ngFileUpload'
-])
+].concat(ALL_IMPORTS))
 .config(function config($stateProvider) {
     $stateProvider
     .state('country-admin', {

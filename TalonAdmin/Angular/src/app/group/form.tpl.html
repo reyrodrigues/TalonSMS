@@ -1,19 +1,14 @@
 ﻿<div class="panel panel-default">
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Name</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Name" ng-model="vm.entity.name" required />
-            </div>
-            <label class="col-sm-2 control-label">Number</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Number" ng-model="vm.entity.number" required />
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
         </div>
     </div>
 </div>
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
-    <tab heading="Unused Vouchers">
+    <tab heading="{{ 'Beneficiaries'|translate }}">
         <div class="panel panel-default">
             <sub-grid
                       collection="Beneficiaries"
@@ -21,10 +16,10 @@
                       key="groupId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="First Name" field="firstName"></sub-grid-column>
-                <sub-grid-column label="Last Name" field="lastName"></sub-grid-column>
-                <sub-grid-column label="Location" field="location.name"></sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions" width="100">
+                <sub-grid-column label="{{ 'First Name'|translate }}" field="firstName"></sub-grid-column>
+                <sub-grid-column label="{{ 'Last Name'|translate }}" field="lastName"></sub-grid-column>
+                <sub-grid-column label="{{ 'Location'|translate }}" field="location.name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disableSorting="true" width="100" ng-if="!vm.isNew">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group">
                             <a href ng-click="grid.appScope.$parent.removeBeneficiary(row.entity, grid)" 

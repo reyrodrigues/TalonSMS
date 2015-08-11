@@ -150,8 +150,7 @@ OrgUserEditController.prototype.configure = function configure() {
     }
 
     function RemoveRole(role, grid) {
-        $http.post(serviceRoot + 'Api/Account/RemoveUserFromRole', {
-            userId: self.entity.id,
+        $http.post(serviceRoot + 'Api/ApplicationUser/' + self.entity.id +'/RemoveUserFromRole', {
             roleId: role.id
         })
         .then(function () {
@@ -163,8 +162,7 @@ OrgUserEditController.prototype.configure = function configure() {
     }
 
     function AddRole(role, grid) {
-        $http.post(serviceRoot + 'Api/Account/AddUserToRole', {
-            userId: self.entity.id,
+        $http.post(serviceRoot + 'Api/ApplicationUser/' + self.entity.id + '/AddUserToRole', {
             roleId: role.id
         })
         .then(function () {

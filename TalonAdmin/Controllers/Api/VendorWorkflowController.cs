@@ -22,7 +22,6 @@ using RazorEngine;
 using System.Net;
 using System.Net.Http;
 
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 
@@ -293,13 +292,17 @@ namespace TalonAdmin.Controllers.Api
                     category.NumberOfVouchers += count;
                 }
 
+                var beneficiaries = await ctx.Beneficiaries
+                            .Include("Group")
+                            .Where(b => b.GroupId == groupId && b.Disabled != true).AsQueryable().ToListAsync();
+
+                beneficiaries.Where(b => String.IsNullOrEmpty(b.CardKey)).ToList().ForEach(b => b.GenerateKey());
+
                 await ctx.SaveChangesAsync();
 
                 await GenerateVouchers(new { DistributionId = distributionId });
 
-                var beneficiaries = await ctx.Beneficiaries
-                            .Include("Group")
-                            .Where(b => b.GroupId == groupId && b.Disabled != true).AsQueryable().ToListAsync();
+
 
                 var distributionLog = new DistributionLog
                 {

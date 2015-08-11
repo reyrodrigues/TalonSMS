@@ -31,6 +31,7 @@ namespace TalonAdmin.Controllers.Api
                 {
                     return BadRequest("Invalid username or password.");
                 }
+
                 if (vendor.ValidatePassword(password) && !ctx.VendorDevices.Where(d => d.UUID == deviceUUID && d.VendorId != vendor.Id).Any())
                 {
                     var vendorDevice = await ctx.VendorDevices.Where(d => d.VendorId == vendor.Id && d.UUID == deviceUUID).FirstOrDefaultAsync();

@@ -2,7 +2,7 @@ angular.module('talon.login', [
     'talon.auth',
   'ui.router',
   'ngStorage'
-])
+].concat(ALL_IMPORTS))
 .config(function config($stateProvider) {
     $stateProvider.state('login', {
         url: '/login',

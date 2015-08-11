@@ -11,7 +11,6 @@ using TalonAdmin.Models.Admin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using TalonAdmin.Models.BindingModels;
@@ -68,7 +67,6 @@ namespace TalonAdmin.Controllers.Api
 
             return Json<IdentityRole>(role, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore });
         }
-
 
         public async Task<IHttpActionResult> Delete([FromUri]string id)
         {

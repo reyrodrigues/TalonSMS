@@ -1,37 +1,36 @@
 ﻿<div class="panel panel-default">
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Name</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Name" ng-model="vm.entity.name" required>
-            </div>
-            <label class="col-sm-2 control-label">Distribution Mechanism</label>
-            <div class="col-sm-4">
-                <select class="form-control" ng-model="vm.entity.distributionMechanism"
+        <div class="col-sm-6">
+            <form-group label="{{ 'Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Distribution Mechanism'|translate }}" name="distributionMechanism" required="true">
+                <select class="form-control" ng-model="vm.entity.distributionMechanism" form-input required
                         ng-options="item.id as item.name for item in vm.lists.distributionMechanisms | orderBy:'item.name'"></select>
-            </div>
+            </form-group>
         </div>
         <div class="line line-dashed b-b line-lg pull-in"></div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Voucher Code Size</label>
-            <div class="col-sm-4">
-                <input type="number" class="form-control" placeholder="Name" ng-model="vm.entity.voucherCodeLength" required>
-            </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Voucher Code Size'|translate }}" name="voucherCodeLength" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.voucherCodeLength" form-input required />
+            </form-group>
         </div>
-        <div class="line b-b line-lg pull-in" ng-if="!vm.isNew"></div>
-        <div class="form-group" ng-if="!vm.isNew">
-            <label class="col-sm-2 control-label" translate>Created On</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" ng-model="vm.entity.createdOn" disabled>
+        <div ng-if="!vm.isNew">
+            <div class="line b-b line-lg pull-in"></div>
+            <div class="col-sm-6">
+                <form-group label="{{ 'Created On'|translate }}" name="createdOn">
+                    <input type="text" class="form-control" ng-model="vm.entity.createdOn" form-input />
+                </form-group>
             </div>
-            <label class="col-sm-2 control-label" translate>Last Modified On</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" ng-model="vm.entity.modifiedOn" disabled>
+            <div class="col-sm-6">
+                <form-group label="{{ 'Modified On'|translate }}" name="modifiedOn">
+                    <input type="text" class="form-control" ng-model="vm.entity.modifiedOn" form-input />
+                </form-group>
             </div>
         </div>
     </div>
-
-
 </div>
 
 <div class="panel panel-default" ng-if="!vm.isNew">
@@ -88,18 +87,18 @@
 </div>
 
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
-    <tab heading="Distributions">
+    <tab heading="{{ 'Distributions'|translate }}">
         <div class="panel panel-default">
             <sub-grid collection="Distributions"
                       expand="location"
                       key="programId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="Title" field="title"></sub-grid-column>
-                <sub-grid-column label="Location" field="location.name"></sub-grid-column>
-                <sub-grid-column label="Cycle" field="group.name"></sub-grid-column>
-                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions" disable-sorting="true">
+                <sub-grid-column label="{{ 'Title'|translate }}" field="title"></sub-grid-column>
+                <sub-grid-column label="{{ 'Location'|translate }}" field="location.name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Cycle'|translate }}" field="group.name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group">
                             <a href ui-sref="distributions.edit({id:row.entity.id})" class="btn btn-default btn-xs">Open</a>

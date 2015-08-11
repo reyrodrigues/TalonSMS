@@ -1,10 +1,12 @@
 ﻿var serviceRoot = window.location.protocol + '//' + window.location.host + '/';
+var ALL_IMPORTS = ['gettext'];
 
 function EditController($injector, $scope) {
     var entityManagerFactory = $injector.get('entityManagerFactory');
     var $state = $injector.get('$state');
     var $rootScope = $injector.get('$rootScope');
     var $q = $injector.get('$q');
+    var gettext = $injector.get('gettext');
     var dialogs = $injector.get('dialogs');
     var toaster = $injector.get('toaster');
     var controlledLists = $injector.get('controlledLists');
@@ -119,9 +121,21 @@ function EditController($injector, $scope) {
     function endEditing() {
         var self = this;
         self.isEditing = false;
+
+        $scope.dataForm.$setPristine();
+        $scope.dataForm.$setUntouched();
     }
 
     function save(continueEditing) {
+        if ($scope.dataForm.$invalid) {
+            angular.forEach($scope.dataForm.$error.required, function (field) {
+                field.$setDirty();
+                field.$setTouched();
+            });
+
+            return;
+        }
+
         var self = this;
         self.isEditing = false;
 
@@ -139,7 +153,7 @@ function EditController($injector, $scope) {
 
     function remove(entityOrId) {
         var self = this;
-        var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
+        var dlg = dialogs.confirm(gettext("Confirm"), gettext("Are you sure you would like to delete this record? This operation cannot be reversed."));
         dlg.result.then(function () {
             self.entity.entityAspect.setDeleted();
             self.isEditing = false;
@@ -155,11 +169,11 @@ function EditController($injector, $scope) {
     }
 
     function success(msg) {
-        toaster.success('Success!', msg);
+        toaster.success(gettext('Success!'), gettext(msg));
     }
 
     function failure(msg) {
-        toaster.error('Error!', msg);
+        toaster.error(gettext('Error!'), gettext(msg));
     }
 
     function defaults() {
@@ -183,6 +197,7 @@ function ListController($injector, $scope) {
     var DTOptionsBuilder = $injector.get('DTOptionsBuilder');
     var DTColumnBuilder = $injector.get('DTColumnBuilder');
     var $q = $injector.get('$q');
+    var gettext = $injector.get('gettext');
     var $compile = $injector.get('$compile');
     var $state = $injector.get('$state');
     var $rootScope = $injector.get('$rootScope');
@@ -211,6 +226,15 @@ function ListController($injector, $scope) {
     this.configure = this.configure || noop;
     this.load = this.load || load;
     this.remove = this.remove || remove;
+
+    this.filterText = '';
+    this.applyFilters = function () {
+        self.instance.rerender();
+    };
+    this.removeFilters = function () {
+        self.filterText = '';
+        self.instance.rerender();
+    };
 
     this.configure();
     this.load();
@@ -251,6 +275,11 @@ function ListController($injector, $scope) {
 
             if (self.settings.filter) {
                 keyFilter = angular.extend(keyFilter, self.settings.filter);
+            }
+
+            if (self.filterText && self.settings.filterFunction) {
+                console.log(self.settings.filterFunction(self.filterText));
+                keyFilter = angular.extend(keyFilter, self.settings.filterFunction(self.filterText));
             }
 
             if (!window.jQuery.isEmptyObject(keyFilter)) {
@@ -328,7 +357,7 @@ function ListController($injector, $scope) {
 
     function remove(id) {
         var self = this;
-        var dlg = dialogs.confirm("Confirm", "Are you sure you would like to delete this record? This operation cannot be reversed.");
+        var dlg = dialogs.confirm(gettext("Confirm"), gettext("Are you sure you would like to delete this record? This operation cannot be reversed."));
         dlg.result.then(function () {
             var query = entityManagerFactory.entityQuery(self.settings.collectionType)
                 .where('id', '==', id)
@@ -355,12 +384,11 @@ function ListController($injector, $scope) {
     }
 
     function success(msg) {
-        toaster.success('Success!', msg);
+        toaster.success(gettext('Success!'), gettext(msg));
     }
 
     function failure(msg) {
-        toaster.error('Error!', msg);
-        console.log(msg);
+        toaster.error(gettext('Error!'), gettext(msg));
     }
 }
 

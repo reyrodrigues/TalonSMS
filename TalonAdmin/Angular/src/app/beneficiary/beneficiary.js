@@ -6,7 +6,7 @@ angular.module('talon.beneficiary', [
   'talon.common',
   'dialogs.main',
   'ngFileUpload'
-])
+].concat(ALL_IMPORTS))
 
 .config(function config($stateProvider) {
     $stateProvider
@@ -20,6 +20,17 @@ angular.module('talon.beneficiary', [
         abstract: true,
         data: {
             settings: {
+                filterFunction: function (value) {
+                    return {
+                        'or': [
+                            { 'firstName': { 'contains': value } },
+                            { 'lastName': { 'contains': value } },
+                            { 'mobileNumber': { 'contains': value } },
+                            { 'group.name': { 'contains': value } },
+                            { 'location.name': { 'contains': value } }
+                        ]
+                    };
+                },
                 collectionType: "Beneficiaries",
                 entityType: 'Beneficiary',
                 expand: ['group', 'location'],
@@ -74,6 +85,7 @@ angular.module('talon.beneficiary', [
 
 
 BeneficiaryListController.prototype.configure = function configure() {
+    var gettext = this.$injector.get('gettext');
     var $rootScope = this.$injector.get('$rootScope');
     var $localStorage = this.$injector.get('$localStorage');
     var dialogs = this.$injector.get('dialogs');
@@ -82,7 +94,7 @@ BeneficiaryListController.prototype.configure = function configure() {
 
     this.actions = [
         {
-            label: "Import Excel",
+            label: gettext("Import Excel"),
             css: "btn-default",
             condition: function () { return $rootScope.canI('Import Beneficiaries'); },
             action: function action() {
@@ -90,12 +102,12 @@ BeneficiaryListController.prototype.configure = function configure() {
                 dlg.result.then(function (result) {
                     if (result) {
                         if (!result.Errors.length) {
-                            toaster.pop('success', 'Success', 'Beneficiaries successfuly imported.');
+                            toaster.pop('success', gettext('Success'), gettext('Beneficiaries successfuly imported.'));
                         } else {
-                            toaster.pop('warning', 'Notice', 'Some beneficiaries were not imported correctly.');
+                            toaster.pop('warning', gettext('Notice'), gettext('Some beneficiaries were not imported correctly.'));
 
                             result.Errors.forEach(function (e) {
-                                toaster.pop('error', 'Error', 'Error importing beneficiary. Message from server:\n' + e.ErrorText + "\nLine: " + e.Line);
+                                toaster.pop('error', gettext('Error'), gettext('Error importing beneficiary. Message from server:\n') + e.ErrorText + gettext("\nLine: ") + e.Line);
                             });
                         }
 
@@ -103,7 +115,7 @@ BeneficiaryListController.prototype.configure = function configure() {
                         self.instance.rerender();
                     }
                 }).catch(function (res) {
-                    toaster.pop('error', 'Error', res.data);
+                    toaster.pop('error', gettext('Error'), res.data);
                 });
 
             }
@@ -111,7 +123,7 @@ BeneficiaryListController.prototype.configure = function configure() {
 
     this.forms = [
         {
-            label: "Export Excel",
+            label: gettext("Export Excel"),
             condition: function () { return $rootScope.canI('Export Beneficiaries'); },
             css: "btn-info",
             url: function () {
@@ -123,13 +135,14 @@ BeneficiaryListController.prototype.configure = function configure() {
 
 BeneficiaryEditController.prototype.canEdit = function canEdit() {
     return !this.entity.disabled;
-};  
+};
 
 BeneficiaryEditController.prototype.configure = function configure() {
     this.$scope.cancelVoucher = cancelVoucher.bind(this.$scope);
     this.$scope.resendVoucher = resendVoucher.bind(this.$scope);
 
     var dialogs = this.$injector.get('dialogs');
+    var gettext = this.$injector.get('gettext');
     var $rootScope = this.$injector.get('$rootScope');
     var $http = this.$injector.get('$http');
     var toaster = this.$injector.get('toaster');
@@ -139,7 +152,7 @@ BeneficiaryEditController.prototype.configure = function configure() {
 
     this.actions = [
         {
-            label: "Disable Beneficiary",
+            label: gettext("Disable Beneficiary"),
             css: "btn-info",
             condition: function (entity) {
                 return !entity.disabled;
@@ -150,7 +163,7 @@ BeneficiaryEditController.prototype.configure = function configure() {
             }
         },
         {
-            label: "Enable Beneficiary",
+            label: gettext("Enable Beneficiary"),
             css: "btn-info",
             condition: function (entity) {
                 return entity.disabled;
@@ -163,7 +176,7 @@ BeneficiaryEditController.prototype.configure = function configure() {
     ];
 
     function cancelVoucher(entity, grid) {
-        var dlg = dialogs.confirm("Confirm", "Are you sure you would like to cancel this voucher?");
+        var dlg = dialogs.confirm(gettext("Confirm"), gettext("Are you sure you would like to cancel this voucher?"));
         dlg.result.then(function (r) {
             var query = entityManagerFactory.entityQuery('IssuedVoucherTransactionRecords')
                 .where("voucher.id", "==", entity.voucherId)
@@ -175,6 +188,7 @@ BeneficiaryEditController.prototype.configure = function configure() {
                 entityManager.saveChanges([voucher]).then(function () {
                     $http.post(serviceRoot + 'Api/VoucherWorkflow/CancelVoucher', { VoucherId: entity.voucherId })
                     .then(function () {
+                        toaster.pop('success', gettext('Success!'), gettext('Voucher cancelled successfully!'));
                         grid.api.custom.reloadData();
                     });
                 });
@@ -185,13 +199,13 @@ BeneficiaryEditController.prototype.configure = function configure() {
     function resendVoucher(entity, grid) {
         console.log(grid, entity);
 
-        var dlg = dialogs.confirm("Confirm", "Are you sure you would like to resend this voucher?");
+        var dlg = dialogs.confirm(gettext("Confirm"), gettext("Are you sure you would like to resend this voucher?"));
         dlg.result.then(function (r) {
             var payload = { VoucherId: entity.voucherId, BeneficiaryId: entity.beneficiaryId };
 
             $http.post(serviceRoot + 'Api/VoucherWorkflow/ResendSMS', payload)
                 .then(function () {
-                    toaster.pop('success', 'Success!', 'Voucher resent successfully!');
+                    toaster.pop('success', gettext('Success!'), gettext('Voucher resent successfully!'));
                     grid.api.custom.reloadData();
                 }).catch(function (res) {
                     toaster.pop('error', 'Error', res.data.Message);

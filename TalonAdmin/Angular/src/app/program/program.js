@@ -6,7 +6,7 @@
   'talon.common',
   'dialogs.main',
   'ngFileUpload'
-])
+].concat(ALL_IMPORTS))
 
 .config(function config($stateProvider) {
     $stateProvider
@@ -160,7 +160,15 @@ ProgramEditController.prototype.configure = function configure() {
         
 
         $scope.save = function () {
-            if ($scope.distributeForm.$valid) {
+            if ($scope.popupForm.$invalid) {
+                angular.forEach($scope.popupForm.$error.required, function (field) {
+                    field.$setDirty();
+                    field.$setTouched();
+                });
+
+                return;
+            }
+
                 $http.post(serviceRoot + 'Api/VoucherWorkflow/DistributeVouchers', $scope.entity)
                     .then(function () {
                         toaster.pop('success', 'Success!', 'Distribution created successfully!');
@@ -168,7 +176,6 @@ ProgramEditController.prototype.configure = function configure() {
                         toaster.pop('error', 'Error', res.data.Message);
                     });
                 $modalInstance.close(true);
-            }
         };
 
         $scope.close = function () {

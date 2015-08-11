@@ -1,43 +1,41 @@
 <div class="panel panel-default">
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Name</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" placeholder=" Name" ng-model="vm.entity.name" required />
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
         </div>
     </div>
 </div>
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
-    <tab heading="Users">
+    <tab heading="{{ 'Users'|translate }}">
         <div class="panel panel-default">
-            <sub-grid 
-                      collection="UserRoles"
+            <sub-grid collection="UserRoles"
                       key="roleId"
                       default-sort="userId"
                       entity-manager="adminEntityManager"
                       entity="vm.entity"
                       wait-for="vm.userQuery"
                       select="vm.mergeUsers">
-                <sub-grid-column label="User Name" field="user.userName">
+                <sub-grid-column label="{{ 'User Name'|translate }}" field="user.userName">
                 </sub-grid-column>
-                <sub-grid-column label="Full Name" field="user.fullName">
+                <sub-grid-column label="{{ 'Full Name'|translate }}" field="user.fullName">
                 </sub-grid-column>
             </sub-grid>
         </div>
     </tab>
-    <tab heading="Actions">
+    <tab heading="{{ 'Actions'|translate }}">
         <div class="panel panel-default">
             <sub-grid collection="Actions"
                       entity-manager="adminEntityManager"
                       entity="vm.entity"
                       select="vm.mergeActions">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="Name" field="name">
+                <sub-grid-column label="{{ 'Name'|translate }}" field="name">
 
 
                 </sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions" width="100" ng-if="vm.canEdit">
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" width="100" disableSorting="true" ng-if="vm.canEdit">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group">
                             <a href ng-click="grid.appScope.$parent.addAction(row.entity, grid)"
@@ -50,15 +48,15 @@
             </sub-grid>
         </div>
     </tab>
-    <tab heading="Menu">
+    <tab heading="{{ 'Menu'|translate }}">
         <div class="panel panel-default">
             <sub-grid collection="MenuCategories"
                       entity-manager="adminEntityManager"
                       entity="vm.entity"
                       select="vm.mergeMenuCategories">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="Name" field="name"></sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions" width="100" ng-if="vm.canEdit">
+                <sub-grid-column label="{{ 'Name'|translate }}" field="name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disableSorting="true" width="100" ng-if="vm.canEdit">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group">
                             <a href ng-click="grid.appScope.$parent.addCategory(row.entity, grid)"

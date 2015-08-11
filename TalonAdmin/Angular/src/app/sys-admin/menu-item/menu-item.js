@@ -134,6 +134,15 @@ MenuItemEditController.prototype.configure = function configure() {
         }
 
         $scope.save = function () {
+            if ($scope.popupForm.$invalid) {
+                angular.forEach($scope.popupForm.$error.required, function (field) {
+                    field.$setDirty();
+                    field.$setTouched();
+                });
+
+                return;
+            }
+
             entityManager.saveChanges([$scope.entity]).then(function () {
                 $modalInstance.close(true);
             });

@@ -10,7 +10,7 @@
                     </a>
                 </li>
                 <li class="hidden-folded padder m-t m-b-sm text-muted text-xs" ng-repeat-start="category in navigationItems | orderBy: 'sortOrder'" ng-if="!category.NeedsCountry || country">
-                    <span>{{ category.Name }}</span>
+                    <span translate>{{ category.Name }}</span>
                 </li>
 
                 <li ng-class="{active:$state.includes(item.State)}" ng-repeat="item in category.Items" ng-repeat-end>
@@ -20,17 +20,17 @@
                             <i class="fa fa-fw fa-angle-down text-active"></i>
                         </span>
                         <i class="{{ item.CssClass }}"></i>
-                        <span>{{item.Title}}</span>
+                        <span translate>{{item.Title}}</span>
                     </a>
                     <ul class="nav nav-sub dk">
                         <li class="nav-sub-header">
                             <a href="">
-                                <span>{{item.Title}}</span>
+                                <span translate>{{item.Title}}</span>
                             </a>
                         </li>
                         <li ui-sref-active="active" ng-repeat-start="child in item.Children" ng-repeat-end>
                             <a ui-sref="{{child.State}}" href="#">
-                                <span>{{ child.Title}}</span>
+                                <span translate>{{ child.Title}}</span>
                             </a>
                         </li>
                     </ul>

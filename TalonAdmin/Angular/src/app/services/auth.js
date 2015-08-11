@@ -39,7 +39,7 @@
 
     function loadUserData() {
         var deferred = $q.defer();
-        $http.get(serviceRoot + 'api/Account/Me')
+        $http.get(serviceRoot + 'api/ApplicationUser/Me')
         .then(function (response) {
             $rootScope.currentUser = response.data;
 

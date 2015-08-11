@@ -6,7 +6,7 @@
   'talon.common',
   'dialogs.main',
   'ngFileUpload'
-])
+].concat(ALL_IMPORTS))
 
 .config(function config($stateProvider) {
     $stateProvider
@@ -22,7 +22,7 @@
             settings: {
                 collectionType: "Distributions",
                 entityType: 'Distribution',
-                expand: ['vouchers', 'categories', 'program'],
+                expand: ['vouchers', 'categories', 'program', 'group'],
                 form: 'distribution/form.tpl.html',
                 controlledLists: ['programs', 'locations', 'voucherTypes', 'vendorTypes', 'beneficiaryGroups']
             }
@@ -38,6 +38,8 @@
             settings: {
                 columns: [
                     ['id', '#'],
+                    ['program.name', 'Program'],
+                    ['group.name', 'Cycle'],
                     ['title', 'Title']
                 ]
             }

@@ -29,10 +29,11 @@
     "flot.tooltip": "~0.8.4",
     "flot.orderbars": "*",
     "flot-spline": "~0.0.1",
-    "angular-block-ui": "~0.2.0"
+    "angular-block-ui": "~0.2.0",
+    "angular-gettext": "~2.1.0"
   },
   "resolutions": {
-    "angular": ">=1.3.0",
+    "angular": "1.4.3",
     "angular-bootstrap": "^0.12"
   }
 }

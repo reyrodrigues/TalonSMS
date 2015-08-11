@@ -1,76 +1,71 @@
 <div class="panel panel-default">
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>Name</label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" placeholder="{{'Name'}}" ng-model="vm.entity.name" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Country Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input  required/>
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>ISO Alpha-2 Code</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" placeholder="{{'ISO Alpha-2 Code'}}" ng-model="vm.entity.isoAlpha2" required>
-            </div>
-            <label class="col-sm-4 control-label" translate>ISO Alpha-3 Code</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" placeholder="{{'ISO Alpha-3 Code'}}" ng-model="vm.entity.isoAlpha3" required>
-            </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'ISO Alpha-2 Code'|translate }}" name="isoAlpha2" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.isoAlpha2" form-input required />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>Currency ISO Code</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" placeholder="{{'Currency ISO Code'}}" ng-model="vm.entity.currencyIsoCode" required>
-            </div>
-            <label class="col-sm-4 control-label" translate>Currency Symbol</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" placeholder="{{'Currency Symbol'}}" ng-model="vm.entity.currencyUnicodeSymbol" required>
-            </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'ISO Alpha-3 Code'|translate }}" name="isoAlpha3" >
+                <input type="text" class="form-control" ng-model="vm.entity.isoAlpha3" form-input  />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>Calling Code</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" placeholder="{{'Calling Code'}}" ng-model="vm.entity.countryCallingCode" required>
-            </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Currency Symbol'|translate }}" name="currencyUnicodeSymbol" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.currencyUnicodeSymbol" form-input required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Currency ISO Code'|translate }}" name="currencyIsoCode" >
+                <input type="text" class="form-control" ng-model="vm.entity.currencyIsoCode" form-input  />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Calling Code'|translate }}" name="countryCallingCode" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.countryCallingCode" form-input required />
+            </form-group>
         </div>
     </div>
 </div>
+
 <div class="panel panel-default" ng-if="!vm.isNew">
     <div class="panel-heading">
         Country-wide Settings
     </div>
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>SMS Service Type</label>
-            <div class="col-sm-8">
-                <select disabled class="form-control" ng-model="vm.entity.settings.smsBackendType"
+        <div class="col-sm-12">
+            <form-group label="{{ 'SMS Service Type'|translate }}" name="smsBackendType">
+                <select class="form-control" ng-model="vm.entity.settings.smsBackendType" form-input
                         ng-options="item.id as item.name for item in vm.lists.smsBackends | orderBy:'item.name'"></select>
-            </div>
+            </form-group>
         </div>
-        <div class="form-group" ng-if="[0,2].indexOf(vm.entity.settings.smsBackendType) > -1">
-            <label class="col-sm-4 control-label" translate>SMS Service URL</label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" placeholder="{{'SMS Service URL'}}" ng-model="vm.entity.settings.serviceUrl" readonly>
-            </div>
+        <div class="col-sm-12" ng-show="[0,2].indexOf(vm.entity.settings.smsBackendType) > -1">
+            <form-group label="{{ 'SMS Service URL'|translate }}" name="serviceUrl">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.serviceUrl" form-input readonly />
+            </form-group>
         </div>
-        <div class="form-group" ng-if="vm.entity.settings.smsBackendType == 1">
-            <label class="col-sm-4 control-label" translate>
-                TurboSMS Signature
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['TurboSMS Signature']" placeholder="{{'TurboSMS Signature'}}" ng-readonly="!isEditing">
-            </div>
+        <div class="col-sm-12" ng-show="vm.entity.settings.smsBackendType == 1">
+            <form-group label="{{ 'TurboSMS Signature'|translate }}" name="turboSMSSignature">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['TurboSMS Signature']" form-input readonly />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>SMS Service User Name</label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" placeholder="{{'SMS Service User Name'}}" ng-model="vm.entity.settings.serviceUser">
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'SMS Service User Name'|translate }}" name="serviceUser">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.serviceUser" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>SMS Service Password</label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" placeholder="{{'SMS Service Password'}}" ng-model="vm.entity.settings.servicePassword">
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'SMS Service Password'|translate }}" name="servicePassword">
+                <input type="password" class="form-control" ng-model="vm.entity.settings.servicePassword" form-input />
+            </form-group>
         </div>
     </div>
 </div>
@@ -79,96 +74,60 @@
         Messages
     </div>
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Beneficiary Voucher Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Voucher Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Beneficiary Voucher Message'|translate }}" name="prop1">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Voucher Message']" form-input />
+            </form-group>
         </div>
-
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Beneficiary Confirmed Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Confirmed Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Beneficiary Confirmed Message'|translate }}" name="prop2">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Confirmed Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Vendor Confirmed Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Confirmed Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Vendor Confirmed Message'|translate }}" name="prop3">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Confirmed Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Beneficiary Canceled Voucher Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Cancelled Voucher Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Beneficiary Canceled Voucher Message'|translate }}" name="prop4">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Cancelled Voucher Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Invalid Voucher Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Invalid Voucher Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Invalid Voucher Message'|translate }}" name="prop5">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Invalid Voucher Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Wrong National Id Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Wrong National Id Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Wrong National Id Message'|translate }}" name="prop6">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Wrong National Id Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Vendor Cannot Accept Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Cannot Accept Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Vendor Cannot Accept Message'|translate }}" name="prop7">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Cannot Accept Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Beneficiary Cannot Accept Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Cannot Accept Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Beneficiary Cannot Accept Message'|translate }}" name="prop8">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Cannot Accept Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Vendor Already Used Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Already Used Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Vendor Already Used Message'|translate }}" name="prop9">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Already Used Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Beneficiary Already Used Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Already Used Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Beneficiary Already Used Message'|translate }}" name="propa">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Beneficiary Already Used Message']" form-input />
+            </form-group>
         </div>
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>
-                Vendor Cancelled Message
-            </label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Cancelled Message']" required>
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Vendor Cancelled Message'|translate }}" name="propb">
+                <input type="text" class="form-control" ng-model="vm.entity.settings.properties['Vendor Cancelled Message']" form-input />
+            </form-group>
         </div>
-
-
     </div>
 </div>

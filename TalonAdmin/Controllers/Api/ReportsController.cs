@@ -82,13 +82,13 @@ namespace TalonAdmin.Controllers.Api
                         Value = v.Value,
                         ValidAfter = v.Category.ValidAfter,
                     };
-                }).OrderBy(d=>d.Beneficiary).ThenBy(d=>d.ValidAfter);
+                }).OrderBy(d => d.Beneficiary).ThenBy(d => d.ValidAfter);
 
 
                 dynamic model = new
-                 {
-                     Codes = qrCodes.ToArray()
-                 };
+                {
+                    Codes = qrCodes.ToArray()
+                };
 
                 var reportData = GenerateReport("TestSheet.cshtml", "Test Sheet", (object)model, PaperKind.Letter);
 
@@ -122,7 +122,8 @@ namespace TalonAdmin.Controllers.Api
                 Func<int, string> createDistributionNumber = (distributionId) =>
                 {
                     var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
-                    var cycleNumber = distribution.Group != null ? distribution.Group.Number : 0;
+                    var groupsInOrder = ctx.Distributions.Where(d => d.ProgramId == programId).OrderBy(d => d.CreatedOn).Select(d => d.GroupId).ToList();
+                    var cycleNumber = groupsInOrder.IndexOf(distribution.GroupId) + 1;
                     var distributionNumber = String.Format("{0:D3}-{1:D3}", distribution.Number ?? 0, cycleNumber);
                     return distributionNumber;
                 };
@@ -195,6 +196,30 @@ namespace TalonAdmin.Controllers.Api
                     Total = items.Select(i => i.TotalValue).Sum()
                 };
 
+                if (items.Any())
+                {
+
+                    var spreadsheet = JArray.FromObject(items).Flatten("Vendor").ToDataTable().ToExcelSpreadsheet();
+                    ctx.ExportedReports.Add(new ExportedReport
+                    {
+                        CountryId = countryId,
+                        OrganizationId = organizationId,
+                        ProgramId = programId,
+                        ReportType = 3,
+
+                        OriginalReport = Convert.ToBase64String(reportData),
+                        Spreadsheet = Convert.ToBase64String(spreadsheet),
+
+                        Description = ctx.Programs.Where(d => d.Id == programId).First().Name,
+
+                        ReportRunBy = User.Identity.GetUserId(),
+                        ReportRunOn = DateTime.UtcNow
+                    });
+
+                    ctx.SaveChanges();
+
+                }
+
                 reportData = GenerateReport("ProgramClosureReport.cshtml", "Program Closure Report", (object)model, paperSize);
             }
 
@@ -227,7 +252,8 @@ namespace TalonAdmin.Controllers.Api
                 Func<int, string> createDistributionNumber = (distributionId) =>
                 {
                     var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
-                    var cycleNumber = distribution.Group != null ? distribution.Group.Number : 0;
+                    var groupsInOrder = ctx.Distributions.Where(d => d.ProgramId == programId).OrderBy(d => d.CreatedOn).Select(d => d.GroupId).ToList();
+                    var cycleNumber = groupsInOrder.IndexOf(distribution.GroupId) + 1;
                     var distributionNumber = String.Format("{0:D3}-{1:D3}", distribution.Number ?? 0, cycleNumber);
                     return distributionNumber;
                 };
@@ -250,18 +276,18 @@ namespace TalonAdmin.Controllers.Api
                                     .ToArrayAsync())
                                      .Select(v =>
                                      new
-                                    {
-                                        Name = v.Beneficiary.FirstName + " " + v.Beneficiary.LastName,
-                                        v.Beneficiary.MobileNumber,
-                                        v.Beneficiary.NationalId,
-                                        FinalizedOn = v.LastModifiedOn,
-                                        v.Voucher.VoucherCode,
-                                        v.ConfirmationCode,
-                                        v.Value,
-                                        v.VoucherId,
-                                        v.Voucher.DistributionId,
-                                        DistributionNumber = createDistributionNumber(v.Voucher.DistributionId),
-                                    }).OrderBy(a => a.VoucherCode).ToArray();
+                                     {
+                                         Name = v.Beneficiary.FirstName + " " + v.Beneficiary.LastName,
+                                         v.Beneficiary.MobileNumber,
+                                         v.Beneficiary.NationalId,
+                                         FinalizedOn = v.LastModifiedOn,
+                                         v.Voucher.VoucherCode,
+                                         v.ConfirmationCode,
+                                         v.Value,
+                                         v.VoucherId,
+                                         v.Voucher.DistributionId,
+                                         DistributionNumber = createDistributionNumber(v.Voucher.DistributionId),
+                                     }).OrderBy(a => a.VoucherCode).ToArray();
                 itemCount = items.Count();
 
                 int pageSize = 20;
@@ -317,30 +343,29 @@ namespace TalonAdmin.Controllers.Api
                 }
 
                 ctx.SaveChanges();
-            }
 
-
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                if (itemCount > 0)
+                if (items.Any())
                 {
-                    ctx.ProgramVendorReconciliations.Add(new ProgramVendorReconciliation
+                    var spreadsheet = JArray.FromObject(items).ToDataTable().ToExcelSpreadsheet();
+                    ctx.ExportedReports.Add(new ExportedReport
                     {
                         CountryId = countryId,
                         OrganizationId = organizationId,
-                        ReconciledOn = DateTime.Now,
-                        OriginalReport = Convert.ToBase64String(reportData),
-                        VendorId = vendorId,
                         ProgramId = programId,
+                        ReportType = 1,
+
+                        OriginalReport = Convert.ToBase64String(reportData),
+
+                        Description = ctx.Vendors.Where(v => v.Id == vendorId).First().Name,
 
                         ReportRunBy = User.Identity.GetUserId(),
                         ReportRunOn = DateTime.UtcNow
                     });
 
                     ctx.SaveChanges();
-
                 }
             }
+
 
             return this.File(reportData, null, "application/pdf");
         }
@@ -416,7 +441,8 @@ namespace TalonAdmin.Controllers.Api
                 }
                 var user = UserManager.FindByName(User.Identity.Name);
                 var distribution = ctx.Distributions.Where(d => d.Id == distributionId).First();
-                var cycleNumber = distribution.Group != null ? distribution.Group.Number : 0;
+                var groupsInOrder = ctx.Distributions.Where(d => d.ProgramId == distribution.ProgramId).OrderBy(d => d.CreatedOn).Select(d => d.GroupId).ToList();
+                var cycleNumber = groupsInOrder.IndexOf(distribution.GroupId) + 1;
                 var distributionNumber = String.Format("{0:D3}-{1:D3}", distribution.Number ?? 0, cycleNumber);
 
                 var model = new
@@ -435,6 +461,29 @@ namespace TalonAdmin.Controllers.Api
                 };
 
                 var reportData = GenerateReport("DistributionReport.cshtml", "Distribution Report", (object)model, paperSize);
+
+                if (items.Any())
+                {
+                    var spreadsheet = JArray.FromObject(items).ToDataTable().ToExcelSpreadsheet();
+                    ctx.ExportedReports.Add(new ExportedReport
+                    {
+                        CountryId = countryId,
+                        OrganizationId = organizationId,
+                        ProgramId = distribution.ProgramId ?? 0,
+                        ReportType = 2,
+
+                        OriginalReport = Convert.ToBase64String(reportData),
+                        Spreadsheet = Convert.ToBase64String(spreadsheet),
+
+                        Description = distribution.Title,
+
+                        ReportRunBy = User.Identity.GetUserId(),
+                        ReportRunOn = DateTime.UtcNow
+                    });
+
+                    ctx.SaveChanges();
+
+                }
 
                 return this.File(reportData, null, "application/pdf");
             }
@@ -469,10 +518,10 @@ namespace TalonAdmin.Controllers.Api
                 var groupedQuery = (await query.ToArrayAsync())
                     .GroupBy(s => s.ReconciledOn.Value.ToShortDateString())
                     .Select(g => new
-                {
-                    g.Key,
-                    Vendors = g.GroupBy(s => s.VoucherName).Select(v => new { v.Key, Vouchers = v.Sum(v1 => v1.Value) })
-                }).Select(t => t.Vendors.Select(t1 => new object[] { t.Key, t1.Key, t1.Vouchers }))
+                    {
+                        g.Key,
+                        Vendors = g.GroupBy(s => s.VoucherName).Select(v => new { v.Key, Vouchers = v.Sum(v1 => v1.Value) })
+                    }).Select(t => t.Vendors.Select(t1 => new object[] { t.Key, t1.Key, t1.Vouchers }))
                 .SelectMany(v => v);
 
                 var jsonString = JsonConvert.SerializeObject(query, Formatting.Indented,
@@ -527,7 +576,7 @@ namespace TalonAdmin.Controllers.Api
                     Orientation = TuesPechkin.GlobalSettings.PaperOrientation.Landscape
                 },
                 Objects = {
-                    new ObjectSettings { 
+                    new ObjectSettings {
                         HtmlText = content.ToString(),
                         WebSettings = new WebSettings {
                             DefaultEncoding = "utf-8"

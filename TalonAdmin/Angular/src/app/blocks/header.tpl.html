@@ -29,16 +29,16 @@
     <ul class="nav navbar-nav navbar-right">
         <li class=" hidden-sm" ng-if="!availableCountries">
             <div style="padding: 15px 15px 15px 15px">
-                <i class="flag-icon flag-icon-{{country.IsoAlpha2|lowercase}}"></i>&nbsp;{{country.Name}}
+                <i class="flag-icon flag-icon-{{country.IsoAlpha2|lowercase}}" ></i>&nbsp;{{country.Name|translate}}
             </div>
         </li>
         <li class="dropdown hidden-sm" ng-if="availableCountries" dropdown>
             <a href class="dropdown-toggle" dropdown-toggle>
-                <i class="flag-icon flag-icon-{{country.IsoAlpha2|lowercase}}"></i>&nbsp;{{country.Name}} <b class="caret"></b>
+                <i class="flag-icon flag-icon-{{country.IsoAlpha2|lowercase}}" ></i>&nbsp;{{country.Name|translate}} <b class="caret"></b>
             </a>
             <ul class="dropdown-menu animated fadeInRight w">
                 <li ng-repeat="country in availableCountries">
-                    <a ng-click="selectCountry(country)" href>{{country.Name}}</a>
+                    <a ng-click="selectCountry(country)" href translate>{{country.Name}}</a>
                 </li>
             </ul>
         </li>
@@ -49,11 +49,11 @@
             <!-- dropdown -->
             <ul class="dropdown-menu animated fadeInRight w">
                 <li>
-                    <a ui-sref="country-admin.users.my-profile">Profile</a>
+                    <a ui-sref="country-admin.users.my-profile" translate>Profile</a>
                 </li>
                 <li class="divider"></li>
                 <li>
-                    <a href="" ng-click="logOut()">Logout</a>
+                    <a href="" ng-click="logOut()" translate>Logout</a>
                 </li>
             </ul>
             <!-- / dropdown -->

@@ -1,22 +1,20 @@
 <div class="panel panel-default">
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Name</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" placeholder="Name" ng-model="vm.entity.name" required />
-            </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
         </div>
-        <div class="form-group">
-
-            <label class="col-sm-2 control-label">Sort Order</label>
-            <div class="col-sm-10">
-                <input type="number" class="form-control" placeholder="Sort Order" ng-model="vm.entity.sortOrder" />
-            </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Sort Order'|translate }}" name="sortOrder" required="true">
+                <input type="number" class="form-control" ng-model="vm.entity.sortOrder" form-input required />
+            </form-group>
         </div>
     </div>
 </div>
+
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
-    <tab heading="Menu Items">
+    <tab heading="{{ 'Menu Items'|translate }}">
         <div class="panel panel-default">
             <sub-grid entity-manager="adminEntityManager"
                       collection="MenuItems"
@@ -24,21 +22,21 @@
                       entity="vm.entity"
                       parent="vm">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="Title" field="title"></sub-grid-column>
-                <sub-grid-column label="State" field="state"></sub-grid-column>
+                <sub-grid-column label="{{ 'Title'|translate }}" field="title"></sub-grid-column>
+                <sub-grid-column label="{{ 'State'|translate }}" field="state"></sub-grid-column>
             </sub-grid>
         </div>
     </tab>
-    <tab heading="Roles">
+    <tab heading="{{ 'Roles'|translate }}">
         <div class="panel panel-default">
             <sub-grid collection="Roles"
                       entity-manager="adminEntityManager"
                       entity="vm.entity"
                       select="vm.mergeRoles">
                 <sub-grid-column label="#" field="id"></sub-grid-column>
-                <sub-grid-column label="Name" field="name"></sub-grid-column>
-                <sub-grid-column label="Can Access" field="isLinked"></sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions" width="100">
+                <sub-grid-column label="{{ 'Name'|translate }}" field="name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Can Access'|translate }}" field="isLinked"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" width="100">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group">
                             <a href ng-click="grid.appScope.$parent.allowAccess(row.entity, grid)"

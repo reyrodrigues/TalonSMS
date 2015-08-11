@@ -13,4 +13,4 @@ angular
     'ngStorage',
     'ui.grid',
     'ui.grid.pagination'
-]);
+].concat(ALL_IMPORTS));

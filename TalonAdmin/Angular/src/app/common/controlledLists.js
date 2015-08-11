@@ -6,6 +6,15 @@
         var adminEntityManager = entityManagerFactory.adminEntityManager();
 
         return {
+            reportTypes: function () {
+                var deferred = $q.defer();
+                deferred.resolve([
+                    { id: 1, name: 'Vendor Financial Report' },
+                    { id: 2, name: 'Distribution Report' },
+                    { id: 3, name: 'Program Closure Report' }
+                ]);
+                return deferred.promise;
+            },
             smsBackends: function () {
                 var deferred = $q.defer();
                 deferred.resolve([

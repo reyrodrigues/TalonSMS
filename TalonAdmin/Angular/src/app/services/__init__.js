@@ -2,5 +2,5 @@
   'ngStorage',
   'ui.router',
   'breeze.angular'
-])
+].concat(ALL_IMPORTS))
 ;

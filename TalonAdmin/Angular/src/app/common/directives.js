@@ -260,7 +260,7 @@ angular.module('talon.common')
                     col.width = width;
                 }
 
-                if(disableSorting) {
+                if (disableSorting) {
                     col.enableSorting = false;
                 }
 
@@ -433,7 +433,7 @@ angular.module('talon.common')
     };
 })
 
-.directive('chosen', function ($timeout) {
+.directive('disabledChosen', function ($timeout) {
     var CHOSEN_OPTION_WHITELIST, NG_OPTIONS_REGEXP, isEmpty, snakeCase;
     NG_OPTIONS_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w]*)|(?:\(\s*([\$\w][\$\w]*)\s*,\s*([\$\w][\$\w]*)\s*\)))\s+in\s+(.*?)(?:\s+track\s+by\s+(.*?))?$/;
     CHOSEN_OPTION_WHITELIST = [
@@ -604,18 +604,18 @@ angular.module('talon.common')
     return {
         restrict: 'A',
         require: '?ngModel',
-        link: function(scope, element, attrs, ngModel) {
+        link: function (scope, element, attrs, ngModel) {
             if (!ngModel) {
                 return;
             }
 
-            ngModel.$render = function() {};
+            ngModel.$render = function () { };
 
-            element.bind('change', function(e) {
+            element.bind('change', function (e) {
                 var element = e.target;
 
                 $q.all(slice.call(element.files, 0).map(readFile))
-                    .then(function(values) {
+                    .then(function (values) {
                         if (element.multiple) {
                             ngModel.$setViewValue(values);
                         }
@@ -628,10 +628,10 @@ angular.module('talon.common')
                     var deferred = $q.defer();
 
                     var reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         deferred.resolve(e.target.result);
                     };
-                    reader.onerror = function(e) {
+                    reader.onerror = function (e) {
                         deferred.reject(e);
                     };
                     reader.readAsDataURL(file);
@@ -644,5 +644,59 @@ angular.module('talon.common')
         } //link
     }; //return
 }])
+
+
+
+.directive('formGroup', function (gettext) {
+    return {
+        restrict: 'E',
+        require: '^form',
+        transclude: true,
+        replace: true,
+        scope: {
+            cssClass: '@class',
+            required: '=',
+            checkbox: '=',
+            label: '@',
+            name: '@'
+        },
+        template: '<div class="form-group" ng-class="{\'has-error\':hasError, cssClass:true, \'required\':required }">' +
+                    '<label class="col-sm-4 control-label" for="{{name}}" ng-if="!checkbox">{{label}}</label>    ' +
+                    '<div  class="input-container" ng-class="{\'col-sm-8\': !checkbox, \'col-sm-12\': checkbox}">' +
+                    '<div ng-transclude></div>' +
+                    '<div class="help-block" ng-messages="$error" ng-show="hasError">' +
+                    '<div ng-messages-include="messages.tpl.html"></div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>',
+        link: function (scope, element, attrs, ctrl) {
+            scope.form = ctrl;
+
+            var input = scope.form.$name + '.' + scope.name;
+
+
+            scope.$parent.$watch(input + '.$invalid && (' + input + '.$touched || ' + scope.form.$name + '.$submitted )', function (hasError) {
+                scope.hasError = hasError;
+            });
+
+            scope.$parent.$watch(input + '.$error', function ($error) {
+                scope.$error = $error;
+            });
+        }
+    };
+})
+.directive('formInput', function (gettext) {
+    return {
+        restrict: 'A',
+        scope: false,
+        link: function (scope, element, attrs) {
+            var formGroup = scope.$parent;
+            attrs['name'] = formGroup.name;
+
+            $(element).attr('placeholder',  formGroup.label);
+            // TODO: Figure out a way to inherit the required as well
+        }
+    };
+})
 ;
 

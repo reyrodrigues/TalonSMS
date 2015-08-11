@@ -1,38 +1,40 @@
 ﻿<div class="panel panel-default">
     <div class="panel-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Title</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" placeholder="Title" ng-model="vm.entity.title" required>
-            </div>
-            <label class="col-sm-2 control-label" translate>Program</label>
-            <div class="col-sm-4">
+        <div class="col-sm-6">
+            <form-group label="{{ 'Title'|translate }}" name="title">
+                <input type="text" class="form-control" ng-model="vm.entity.title" form-input />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Program'|translate }}" name="programId">
                 <select class="form-control" ng-model="vm.entity.programId"
-                        ng-options="item.id as item.name for item in vm.lists.programs | orderBy:'item.name'" required></select>
-            </div>
+                        ng-options="item.id as item.name for item in vm.lists.programs | orderBy:'item.name'" form-input></select>
+            </form-group>
         </div>
         <div class="line line-dashed b-b line-lg pull-in"></div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" translate>Cycle</label>
-            <div class="col-sm-4">
+        <div class="col-sm-6">
+            <form-group label="{{ 'Cycle'|translate }}" name="groupId">
                 <select class="form-control" ng-model="vm.entity.groupId"
-                        ng-options="item.id as item.name for item in vm.lists.beneficiaryGroups | orderBy:'item.name'"></select>
-            </div>
-            <label class="col-sm-2 control-label" translate>Location</label>
-            <div class="col-sm-4">
-                <select class="form-control" ng-model="vm.entity.locationId"
-                        ng-options="item.id as item.name for item in vm.lists.locations | orderBy:'item.name'"></select>
-            </div>
+                        ng-options="item.id as item.name for item in vm.lists.beneficiaryGroups | orderBy:'item.name'" form-input></select>
+            </form-group>
         </div>
-        <div class="line b-b line-lg pull-in"></div>
-        <div class="form-group" ng-if="!vm.isNew">
-            <label class="col-sm-2 control-label" translate>Created On</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" ng-model="vm.entity.createdOn" disabled>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Location'|translate }}" name="locationId">
+                <select class="form-control" ng-model="vm.entity.locationId"
+                        ng-options="item.id as item.name for item in vm.lists.locations | orderBy:'item.name'" form-input></select>
+            </form-group>
+        </div>
+        <div ng-if="!vm.isNew">
+            <div class="line b-b line-lg pull-in"></div>
+            <div class="col-sm-6">
+                <form-group label="{{ 'Created On'|translate }}" name="createdOn">
+                    <input type="text" class="form-control" ng-model="vm.entity.createdOn" form-input />
+                </form-group>
             </div>
-            <label class="col-sm-2 control-label" translate>Last Modified On</label>
-            <div class="col-sm-4">
-                <input type="text" class="form-control" ng-model="vm.entity.modifiedOn" disabled>
+            <div class="col-sm-6">
+                <form-group label="{{ 'Modified On'|translate }}" name="modifiedOn">
+                    <input type="text" class="form-control" ng-model="vm.entity.modifiedOn" form-input />
+                </form-group>
             </div>
         </div>
     </div>
@@ -73,7 +75,7 @@
     </table>
 </div>
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
-    <tab heading="Unused Vouchers">
+    <tab heading="{{ 'Unused Vouchers'|translate }}">
         <div class="panel panel-default">
             <sub-grid filter="{'and': [
                       { 'type': {'==': 1} },
@@ -84,15 +86,15 @@
                       key="voucher.distributionId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="Beneficiary" field="beneficiary.firstName">
+                <sub-grid-column label="{{ 'Beneficiary'|translate }}" field="beneficiary.firstName">
                     <div class="ui-grid-cell-contents">
                         {{ row.entity.beneficiary.firstName + ' ' + row.entity.beneficiary.lastName }}
                     </div>
                 </sub-grid-column>
-                <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
-                <sub-grid-column label="Serial Number" field="voucher.sequentialCode"></sub-grid-column>
-                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions" disable-sorting="true">
+                <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Serial Number'|translate }}" field="voucher.sequentialCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group" ng-if="grid.appScope.$parent.vm.entity.program.distributionMechanism == 1">
                             <a href ng-click="grid.appScope.$parent.cancelVoucher(row.entity, grid)" class="btn btn-default btn-xs">Cancel Voucher</a>
@@ -103,7 +105,7 @@
             </sub-grid>
         </div>
     </tab>
-    <tab heading="Used Vouchers">
+    <tab heading="{{ 'Used Vouchers'|translate }}">
         <div class="panel panel-default">
             <sub-grid filter="{'and': [
                       { 'type': {'==': 2} },
@@ -118,30 +120,30 @@
                       key="voucher.distributionId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="Beneficiary" field="beneficiary.firstName">
+                <sub-grid-column label="{{ 'Beneficiary'|translate }}" field="beneficiary.firstName">
                     <div class="ui-grid-cell-contents">
                         {{ row.entity.beneficiary.firstName + ' ' + row.entity.beneficiary.lastName }}
                     </div>
                 </sub-grid-column>
-                <sub-grid-column label="Voucher Code" field="voucher.voucherCode"></sub-grid-column>
-                <sub-grid-column label="Created On" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Used On" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="Status" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Used On'|translate }}" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Status'|translate }}" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
             </sub-grid>
         </div>
     </tab>
-    <tab heading="Beneficiaries" ng-if="vm.entity.program.distributionMechanism == 3">
+    <tab heading="{{ 'Beneficiaries'|translate }}" ng-if="vm.entity.program.distributionMechanism == 3">
         <div class="panel panel-default">
             <sub-grid collection="DistributionBeneficiaries"
                       parameter="distributionId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
-                <sub-grid-column label="Beneficiary" field="firstName">
+                <sub-grid-column label="{{ 'Beneficiary'|translate }}" field="firstName">
                     <div class="ui-grid-cell-contents">
                         {{ row.entity.name }}
                     </div>
                 </sub-grid-column>
-                <sub-grid-column label="Actions" name="Actions" disable-sorting="true">
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true">
                     <div class="ui-grid-cell-contents">
                         <div class="btn-group">
                             <a href ng-click="grid.appScope.$parent.assignVoucherBook(row.entity, grid)" class="btn btn-default btn-xs">Assign Voucher Book</a>

@@ -10,7 +10,7 @@
             settings: {
                 collectionType: "Locations",
                 entityType: 'Location',
-                form: 'country-admin/locations/form.tpl.html'
+                form: 'country-admin/location/form.tpl.html'
             }
         }
     })

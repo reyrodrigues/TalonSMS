@@ -18,6 +18,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-ng-annotate');
     grunt.loadNpmTasks('grunt-html2js');
+    grunt.loadNpmTasks('grunt-angular-gettext');
+
 
     /**
      * Load in our build configuration file.
@@ -29,6 +31,26 @@ module.exports = function (grunt) {
      * instructions.
      */
     var taskConfig = {
+        nggettext_extract: {
+            pot: {
+                files: {
+                    './po/template.pot': ['./src/**/*.html']
+                }
+            },
+        },
+
+        nggettext_compile: {
+            all: {
+                options: {
+                    module: 'talon'
+                },
+                files: {
+                    './src/app/translations.js': ['./po/*.po']
+                }
+            },
+        },
+
+
         /**
          * We read in our `package.json` file so we can access the package name and
          * version. It's already there, so we don't repeat ourselves here.

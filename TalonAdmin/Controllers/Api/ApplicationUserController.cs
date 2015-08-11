@@ -11,13 +11,15 @@ using TalonAdmin.Models.Admin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using TalonAdmin.Models.BindingModels;
+using System.Data.Entity;
+using Newtonsoft.Json.Linq;
 
 namespace TalonAdmin.Controllers.Api
 {
+    [RoutePrefix("api/ApplicationUser")]
     public class ApplicationUserController : ApiController
     {
         public async Task<IHttpActionResult> Post(ApplicationUserBindingModel model)
@@ -91,12 +93,93 @@ namespace TalonAdmin.Controllers.Api
             return Json<ApplicationUser>(user, new Newtonsoft.Json.JsonSerializerSettings {  ReferenceLoopHandling  = Newtonsoft.Json.ReferenceLoopHandling.Ignore });
         }
 
+        [HttpDelete]
         public async Task<IHttpActionResult> Delete([FromUri]string id)
         {
             var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
 
             var user = await UserManager.FindByIdAsync(id);
             var result = await UserManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                return GetErrorResult(result);
+            }
+
+            return Ok();
+        }
+
+        [Route("Me"), HttpGet]
+        public async Task<IHttpActionResult> Me()
+        {
+            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+
+            using (var admin = new Models.Admin.AdminContext())
+            {
+                admin.Configuration.ProxyCreationEnabled = false;
+                admin.Configuration.LazyLoadingEnabled = false;
+
+                string userId = User.Identity.GetUserId();
+                if (admin.Users.Where(u => u.Id == userId).Any())
+                {
+                    var user = (await admin.Users
+                        .Include("Countries")
+                        .Include("Roles")
+                        .Include("Countries.Country")
+                        .Include("Organization")
+                        .Where(u => u.Id == userId)
+                        .ToListAsync()).First();
+                    var roles = user.Roles.Select(r => r.RoleId).ToArray();
+
+                    var jsonUser = JObject.FromObject(user);
+                    var role = await RoleManager.FindByNameAsync("System Administrator");
+                    jsonUser["IsSystemAdministrator"] = role.Users.Select(r => r.UserId).Contains(user.Id);
+                    jsonUser["AvailableActions"] = JToken.FromObject(admin.ActionRoles.Include("Action")
+                        .Where(a => roles.Contains(a.RoleId))
+                        .Select(a => a.Action)
+                        .Distinct());
+
+                    return Json<JObject>(jsonUser);
+                }
+
+                return BadRequest();
+            }
+        }
+
+        [Route("{id}/RemoveUserFromRole")]
+        public async Task<IHttpActionResult> RemoveUserFromRole([FromUri]string id, [FromBody]dynamic request)
+        {
+            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+
+            string roleId = request.roleId;
+
+            var user = await UserManager.FindByIdAsync(id);
+            var role = await RoleManager.FindByIdAsync(roleId);
+
+            IdentityResult result = await UserManager.RemoveFromRoleAsync(user.Id, role.Name);
+
+            if (!result.Succeeded)
+            {
+                return GetErrorResult(result);
+            }
+
+            return Ok();
+        }
+
+        [Route("{id}/AddUserToRole")]
+        public async Task<IHttpActionResult> AddUserToRole([FromUri]string id, [FromBody]dynamic request)
+        {
+            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+
+            string roleId = request.roleId;
+
+            var user = await UserManager.FindByIdAsync(id);
+            var role = await RoleManager.FindByIdAsync(roleId);
+
+            IdentityResult result = await UserManager.AddToRoleAsync(user.Id, role.Name);
 
             if (!result.Succeeded)
             {

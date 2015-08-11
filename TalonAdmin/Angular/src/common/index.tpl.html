@@ -11,13 +11,23 @@
                         <input type="hidden" name="OrganizationId" value="{{currentUser.OrganizationId}}" />
                         <input type="hidden" name="CountryId" value="{{currentUser.CountryId}}" />
 
-                        <button class="btn {{ form.css }} btn-sm" t type="submit">{{ form.label }}</button>
+                        <button class="btn {{ form.css }} btn-sm"  translate type="submit">{{ form.label }}</button>
                     </form>
                 </div>
                 <div class="btn-group" ng-repeat="action in vm.actions">
-                    <a class="btn {{ action.css }} btn-sm" href ng-click="action.action()" ng-if="!action.condition || action.condition(vm.entity)">{{ action.label }}</a>
+                    <a class="btn {{ action.css }} btn-sm" href ng-click="action.action()" ng-if="!action.condition || action.condition(vm.entity)" translate>{{ action.label }}</a>
                 </div>
-                <button class="btn btn-success pull-right" ui-sref="^.create" ng-if="vm.canCreate">New</button>
+                <button class="btn btn-success pull-right btn-sm" ui-sref="^.create" ng-if="vm.canCreate" translate>New</button>
+            </div>
+        </div>
+
+        <div class="wrapper bg-light lter b-b" ng-if="vm.settings.filterFunction">
+            <div class="btn-toolbar">
+                <div class="input-group">
+                    <input type="text" class="form-control input-sm" placeholder="Search" ng-model="vm.filterText" ui-keypress="{13:'vm.applyFilters()'}" />
+                    <span class="input-group-btn"><button class="btn btn-sm btn-default" ng-click="vm.applyFilters()" translate>Search</button></span>
+                    <span class="input-group-btn"><button class="btn btn-sm btn-default" ng-click="vm.removeFilters()" ng-if="vm.filterText" translate>Clear Search</button></span>
+                </div>
             </div>
         </div>
     </div>

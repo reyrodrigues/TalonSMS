@@ -6,7 +6,9 @@ angular.module('talon', [
   'ngStorage',
   'toaster',
   'ngAnimate',
+  'ngMessages',
   'blockUI',
+  'gettext',
 
   // modules
   'talon.auth',
@@ -35,7 +37,8 @@ angular.module('talon', [
 
 })
 
-.run(function run() {
+.run(function run(gettextCatalog) {
+    gettextCatalog.setCurrentLanguage('en');
 })
 .controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, $q, entityManagerFactory, authService) {
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {

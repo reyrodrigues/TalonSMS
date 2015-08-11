@@ -5,11 +5,10 @@
         </h4>
     </div>
     <div class="modal-body">
-        <div class="form-group">
-            <label class="col-sm-4 control-label" translate>Starting Serial Number</label>
-            <div class="col-sm-8">
-                <input type="number" class="form-control" ng-model="serialNumber" />
-            </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Starting Serial Number'|translate }}" name="serialNumber" required="true">
+                <input type="text" class="form-control" ng-model="serialNumber" form-input required />
+            </form-group>
         </div>
         <div class="alert alert-info" role="alert">
             The system will auto fill the vouchers with the serial numbers starting from the number above.

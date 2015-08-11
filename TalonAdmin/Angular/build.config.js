@@ -78,8 +78,8 @@ module.exports = {
         'vendor/angular-datatables/dist/angular-datatables.min.js',
         'vendor/angular-sanitize/angular-sanitize.min.js',
         'vendor/angular-animate/angular-animate.min.js',
+        'vendor/angular-messages/angular-messages.min.js',
         'vendor/angularjs-toaster/toaster.min.js',
-        'vendor/angular-dialog-service/dist/dialogs.min.js',
         'vendor/moment/min/moment-with-locales.min.js',
         'vendor/moment-timezone/builds/moment-timezone-with-data.min.js',
         'vendor/ng-file-upload/ng-file-upload.min.js',
@@ -92,8 +92,10 @@ module.exports = {
         'vendor/flot.tooltip/js/jquery.flot.tooltip.js',
         'vendor/flot-spline/js/jquery.flot.spline.js',
         'vendor/angular-block-ui/dist/angular-block-ui.min.js',
+        'vendor/angular-gettext/dist/angular-gettext.js',
 
 
+        'lib/angular-dialog-service/dialogs.js',
         'lib/ui-utils-ieshiv.min.js',
         'lib/ui-utils.min.js'
         ],

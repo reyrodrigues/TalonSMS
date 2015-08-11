@@ -73,9 +73,9 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
-        public IQueryable<Models.Vouchers.ProgramVendorReconciliation> ProgramVendorReconciliations()
+        public IQueryable<Models.Vouchers.ExportedReport> ExportedReports()
         {
-            return _contextProvider.Context.ProgramVendorReconciliations
+            return _contextProvider.Context.ExportedReports
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
@@ -113,6 +113,20 @@ namespace TalonAdmin.Controllers.Breeze
         public IQueryable<Models.Vouchers.Vendor> Vendors()
         {
             return _contextProvider.Context.Vendors
+                .FilterCountry(this);
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.VendorDevice> VendorDevices()
+        {
+            return _contextProvider.Context.VendorDevices
+                .FilterCountry(this);
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.VendorSalesPerson> VendorSalesPersons()
+        {
+            return _contextProvider.Context.VendorSalesPersons
                 .FilterCountry(this);
         }
 

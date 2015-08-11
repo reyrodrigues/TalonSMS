@@ -106,10 +106,7 @@ namespace TalonAdmin.Controllers.Api
 
                 if (String.IsNullOrEmpty(beneficiary.CardKey))
                 {
-                    Aes rm = new AesCryptoServiceProvider();
-                    rm.GenerateKey();
-
-                    beneficiary.CardKey = Convert.ToBase64String(rm.Key);
+                    beneficiary.GenerateKey();
                 }
                 beneficiary.CardId = cardId;
 

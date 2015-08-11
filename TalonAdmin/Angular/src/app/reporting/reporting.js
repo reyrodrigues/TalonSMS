@@ -89,10 +89,11 @@
 ;
 
 function ReportHistoryController($scope, $rootScope, $q, toaster, entityManagerFactory, controlledLists) {
-    $q.all([controlledLists.vendors(), controlledLists.distributions(), controlledLists.programs()]).then(function (promises) {
+    $q.all([controlledLists.vendors(), controlledLists.distributions(), controlledLists.programs(), controlledLists.reportTypes()]).then(function (promises) {
         $scope.vendors = promises[0];
         $scope.distributions = promises[1];
         $scope.programs = promises[2];
+        $scope.reportTypes = promises[3];
     });
 
     var entityManager = entityManagerFactory.entityManager();
@@ -102,12 +103,12 @@ function ReportHistoryController($scope, $rootScope, $q, toaster, entityManagerF
     };
 
     $scope.listReports = function () {
-        var query = entityManagerFactory.entityQuery("ProgramVendorReconciliations")
-            .expand(['vendor'])
+        var query = entityManagerFactory.entityQuery("ExportedReports")
             .using(entityManager)
-            .where({
-                "programId": { "==": $scope.reconciliation.Program.id }
-            })
+            .where({ 'and' : [
+            { "programId": { "==": $scope.reconciliation.program.id } },
+            { "reportType": { "==": $scope.reconciliation.reportType.id } },
+            ]})
             .execute()
             .then(function (response) {
                 $scope.reconciliation.Reports = response.results;
@@ -209,7 +210,7 @@ function ProgramClosureController($scope, $rootScope, $q, toaster, controlledLis
 }
 
 
-function VendorFinancialReportController ($scope, $rootScope, $q, toaster, controlledLists, authService, $injector) {
+function VendorFinancialReportController($scope, $rootScope, $q, toaster, controlledLists, authService, $injector) {
     $q.all([controlledLists.vendors(), controlledLists.distributions(), controlledLists.programs()]).then(function (promises) {
         $scope.vendors = promises[0].filter(function (v) { return !v.parentRecordId; });
         $scope.distributions = promises[1];

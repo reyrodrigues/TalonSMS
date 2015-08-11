@@ -22,7 +22,7 @@ using Newtonsoft.Json;
 
 namespace TalonAdmin.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [RoutePrefix("api/Excel")]
     public class ExcelController : ApiController
     {
@@ -88,15 +88,18 @@ namespace TalonAdmin.Controllers
                     .Where(b => b.OrganizationId == organizationId && b.CountryId == countryId)
                     .ToArrayAsync();
 
-                var jsonBeneficiaries = JToken.FromObject(beneficiaryQuery, new JsonSerializer { 
+                var jsonBeneficiaries = JToken.FromObject(beneficiaryQuery, new JsonSerializer
+                {
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 }) as JArray;
                 foreach (var jsonBeneficiary in jsonBeneficiaries)
                 {
-                    jsonBeneficiary["Group"] = jsonBeneficiary["Group"].Type != JTokenType.Null ? jsonBeneficiary["Group"]["Name"] : "";
+                    jsonBeneficiary["Cycle"] = jsonBeneficiary["Group"].Type != JTokenType.Null ? jsonBeneficiary["Group"]["Name"] : "";
                     jsonBeneficiary["Location"] = jsonBeneficiary["Location"].Type != JTokenType.Null ? jsonBeneficiary["Location"]["Name"] : "";
                     jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].Type != JTokenType.Null ? (jsonBeneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
                 }
+
+                jsonBeneficiaries.RemoveProperties("Group");
 
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
 
@@ -109,14 +112,13 @@ namespace TalonAdmin.Controllers
                 dataTable.TableName = "Beneficiaries";
 
                 // Removing Id Columns because they are parsed later on in the import
-                dataTable.Columns.Remove("Name");
-                dataTable.Columns.Remove("GroupId");
-                dataTable.Columns.Remove("LocationId");
-                dataTable.Columns.Remove("Distributions");
-                dataTable.Columns.Remove("OrganizationId");
-                dataTable.Columns.Remove("CountryId");
-                dataTable.Columns.Remove("WasWelcomeMessageSent");
-                dataTable.Columns.Remove("PIN");
+                dataTable.Columns.RemoveSafe("Name");
+                dataTable.Columns.RemoveSafe("GroupId");
+                dataTable.Columns.RemoveSafe("LocationId");
+                dataTable.Columns.RemoveSafe("OrganizationId");
+                dataTable.Columns.RemoveSafe("CountryId");
+                dataTable.Columns.RemoveSafe("WasWelcomeMessageSent");
+                dataTable.Columns.RemoveSafe("PIN");
 
                 return this.File(dataTable.ToExcelSpreadsheet(), "Beneficiaries.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             }
@@ -179,7 +181,7 @@ namespace TalonAdmin.Controllers
                             try
                             {
                                 var beneficiaryId = jsonBeneficiary.PropertyValueIfExists<int?>("Id");
-                                var groupName = jsonBeneficiary.PropertyValueIfExists<string>("Group");
+                                var groupName = jsonBeneficiary.PropertyValueIfExists<string>("Cycle");
                                 var locationName = jsonBeneficiary.PropertyValueIfExists<string>("Location");
 
                                 jsonBeneficiary["Sex"] = (jsonBeneficiary.PropertyValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
@@ -187,7 +189,7 @@ namespace TalonAdmin.Controllers
                                 jsonBeneficiary.Remove("Name");
 
                                 // Removing string fields
-                                jsonBeneficiary.Remove("Group");
+                                jsonBeneficiary.Remove("Cycle");
                                 jsonBeneficiary.Remove("Location");
 
                                 // Trust no one
@@ -539,5 +541,80 @@ namespace TalonAdmin.Controllers
 
             return Ok<JObject>(response);
         }
-    }
+
+        [Route("ImportMetadata")]
+        public async Task<IHttpActionResult> ImportMetadata()
+        {
+            if (!Request.Content.IsMimeMultipartContent())
+            {
+                return BadRequest();
+            }
+
+            dynamic response = new JObject();
+            response.Errors = new JArray();
+
+            string root = HostingEnvironment.MapPath("~/App_Data/uploads");
+            var provider = new MultipartFormDataStreamProvider(root);
+
+            var streamProvider = new MultipartFormDataStreamProvider(root);
+            await Request.Content.ReadAsMultipartAsync(streamProvider);
+
+            foreach (MultipartFileData fileData in streamProvider.FileData)
+            {
+            }
+
+            return Ok();
+        }
+
+        [AllowAnonymous]
+        [Route("ExportMetadata"), HttpGet]
+        public async Task<IHttpActionResult> ExportMetadata()
+        {
+            using (var ctx = new Models.Admin.AdminContext())
+            {
+                ctx.Configuration.ProxyCreationEnabled = false;
+                ctx.Configuration.LazyLoadingEnabled = false;
+
+                var dataTable = new DataTable();
+                var jsonSerializer = new JsonSerializer() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
+
+                var actions = JArray.FromObject(await ctx.Actions.ToArrayAsync(), jsonSerializer).ToObject<DataTable>();
+                var menuCategories = JArray.FromObject(await ctx.MenuCategories.ToArrayAsync(), jsonSerializer).ToObject<DataTable>();
+
+                var menuItems = JArray.FromObject(await ctx.MenuItems.ToArrayAsync(), jsonSerializer)
+                    .RemoveProperties("Category", "Children")
+                    .ToObject<DataTable>();
+
+                var roles = JArray.FromObject(await ctx.Roles.ToArrayAsync(), jsonSerializer)
+                    .RemoveProperties("Users")
+                    .ToObject<DataTable>();
+
+                var actionRoles = JArray.FromObject(await ctx.ActionRoles.ToArrayAsync(), jsonSerializer)
+                    .RemoveProperties("Action", "Role")
+                    .ToObject<DataTable>();
+
+                var menuCategoryRoles = JArray.FromObject(await ctx.MenuCategoryRoles.ToArrayAsync(), jsonSerializer)
+                    .RemoveProperties("Category", "Role")
+                    .ToObject<DataTable>();
+
+                actions.TableName = "Actions";
+                menuCategories.TableName = "MenuCategories";
+                menuItems.TableName = "MenuItems";
+                roles.TableName = "Roles";
+                actionRoles.TableName = "ActionRoles";
+                menuCategoryRoles.TableName = "MenuCategoryRoles";
+
+                var dataSet = new DataSet();
+
+                dataSet.Tables.Add(actions);
+                dataSet.Tables.Add(menuCategories);
+                dataSet.Tables.Add(menuItems);
+                dataSet.Tables.Add(roles);
+                dataSet.Tables.Add(actionRoles);
+                dataSet.Tables.Add(menuCategoryRoles);
+
+                return this.File(dataSet.ToExcelSpreadsheet(), "Metadata.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+        }
+        }
 }

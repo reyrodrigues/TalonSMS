@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Web;
 using System.Xml.Serialization;
 
@@ -29,11 +31,10 @@ namespace TalonAdmin.Models.Vouchers
         public virtual string MobileNumber { get; set; }
 
         public virtual string BirthYear { get; set; }
-
         public virtual int Sex { get; set; }
 
         public virtual bool? Disabled { get; set; }
-        public virtual bool? WasWelcomeMessageSent { get; set; }
+
         public virtual int? GroupId { get; set; }
         public virtual int? LocationId { get; set; }
 
@@ -47,5 +48,16 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual BeneficiaryGroup Group { get; set; }
         public virtual Location Location { get; set; }
+
+        public virtual ICollection<BeneficiaryAdditionalData> AdditionalData { get; set; }
+
+        internal void GenerateKey()
+        {
+            using (Aes rm = new AesCryptoServiceProvider())
+            {
+                rm.GenerateKey();
+                this.CardKey = Convert.ToBase64String(rm.Key);
+            }
+        }
     }
 }

@@ -1,0 +1,520 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"X-Generator: Poedit 1.8.4\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: en\n"
+
+#: src/app/blocks/nav.tpl.html:13
+msgid "{{ category.Name }}"
+msgstr "{{ category.Name }}"
+
+#: src/app/blocks/nav.tpl.html:33
+msgid "{{ child.Title}}"
+msgstr "{{ child.Title}}"
+
+#: src/common/edit.toolbar.tpl.html:10
+msgid "{{ form.label }}"
+msgstr "{{ form.label }}"
+
+#: src/common/edit.toolbar.tpl.html:14
+msgid "{{a.label}}"
+msgstr "{{a.label}}"
+
+#: src/app/blocks/header.tpl.html:41
+msgid "{{country.Name}}"
+msgstr "{{country.Name}}"
+
+#: src/app/blocks/nav.tpl.html:23 src/app/blocks/nav.tpl.html:28
+msgid "{{item.Title}}"
+msgstr "{{item.Title}}"
+
+#: src/app/sys-admin/organization/form.tpl.html:8
+msgid "Abbreviation"
+msgstr "Abbreviation"
+
+#: src/app/org-admin/user/form.tpl.html:9
+#: src/app/sys-admin/user/form.tpl.html:12
+msgid "Account Name"
+msgstr "Account Name"
+
+#: src/app/beneficiary/form.tpl.html:80 src/app/distribution/form.tpl.html:146
+#: src/app/distribution/form.tpl.html:97 src/app/group/form.tpl.html:22
+#: src/app/org-admin/user/form.tpl.html:51
+#: src/app/org-admin/user/form.tpl.html:73 src/app/program/form.tpl.html:101
+#: src/app/sys-admin/menu-category/form.tpl.html:39
+#: src/app/sys-admin/menu-item/form.tpl.html:41
+#: src/app/sys-admin/organization/form.tpl.html:45
+#: src/app/sys-admin/role/form.tpl.html:29
+#: src/app/sys-admin/role/form.tpl.html:40
+#: src/app/sys-admin/role/form.tpl.html:61
+#: src/app/sys-admin/user/form.tpl.html:64
+#: src/app/sys-admin/user/form.tpl.html:85 src/app/vendor/form.tpl.html:139
+msgid "Actions"
+msgstr "Actions"
+
+#: src/app/program/form.tpl.html:85
+msgid "Add"
+msgstr "Add"
+
+#: src/common/edit.toolbar.tpl.html:16
+msgid "Add Another"
+msgstr "Add Another"
+
+#: src/app/distribution/assign-voucher-book.tpl.html:19
+msgid "Assign"
+msgstr "Assign"
+
+#: src/app/distribution/assign-voucher-book.tpl.html:3
+msgid "Assign Voucher Book"
+msgstr "Assign Voucher Book"
+
+#: src/app/dialogs/importBeneficiaries.tpl.html:21
+#: src/app/dialogs/importVendors.tpl.html:21
+#: src/app/distribution/assign-voucher-book.tpl.html:22
+#: src/app/program/copy-categories.tpl.html:24
+#: src/app/program/distribute-vouchers.tpl.html:25
+#: src/app/sys-admin/menu-item/edit-child.tpl.html:26
+#: src/common/edit.toolbar.tpl.html:21 src/common/edit.toolbar.tpl.html:34
+#: src/common/edit.toolbar.tpl.html:44
+msgid "Back"
+msgstr "Back"
+
+#: src/app/distribution/form.tpl.html:135 src/app/group/form.tpl.html:11
+msgid "Beneficiaries"
+msgstr "Beneficiaries"
+
+#: src/app/distribution/form.tpl.html:123
+#: src/app/distribution/form.tpl.html:141 src/app/distribution/form.tpl.html:89
+#: src/app/vendor/form.tpl.html:118
+msgid "Beneficiary"
+msgstr "Beneficiary"
+
+#: src/app/org-admin/country-settings/form.tpl.html:94
+#: src/app/sys-admin/country-settings/form.tpl.html:123
+msgid "Beneficiary Already Used Message"
+msgstr "Beneficiary Already Used Message"
+
+#: src/app/org-admin/country-settings/form.tpl.html:64
+#: src/app/sys-admin/country-settings/form.tpl.html:93
+msgid "Beneficiary Canceled Voucher Message"
+msgstr "Beneficiary Canceled Voucher Message"
+
+#: src/app/org-admin/country-settings/form.tpl.html:84
+#: src/app/sys-admin/country-settings/form.tpl.html:113
+msgid "Beneficiary Cannot Accept Message"
+msgstr "Beneficiary Cannot Accept Message"
+
+#: src/app/org-admin/country-settings/form.tpl.html:54
+#: src/app/sys-admin/country-settings/form.tpl.html:83
+msgid "Beneficiary Confirmed Message"
+msgstr "Beneficiary Confirmed Message"
+
+#: src/app/org-admin/country-settings/form.tpl.html:49
+#: src/app/sys-admin/country-settings/form.tpl.html:78
+msgid "Beneficiary Voucher Message"
+msgstr "Beneficiary Voucher Message"
+
+#: src/app/beneficiary/form.tpl.html:35
+msgid "Birth Year"
+msgstr "Birth Year"
+
+#: src/app/sys-admin/country-settings/form.tpl.html:32
+msgid "Calling Code"
+msgstr "Calling Code"
+
+#: src/app/sys-admin/menu-category/form.tpl.html:38
+msgid "Can Access"
+msgstr "Can Access"
+
+#: src/app/sys-admin/menu-item/form.tpl.html:23
+msgid "Category"
+msgstr "Category"
+
+#: src/app/vendor/form.tpl.html:131
+msgid "Child Vendors"
+msgstr "Child Vendors"
+
+#: src/app/sys-admin/menu-item/form.tpl.html:31
+msgid "Children"
+msgstr "Children"
+
+#: src/app/vendor/form.tpl.html:125
+msgid "Claimed On"
+msgstr "Claimed On"
+
+#: src/app/org-admin/user/form.tpl.html:36
+#: src/app/sys-admin/user/form.tpl.html:47 src/app/vendor/form.tpl.html:87
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+#: src/app/program/form.tpl.html:75
+msgid "Copy"
+msgstr "Copy"
+
+#: src/app/program/copy-categories.tpl.html:21
+#: src/app/program/copy-categories.tpl.html:3
+msgid "Copy Categories"
+msgstr "Copy Categories"
+
+#: src/app/org-admin/user/form.tpl.html:43
+#: src/app/sys-admin/organization/form.tpl.html:37
+#: src/app/sys-admin/user/form.tpl.html:56
+msgid "Countries"
+msgstr "Countries"
+
+#: src/app/org-admin/country-settings/form.tpl.html:4
+#: src/app/sys-admin/country-settings/form.tpl.html:4
+msgid "Country Name"
+msgstr "Country Name"
+
+#: src/app/program/distribute-vouchers.tpl.html:22
+msgid "Create Distribution"
+msgstr "Create Distribution"
+
+#: src/app/beneficiary/form.tpl.html:109 src/app/beneficiary/form.tpl.html:79
+#: src/app/distribution/form.tpl.html:129 src/app/distribution/form.tpl.html:30
+#: src/app/distribution/form.tpl.html:96 src/app/program/form.tpl.html:100
+#: src/app/program/form.tpl.html:23
+msgid "Created On"
+msgstr "Created On"
+
+#: src/app/sys-admin/menu-item/form.tpl.html:17
+msgid "Css Class"
+msgstr "Css Class"
+
+#: src/app/sys-admin/country-settings/form.tpl.html:26
+msgid "Currency ISO Code"
+msgstr "Currency ISO Code"
+
+#: src/app/sys-admin/country-settings/form.tpl.html:21
+msgid "Currency Symbol"
+msgstr "Currency Symbol"
+
+#: src/app/beneficiary/form.tpl.html:53 src/app/distribution/form.tpl.html:16
+#: src/app/program/distribute-vouchers.tpl.html:9
+#: src/app/program/form.tpl.html:99
+msgid "Cycle"
+msgstr "Cycle"
+
+#: src/app/program/copy-categories.tpl.html:14
+msgid "Date Offset"
+msgstr "Date Offset"
+
+#: src/app/program/distribute-vouchers.tpl.html:3
+msgid "Distribute Vouchers"
+msgstr "Distribute Vouchers"
+
+#: src/app/reporting/distribution.tpl.html:19
+msgid "Distribution"
+msgstr "Distribution"
+
+#: src/app/program/form.tpl.html:9
+msgid "Distribution Mechanism"
+msgstr "Distribution Mechanism"
+
+#: src/app/program/form.tpl.html:90
+msgid "Distributions"
+msgstr "Distributions"
+
+#: src/common/edit.toolbar.tpl.html:20
+msgid "Edit"
+msgstr "Edit"
+
+#: src/app/sys-admin/menu-item/edit-child.tpl.html:2
+msgid "Edit Menu Item"
+msgstr "Edit Menu Item"
+
+#: src/app/org-admin/user/form.tpl.html:16
+#: src/app/sys-admin/user/form.tpl.html:29
+msgid "Email"
+msgstr "Email"
+
+#: src/app/beneficiary/form.tpl.html:4 src/app/group/form.tpl.html:19
+msgid "First Name"
+msgstr "First Name"
+
+#: src/app/org-admin/user/form.tpl.html:4
+#: src/app/sys-admin/role/form.tpl.html:24
+#: src/app/sys-admin/user/form.tpl.html:4
+msgid "Full Name"
+msgstr "Full Name"
+
+#: src/app/dialogs/importBeneficiaries.tpl.html:2
+msgid "Import Beneficiaries"
+msgstr "Import Beneficiaries"
+
+#: src/app/dialogs/importVendors.tpl.html:2
+msgid "Import Vendors"
+msgstr "Import Vendors"
+
+#: src/app/org-admin/country-settings/form.tpl.html:69
+#: src/app/sys-admin/country-settings/form.tpl.html:98
+msgid "Invalid Voucher Message"
+msgstr "Invalid Voucher Message"
+
+#: src/app/beneficiary/form.tpl.html:29
+msgid "IRC Id"
+msgstr "IRC Id"
+
+#: src/app/sys-admin/country-settings/form.tpl.html:10
+msgid "ISO Alpha-2 Code"
+msgstr "ISO Alpha-2 Code"
+
+#: src/app/sys-admin/country-settings/form.tpl.html:15
+msgid "ISO Alpha-3 Code"
+msgstr "ISO Alpha-3 Code"
+
+#: src/app/beneficiary/form.tpl.html:9 src/app/group/form.tpl.html:20
+msgid "Last Name"
+msgstr "Last Name"
+
+#: src/app/beneficiary/form.tpl.html:47 src/app/distribution/form.tpl.html:22
+#: src/app/group/form.tpl.html:21
+#: src/app/program/distribute-vouchers.tpl.html:15
+#: src/app/program/form.tpl.html:98
+msgid "Location"
+msgstr "Location"
+
+#: src/app/blocks/header.tpl.html:56
+msgid "Logout"
+msgstr "Logout"
+
+#: src/app/sys-admin/role/form.tpl.html:53
+msgid "Menu"
+msgstr "Menu"
+
+#: src/app/sys-admin/menu-category/form.tpl.html:17
+msgid "Menu Items"
+msgstr "Menu Items"
+
+#: src/app/beneficiary/form.tpl.html:15
+msgid "Mobile Number"
+msgstr "Mobile Number"
+
+#: src/app/distribution/form.tpl.html:35 src/app/program/form.tpl.html:28
+msgid "Modified On"
+msgstr "Modified On"
+
+#: src/app/country-admin/location/form.tpl.html:4
+#: src/app/country-admin/voucher-type/form.tpl.html:4
+#: src/app/group/form.tpl.html:4 src/app/org-admin/user/form.tpl.html:50
+#: src/app/org-admin/user/form.tpl.html:72 src/app/program/form.tpl.html:4
+#: src/app/sys-admin/action/form.tpl.html:4
+#: src/app/sys-admin/menu-category/form.tpl.html:37
+#: src/app/sys-admin/menu-category/form.tpl.html:4
+#: src/app/sys-admin/organization/form.tpl.html:4
+#: src/app/sys-admin/organization/form.tpl.html:44
+#: src/app/sys-admin/role/form.tpl.html:36
+#: src/app/sys-admin/role/form.tpl.html:60
+#: src/app/sys-admin/user/form.tpl.html:63
+#: src/app/sys-admin/user/form.tpl.html:84 src/app/vendor/form.tpl.html:137
+msgid "Name"
+msgstr "Name"
+
+#: src/app/beneficiary/form.tpl.html:24
+msgid "National Id"
+msgstr "National Id"
+
+#: src/app/program/copy-categories.tpl.html:9
+msgid "Number of Copies"
+msgstr "Number of Copies"
+
+#: src/app/org-admin/user/form.tpl.html:21
+#: src/app/sys-admin/user/form.tpl.html:20
+msgid "Organization"
+msgstr "Organization"
+
+#: src/app/reporting/distribution.tpl.html:24
+#: src/app/reporting/program-closure.tpl.html:23
+#: src/app/reporting/vendor-financial.tpl.html:31
+msgid "Paper Size"
+msgstr "Paper Size"
+
+#: src/app/org-admin/user/form.tpl.html:31
+#: src/app/sys-admin/user/form.tpl.html:39 src/app/vendor/form.tpl.html:80
+msgid "Password"
+msgstr "Password"
+
+#: src/app/beneficiary/form.tpl.html:60
+msgid "PIN"
+msgstr "PIN"
+
+#: src/app/blocks/header.tpl.html:52
+msgid "Profile"
+msgstr "Profile"
+
+#: src/app/distribution/form.tpl.html:9
+#: src/app/reporting/program-closure.tpl.html:18
+#: src/app/reporting/report-history.tpl.html:10
+#: src/app/reporting/vendor-financial.tpl.html:24
+#: src/app/reporting/vendor-receipt.tpl.html:15
+msgid "Program"
+msgstr "Program"
+
+#: src/app/program/form.tpl.html:76
+msgid "Remove"
+msgstr "Remove"
+
+#: src/app/reporting/report-history.tpl.html:15
+msgid "Report Type"
+msgstr "Report Type"
+
+#: src/app/org-admin/user/form.tpl.html:64
+#: src/app/sys-admin/menu-category/form.tpl.html:30
+#: src/app/sys-admin/user/form.tpl.html:77
+msgid "Roles"
+msgstr "Roles"
+
+#: src/app/sys-admin/menu-item/edit-child.tpl.html:23
+#: src/common/edit.toolbar.tpl.html:32 src/common/edit.toolbar.tpl.html:43
+msgid "Save"
+msgstr "Save"
+
+#: src/common/edit.toolbar.tpl.html:33
+msgid "Save and Continue Editing"
+msgstr "Save and Continue Editing"
+
+#: src/app/distribution/form.tpl.html:95
+msgid "Serial Number"
+msgstr "Serial Number"
+
+#: src/app/beneficiary/form.tpl.html:40
+msgid "Sex"
+msgstr "Sex"
+
+#: src/app/org-admin/country-settings/form.tpl.html:37
+#: src/app/sys-admin/country-settings/form.tpl.html:66
+msgid "SMS Service Password"
+msgstr "SMS Service Password"
+
+#: src/app/org-admin/country-settings/form.tpl.html:16
+#: src/app/sys-admin/country-settings/form.tpl.html:45
+msgid "SMS Service Type"
+msgstr "SMS Service Type"
+
+#: src/app/org-admin/country-settings/form.tpl.html:22
+#: src/app/sys-admin/country-settings/form.tpl.html:51
+msgid "SMS Service URL"
+msgstr "SMS Service URL"
+
+#: src/app/org-admin/country-settings/form.tpl.html:32
+#: src/app/sys-admin/country-settings/form.tpl.html:61
+msgid "SMS Service User Name"
+msgstr "SMS Service User Name"
+
+#: src/app/sys-admin/menu-category/form.tpl.html:9
+msgid "Sort Order"
+msgstr "Sort Order"
+
+#: src/app/distribution/assign-voucher-book.tpl.html:9
+msgid "Starting Serial Number"
+msgstr "Starting Serial Number"
+
+#: src/app/sys-admin/menu-category/form.tpl.html:26
+#: src/app/sys-admin/menu-item/edit-child.tpl.html:16
+#: src/app/sys-admin/menu-item/form.tpl.html:11
+#: src/app/sys-admin/menu-item/form.tpl.html:40
+msgid "State"
+msgstr "State"
+
+#: src/app/beneficiary/form.tpl.html:111 src/app/distribution/form.tpl.html:131
+#: src/app/vendor/form.tpl.html:127
+msgid "Status"
+msgstr "Status"
+
+#: src/app/distribution/form.tpl.html:4 src/app/program/form.tpl.html:97
+#: src/app/sys-admin/menu-category/form.tpl.html:25
+#: src/app/sys-admin/menu-item/edit-child.tpl.html:11
+#: src/app/sys-admin/menu-item/form.tpl.html:39
+#: src/app/sys-admin/menu-item/form.tpl.html:5
+msgid "Title"
+msgstr "Title"
+
+#: src/app/org-admin/country-settings/form.tpl.html:27
+#: src/app/sys-admin/country-settings/form.tpl.html:56
+msgid "TurboSMS Signature"
+msgstr "TurboSMS Signature"
+
+#: src/app/beneficiary/form.tpl.html:67 src/app/distribution/form.tpl.html:78
+msgid "Unused Vouchers"
+msgstr "Unused Vouchers"
+
+#: src/app/sys-admin/organization/form.tpl.html:25
+msgid "Update Logo"
+msgstr "Update Logo"
+
+#: src/app/dialogs/importBeneficiaries.tpl.html:18
+#: src/app/dialogs/importVendors.tpl.html:18
+msgid "Upload File"
+msgstr "Upload File"
+
+#: src/app/beneficiary/form.tpl.html:110 src/app/distribution/form.tpl.html:130
+#: src/app/vendor/form.tpl.html:126
+msgid "Used On"
+msgstr "Used On"
+
+#: src/app/beneficiary/form.tpl.html:91 src/app/distribution/form.tpl.html:108
+#: src/app/vendor/form.tpl.html:97
+msgid "Used Vouchers"
+msgstr "Used Vouchers"
+
+#: src/app/sys-admin/role/form.tpl.html:22
+msgid "User Name"
+msgstr "User Name"
+
+#: src/app/sys-admin/role/form.tpl.html:12
+msgid "Users"
+msgstr "Users"
+
+#: src/app/vendor/form.tpl.html:124
+msgid "Value"
+msgstr "Value"
+
+#: src/app/beneficiary/form.tpl.html:107
+#: src/app/reporting/vendor-financial.tpl.html:19
+#: src/app/reporting/vendor-receipt.tpl.html:10
+msgid "Vendor"
+msgstr "Vendor"
+
+#: src/app/org-admin/country-settings/form.tpl.html:89
+#: src/app/sys-admin/country-settings/form.tpl.html:118
+msgid "Vendor Already Used Message"
+msgstr "Vendor Already Used Message"
+
+#: src/app/org-admin/country-settings/form.tpl.html:99
+#: src/app/sys-admin/country-settings/form.tpl.html:128
+msgid "Vendor Cancelled Message"
+msgstr "Vendor Cancelled Message"
+
+#: src/app/org-admin/country-settings/form.tpl.html:79
+#: src/app/sys-admin/country-settings/form.tpl.html:108
+msgid "Vendor Cannot Accept Message"
+msgstr "Vendor Cannot Accept Message"
+
+#: src/app/org-admin/country-settings/form.tpl.html:59
+#: src/app/sys-admin/country-settings/form.tpl.html:88
+msgid "Vendor Confirmed Message"
+msgstr "Vendor Confirmed Message"
+
+#: src/app/beneficiary/form.tpl.html:108 src/app/beneficiary/form.tpl.html:78
+#: src/app/distribution/form.tpl.html:128 src/app/distribution/form.tpl.html:94
+#: src/app/vendor/form.tpl.html:123
+msgid "Voucher Code"
+msgstr "Voucher Code"
+
+#: src/app/program/form.tpl.html:16
+msgid "Voucher Code Size"
+msgstr "Voucher Code Size"
+
+#: src/app/org-admin/country-settings/form.tpl.html:74
+#: src/app/sys-admin/country-settings/form.tpl.html:103
+msgid "Wrong National Id Message"
+msgstr "Wrong National Id Message"

@@ -2,7 +2,7 @@ angular.module( 'talon.dashboard', [
   'ui.router',
   'ui.utils',
   'talon.dataAccess'
-])
+].concat(ALL_IMPORTS))
 
 .config(function config( $stateProvider ) {
     $stateProvider.state('dashboard', {
