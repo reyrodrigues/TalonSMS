@@ -448,7 +448,8 @@ namespace TalonAdmin.Controllers.Api
             using (var db = new Models.Vouchers.Context())
             {
                 var vendorQuery = from v in db.Vendors
-                                  where v.MobileNumber == phoneNumber && v.CountryId == countryId
+                                  where (v.MobileNumber == phoneNumber && v.CountryId == countryId) ||
+                                  v.SalesPersons.Where(s=>s.MobileNumber == phoneNumber && s.CountryId == countryId).Any()
                                   select v;
 
 

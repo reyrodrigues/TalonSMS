@@ -29,6 +29,7 @@ namespace TalonAdmin.Models.Vouchers
         public virtual Location Location { get; set; }
 
         public virtual Vendor ParentRecord { get; set; }
+        public virtual ICollection<VendorSalesPerson> SalesPersons { get; set;  }
 
         public void SetPassword(string plainText)
         {

@@ -128,6 +128,7 @@ function VendorReceiptController($scope, $rootScope, $q, toaster, entityManagerF
 
     $scope.reconciliation = {
     };
+    $scope.removedVouchers = [];
 
     $scope.$watch('reconciliation.Filter', function (filter) {
         if (filter) {
@@ -139,12 +140,22 @@ function VendorReceiptController($scope, $rootScope, $q, toaster, entityManagerF
         }
     });
 
+    $scope.removeFromReconciliation = function (voucher) {
+        voucher.$remove = true;
+    };
 
-    $scope.reconcileVoucher = function (transactionRecord) {
-        transactionRecord.reconciledOn = moment().utc().toDate();
-        transactionRecord.reconciledBy = $rootScope.currentUser.UserName;
+    $scope.addToReconciliation = function (voucher) {
+        delete voucher.$remove ;
+    };
 
-        entityManager.saveChanges([transactionRecord])
+    $scope.reconcileAll = function () {
+        var toSave = $scope.reconciliation.FilteredVouchers.filter(function (v) { return !v.$remove && !v.reconciledOn; });
+        toSave.forEach(function (v) {
+            v.reconciledOn = moment().utc().toDate();
+            v.reconciledBy = $rootScope.currentUser.UserName;
+        });
+
+        entityManager.saveChanges(toSave)
             .then(function () { })
             .catch(function (response) { toaster.pop('error', 'Error', res.data); });
     };

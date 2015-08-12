@@ -204,9 +204,24 @@ function ProgramEditController($injector, $scope) {
     EditController.call(this, $injector, $scope);
 
 
+    // Custom Save Marker
     function save(continueEditing) {
         var self = this;
         self.isEditing = false;
+
+        var $scope = this.$scope;
+        if ($scope.dataForm.$invalid) {
+            angular.forEach($scope.dataForm.$error.required, function (field) {
+                field.$setDirty();
+                field.$setTouched();
+            });
+
+            return;
+        }
+
+        $scope.dataForm.$setPristine();
+        $scope.dataForm.$setUntouched();
+
         self.entity.modifiedOn = moment().utc().toJSON();
         self.entity.modifiedBy = $scope.currentUser.Id;
 

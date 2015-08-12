@@ -21,6 +21,36 @@
     </div>
 </div>
 <div class="panel panel-default">
+    <div class="panel-heading font-bold">Owner Information</div>
+    <div class="panel-body">
+        <div class="col-sm-6">
+            <form-group label="{{ 'First Name'|translate }}" name="firstName" required="true">
+                <input type="text" class="form-control" form-input ng-model="vm.entity.firstName" required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Last Name'|translate }}" name="lastName" required="true">
+                <input type="text" class="form-control" form-input ng-model="vm.entity.lastName" required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Mobile Number'|translate }}" name="mobileNumber" required="true">
+                <div class="input-group m-b">
+                    <span class="input-group-addon">+{{ country.CountryCallingCode }}</span>
+                    <input type="text" class="form-control" ng-model="vm.entity.mobileNumber" phone-number form-input required />
+                </div>
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'National Id'|translate }}" name="nationalId" required="true">
+                <input type="text" class="form-control" form-input ng-model="vm.entity.nationalId" required />
+            </form-group>
+        </div>
+
+    </div>
+</div>
+<div class="panel panel-default">
     <div class="panel-heading font-bold">Access Information</div>
     <div class="panel-body">
         <div class="col-sm-6">

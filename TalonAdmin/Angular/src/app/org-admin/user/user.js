@@ -222,12 +222,26 @@ OrgUserEditController.prototype.configure = function configure() {
     }
 };
 
+// Custom Save Marker
 OrgUserEditController.prototype.save = function save(continueEditing) {
     var self = this;
     var $state = this.$injector.get('$state');
     var $http = this.$injector.get('$http');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
     var entityManager = entityManagerFactory.adminEntityManager();
+
+    var $scope = this.$scope;
+    if ($scope.dataForm.$invalid) {
+        angular.forEach($scope.dataForm.$error.required, function (field) {
+            field.$setDirty();
+            field.$setTouched();
+        });
+
+        return;
+    }
+
+    $scope.dataForm.$setPristine();
+    $scope.dataForm.$setUntouched();
 
     var url = serviceRoot + 'Api/ApplicationUser/';
 

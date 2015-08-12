@@ -9,6 +9,7 @@
     <div class="wrapper-md col">
         <div class="row">
             <form class="form-horizontal form-validation" ng-submit="vm.save()" name="dataForm" novalidate>
+                <input type="hidden" name="entityType" value="{{ settings.entityType }}" />
                 <div class="col-sm-12" ng-include="vm.settings.form" toggle-editing is-editing="vm.isEditing">
                 </div>
             </form>

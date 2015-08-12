@@ -215,6 +215,7 @@ SysUserEditController.prototype.configure = function configure() {
     }
 };
 
+// Custom Save Marker
 SysUserEditController.prototype.save = function save(continueEditing) {
     var self = this;
     var $state = this.$injector.get('$state');
@@ -223,6 +224,19 @@ SysUserEditController.prototype.save = function save(continueEditing) {
     var entityManager = entityManagerFactory.adminEntityManager();
 
     var url = serviceRoot + 'Api/ApplicationUser/';
+
+    var $scope = this.$scope;
+    if ($scope.dataForm.$invalid) {
+        angular.forEach($scope.dataForm.$error.required, function (field) {
+            field.$setDirty();
+            field.$setTouched();
+        });
+
+        return;
+    }
+
+    $scope.dataForm.$setPristine();
+    $scope.dataForm.$setUntouched();
 
     self.isEditing = false;
 

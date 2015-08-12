@@ -44,9 +44,11 @@ namespace TalonAdmin.Controllers.Api
 
             var recreateDashboard = !System.IO.File.Exists(fileName);
 
-            if (System.IO.File.Exists(fileName)) {
+            if (System.IO.File.Exists(fileName))
+            {
                 var timeSinceLastGeneration = DateTime.Now - System.IO.File.GetLastWriteTime(fileName);
-                if (timeSinceLastGeneration.TotalMinutes > 10) {
+                if (timeSinceLastGeneration.TotalMinutes > 10)
+                {
                     recreateDashboard = true;
                 }
             }
@@ -192,7 +194,7 @@ namespace TalonAdmin.Controllers.Api
             var transactionRecordQuery = ctx.VoucherTransactionRecords.FilterCountry(this).FilterOrganization(this);
 
             return transactionRecordQuery
-                .Where(v => v.Voucher.Distribution.ProgramId == program.Id && v.VendorId != null)
+                .Where(v => v.Type == 2 && v.Voucher.Distribution.ProgramId == program.Id && v.VendorId != null)
                 .GroupBy(v => v.Vendor.ParentRecordId == null ? v.Vendor : v.Vendor.ParentRecord)
                 .ToArray()
                 .Select(v => new object[] { v.Key.Name, v.Count() });
@@ -203,7 +205,19 @@ namespace TalonAdmin.Controllers.Api
         }
         private dynamic GenerateUsedVsIssuedReport(Models.Vouchers.Program program, DateTime? start, DateTime? end)
         {
-            var voucherQuery = ctx.Vouchers.FilterCountry(this).FilterOrganization(this);
+            var voucherQuery = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(v => v.Distribution.Program.Id == program.Id);
+
+            var issued = voucherQuery.Where(v => v.TransactionRecords.Where(t => t.Type == 1).Any())
+                .Select(v => new { Value = 1, Key = v.TransactionRecords.Select(t => t.CreatedOn).Min() })
+                .ToArray()
+                .GroupBy(k => k.Key.ToUniversalTime().ToShortDateString())
+                .ToDictionary(k => k.Key, v => v.Sum(s => s.Value));
+
+            var used = voucherQuery.Where(v => v.TransactionRecords.Where(t => t.Type == 2).Any())
+                .Select(v => new { Value = 1, Key = v.TransactionRecords.Select(t => t.CreatedOn).Min() })
+                .ToArray()
+                .GroupBy(k => k.Key.ToUniversalTime().ToShortDateString())
+                .ToDictionary(k => k.Key, v => v.Sum(s => s.Value));
 
             if (start == null)
                 start = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == program.Id).Select(c => c.CreatedOn).ToArray().Select(c => c.ToUniversalTime()).Min();
@@ -212,7 +226,7 @@ namespace TalonAdmin.Controllers.Api
 
 
             return Enumerable
-                .Range(0, (int)Math.Ceiling((end.Value - start.Value).TotalDays) + 1)
+                .Range(0, (int)Math.Ceiling((end.Value - start.Value).TotalDays) +1)
                 .Select(d => new
                 {
                     Date = DateTime.Parse(start.Value.ToShortDateString()).AddDays(d),
@@ -221,27 +235,9 @@ namespace TalonAdmin.Controllers.Api
                 })
                 .Select(d => new object[] {
                     d.Date,
-                    voucherQuery
-                        .Where(v => v.Distribution.ProgramId == program.Id)
-                        .Where(v=>v.TransactionRecords.Where(t=>
-                            t.CreatedOn > d.Date && t.CreatedOn < d.DatePlusOne &&
-                            (t.LastModifiedOn >= d.Date || t.LastModifiedOn == null))
-                        .Any())
-                        .Count(),
-                    voucherQuery
-                        .Where(v => v.Distribution.ProgramId == program.Id)
-                        .Where(v=>v.TransactionRecords.Where(t=>
-                           t.CreatedOn < d.DatePlusOne &&
-                            (t.LastModifiedOn >= d.Date || t.LastModifiedOn == null))
-                        .Any())
-                        .Count(),
-                    voucherQuery
-                        .Where(v => v.Distribution.ProgramId == program.Id)
-                        .Where(v=>v.TransactionRecords.Where(t =>
-                            t.LastModifiedOn > d.Date && t.LastModifiedOn < d.DatePlusOne
-
-                            ).Any())
-                        .Count()
+                    issued.ContainsKey(d.Date.ToUniversalTime().ToShortDateString()) ? issued[d.Date.ToUniversalTime().ToShortDateString()] : 0,
+                    0,
+                    used.ContainsKey(d.Date.ToUniversalTime().ToShortDateString()) ? used[d.Date.ToUniversalTime().ToShortDateString()] : 0,
                 });
         }
         #endregion

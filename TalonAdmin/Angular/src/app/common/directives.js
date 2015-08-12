@@ -647,7 +647,7 @@ angular.module('talon.common')
 
 
 
-.directive('formGroup', function (gettext) {
+.directive('formGroup', function (gettext, $rootScope) {
     return {
         restrict: 'E',
         require: '^form',
@@ -664,6 +664,7 @@ angular.module('talon.common')
                     '<label class="col-sm-4 control-label" for="{{name}}" ng-if="!checkbox">{{label}}</label>    ' +
                     '<div  class="input-container" ng-class="{\'col-sm-8\': !checkbox, \'col-sm-12\': checkbox}">' +
                     '<div ng-transclude></div>' +
+                    '<div class="help-block" ng-show="helpText">{{ helpText }}</div>' +
                     '<div class="help-block" ng-messages="$error" ng-show="hasError">' +
                     '<div ng-messages-include="messages.tpl.html"></div>' +
                     '</div>' +
@@ -674,10 +675,19 @@ angular.module('talon.common')
 
             var input = scope.form.$name + '.' + scope.name;
 
+            if ($rootScope.helpText) {
+                var helpTextObject = $rootScope.helpText[scope.$parent.settings.entityType];
 
-            scope.$parent.$watch(input + '.$invalid && (' + input + '.$touched || ' + scope.form.$name + '.$submitted )', function (hasError) {
-                scope.hasError = hasError;
-            });
+                if (helpTextObject && helpTextObject[scope.name]) {
+                    scope.helpText = helpTextObject[scope.name];
+                }
+            }
+
+            if (input && scope.form && scope.form.$name) {
+                scope.$parent.$watch(input + '.$invalid && (' + input + '.$touched || ' + scope.form.$name + '.$submitted )', function (hasError) {
+                    scope.hasError = hasError;
+                });
+            }
 
             scope.$parent.$watch(input + '.$error', function ($error) {
                 scope.$error = $error;
@@ -693,7 +703,7 @@ angular.module('talon.common')
             var formGroup = scope.$parent;
             attrs['name'] = formGroup.name;
 
-            $(element).attr('placeholder',  formGroup.label);
+            $(element).attr('placeholder', formGroup.label);
             // TODO: Figure out a way to inherit the required as well
         }
     };

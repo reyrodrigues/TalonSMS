@@ -330,7 +330,7 @@
     <Compile Include="Models\Admin\Organization.cs" />
     <Compile Include="Models\BindingModels\RoleSubscriptionBindingModel.cs" />
     <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\Api\VendorWorkflowController.cs" />
+    <Compile Include="Controllers\Api\VoucherWorkflowController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -389,6 +389,7 @@
     <Content Include="Angular\src\app\app.js" />
     <Content Include="Angular\src\app\country-admin\transaction\transaction.js" />
     <Content Include="Angular\src\app\distribution\assign-voucher-book.tpl.html" />
+    <Content Include="Angular\src\app\helpText.js" />
     <Content Include="Angular\src\app\org-admin\country-settings\form.tpl.html" />
     <Content Include="Angular\src\app\org-admin\country-settings\country-settings.js" />
     <Content Include="Angular\src\app\program\copy-categories.tpl.html" />

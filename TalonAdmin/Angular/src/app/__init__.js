@@ -23,6 +23,7 @@ function EditController($injector, $scope) {
     this.isNew = false;
     this.entity = {};
     this.settings = angular.extend(parentSettings, currentSettings);
+    $scope.settings = this.settings;
 
     this.canEdit = $rootScope.canI('Edit ' + this.settings.collectionType);
     this.canCreate = $rootScope.canI('Create ' + this.settings.collectionType);
@@ -136,6 +137,9 @@ function EditController($injector, $scope) {
             return;
         }
 
+        $scope.dataForm.$setPristine();
+        $scope.dataForm.$setUntouched();
+
         var self = this;
         self.isEditing = false;
 
@@ -216,6 +220,7 @@ function ListController($injector, $scope) {
     this.entityManager = entityManagerFactory[entityManagerFunction]();
     this.success = success;
     this.failure = failure;
+    $scope.settings = this.settings;
 
     this.canEdit = $rootScope.canI('Edit ' + this.settings.collectionType);
     this.canDelete = $rootScope.canI('Delete ' + this.settings.collectionType);
