@@ -1,0 +1,132 @@
+@import 'variables.less';
+/**
+ * Typography
+ */
+
+@font-face {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Roboto Regular'), local('Roboto-Regular'), url(Rsourcesanspro.woff) format('woff');
+}
+
+@import '../../vendor/bootstrap/less/bootstrap.less';
+
+@import 'simple-line-icons.less';
+
+
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 300;
+    src: local('Source Sans Pro Light'), local('SourceSansPro-Light'), url('sourcesanspro-light.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url('sourcesanspro.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold'), url('sourcesanspro-bold.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'Glyphicons Halflings';
+    src: ~"url('@{icon-font-name}.eot')";
+    src: ~"url('@{icon-font-name}.eot?#iefix') format('embedded-opentype')", ~"url('@{icon-font-name}.woff') format('woff')", ~"url('@{icon-font-name}.ttf') format('truetype')", ~"url('@{icon-font-name}.svg#@{icon-font-svg-id}') format('svg')";
+}
+
+
+@import 'app.less';
+
+
+.table-grid {
+    > thead,
+    > tbody,
+    > tfoot {
+        > tr {
+            > th,
+            > td {
+                padding: 3px 10px;
+            }
+        }
+    }
+}
+
+.grid .tab-content {
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+}
+
+.grid .panel {
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+}
+
+.ui-grid {
+    border: 0px solid #d4d4d4;
+}
+
+@import (inline) '../../vendor/chosen/chosen.css';
+@import (inline) '../../vendor/angular-bootstrap-chosen/dist/css/chosen.css';
+@import (inline) '../../vendor/footable/css/footable.core.min.css';
+
+
+.localytics-chosen.loading + .chosen-container-multi .chosen-choices {
+    background-image: url('spinner.gif');
+    background-repeat: no-repeat;
+    background-position: 95%;
+}
+
+.localytics-chosen.loading + .chosen-container-single .chosen-single span {
+    background: url('spinner.gif') no-repeat right;
+}
+
+@font-face {
+    font-family: 'footable';
+    src: url('footable.eot');
+    src: url('footable.eot?#iefix') format('embedded-opentype'), url('footable.woff') format('woff'), url('footable.ttf') format('truetype'), url('footable.svg#footable') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    @font-face {
+        font-family: 'footable';
+        src: url('footable.svg#footable') format('svg');
+        font-weight: normal;
+        font-style: normal;
+    }
+}
+
+
+
+.flotTip {
+    z-index: 100;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: solid 1px #000 !important;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+
+.form-group.required {
+    & .control-label:after {
+        content: " *";
+        color: red;
+    }
+
+    & .control-label {
+        font-weight: bold;
+    }
+}

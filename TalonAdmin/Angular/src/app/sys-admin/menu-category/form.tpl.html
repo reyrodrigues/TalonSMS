@@ -1,0 +1,52 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-sm-6">
+            <form-group label="{{ 'Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Sort Order'|translate }}" name="sortOrder" required="true">
+                <input type="number" class="form-control" ng-model="vm.entity.sortOrder" form-input required />
+            </form-group>
+        </div>
+    </div>
+</div>
+
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="{{ 'Menu Items'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid entity-manager="adminEntityManager"
+                      collection="MenuItems"
+                      key="categoryId"
+                      entity="vm.entity"
+                      parent="vm">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Title'|translate }}" field="title"></sub-grid-column>
+                <sub-grid-column label="{{ 'State'|translate }}" field="state"></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="{{ 'Roles'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="Roles"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity"
+                      select="vm.mergeRoles">
+                <sub-grid-column label="#" field="id"></sub-grid-column>
+                <sub-grid-column label="{{ 'Name'|translate }}" field="name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Can Access'|translate }}" field="isLinked"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" width="100">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.allowAccess(row.entity, grid)"
+                               class="btn btn-success btn-xs btn-block" ng-if="!row.entity.isLinked">Allow</a>
+                            <a href ng-click="grid.appScope.$parent.restrictAccess(row.entity, grid)"
+                               class="btn btn-danger btn-xs btn-block" ng-if="row.entity.isLinked">Restrict</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

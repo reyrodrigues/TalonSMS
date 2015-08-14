@@ -1,6 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
+using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using TalonAdmin.Models.Admin;
@@ -23,6 +28,33 @@ namespace TalonAdmin.Extensions
             int organizationId = Convert.ToInt32(headers.ContainsKey("X-Tenant-Organization") ? headers["X-Tenant-Organization"].First() : "0");
 
             return organizationId;
+        }
+
+        public static async Task<Models.Admin.ApplicationUser> WhoAmI(this ApiController self) {
+            var UserManager = self.Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            var RoleManager = self.Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+
+            using (var admin = new Models.Admin.AdminContext())
+            {
+                admin.Configuration.ProxyCreationEnabled = false;
+                admin.Configuration.LazyLoadingEnabled = false;
+
+                string userId = self.User.Identity.GetUserId();
+                if (admin.Users.Where(u => u.Id == userId).Any())
+                {
+                    var user = (await admin.Users
+                        .Include("Countries")
+                        .Include("Roles")
+                        .Include("Countries.Country")
+                        .Include("Organization")
+                        .Where(u => u.Id == userId)
+                        .ToListAsync()).First();
+
+                    return user;
+                }
+
+                return null;
+            }
         }
 
         public static IQueryable<T> FilterCountry<T>(this IQueryable<T> queryable, ApiController controller)

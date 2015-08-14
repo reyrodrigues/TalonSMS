@@ -1,0 +1,28 @@
+﻿<form name="copyForm" class="form-horizontal" ng-submit="save()">
+    <div class="modal-header">
+        <h4 class="modal-title" translate>
+            Copy Categories
+        </h4>
+    </div>
+    <div class="modal-body">
+        <div class="col-sm-12">
+            <form-group label="{{ 'Number of Copies'|translate }}" name="numberOfCopies" required="true">
+                <input type="number" class="form-control" ng-model="copies.numberOfCopies" form-input required />
+            </form-group>
+        </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Date Offset'|translate }}" name="dateOffset">
+                <select class="form-control" ng-model="copies.dateOffset" form-input
+                        ng-options="item.id as item.name for item in dateOffsetOptions | orderBy:'item.id'"></select>
+            </form-group>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" translate>
+            Copy Categories
+        </button>
+        <button class="btn btn-default" ng-click="close()" translate>
+            Back
+        </button>
+    </div>
+</form>

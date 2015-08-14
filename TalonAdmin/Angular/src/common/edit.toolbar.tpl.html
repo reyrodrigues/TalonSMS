@@ -1,0 +1,49 @@
+﻿    <div class="row" ng-if="!vm.isNew">
+        <div class="col-sm-12" ng-if="!vm.isEditing">
+            <div class=" col-sm-12">
+                <div class="btn-group" ng-repeat="form in vm.forms">
+                    <form method="POST" action="{{ form.url() }}" target=" _blank" ng-if="!form.condition || form.condition(vm.entity)">
+                        <input type="hidden" name="__authorization" value="Bearer {{ token }}" />
+                        <input type="hidden" name="OrganizationId" value="{{form.OrganizationId || currentUser.OrganizationId}}" />
+                        <input type="hidden" name="CountryId" value="{{(form.countryId && form.countryId()) || currentUser.CountryId}}" />
+
+                        <button class="btn {{ form.css }} btn-sm" type="submit" translate>{{ form.label }}</button>
+                    </form>
+                </div>
+                <div class="btn-group pull-left" ng-repeat="a in vm.actions">
+                    <a href class="btn btn-sm {{ a.css }}" ng-click="a.action()" ng-if="!a.condition || a.condition(vm.entity)" translate>{{a.label}}</a>
+                </div>
+                <a ui-sref="^.create" class="btn btn-primary btn-sm " ng-if="vm.canCreate" translate>Add Another</a>
+
+                <div class=" pull-right">
+                    <div class="btn-group">
+                        <a ng-click="vm.beginEditing()" class="btn btn-primary btn-sm" ng-if="vm.canEdit" translate>Edit</a>
+                        <a ui-sref="^.list" class="btn btn-info btn-sm" translate>Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<form class=form-horizontal form-validation" ng-submit="vm.save()">
+    <div class="row" ng-if="!vm.isNew">
+        <div class="col-sm-12" ng-if="vm.isEditing">
+            <div class=" col-sm-12">
+                <div class="btn-group pull-right">
+                    <button type="submit" class="btn btn-primary btn-sm" translate>Save</button>
+                    <a ng-click="vm.save(true)" class="btn btn-primary btn-sm" translate>Save and Continue Editing</a>
+                    <a ng-click="vm.endEditing()" class="btn btn-info btn-sm" translate>Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-if="vm.isNew">
+        <div class=" col-sm-12">
+            <div class=" col-sm-12">
+                <div class="btn-group pull-right">
+                    <button type="submit" class="btn btn-primary btn-sm" translate>Save</button>
+                    <a ui-sref="^.list" href class="btn btn-info btn-sm" translate>Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

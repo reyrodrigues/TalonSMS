@@ -16,7 +16,6 @@ namespace TalonAdmin.Models.Admin
 
         public virtual ICollection<MenuItem> Items { get; set; }
 
-        [JsonIgnore, XmlIgnore, IgnoreDataMember]
         public virtual ICollection<MenuCategoryRole> Roles { get; set; }
     }
 }

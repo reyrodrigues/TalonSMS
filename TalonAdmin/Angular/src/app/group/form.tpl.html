@@ -1,0 +1,33 @@
+﻿<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-sm-12">
+            <form-group label="{{ 'Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="{{ 'Beneficiaries'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid
+                      collection="Beneficiaries"
+                      expand="location"
+                      key="groupId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'First Name'|translate }}" field="firstName"></sub-grid-column>
+                <sub-grid-column label="{{ 'Last Name'|translate }}" field="lastName"></sub-grid-column>
+                <sub-grid-column label="{{ 'Location'|translate }}" field="location.name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disableSorting="true" width="100" ng-if="!vm.isNew">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.removeBeneficiary(row.entity, grid)" 
+                               class="btn btn-default btn-xs" ><i class="fa fa-trash-o"></i> Remove</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

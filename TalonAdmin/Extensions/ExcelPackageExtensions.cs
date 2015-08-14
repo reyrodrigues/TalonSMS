@@ -106,6 +106,10 @@ namespace TalonAdmin.Extensions
             {
                 var outputStream = new System.IO.MemoryStream();
 
+                if (String.IsNullOrEmpty(self.TableName)) {
+                    self.TableName = "Export";
+                }
+
                 var sheet = package.Workbook.Worksheets.Add(self.TableName);
 
                 sheet.LoadFromDataTable(self);

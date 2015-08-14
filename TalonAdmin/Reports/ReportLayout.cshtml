@@ -1,0 +1,72 @@
+﻿@using System.Net;
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .title {
+            margin-left: 12%;
+        }
+
+        .a4 body {
+            width: 297mm;
+        }
+
+        .a4 .page {
+            page-break-after: always;
+            height: 210mm;
+            display: block;
+        }
+
+        .a4 div.table {
+            height: 185mm;
+            display: block;
+        }
+
+        .letter body {
+            width: 279mm;
+        }
+
+        .letter .page {
+            page-break-after: always;
+            height: 215mm;
+            display: block;
+        }
+
+        .letter div.table {
+            height: 185mm;
+            display: block;
+        }
+
+
+        .last-page div.table {
+            height: auto;
+            min-height: 150mm;
+            display: block;
+        }
+
+        .footer {
+            height: 100px;
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        table td {
+            padding: 1px 5px !important;
+        }
+    </style>
+</head>
+<body class="@((Model.PaperSize??"A4").ToLower())">
+    @RenderBody()
+</body>
+</html>

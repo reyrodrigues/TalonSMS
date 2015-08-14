@@ -63,11 +63,17 @@ namespace TalonAdmin.Models.Vouchers
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Conventions.Add(new DataTypePropertyAttributeConvention());
+            //modelBuilder.Conventions.Add(new DataTypePropertyAttributeConvention());
 
-            Database.SetInitializer(new NullDatabaseInitializer<Context>());
 #if !DEBUG
+            Database.SetInitializer(new NullDatabaseInitializer<Context>());
 #endif
+#if DEBUG
+            Database.SetInitializer(new NullDatabaseInitializer<Context>());
+            //Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
+           // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
+#endif
+
 
             modelBuilder.Entity<DistributionVoucherCategory>()
                 .HasRequired(p => p.Distribution)
@@ -83,34 +89,33 @@ namespace TalonAdmin.Models.Vouchers
                 .WithMany(p => p.TransactionRecords)
                 .WillCascadeOnDelete(false);
 
-            modelBuilder.Entity<BeneficiaryDistribution>()
-                .HasRequired(p => p.Beneficiary)
-                .WithMany(p => p.Distributions);
-
-            modelBuilder.Entity<BeneficiaryDistribution>()
-                .HasRequired(p => p.Distribution)
-                .WithMany(p => p.Beneficiaries);
-
             modelBuilder.Entity<Beneficiary>()
                 .HasOptional(p => p.Group)
                 .WithMany(p => p.Beneficiaries);
+
+            modelBuilder.Entity<BeneficiaryAdditionalData>().ToTable("BeneficiaryAdditionalData");
         }
 
         public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<VendorSalesPerson> VendorSalesPersons { get; set; }
+        public DbSet<VendorDevice> VendorDevices { get; set; }
         public DbSet<VendorType> VendorTypes { get; set; }
         public DbSet<Beneficiary> Beneficiaries { get; set; }
         public DbSet<BeneficiaryGroup> BeneficiaryGroups { get; set; }
-        public DbSet<BeneficiaryDistribution> BeneficiaryDistributions { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Program> Programs { get; set; }
+        public DbSet<ProgramVoucherCategory> ProgramVoucherCategories { get; set; }
         public DbSet<Distribution> Distributions { get; set; }
         public DbSet<DistributionLog> DistributionLogs { get; set; }
-        public DbSet<ProgramVendorReconciliation> ProgramVendorReconciliations { get; set; }
-        public DbSet<DistributionVendorReconciliation> DistributionVendorReconciliations { get; set; }
+        public DbSet<ExportedReport> ExportedReports { get; set; }
         public DbSet<DistributionVoucherCategory> DistributionVoucherCategories { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<VoucherType> VoucherTypes { get; set; }
         public DbSet<VoucherTransactionRecord> VoucherTransactionRecords { get; set; }
         public DbSet<MessageLog> MessageLogs { get; set; }
+
+        public DbSet<TransactionLogItem> TransactionLogItems { get; set; }
+        public DbSet<CardLoad> CardLoads { get; set; }
+
     }
 }

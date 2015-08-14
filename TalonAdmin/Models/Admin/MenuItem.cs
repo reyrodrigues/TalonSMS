@@ -16,7 +16,6 @@ namespace TalonAdmin.Models.Admin
         public virtual int? CategoryId { get; set; }
         public virtual int? ParentId { get; set; }
 
-        [IgnoreDataMember, XmlIgnore, JsonIgnore]
         public virtual MenuCategory Category { get; set; }
 
         [IgnoreDataMember, XmlIgnore, JsonIgnore]

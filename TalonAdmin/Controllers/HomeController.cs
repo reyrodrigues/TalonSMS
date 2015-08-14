@@ -19,6 +19,7 @@ using Microsoft.AspNet.Identity.Owin;
 using System.DirectoryServices.AccountManagement;
 using System.Globalization;
 using Breeze.ContextProvider.EF6;
+using Newtonsoft.Json;
 
 namespace TalonAdmin.Controllers
 {
@@ -39,7 +40,7 @@ namespace TalonAdmin.Controllers
 
         public ActionResult Index()
         {
-            return View(); // Redirect("~/App/");
+            return  Redirect("~/App/");
         }
 
         public ActionResult TestReport(int vendorId, int distributionId, string period)
@@ -70,7 +71,7 @@ namespace TalonAdmin.Controllers
                         Page = i + 1,
                         IsLastPage = (i + 1) == numberOfPages,
                         Items = items.Skip(i * pageSize).Take(pageSize).ToArray(),
-                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Category.Value).Sum()
+                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Value).Sum()
                     });
                 }
                 var user = UserManager.FindByName(User.Identity.Name);
@@ -86,7 +87,7 @@ namespace TalonAdmin.Controllers
                     Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
                     Logo = Convert.ToBase64String(image),
                     LogoMimeType = "image/svg+xml",
-                    Total = items.Select(i => i.Voucher.Category.Value).Sum()
+                    Total = items.Select(i => i.Voucher.Value).Sum()
                 };
                 var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
 
@@ -170,10 +171,24 @@ namespace TalonAdmin.Controllers
                 var categories = ctx.MenuCategories.ToArray().Where(c =>!c.Roles.Any() || c.Roles.Select(r => r.RoleId).Intersect(roles).Any())
                     .OrderBy(c => c.SortOrder).ToArray();
 
-                return Content(JToken.FromObject(categories).ToString(), "application/json");
+                var jsonSerializer  = new JsonSerializer {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                };
+
+                return Content(JToken.FromObject(categories, jsonSerializer).ToString(), "application/json");
             }
         }
 
+        public ActionResult MetadataJS() {
+            var talonContextProvider = new EFContextProvider<Models.Vouchers.Context>();
+            var adminContextProvider = new EFContextProvider<Models.Admin.AdminContext>();
+
+            var buffer = new StringBuilder();
+            buffer.AppendFormat("window.ContextMetadata = JSON.stringify({0});\n", talonContextProvider.Metadata());
+            buffer.AppendFormat("window.AdminMetadata = JSON.stringify({0});\n", adminContextProvider.Metadata());
+
+            return Content(buffer.ToString(), "application/javascript");
+        }
 
         public ActionResult OfflineManifest()
         {

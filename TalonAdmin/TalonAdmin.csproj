@@ -22,6 +22,9 @@
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <TypeScriptToolsVersion>1.0</TypeScriptToolsVersion>
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -54,8 +57,8 @@
       <HintPath>..\packages\Common.Logging.2.1.1\lib\net40\Common.Logging.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="EntityFramework.BulkInsert">
       <HintPath>..\packages\EntityFramework.BulkInsert-ef6.6.0.2.7\lib\Net45\EntityFramework.BulkInsert.dll</HintPath>
@@ -64,8 +67,12 @@
       <HintPath>..\packages\EntityFramework.MappingAPI.6.0.0.7\lib\net45\EntityFramework.MappingAPI.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServerCompact, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.SqlServerCompact.6.1.3\lib\net45\EntityFramework.SqlServerCompact.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="EPPlus">
       <HintPath>..\packages\EPPlus.4.0.3\lib\net20\EPPlus.dll</HintPath>
@@ -91,6 +98,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.OData.Edm.6.9.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.OData.Edm.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Cors">
+      <HintPath>..\packages\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Spatial, Version=6.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Spatial.6.9.0\lib\portable-net40+sl5+wp8+win8+wpa\Microsoft.Spatial.dll</HintPath>
@@ -99,15 +113,33 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="RazorEngine">
-      <HintPath>..\packages\RazorEngine.3.6.1\lib\net45\RazorEngine.dll</HintPath>
+    <Reference Include="RazorEngine, Version=3.7.0.0, Culture=neutral, PublicKeyToken=9ee697374c7e744a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\RazorEngine.3.7.0\lib\net45\RazorEngine.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.SQLite, Version=1.0.97.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Core.1.0.97.0\lib\net45\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data.SQLite.EF6, Version=1.0.97.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.EF6.1.0.97.0\lib\net45\System.Data.SQLite.EF6.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data.SQLite.Linq, Version=1.0.97.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Linq.1.0.97.0\lib\net45\System.Data.SQLite.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.DirectoryServices.Protocols" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
@@ -202,6 +234,12 @@
       <Private>True</Private>
       <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="zxing">
+      <HintPath>..\packages\ZXing.Net.0.14.0.1\lib\net40\zxing.dll</HintPath>
+    </Reference>
+    <Reference Include="zxing.presentation">
+      <HintPath>..\packages\ZXing.Net.0.14.0.1\lib\net40\zxing.presentation.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.AspNet.Identity.Core">
@@ -215,9 +253,6 @@
     </Reference>
     <Reference Include="Owin">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin">
-      <HintPath>..\packages\Microsoft.Owin.3.0.0\lib\net45\Microsoft.Owin.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Owin.Host.SystemWeb">
       <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
@@ -258,12 +293,23 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
+    <Compile Include="Attributes\AuthorizeVendorAttribute.cs" />
+    <Compile Include="Extensions\ReportExtensions.cs" />
+    <Compile Include="Extensions\SystemDotDataExtensions.cs" />
+    <Compile Include="Models\BindingModels\ApplicationRoleBindingModel.cs" />
+    <Compile Include="Controllers\Api\ApplicationRoleController.cs" />
+    <Compile Include="Controllers\Api\ApplicationUserController.cs" />
+    <Compile Include="Controllers\Api\App\MobileClientController.cs" />
     <Compile Include="Controllers\Api\DashboardController.cs" />
+    <Compile Include="Controllers\Api\App\VendorProfileController.cs" />
+    <Compile Include="Models\Admin\Action.cs" />
+    <Compile Include="Models\Admin\ActionRole.cs" />
+    <Compile Include="Models\BindingModels\ApplicationUserBindingModel.cs" />
+    <Compile Include="Models\BindingModels\DistributeVouchersBindingModel.cs" />
     <Compile Include="Models\BindingModels\ReportRequest.cs" />
     <Compile Include="Controllers\Api\ReportsController.cs" />
     <Compile Include="Controllers\Breeze\AdminController.cs" />
     <Compile Include="Controllers\Breeze\EVMController.cs" />
-    <Compile Include="Controllers\Api\AccountController.cs" />
     <Compile Include="Controllers\Api\ExcelController.cs" />
     <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Models\Admin\CountrySettings.cs" />
@@ -282,26 +328,27 @@
     <Compile Include="Models\Admin\MenuCategory.cs" />
     <Compile Include="Models\Admin\MenuItem.cs" />
     <Compile Include="Models\Admin\Organization.cs" />
-    <Compile Include="Models\BindingModels\RemoveUserFromRoleBindingModel.cs" />
-    <Compile Include="Models\BindingModels\AddUserToRoleBindingModel.cs" />
+    <Compile Include="Models\BindingModels\RoleSubscriptionBindingModel.cs" />
     <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\Api\VendorWorkflowController.cs" />
+    <Compile Include="Controllers\Api\VoucherWorkflowController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\BindingModels\AccountBindingModels.cs" />
     <Compile Include="Models\BindingModels\AssignVoucherBidingModel.cs" />
+    <Compile Include="Models\DictionaryEntity.cs" />
     <Compile Include="Models\JsonProperty.cs" />
     <Compile Include="Models\ViewModels\AccountViewModels.cs" />
     <Compile Include="Models\ViewModels\DistributionVendorViewModel.cs" />
     <Compile Include="Models\Vouchers\Beneficiary.cs" />
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
-    <Compile Include="Models\Vouchers\BeneficiaryDistribution.cs" />
+    <Compile Include="Models\Vouchers\BeneficiaryAdditionalData.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryGroup.cs" />
+    <Compile Include="Models\Vouchers\CardLoad.cs" />
     <Compile Include="Models\Vouchers\Context.cs" />
     <Compile Include="Models\Vouchers\DistributionLog.cs" />
+    <Compile Include="Models\Vouchers\ProgramVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\ProgramVendorReconciliation.cs" />
-    <Compile Include="Models\Vouchers\DistributionVendorReconciliation.cs" />
     <Compile Include="Models\Vouchers\DistributionVoucherCategory.cs" />
     <Compile Include="Models\Vouchers\Distribution.cs" />
     <Compile Include="Models\Entity.cs" />
@@ -309,6 +356,9 @@
     <Compile Include="Models\Vouchers\MessageLog.cs" />
     <Compile Include="Models\Vouchers\Program.cs" />
     <Compile Include="Models\Vouchers\TenantEntity.cs" />
+    <Compile Include="Models\Vouchers\TransactionLogItem.cs" />
+    <Compile Include="Models\Vouchers\VendorDevice.cs" />
+    <Compile Include="Models\Vouchers\VendorSalesPerson.cs" />
     <Compile Include="Models\Vouchers\VendorType.cs" />
     <Compile Include="Models\Vouchers\VoucherType.cs" />
     <Compile Include="Models\Vouchers\Location.cs" />
@@ -326,6 +376,99 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
+    <Content Include="Angular\.gitignore" />
+    <Content Include="Angular\build.config.js" />
+    <Content Include="Angular\Gruntfile.js" />
+    <Content Include="Angular\karma\karma-unit.tpl.js" />
+    <Content Include="Angular\lib\angular-dialog-service\dialogs-default-translations.js" />
+    <Content Include="Angular\lib\angular-dialog-service\dialogs-default-translations.min.js" />
+    <Content Include="Angular\lib\angular-dialog-service\dialogs.css" />
+    <Content Include="Angular\lib\angular-dialog-service\dialogs.js" />
+    <Content Include="Angular\lib\angular-dialog-service\dialogs.min.css" />
+    <Content Include="Angular\lib\angular-dialog-service\dialogs.min.js" />
+    <Content Include="Angular\lib\ui-utils-ieshiv.min.js" />
+    <Content Include="Angular\lib\ui-utils.min.js" />
+    <Content Include="Angular\src\app\app.js" />
+    <Content Include="Angular\src\app\country-admin\transaction\transaction.js" />
+    <Content Include="Angular\src\app\distribution\assign-voucher-book.tpl.html" />
+    <Content Include="Angular\src\app\helpText.js" />
+    <Content Include="Angular\src\app\org-admin\country-settings\form.tpl.html" />
+    <Content Include="Angular\src\app\org-admin\country-settings\country-settings.js" />
+    <Content Include="Angular\src\app\org-admin\country-settings\upload-vendor-data.tpl.html" />
+    <Content Include="Angular\src\app\program\copy-categories.tpl.html" />
+    <Content Include="Angular\src\app\program\distribute-vouchers.tpl.html" />
+    <Content Include="Angular\src\app\reporting\program-closure.tpl.html" />
+    <Content Include="Angular\src\app\reporting\vendor-receipt.tpl.html" />
+    <Content Include="Angular\src\app\reporting\report-history.tpl.html" />
+    <Content Include="Angular\src\app\reporting\vendor-financial.tpl.html" />
+    <Content Include="Angular\src\app\reporting\distribution.tpl.html" />
+    <Content Include="Angular\src\app\reporting\reporting.js" />
+    <Content Include="Angular\src\app\sys-admin\country-settings\country-settings.js" />
+    <Content Include="Angular\src\app\sys-admin\country-settings\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\menu-category\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\menu-category\menu-category.js" />
+    <Content Include="Angular\src\app\sys-admin\menu-item\edit-child.tpl.html" />
+    <Content Include="Angular\src\app\country-admin\location\form.tpl.html" />
+    <Content Include="Angular\src\app\country-admin\location\location.js" />
+    <Content Include="Angular\src\app\country-admin\voucher-type\form.tpl.html" />
+    <Content Include="Angular\src\app\country-admin\voucher-type\voucher-type.js" />
+    <Content Include="Angular\src\app\country-admin\__init__.js" />
+    <Content Include="Angular\src\app\program\program.js" />
+    <Content Include="Angular\src\app\program\form.tpl.html" />
+    <Content Include="Angular\src\app\distribution\form.tpl.html" />
+    <Content Include="Angular\src\app\distribution\distribution.js" />
+    <Content Include="Angular\src\app\group\group.js" />
+    <Content Include="Angular\src\app\sys-admin\menu-item\menu-item.js" />
+    <Content Include="Angular\src\app\sys-admin\menu-item\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\action\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\action\action.js" />
+    <Content Include="Angular\src\app\sys-admin\organization\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\organization\organization.js" />
+    <Content Include="Angular\src\app\sys-admin\role\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\role\role.js" />
+    <Content Include="Angular\src\app\sys-admin\user\form.tpl.html" />
+    <Content Include="Angular\src\app\sys-admin\user\user.js" />
+    <Content Include="Angular\src\app\sys-admin\__init__.js" />
+    <Content Include="Angular\src\app\org-admin\user\user.js" />
+    <Content Include="Angular\src\app\org-admin\user\form.tpl.html" />
+    <Content Include="Angular\src\app\beneficiary\beneficiary.js" />
+    <Content Include="Angular\src\app\beneficiary\form.tpl.html" />
+    <Content Include="Angular\src\app\blocks\header.tpl.html" />
+    <Content Include="Angular\src\app\blocks\nav.tpl.html" />
+    <Content Include="Angular\src\app\common\controlledLists.js" />
+    <Content Include="Angular\src\app\common\filters.js" />
+    <Content Include="Angular\src\app\common\__init__.js" />
+    <Content Include="Angular\src\app\dialogs\assignToGroup.tpl.html" />
+    <Content Include="Angular\src\app\dialogs\importBeneficiaries.tpl.html" />
+    <Content Include="Angular\src\app\dialogs\importVendors.tpl.html" />
+    <Content Include="Angular\src\app\org-admin\__init__.js" />
+    <Content Include="Angular\src\app\services\modelOverrides.js" />
+    <Content Include="Angular\src\app\services\__init__.js" />
+    <Content Include="Angular\src\app\translations.js" />
+    <Content Include="Angular\src\app\vendor-type\form.tpl.html" />
+    <Content Include="Angular\src\app\vendor-type\vendor-type.js" />
+    <Content Include="Angular\src\app\vendor\edit-child.tpl.html" />
+    <Content Include="Angular\src\app\vendor\vendor.js" />
+    <Content Include="Angular\src\app\vendor\form.tpl.html" />
+    <Content Include="Angular\src\app\__init__.js" />
+    <Content Include="Angular\src\app\common\directives.js" />
+    <Content Include="Angular\src\app\common\controllers.js" />
+    <Content Include="Angular\src\app\dashboard\dashboard.js" />
+    <Content Include="Angular\src\app\dashboard\dashboard.tpl.html" />
+    <Content Include="Angular\src\app\login\login.js" />
+    <Content Include="Angular\src\app\login\login.tpl.html" />
+    <Content Include="Angular\src\app\services\auth.js" />
+    <Content Include="Angular\src\app\services\dataAccess.js" />
+    <Content Include="Angular\src\app\services\multitenant.js" />
+    <Content Include="Angular\src\assets\fontawesome-webfont.svg" />
+    <Content Include="Angular\src\assets\glyphicons-halflings-regular.svg" />
+    <Content Include="Angular\src\assets\Simple-Line-Icons.svg" />
+    <Content Include="Angular\src\common\create.tpl.html" />
+    <Content Include="Angular\src\common\edit.toolbar.tpl.html" />
+    <Content Include="Angular\src\common\edit.tpl.html" />
+    <Content Include="Angular\src\common\index.tpl.html" />
+    <Content Include="Angular\src\common\messages.tpl.html" />
+    <Content Include="Angular\src\index.html" />
     <Content Include="Content\Flags\css\flag-icon.css" />
     <Content Include="Content\Flags\css\flag-icon.min.css" />
     <Content Include="Content\Flags\flags\1x1\ad.svg" />
@@ -838,33 +981,73 @@
     <Content Include="Scripts\jquery.signalR-2.2.0.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.min.js" />
     <Content Include="Scripts\NavigationMenu.js" />
-    <Content Include="Source\src\js\controllers\countryAdmin.js" />
-    <Content Include="Source\src\js\controllers\orgAdmin.js" />
-    <Content Include="Source\src\js\controllers\reconciliation.js" />
-    <Content Include="Source\src\js\controllers\reports.js" />
-    <Content Include="Source\src\js\controllers\systemAdmin.js" />
-    <Content Include="Source\src\js\controllers\users.js" />
-    <Content Include="Source\src\js\directives\fileDownload.js" />
-    <Content Include="Source\src\js\directives\fileReader.js" />
-    <Content Include="Source\src\js\directives\phoneNumber.js" />
-    <Content Include="Source\src\js\directives\date.js" />
-    <Content Include="Source\src\js\factories\genericControllerFactory.js" />
-    <Content Include="Source\src\js\filters\date.js" />
-    <Content Include="Source\src\js\providers\backendProviders.js" />
-    <Content Include="Source\src\js\services\adminBackendService.js" />
-    <Content Include="Source\src\js\services\injectorHelperService.js" />
-    <Content Include="Source\src\js\services\multiTenantInterceptorService.js" />
-    <Content Include="Source\src\tpl\country-admin\users\edit.html" />
-    <Content Include="Source\src\tpl\country-admin\users\my-profile.html" />
-    <Content Include="Source\src\tpl\country-admin\vendor-types\form.html" />
-    <Content Include="Source\src\tpl\beneficiaries\bulkEdit.html" />
-    <Content Include="Source\src\tpl\dialogs\importVendors.html" />
-    <Content Include="Source\src\tpl\dialogs\importBeneficiaries.html" />
-    <Content Include="Source\src\tpl\dialogs\assignToGroup.html" />
+    <Content Include="Angular\.bowerrc" />
+    <Content Include="Angular\bower.json" />
+    <Content Include="Angular\module.prefix" />
+    <Content Include="Angular\module.suffix" />
+    <Content Include="Angular\package.json" />
+    <Content Include="Angular\src\less\main.less" />
+    <Content Include="Angular\src\less\variables.less" />
+    <Content Include="Angular\src\assets\sourcesanspro-bold.woff" />
+    <Content Include="Angular\src\assets\sourcesanspro-light.woff" />
+    <Content Include="Angular\src\assets\sourcesanspro.woff" />
+    <Content Include="Angular\src\less\simple-line-icons.less" />
+    <Content Include="Angular\src\assets\fontawesome-webfont.eot" />
+    <Content Include="Angular\src\assets\fontawesome-webfont.ttf" />
+    <Content Include="Angular\src\assets\fontawesome-webfont.woff" />
+    <Content Include="Angular\src\assets\FontAwesome.otf" />
+    <Content Include="Angular\src\assets\glyphicons-halflings-regular.eot" />
+    <Content Include="Angular\src\assets\glyphicons-halflings-regular.ttf" />
+    <Content Include="Angular\src\assets\glyphicons-halflings-regular.woff" />
+    <Content Include="Angular\src\assets\glyphicons-halflings-regular.woff2" />
+    <Content Include="Angular\src\assets\Simple-Line-Icons.eot" />
+    <Content Include="Angular\src\assets\Simple-Line-Icons.ttf" />
+    <Content Include="Angular\src\assets\Simple-Line-Icons.woff" />
+    <Content Include="Angular\src\less\app.arrow.less" />
+    <Content Include="Angular\src\less\app.butterbar.less" />
+    <Content Include="Angular\src\less\app.buttons.less" />
+    <Content Include="Angular\src\less\app.colors.less" />
+    <Content Include="Angular\src\less\app.components.less" />
+    <Content Include="Angular\src\less\app.item.less" />
+    <Content Include="Angular\src\less\app.layout.boxed.less" />
+    <Content Include="Angular\src\less\app.layout.less" />
+    <Content Include="Angular\src\less\app.less" />
+    <Content Include="Angular\src\less\app.mixins.less" />
+    <Content Include="Angular\src\less\app.nav.dock.less" />
+    <Content Include="Angular\src\less\app.nav.less" />
+    <Content Include="Angular\src\less\app.nav.offscreen.less" />
+    <Content Include="Angular\src\less\app.ng.less" />
+    <Content Include="Angular\src\less\app.plugin.less" />
+    <Content Include="Angular\src\less\app.reset.less" />
+    <Content Include="Angular\src\less\app.utilities.less" />
+    <Content Include="Angular\src\less\app.variables.less" />
+    <Content Include="Angular\src\less\app.widgets.less" />
+    <Content Include="Angular\src\app\group\form.tpl.html" />
+    <Content Include="Angular\po\template.pot" />
+    <Content Include="Angular\po\en.po" />
+    <Content Include="Angular\po\pt.po" />
+    <None Include="_bin_deployableAssemblies\x86\sqlcese40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceqp40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceme40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceer40EN.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlcecompact40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceca40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\Microsoft.VC90.CRT\README_ENU.txt" />
+    <None Include="_bin_deployableAssemblies\x86\Microsoft.VC90.CRT\msvcr90.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlcese40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceqp40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceme40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceer40EN.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlcecompact40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceca40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\Microsoft.VC90.CRT\README_ENU.txt" />
+    <None Include="_bin_deployableAssemblies\amd64\Microsoft.VC90.CRT\msvcr90.dll" />
     <None Include="Properties\PublishProfiles\EVM.pubxml" />
-    <Content Include="Reports\VendorReceiptReport.cshtml" />
     <Content Include="Reports\DistributionReport.cshtml" />
     <Content Include="Reports\VendorProgramReceiptReport.cshtml" />
+    <Content Include="Reports\ReportLayout.cshtml" />
+    <Content Include="Reports\ProgramClosureReport.cshtml" />
+    <Content Include="Reports\TestSheet.cshtml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -876,146 +1059,9 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
-    <Content Include="Source\GruntFile.js" />
-    <Content Include="Source\grunt\bower-install-simple.js" />
-    <Content Include="Source\grunt\bump.js" />
-    <Content Include="Source\grunt\changelog.js" />
-    <Content Include="Source\grunt\clean.js" />
-    <Content Include="Source\grunt\concat.js" />
-    <Content Include="Source\grunt\copy.js" />
-    <Content Include="Source\grunt\htmlmin.js" />
-    <Content Include="Source\grunt\index.js" />
-    <Content Include="Source\grunt\recess.js" />
-    <Content Include="Source\grunt\swig.js" />
-    <Content Include="Source\grunt\uglify.js" />
-    <Content Include="Source\src\css\app.css" />
-    <Content Include="Source\src\css\font.css" />
-    <Content Include="Source\src\js\controllers\vendor.js" />
-    <Content Include="Source\src\js\controllers\generic.js" />
-    <Content Include="Source\src\js\controllers\vouchers.js" />
-    <Content Include="Source\src\js\directives\chosen.js" />
-    <Content Include="Source\src\js\directives\toggleEditing.js" />
-    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen.css" />
-    <Content Include="Source\src\lib\bootstrap-chosen\chosen-sprite%402x.png" />
-    <Content Include="Source\src\lib\bootstrap-chosen\chosen-sprite.png" />
-    <Content Include="Source\src\lib\ng-grid.bootstrap.css" />
-    <Content Include="Source\src\img\a0.jpg" />
-    <Content Include="Source\src\img\a1.jpg" />
-    <Content Include="Source\src\img\a10.jpg" />
-    <Content Include="Source\src\img\a2.jpg" />
-    <Content Include="Source\src\img\a3.jpg" />
-    <Content Include="Source\src\img\a4.jpg" />
-    <Content Include="Source\src\img\a5.jpg" />
-    <Content Include="Source\src\img\a6.jpg" />
-    <Content Include="Source\src\img\a7.jpg" />
-    <Content Include="Source\src\img\a8.jpg" />
-    <Content Include="Source\src\img\a9.jpg" />
-    <Content Include="Source\src\img\b0.jpg" />
-    <Content Include="Source\src\img\b1.jpg" />
-    <Content Include="Source\src\img\b10.jpg" />
-    <Content Include="Source\src\img\b11.jpg" />
-    <Content Include="Source\src\img\b12.jpg" />
-    <Content Include="Source\src\img\b13.jpg" />
-    <Content Include="Source\src\img\b14.jpg" />
-    <Content Include="Source\src\img\b15.jpg" />
-    <Content Include="Source\src\img\b16.jpg" />
-    <Content Include="Source\src\img\b17.jpg" />
-    <Content Include="Source\src\img\b18.jpg" />
-    <Content Include="Source\src\img\b19.jpg" />
-    <Content Include="Source\src\img\b2.jpg" />
-    <Content Include="Source\src\img\b20.jpg" />
-    <Content Include="Source\src\img\b3.jpg" />
-    <Content Include="Source\src\img\b4.jpg" />
-    <Content Include="Source\src\img\b5.jpg" />
-    <Content Include="Source\src\img\b6.jpg" />
-    <Content Include="Source\src\img\b7.jpg" />
-    <Content Include="Source\src\img\b8.jpg" />
-    <Content Include="Source\src\img\b9.jpg" />
-    <Content Include="Source\src\img\bg.jpg" />
-    <Content Include="Source\src\img\c0.jpg" />
-    <Content Include="Source\src\img\c1.jpg" />
-    <Content Include="Source\src\img\c2.jpg" />
-    <Content Include="Source\src\img\c3.jpg" />
-    <Content Include="Source\src\img\c4.jpg" />
-    <Content Include="Source\src\img\c5.jpg" />
-    <Content Include="Source\src\img\c6.jpg" />
-    <Content Include="Source\src\img\c7.jpg" />
-    <Content Include="Source\src\img\c8.jpg" />
-    <Content Include="Source\src\img\c9.jpg" />
-    <Content Include="Source\src\img\logo.png" />
-    <Content Include="Source\src\img\p0.jpg" />
-    <Content Include="Source\src\index.html" />
-    <Content Include="Source\src\index.min.html" />
-    <Content Include="Source\src\js\app.js" />
-    <Content Include="Source\src\js\config.js" />
-    <Content Include="Source\src\js\config.lazyload.js" />
-    <Content Include="Source\src\js\config.router.js" />
-    <Content Include="Source\src\js\controllers\beneficiaries.js" />
-    <Content Include="Source\src\js\controllers\dashboard.js" />
-    <Content Include="Source\src\js\controllers\signin.js" />
-    <Content Include="Source\src\js\directives\setnganimate.js" />
-    <Content Include="Source\src\js\directives\ui-butterbar.js" />
-    <Content Include="Source\src\js\directives\ui-focus.js" />
-    <Content Include="Source\src\js\directives\ui-fullscreen.js" />
-    <Content Include="Source\src\js\directives\ui-jq.js" />
-    <Content Include="Source\src\js\directives\ui-module.js" />
-    <Content Include="Source\src\js\directives\ui-nav.js" />
-    <Content Include="Source\src\js\directives\ui-scroll.js" />
-    <Content Include="Source\src\js\directives\ui-shift.js" />
-    <Content Include="Source\src\js\directives\ui-toggleclass.js" />
-    <Content Include="Source\src\js\filters\voucherFilters.js" />
-    <Content Include="Source\src\js\filters\fromNow.js" />
-    <Content Include="Source\src\js\main.js" />
-    <Content Include="Source\src\js\services\authInterceptorService.js" />
-    <Content Include="Source\src\js\services\authService.js" />
-    <Content Include="Source\src\js\services\backendService.js" />
-    <Content Include="Source\src\js\services\tokensManagerService.js" />
-    <Content Include="Source\src\js\services\ui-load.js" />
-    <Content Include="Source\src\lib\crypto\forge.min.js" />
-    <Content Include="Source\src\lib\jquery.flot.spline.min.js" />
-    <Content Include="Source\src\lib\jquery.sparkline.retina.js" />
-    <Content Include="Source\src\tpl\country-admin\voucher-types\form.html" />
-    <Content Include="Source\src\tpl\country-admin\locations\form.html" />
-    <Content Include="Source\src\tpl\app.html" />
-    <Content Include="Source\src\tpl\generic\create.html" />
-    <Content Include="Source\src\tpl\generic\edit.html" />
-    <Content Include="Source\src\tpl\generic\list.html" />
-    <Content Include="Source\src\tpl\groups\form.html" />
-    <Content Include="Source\src\tpl\org-admin\users\edit.html" />
-    <Content Include="Source\src\tpl\org-admin\users\register.html" />
-    <Content Include="Source\src\tpl\page_signin.html" />
-    <Content Include="Source\src\tpl\org-admin\countries\form.html" />
-    <Content Include="Source\src\tpl\programs\form.html" />
-    <Content Include="Source\src\tpl\reconciliation\report-history.html" />
-    <Content Include="Source\src\tpl\reconciliation\vendor-receipt.html" />
-    <Content Include="Source\src\tpl\reports\distribution.html" />
-    <Content Include="Source\src\tpl\reports\vendor-financial.html" />
-    <Content Include="Source\src\tpl\system-admin\countries\form.html" />
-    <Content Include="Source\src\tpl\system-admin\message-log\list.html" />
-    <Content Include="Source\src\tpl\system-admin\organizations\edit-country.html" />
-    <Content Include="Source\src\tpl\system-admin\organizations\form.html" />
-    <Content Include="Source\src\tpl\system-admin\users\edit.html" />
-    <Content Include="Source\src\tpl\system-admin\users\register.html" />
-    <Content Include="Source\src\tpl\vendors\create.html" />
-    <Content Include="Source\src\tpl\vendors\edit.html" />
-    <Content Include="Source\src\tpl\vendors\list.html" />
-    <Content Include="Source\src\tpl\distributions\form.html" />
-    <Content Include="Source\src\tpl\app\dashboard.html" />
-    <Content Include="Source\src\tpl\distributions\create.html" />
-    <Content Include="Source\src\tpl\distributions\edit.html" />
-    <Content Include="Source\src\tpl\distributions\list.html" />
-    <Content Include="Source\src\tpl\beneficiaries\create.html" />
-    <Content Include="Source\src\tpl\blank.html" />
-    <Content Include="Source\src\tpl\blocks\aside.html" />
-    <Content Include="Source\src\tpl\blocks\header.html" />
-    <Content Include="Source\src\tpl\blocks\nav.html" />
-    <Content Include="Source\src\tpl\blocks\page_footer.html" />
-    <Content Include="Source\src\tpl\blocks\settings.html" />
-    <Content Include="Source\src\tpl\beneficiaries\edit.html" />
-    <Content Include="Source\src\tpl\beneficiaries\form.html" />
-    <Content Include="Source\src\tpl\beneficiaries\list.html" />
-    <Content Include="Source\src\tpl\vendors\form.html" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -1029,60 +1075,18 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
-    <Content Include="Source\bower.json" />
-    <Content Include="Source\package.json" />
-    <Content Include="Source\src\.DS_Store" />
-    <Content Include="Source\src\css\less\app.arrow.less" />
-    <Content Include="Source\src\css\less\app.butterbar.less" />
-    <Content Include="Source\src\css\less\app.buttons.less" />
-    <Content Include="Source\src\css\less\app.colors.less" />
-    <Content Include="Source\src\css\less\app.components.less" />
-    <Content Include="Source\src\css\less\app.item.less" />
-    <Content Include="Source\src\css\less\app.layout.boxed.less" />
-    <Content Include="Source\src\css\less\app.layout.less" />
-    <Content Include="Source\src\css\less\app.less" />
-    <Content Include="Source\src\css\less\app.mixins.less" />
-    <Content Include="Source\src\css\less\app.nav.dock.less" />
-    <Content Include="Source\src\css\less\app.nav.less" />
-    <Content Include="Source\src\css\less\app.nav.offscreen.less" />
-    <Content Include="Source\src\css\less\app.ng.less" />
-    <Content Include="Source\src\css\less\app.plugin.less" />
-    <Content Include="Source\src\css\less\app.reset.less" />
-    <Content Include="Source\src\css\less\app.utilities.less" />
-    <Content Include="Source\src\css\less\app.variables.less" />
-    <Content Include="Source\src\css\less\app.widgets.less" />
-    <Content Include="Source\src\fonts\.DS_Store" />
-    <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro-bold.woff" />
-    <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro-light.woff" />
-    <Content Include="Source\src\fonts\sourcesanspro\sourcesanspro.woff" />
-    <Content Include="Source\src\l10n\ua.yaml" />
-    <Content Include="Source\src\l10n\ru.yaml" />
-    <Content Include="Source\src\l10n\en-US.yaml" />
-    <Content Include="Source\po\template.pot" />
-    <None Include="Source\po\pt_BR.po" />
-    <Content Include="Source\po\ru.po" />
-    <None Include="Source\src\l10n\en.yaml" />
     <Content Include="Views\Home\OfflineManifest.cshtml" />
-    <Content Include="Source\src\lib\bootstrap-chosen\.bower.json" />
-    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen-variables.less" />
-    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen-variables.scss" />
-    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen.less" />
-    <Content Include="Source\src\lib\bootstrap-chosen\bootstrap-chosen.scss" />
-    <Content Include="Source\src\lib\bootstrap-chosen\bower.json" />
-    <Content Include="Source\src\lib\bootstrap-chosen\README.md" />
     <Content Include="Views\Home\ServerScript.cshtml" />
+    <None Include="_bin_deployableAssemblies\amd64\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" />
+    <None Include="_bin_deployableAssemblies\x86\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App\" />
     <Folder Include="App_Data\uploads\" />
-    <Folder Include="Source\src\tpl\vouchers\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Source\src\js\services\controlledListService.js" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
@@ -1106,7 +1110,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>1099</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost/EmergencyVoucherManagement</IISUrl>
+          <IISUrl>http://localhost:9091/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
@@ -1120,6 +1124,13 @@
     <PostBuildEvent>rem cd $(ProjectDir)Source
 rem grunt build</PostBuildEvent>
   </PropertyGroup>
+  <Import Project="..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\System.Data.SQLite.Core.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\System.Data.SQLite.Core.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

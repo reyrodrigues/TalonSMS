@@ -60,21 +60,22 @@ namespace TalonAdmin.Controllers.Breeze
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
-        
 
         [HttpGet]
-        public IQueryable<Models.Vouchers.DistributionVendorReconciliation> DistributionVendorReconciliations()
+        public IQueryable<Models.Vouchers.Beneficiary> DistributionBeneficiaries(int distributionId)
         {
-            return _contextProvider.Context.DistributionVendorReconciliations
+            return _contextProvider.Context.VoucherTransactionRecords
                 .FilterCountry(this)
-                .FilterOrganization(this);
+                .Where(v=> v.Type == 1)
+                .Where(v=>v.Voucher.DistributionId == distributionId)
+                .Select(v=>v.Beneficiary)
+                .Distinct();
         }
 
-
         [HttpGet]
-        public IQueryable<Models.Vouchers.ProgramVendorReconciliation> ProgramVendorReconciliations()
+        public IQueryable<Models.Vouchers.ExportedReport> ExportedReports()
         {
-            return _contextProvider.Context.ProgramVendorReconciliations
+            return _contextProvider.Context.ExportedReports
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
@@ -83,14 +84,6 @@ namespace TalonAdmin.Controllers.Breeze
         public IQueryable<Models.Vouchers.DistributionLog> DistributionLogs()
         {
             return _contextProvider.Context.DistributionLogs
-                .FilterCountry(this)
-                .FilterOrganization(this);
-        }
-
-        [HttpGet]
-        public IQueryable<Models.Vouchers.BeneficiaryDistribution> BeneficiaryDistributions()
-        {
-            return _contextProvider.Context.BeneficiaryDistributions
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
@@ -124,6 +117,20 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
+        public IQueryable<Models.Vouchers.VendorDevice> VendorDevices()
+        {
+            return _contextProvider.Context.VendorDevices
+                .FilterCountry(this);
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.VendorSalesPerson> VendorSalesPersons()
+        {
+            return _contextProvider.Context.VendorSalesPersons
+                .FilterCountry(this);
+        }
+
+        [HttpGet]
         public IQueryable<Models.Vouchers.VendorType> VendorTypes()
         {
             return _contextProvider.Context.VendorTypes
@@ -153,13 +160,52 @@ namespace TalonAdmin.Controllers.Breeze
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
+        /// <summary>
+        /// Filtered Voucher Transactions limited to just vouchers issued.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IQueryable<Models.Vouchers.VoucherTransactionRecord> IssuedVoucherTransactionRecords()
+        {
+            return _contextProvider.Context.VoucherTransactionRecords
+                .Where(v=> v.Type == 1)
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
+
+
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.TransactionLogItem> TransactionLogItems()
+        {
+            return _contextProvider.Context.TransactionLogItems
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.CardLoad> CardLoads()
+        {
+            return _contextProvider.Context.CardLoads
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
 
         [HttpGet]
         public IQueryable<Models.Vouchers.Vendor> DistributionVendors(int distributionId)
         {
             return _contextProvider.Context.VoucherTransactionRecords
                 .Where(v => v.Voucher.DistributionId == distributionId && v.VendorId != null)
-                .Select(v=>v.Vendor)
+                .Select(v => v.Vendor)
+                .Distinct();
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.Vendor> ProgramVendors(int programId)
+        {
+            return _contextProvider.Context.VoucherTransactionRecords
+                .Where(v => v.Voucher.Distribution.ProgramId == programId && v.VendorId != null)
+                .Select(v => v.Vendor)
                 .Distinct();
         }
 

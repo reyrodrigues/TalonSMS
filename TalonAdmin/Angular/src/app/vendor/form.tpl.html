@@ -1,0 +1,148 @@
+﻿<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-sm-12">
+            <form-group label="{{ 'Entity Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Vendor Type'|translate }}" name="typeId">
+                <select class="form-control" chosen ng-model="vm.entity.typeId" form-input
+                        ng-options="item.id as item.name for item in vm.lists.vendorTypes | orderBy:'item.name'"></select>
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Location'|translate }}" name="locationId">
+                <select class="form-control" chosen ng-model="vm.entity.locationId" form-input
+                        ng-options="item.id as item.name for item in vm.lists.locations | orderBy:'item.name'"></select>
+            </form-group>
+        </div>
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-heading font-bold">Owner Information</div>
+    <div class="panel-body">
+        <div class="col-sm-6">
+            <form-group label="{{ 'First Name'|translate }}" name="firstName" required="true">
+                <input type="text" class="form-control" form-input ng-model="vm.entity.firstName" required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Last Name'|translate }}" name="lastName" required="true">
+                <input type="text" class="form-control" form-input ng-model="vm.entity.lastName" required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Mobile Number'|translate }}" name="mobileNumber" required="true">
+                <div class="input-group m-b">
+                    <span class="input-group-addon">+{{ country.CountryCallingCode }}</span>
+                    <input type="text" class="form-control" ng-model="vm.entity.mobileNumber" phone-number form-input required />
+                </div>
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'National Id'|translate }}" name="nationalId" required="true">
+                <input type="text" class="form-control" form-input ng-model="vm.entity.nationalId" required />
+            </form-group>
+        </div>
+
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-heading font-bold">Access Information</div>
+    <div class="panel-body">
+        <div class="col-sm-6">
+            <form-group label="{{ 'User Name'|translate }}" name="locationId">
+                <input type="text" class="form-control" ng-model="vm.entity.userName" form-input />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Password'|translate }}" name="locationId">
+                <input type="password" class="form-control" form-input ng-model="vm.password.NewPassword">
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Confirm Password'|translate }}" name="locationId">
+                <input type="password" class="form-control" form-input ng-model="vm.password.ConfirmPassword"
+                       ui-validate="'$value==vm.password.NewPassword'" ui-validate-watch="'vm.password.NewPassword'">
+            </form-group>
+        </div>
+    </div>
+</div>
+
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="{{ 'Sales Personnel'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="VendorSalesPersons"
+                      key="vendorId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Name'|translate }}" field="firstName">
+                    <div class="ui-grid-cell-contents">
+                        {{ row.entity.firstName }} {{ row.entity.lastName}}
+                    </div>
+                </sub-grid-column>
+                <sub-grid-column label="{{ 'Mobile Number'|translate }}" field="mobileNumber"></sub-grid-column>
+                <sub-grid-column label="{{ 'National Id'|translate }}" field="nationalId"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" width="100" ng-if="canI('Add Sales Person')">
+                    <div class="ui-grid-cell-contents">
+                            <div class="btn-group">
+                                <a href ng-click="grid.appScope.$parent.editChild(row.entity, grid)" class="btn btn-success btn-xs">Edit</a>
+                                <a href ng-click="grid.appScope.$parent.deleteChild(row.entity, grid)" class="btn btn-danger btn-xs">Delete</a>
+                            </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="{{ 'Devices'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="VendorDevices"
+                      key="vendorId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Name'|translate }}" field="name"></sub-grid-column>
+                <sub-grid-column label="{{ 'UUID'|translate }}" field="uUID"></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="{{ 'Used Vouchers'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid filter="
+                      {'and': [
+                        { 'type': {'==': 2} },
+                        { 'or': [
+                               { 'voucher.status': { '==': 2 } },
+                               { 'voucher.status': { '==': 3 } },
+                               { 'voucher.status': { '==': 4 } }
+                              ]
+                          },
+                        { 'or': [
+                                {'vendorId': { '==': vm.entity.id }},
+                                {'vendor.parentRecordId': { '==': vm.entity.id }}
+                              ]
+                            }
+                       ]}"
+                      collection="VoucherTransactionRecords"
+                      expand="beneficiary, voucher, voucher.category"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Beneficiary'|translate }}" field="beneficiary.firstName">
+                    <div class="ui-grid-cell-contents">
+                        {{ row.entity.beneficiary.firstName }} {{ row.entity.beneficiary.lastName }}
+                    </div>
+                </sub-grid-column>
+                <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Value'|translate }}" field="value"></sub-grid-column>
+                <sub-grid-column label="{{ 'Claimed On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Used On'|translate }}" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Status'|translate }}" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+
+</tabset>

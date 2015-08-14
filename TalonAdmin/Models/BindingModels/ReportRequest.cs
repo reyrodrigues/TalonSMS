@@ -14,5 +14,8 @@ namespace TalonAdmin.Controllers.BindingModels
         public int OrganizationId { get; set; }
         public string PeriodStart { get; set; }
         public string PeriodEnd { get; set; }
+
+        public string PaperSize { get; set; }
+        public double? TimezoneOffset { get; set; }
     }
 }

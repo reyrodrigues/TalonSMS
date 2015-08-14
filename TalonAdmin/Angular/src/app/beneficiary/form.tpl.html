@@ -1,0 +1,115 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-sm-6">
+            <form-group label="{{ 'First Name'|translate }}" name="firstName" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.firstName" form-input required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Last Name'|translate }}" name="lastName" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.lastName" form-input required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Mobile Number'|translate }}" name="mobileNumber" required="true">
+                <div class="input-group m-b">
+                    <span class="input-group-addon">+{{ country.CountryCallingCode }}</span>
+                    <input type="text" class="form-control" ng-model="vm.entity.mobileNumber" phone-number form-input required />
+                </div>
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'National Id'|translate }}" name="nationalId">
+                <input type="text" class="form-control" ng-model="vm.entity.nationalId" form-input />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'IRC Id'|translate }}" name="iRCId">
+                <input type="text" class="form-control" ng-model="vm.entity.iRCId" form-input />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Birth Year'|translate }}" name="birthYear">
+                <input type="text" class="form-control" ng-model="vm.entity.birthYear" form-input />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Sex'|translate }}" name="sex">
+                <select chosen class="form-control" ng-model="vm.entity.sex"
+                        ng-options="item.id as item.name for item in vm.lists.sexes | orderBy:'item.name'" form-input></select>
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Location'|translate }}" name="sex">
+                <select chosen class="form-control" ng-model="vm.entity.locationId"
+                        ng-options="item.id as item.name for item in vm.lists.locations | orderBy:'item.name'" form-input></select>
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Cycle'|translate }}" name="groupId">
+                <select chosen class="form-control" ng-model="vm.entity.groupId"
+                        ng-options="item.id as item.name for item in vm.lists.beneficiaryGroups | orderBy:'item.name'" form-input></select>
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'PIN'|translate }}" name="pin">
+                <input type="text" class="form-control" ng-model="vm.entity.pIN" form-input />
+            </form-group>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="{{ 'Unused Vouchers'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid filter="{'and': [
+                      { 'type': {'==': 1} },
+                      { 'voucher.status': { '==': 1 } }
+                      ]}"
+                      collection="VoucherTransactionRecords"
+                      expand="vendor, voucher"
+                      key="beneficiaryId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.cancelVoucher(row.entity, grid)" class="btn btn-default btn-xs">Cancel Voucher</a>
+                            <a href ng-click="grid.appScope.$parent.resendVoucher(row.entity, grid)" class="btn btn-default btn-xs">Resend Voucher</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="{{ 'Used Vouchers'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid filter="{'and': [
+                      { 'type': {'==': 2} },
+                      { 'or': [
+                           { 'voucher.status': { '==': 2 } },
+                           { 'voucher.status': { '==': 3 } },
+                           { 'voucher.status': { '==': 4 } }
+                          ]
+                      } ]}
+                      "
+                      collection="VoucherTransactionRecords"
+                      expand="vendor, voucher"
+                      key="beneficiaryId"
+                      entity="vm.entity">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Vendor'|translate }}" field="vendor.name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Used On'|translate }}" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
+                <sub-grid-column label="{{ 'Status'|translate }}" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

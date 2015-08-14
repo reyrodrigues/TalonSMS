@@ -1,0 +1,52 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+
+        <div class="col-sm-12">
+            <form-group label="{{ 'Title'|translate }}" name="title" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.title" form-input required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'State'|translate }}" name="state" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.state" form-input required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Css Class'|translate }}" name="cssClass">
+                <input type="text" class="form-control" ng-model="vm.entity.cssClass" form-input />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Category'|translate }}" name="categoryId">
+                <select chosen class="form-control" ng-model="vm.entity.categoryId" form-input
+                        ng-options="item.id as item.name for item in vm.lists.menuCategories | orderBy:'item.name'"></select>
+            </form-group>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="{{ 'Children'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid entity-manager="adminEntityManager"
+                      collection="MenuItems"
+                      key="parentId"
+                      entity="vm.entity"
+                      parent="vm">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Title'|translate }}" field="title"></sub-grid-column>
+                <sub-grid-column label="{{ 'State'|translate }}" field="state"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disableSorting="true" width="100">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.editChild(row.entity, grid)" class="btn btn-default btn-xs">Edit</a>
+                            <a href ng-click="grid.appScope.$parent.deleteChild(row.entity, grid)" class="btn btn-default btn-xs">Delete</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>

@@ -1,0 +1,31 @@
+﻿<div class="modal-header">
+    <h4 class="modal-title" translate>
+        Edit Menu Item
+    </h4>
+
+</div>
+<div class="modal-body">
+    <div class="row">
+        <form class="form-horizontal" name="popupForm" ng-submit="void()">
+
+            <div class="col-sm-12">
+                <form-group label="{{ 'Title'|translate }}" name="title">
+                    <input type="text" class="form-control" form-input ng-model="entity.title" required />
+                </form-group>
+            </div>
+            <div class="col-sm-12">
+                <form-group label="{{ 'State'|translate }}" name="state">
+                    <input type="text" class="form-control" form-input ng-model="entity.state" required />
+                </form-group>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-success" ng-click="save()" translate>
+        Save
+    </button>
+    <button class="btn btn-default" ng-click="close()" translate>
+        Back
+    </button>
+</div>

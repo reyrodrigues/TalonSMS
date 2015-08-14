@@ -1,0 +1,49 @@
+﻿<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">Program Closure Report</h1>
+</div>
+<div class="wrapper-md">
+    <form class="form-horizontal form-validation" action="{{ url }}" method="POST" target="_blank">
+        <input type="hidden" name="OrganizationId" value="{{report.OrganizationId}}" />
+        <input type="hidden" name="CountryId" value="{{report.CountryId}}" />
+        <input type="hidden" name="ProgramId" value="{{report.ProgramId}}" />
+        <input type="hidden" name="PaperSize" value="{{report.PaperSize||'A4'}}" />
+        <input type="hidden" name="TimezoneOffset" value="{{app.timezoneOffset}}" />
+        <input type="hidden" name="__authorization" value="Bearer {{token}}" />
+        <div class="row">
+            <div class="col-sm-12">
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" translate>Program</label>
+                            <div class="col-sm-4">
+                                <select chosen class="form-control" ng-model="report.ProgramId"
+                                        ng-options="item.id as item.name for item in programs | orderBy:'item.name'"></select>
+                            </div>
+                            <label class="col-sm-2 control-label" translate>Paper Size</label>
+                            <div class="col-sm-4">
+                                <select class="form-control" ng-model="report.PaperSize">
+                                    <option value="A4" selected>A4</option>
+                                    <option value="Letter">US Letter</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <div class=" col-sm-12">
+                        <div class="btn-group pull-right">
+                            <button type="submit" class="btn btn-primary" ng-disabled="!report.ProgramId">Generate Report</button>
+                            <button ui-sref="app.dashboard" class="btn btn-info">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>

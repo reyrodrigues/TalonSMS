@@ -1,0 +1,73 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-sm-12">
+            <form-group label="{{ 'Name'|translate }}" name="name" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.name" form-input required />
+            </form-group>
+        </div>
+    </div>
+</div>
+<tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
+    <tab heading="{{ 'Users'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="UserRoles"
+                      key="roleId"
+                      default-sort="userId"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity"
+                      wait-for="vm.userQuery"
+                      select="vm.mergeUsers">
+                <sub-grid-column label="{{ 'User Name'|translate }}" field="user.userName">
+                </sub-grid-column>
+                <sub-grid-column label="{{ 'Full Name'|translate }}" field="user.fullName">
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="{{ 'Actions'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="Actions"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity"
+                      select="vm.mergeActions"
+                      items-per-page="400">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Name'|translate }}" field="name">
+
+
+                </sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" width="100" disableSorting="true" ng-if="vm.canEdit">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.addAction(row.entity, grid)"
+                               class="btn btn-success btn-xs btn-block" ng-if="!row.entity.isLinked">Add</a>
+                            <a href ng-click="grid.appScope.$parent.removeAction(row.entity, grid)"
+                               class="btn btn-danger btn-xs btn-block" ng-if="row.entity.isLinked">Remove</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="{{ 'Menu'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="MenuCategories"
+                      entity-manager="adminEntityManager"
+                      entity="vm.entity"
+                      select="vm.mergeMenuCategories">
+                <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
+                <sub-grid-column label="{{ 'Name'|translate }}" field="name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disableSorting="true" width="100" ng-if="vm.canEdit">
+                    <div class="ui-grid-cell-contents">
+                        <div class="btn-group">
+                            <a href ng-click="grid.appScope.$parent.addCategory(row.entity, grid)"
+                               class="btn btn-success btn-xs btn-block" ng-if="!row.entity.isLinked">Add</a>
+                            <a href ng-click="grid.appScope.$parent.removeCategory(row.entity, grid)"
+                               class="btn btn-danger btn-xs btn-block" ng-if="row.entity.isLinked">Remove</a>
+                        </div>
+                    </div>
+                </sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+</tabset>
