@@ -69,9 +69,9 @@ namespace TalonAdmin.Models.Vouchers
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
 #endif
 #if DEBUG
-            Database.SetInitializer(new NullDatabaseInitializer<Context>());
+            //Database.SetInitializer(new NullDatabaseInitializer<Context>());
             //Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
-           // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
+           Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
 #endif
 
 
