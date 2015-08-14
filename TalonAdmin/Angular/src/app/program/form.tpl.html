@@ -90,13 +90,13 @@
     <tab heading="{{ 'Distributions'|translate }}">
         <div class="panel panel-default">
             <sub-grid collection="Distributions"
-                      expand="location"
+                      expand="location, group"
                       key="programId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="{{ 'Title'|translate }}" field="title"></sub-grid-column>
-                <sub-grid-column label="{{ 'Location'|translate }}" field="location.name"></sub-grid-column>
                 <sub-grid-column label="{{ 'Cycle'|translate }}" field="group.name"></sub-grid-column>
+                <sub-grid-column label="{{ 'Location'|translate }}" field="location.name"></sub-grid-column>
                 <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true">
                     <div class="ui-grid-cell-contents">

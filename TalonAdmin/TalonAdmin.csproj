@@ -344,6 +344,7 @@
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryAdditionalData.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryGroup.cs" />
+    <Compile Include="Models\Vouchers\CardLoad.cs" />
     <Compile Include="Models\Vouchers\Context.cs" />
     <Compile Include="Models\Vouchers\DistributionLog.cs" />
     <Compile Include="Models\Vouchers\ProgramVoucherCategory.cs" />
@@ -355,6 +356,7 @@
     <Compile Include="Models\Vouchers\MessageLog.cs" />
     <Compile Include="Models\Vouchers\Program.cs" />
     <Compile Include="Models\Vouchers\TenantEntity.cs" />
+    <Compile Include="Models\Vouchers\TransactionLogItem.cs" />
     <Compile Include="Models\Vouchers\VendorDevice.cs" />
     <Compile Include="Models\Vouchers\VendorSalesPerson.cs" />
     <Compile Include="Models\Vouchers\VendorType.cs" />
@@ -392,6 +394,7 @@
     <Content Include="Angular\src\app\helpText.js" />
     <Content Include="Angular\src\app\org-admin\country-settings\form.tpl.html" />
     <Content Include="Angular\src\app\org-admin\country-settings\country-settings.js" />
+    <Content Include="Angular\src\app\org-admin\country-settings\upload-vendor-data.tpl.html" />
     <Content Include="Angular\src\app\program\copy-categories.tpl.html" />
     <Content Include="Angular\src\app\program\distribute-vouchers.tpl.html" />
     <Content Include="Angular\src\app\reporting\program-closure.tpl.html" />

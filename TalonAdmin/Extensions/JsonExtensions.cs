@@ -16,7 +16,7 @@ namespace Newtonsoft.Json.Linq
         /// <param name="self">JObject</param>
         /// <param name="property">name of property</param>
         /// <returns></returns>
-        public static T PropertyValueIfExists<T>(this JObject self, string property)
+        public static T ValueIfExists<T>(this JObject self, string property)
         {
             var exists = self.Properties().Where(p => p.Name == property).Any() && !String.IsNullOrEmpty(self[property].ToString());
             return exists ? self[property].ToObject<T>() : default(T);

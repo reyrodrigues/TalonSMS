@@ -3,7 +3,7 @@
 </div>
 <div class="vbox ">
     <div class="col">
-        <div class="wrapper bg-light lter b-b">
+        <div class="wrapper bg-light lter b-b" ng-if="vm.canCreate || vm.forms || vm.actions">
             <div class="btn-toolbar">
                 <div class="btn-group" ng-repeat="form in vm.forms">
                     <form method="POST" action="{{ form.url() }}" t target=" _blank" ng-if="!form.condition || form.condition(vm.entity)">

@@ -59,7 +59,7 @@ function EditController($injector, $scope) {
     function load() {
         if (self.settings.controlledLists) {
             self.settings.controlledLists.forEach(function (l) {
-                controlledLists[l]().then(function(list){
+                controlledLists[l]().then(function (list) {
                     self.lists[l] = list;
                 });
             });
@@ -231,6 +231,7 @@ function ListController($injector, $scope) {
     this.configure = this.configure || noop;
     this.load = this.load || load;
     this.remove = this.remove || remove;
+    this.actionsHtml = this.actionsHtml || actionsHtml;
 
     this.filterText = '';
     this.applyFilters = function () {
@@ -309,30 +310,30 @@ function ListController($injector, $scope) {
         .withDataProp('data')
         .withOption('filter', false)
         .withOption('serverSide', true)
-        .withOption('order', $localStorage[stateName + '_Order'] )
+        .withOption('order', $localStorage[stateName + '_Order'])
         .withBootstrap()
         .withDisplayLength(25)
         .withOption('createdRow', createdRow)
         .withPaginationType('full_numbers');
 
         self.columns = self.settings.columns.map(function (c) {
-            var col = DTColumnBuilder
-                .newColumn(c[0])
-                .withTitle(c.length > 1 ? c[1] : c[0]);
+                var col = DTColumnBuilder
+                    .newColumn(c[0])
+                    .withTitle(c.length > 1 ? c[1] : c[0]);
 
-            if (c.length > 2 && c[2]) {
-                col = col.notSortable();
-            }
+                if (c.length > 2 && c[2]) {
+                    col = col.notSortable();
+                }
 
-            if (c.length > 3 && c[3]) {
-                col = col.notVisible();
-            }
+                if (c.length > 3 && c[3]) {
+                    col = col.notVisible();
+                }
 
-            if (c.length > 4 && c[4]) {
-                col = col.renderWith(c[4]);
-            }
+                if (c.length > 4 && c[4]) {
+                    col = col.renderWith(c[4]);
+                }
+                return col;
 
-            return col;
         });
 
         self.columns.push(DTColumnBuilder
@@ -340,7 +341,7 @@ function ListController($injector, $scope) {
             .withTitle('Actions')
             .withOption('width', '130px')
             .notSortable()
-            .renderWith(actionsHtml));
+            .renderWith(this.actionsHtml));
     }
 
     function createdRow(row, data, dataIndex) {

@@ -214,7 +214,7 @@ namespace TalonAdmin.Controllers.Api
                 .ToDictionary(k => k.Key, v => v.Sum(s => s.Value));
 
             var used = voucherQuery.Where(v => v.TransactionRecords.Where(t => t.Type == 2).Any())
-                .Select(v => new { Value = 1, Key = v.TransactionRecords.Select(t => t.CreatedOn).Min() })
+                .Select(v => new { Value = 1, Key = v.TransactionRecords.Where(t => t.Type == 2).Select(t => t.CreatedOn).Min() })
                 .ToArray()
                 .GroupBy(k => k.Key.ToUniversalTime().ToShortDateString())
                 .ToDictionary(k => k.Key, v => v.Sum(s => s.Value));

@@ -104,7 +104,7 @@ angular.module('talon', [
         name: 'Talon',
         currentYear: moment().year(),
         fullName: 'Talon',
-        version: '1.0.0b',
+        version: '1.2.0b',
         serviceRoot: serviceRoot,
         timezoneOffset: moment().utcOffset() / 60,
         // for chart colors

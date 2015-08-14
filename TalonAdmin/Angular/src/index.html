@@ -45,7 +45,7 @@
         </div>
         <!-- /content -->
         <!-- footer -->
-        <div class="app-footer wrapper b-t bg-light">
+        <div class="app-footer wrapper b-t bg-light" ng-cloak>
             <span class="pull-right">{{app.version}}</span>
             Copyright &copy; The International Rescue Committee, {{ app.currentYear }}.
         </div>
@@ -60,6 +60,7 @@
             $.fn.dataTable.ext.errMode = 'none';
             moment.locale('en-US');
         });
+
     </script>
 </body>
 </html>

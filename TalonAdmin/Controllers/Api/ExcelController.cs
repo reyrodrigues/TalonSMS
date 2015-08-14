@@ -180,11 +180,11 @@ namespace TalonAdmin.Controllers
                         {
                             try
                             {
-                                var beneficiaryId = jsonBeneficiary.PropertyValueIfExists<int?>("Id");
-                                var groupName = jsonBeneficiary.PropertyValueIfExists<string>("Cycle");
-                                var locationName = jsonBeneficiary.PropertyValueIfExists<string>("Location");
+                                var beneficiaryId = jsonBeneficiary.ValueIfExists<int?>("Id");
+                                var groupName = jsonBeneficiary.ValueIfExists<string>("Cycle");
+                                var locationName = jsonBeneficiary.ValueIfExists<string>("Location");
 
-                                jsonBeneficiary["Sex"] = (jsonBeneficiary.PropertyValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
+                                jsonBeneficiary["Sex"] = (jsonBeneficiary.ValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
 
                                 jsonBeneficiary.Remove("Name");
 
@@ -417,9 +417,9 @@ namespace TalonAdmin.Controllers
                         {
                             try
                             {
-                                var vendorId = jsonVendor.PropertyValueIfExists<int?>("Id");
-                                var locationName = jsonVendor.PropertyValueIfExists<string>("Location");
-                                var typeName = jsonVendor.PropertyValueIfExists<string>("Type");
+                                var vendorId = jsonVendor.ValueIfExists<int?>("Id");
+                                var locationName = jsonVendor.ValueIfExists<string>("Location");
+                                var typeName = jsonVendor.ValueIfExists<string>("Type");
 
                                 jsonVendor.Remove("Location");
                                 jsonVendor.Remove("Type");

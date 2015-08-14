@@ -20,6 +20,9 @@ using TalonAdmin.Utils;
 using System.IO.Compression;
 using TalonAdmin.Models.Vouchers;
 using TalonAdmin.Attributes;
+using System.Net.Http;
+
+
 namespace TalonAdmin.Controllers.Api
 {
     [RoutePrefix("api/App/MobileClient")]
@@ -33,15 +36,15 @@ namespace TalonAdmin.Controllers.Api
         }
 
         /// <summary>
-        /// Noop action that just returns true. Used to determine if an wifi connection can reach the system.
+        /// Noop action that returns whatever is passed in the request. Used to determine if an wifi connection can reach the system.
         /// </summary>
         /// <returns></returns>
         [HttpGet]
         [Route("IsAlive")]
-        public IHttpActionResult IsAlive()
+        public IHttpActionResult IsAlive(string echo)
         {
 
-            return Ok();
+            return Ok<string>(echo);
         }
 
         #region Provisioning
@@ -248,6 +251,9 @@ namespace TalonAdmin.Controllers.Api
 
                 JToken beneficiaryKeysJson = await DownloadBeneficiaryKeysInternal();
                 string beneficiaryKeys = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
+
+                JToken qrCodesJson = await DownloadBeneficiaryKeysInternal();
+                string qrCodes = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
                 using (var memoryStream = new MemoryStream())
                 {
                     using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
@@ -267,6 +273,14 @@ namespace TalonAdmin.Controllers.Api
                         {
                             streamWriter.Write(beneficiaryKeys);
                         }
+
+                        var qrCodesEntry = archive.CreateEntry("QRCodes.b64");
+
+                        using (var entryStream = qrCodesEntry.Open())
+                        using (var streamWriter = new StreamWriter(entryStream))
+                        {
+                            streamWriter.Write(qrCodes);
+                        }
                     }
 
                     using (var outputStream = new MemoryStream())
@@ -278,6 +292,103 @@ namespace TalonAdmin.Controllers.Api
                     }
                 }
             }
+        }
+
+        [Route("UploadVendorPayload")]
+        public async Task<IHttpActionResult> UploadVendorPayload()
+        {
+            if (!Request.Content.IsMimeMultipartContent())
+            {
+                return BadRequest();
+            }
+
+            string root = HostingEnvironment.MapPath("~/App_Data/uploads");
+            var provider = new MultipartFormDataStreamProvider(root);
+
+            var streamProvider = new MultipartFormDataStreamProvider(root);
+            await Request.Content.ReadAsMultipartAsync(streamProvider);
+
+            StringBuilder builder = new StringBuilder();
+
+            foreach (MultipartFileData fileData in streamProvider.FileData)
+            {
+                var fileBytes = File.ReadAllBytes(fileData.LocalFileName);
+
+                // No need to keep the file lying around
+                File.Delete(fileData.LocalFileName);
+
+                using (var memoryStream = new MemoryStream(fileBytes))
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Read))
+                {
+                    var cardLoadsEntry = archive.GetEntry("cardLoadHistoryDB.b64");
+                    var transactionsEntry = archive.GetEntry("transactionHistoryDB.b64");
+                    var vendorProfileEntry = archive.GetEntry("vendorProfile.b64");
+
+
+                    string cardLoadsEncryptedData = "";
+                    string transactionsEncryptedData = "";
+                    string vendorProfileEncryptedData = "";
+
+                    using (var stream = cardLoadsEntry.Open())
+                    {
+                        var output = new MemoryStream();
+                        stream.CopyTo(output);
+                        stream.Close();
+
+                        cardLoadsEncryptedData = Encoding.UTF8.GetString(output.ToArray());
+                    }
+
+                    using (var stream = transactionsEntry.Open())
+                    {
+                        var output = new MemoryStream();
+                        stream.CopyTo(output);
+                        stream.Close();
+
+                        transactionsEncryptedData = Encoding.UTF8.GetString(output.ToArray());
+                    }
+
+                    using (var stream = vendorProfileEntry.Open())
+                    {
+                        var output = new MemoryStream();
+                        stream.CopyTo(output);
+                        stream.Close();
+
+                        vendorProfileEncryptedData = Encoding.UTF8.GetString(output.ToArray());
+                    }
+                    var cardLoads = JToken.Parse(DecryptUsingRSA(cardLoadsEncryptedData, "ServerPrivate.json")) as JArray;
+                    var transactions = JToken.Parse(DecryptUsingRSA(transactionsEncryptedData, "ServerPrivate.json")) as JArray;
+                    var vendorProfile = JToken.Parse(DecryptUsingRSA(vendorProfileEncryptedData, "ServerPrivate.json"));
+
+                    var vendorObject = vendorProfile.ToObject<Models.Vouchers.Vendor>();
+
+                    await ProcessCardLoadsInternal(cardLoads, vendorObject);
+                    await ProcessTransactionsInternal(transactions, vendorObject);
+                }
+            }
+            return Ok<string>(builder.ToString());
+        }
+        #endregion
+
+        #region Cached Transactions
+
+        [Route("UploadCardLoads")]
+        [AuthorizeVendor]
+        public async Task<IHttpActionResult> UploadCardLoads([FromBody]JArray cardLoads)
+        {
+            var vendor = await VendorFromRequest();
+            await ProcessCardLoadsInternal(cardLoads, vendor);
+
+            return Ok();
+        }
+
+        [Route("UploadTransactions")]
+        [AuthorizeVendor]
+        public async Task<IHttpActionResult> UploadTransactions([FromBody]JArray transactions)
+        {
+            var vendor = await VendorFromRequest();
+            await ProcessTransactionsInternal(transactions, vendor);
+
+            return Ok();
         }
         #endregion
 
@@ -291,6 +402,17 @@ namespace TalonAdmin.Controllers.Api
             decimal amountCredited = request.amountCredited;
             int beneficiaryId = request.beneficiaryId;
 
+            return Ok<JToken>(await ProccessNFCTransactionInternal(vendor, beneficiaryId, amountCredited));
+        }
+
+        private async Task<JToken> ProccessNFCTransactionInternal(Vendor vendor, int beneficiaryId, decimal amountCredited)
+        {
+            return await ProccessNFCTransactionInternal(vendor, beneficiaryId, amountCredited, DateTime.UtcNow);
+        }
+
+        private async Task<JToken> ProccessNFCTransactionInternal(Vendor vendor, int beneficiaryId, decimal amountCredited, DateTime transactionDate)
+        {
+            var confirmationCodes = new List<string>();
             using (var db = new Models.Vouchers.Context())
             {
                 var vouchers = await db.VoucherTransactionRecords
@@ -316,16 +438,17 @@ namespace TalonAdmin.Controllers.Api
 
                     if (amountCredited > voucherData.Amount)
                     {
+                        var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
                         var transactionRecord = new VoucherTransactionRecord()
                         {
                             VoucherId = voucher.Id,
                             BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
                             VendorId = vendor.Id,
                             Type = 2,
-                            ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6"),
-                            LastModifiedOn = DateTime.UtcNow,
-                            CreatedOn = DateTime.UtcNow,
-                            Value = voucherData.Amount, // QR claims full price,
+                            ConfirmationCode = confirmationCode,
+                            LastModifiedOn = transactionDate,
+                            CreatedOn = transactionDate,
+                            Value = voucherData.Amount, // Spending out the remaining amount in this voucher
                             CountryId = voucher.CountryId,
                             OrganizationId = voucher.OrganizationId
                         };
@@ -334,25 +457,29 @@ namespace TalonAdmin.Controllers.Api
                         voucher.Status = 3;
                         amountCredited = amountCredited - voucherData.Amount;
 
+                        confirmationCodes.Add(confirmationCode);
+
                         continue;
                     }
                     if (amountCredited <= voucherData.Amount)
                     {
 
+                        var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
                         var transactionRecord = new VoucherTransactionRecord()
                         {
                             VoucherId = voucher.Id,
                             BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
                             VendorId = vendor.Id,
                             Type = 2,
-                            ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6"),
-                            LastModifiedOn = DateTime.UtcNow,
-                            CreatedOn = DateTime.UtcNow,
-                            Value = amountCredited, // QR claims full price,
+                            ConfirmationCode = confirmationCode,
+                            LastModifiedOn = transactionDate,
+                            CreatedOn = transactionDate,
+                            Value = amountCredited,
                             CountryId = voucher.CountryId,
                             OrganizationId = voucher.OrganizationId
                         };
 
+                        confirmationCodes.Add(confirmationCode);
                         db.VoucherTransactionRecords.Add(transactionRecord);
                         voucher.Status = 2;
                         amountCredited = 0;
@@ -363,11 +490,11 @@ namespace TalonAdmin.Controllers.Api
 
                 await db.SaveChangesAsync();
 
-                return Ok<JToken>(JToken.FromObject(new
+                return JToken.FromObject(new
                 {
                     Success = true,
-                    ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6")
-                }));
+                    ConfirmationCode = String.Join(",", confirmationCodes)
+                });
             }
         }
 
@@ -379,6 +506,16 @@ namespace TalonAdmin.Controllers.Api
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
             string voucherCode = request.voucherCode;
+            return Ok<JToken>(await ProcessQRTransactionInternal(vendor, voucherCode));
+        }
+
+        private async Task<JToken> ProcessQRTransactionInternal(Vendor vendor, string voucherCode)
+        {
+            return await ProcessQRTransactionInternal(vendor, voucherCode, DateTime.UtcNow);
+        }
+
+        private async Task<JToken> ProcessQRTransactionInternal(Vendor vendor, string voucherCode, DateTime transactionDate)
+        {
             using (var db = new Models.Vouchers.Context())
             {
                 var voucher = await db.Vouchers
@@ -387,23 +524,23 @@ namespace TalonAdmin.Controllers.Api
 
                 if (voucher == null || voucher.Status != 1)
                 {
-                    return Ok<JToken>(JToken.FromObject(new
+                    return JToken.FromObject(new
                     {
                         Success = false,
                         Message = "Voucher Already Used",
                         VoucherCode = voucherCode
-                    }));
+                    });
                 }
-
+                var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
                 var transactionRecord = new VoucherTransactionRecord()
                 {
                     VoucherId = voucher.Id,
                     BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
                     VendorId = vendor.Id,
                     Type = 2,
-                    ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6"),
-                    LastModifiedOn = DateTime.UtcNow,
-                    CreatedOn = DateTime.UtcNow,
+                    ConfirmationCode = confirmationCode,
+                    LastModifiedOn = transactionDate,
+                    CreatedOn = transactionDate,
                     Value = voucher.Value, // QR claims full price,
                     CountryId = voucher.CountryId,
                     OrganizationId = voucher.OrganizationId
@@ -414,14 +551,59 @@ namespace TalonAdmin.Controllers.Api
 
                 await db.SaveChangesAsync();
 
-                return Ok<JToken>(JToken.FromObject(new
+                return JToken.FromObject(new
                 {
                     Success = true,
                     VoucherCode = voucher.VoucherCode,
-                    ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6")
-                }));
+                    ConfirmationCode = confirmationCode
+                });
             }
         }
+
+        [HttpPost]
+        [Authorize]
+        [Route("ProcessQuarantinedTransaction")]
+        public async Task<IHttpActionResult> ProcessQuarantinedTransaction(int transactionId)
+        {
+            using (var ctx = new Models.Vouchers.Context())
+            {
+                var transaction = await ctx.TransactionLogItems.Include("Vendor").Where(t => t.Id == transactionId).FirstOrDefaultAsync();
+                if (transaction == null)
+                {
+                    return Ok<JToken>(JToken.FromObject(new
+                    {
+                        Success = false,
+                        Message = "Invalid transaction id."
+                    }));
+                }
+                dynamic result = new JObject() { };
+                if (transaction.Type == 2)
+                {
+                    //NFC
+                    result = await ProccessNFCTransactionInternal(transaction.Vendor, transaction.BeneficiaryId, transaction.AmountCredited, transaction.Date);
+                }
+                else
+                {
+                    // QR And SMS should be the same?
+                    result = await ProcessQRTransactionInternal(transaction.Vendor, transaction.VoucherCode, transaction.Date);
+                }
+                var me = await this.WhoAmI();
+
+                if (result.Success == true)
+                {
+                    transaction.Processed = true;
+                    transaction.Quarantine = false;
+                    transaction.ProcessedOn = DateTime.UtcNow;
+                    transaction.ProcessedBy = me.UserName;
+                    transaction.ConfirmationCode = result.ConfirmationCode;
+                }
+
+                await ctx.SaveChangesAsync();
+
+                return Ok<JToken>(result);
+            }
+        }
+
 
         [HttpGet]
         [Route("DownloadKeyset")]
@@ -440,61 +622,95 @@ namespace TalonAdmin.Controllers.Api
             }));
         }
 
-        [HttpGet]
-        [Route("EncryptServer")]
-        public async Task<IHttpActionResult> EncryptServer()
+        #region Private Methods
+        private async Task ProcessTransactionsInternal(JArray transactions, Vendor vendor)
         {
-            var keyContainer = HostingEnvironment.MapPath("~/Keys");
-
-            using (var rsa = new RSACryptoServiceProvider())
+            using (var ctx = new Models.Vouchers.Context())
             {
-                rsa.PersistKeyInCsp = false;
-                dynamic serverPublic = JToken.Parse(File.ReadAllText(Path.Combine(keyContainer, "ServerPublic.json")));
-
-                RSAParameters publicKey = new RSAParameters
+                var mapped = transactions.OfType<JObject>().Select(s => new
                 {
-                    Exponent = serverPublic.Exponent,
-                    Modulus = serverPublic.Modulus,
-                };
-
-                rsa.ImportParameters(publicKey);
-                var encrypted = rsa.Encrypt(Encoding.UTF8.GetBytes("HELLO!"), false);
-
-
-                dynamic serverPrivate = JToken.Parse(File.ReadAllText(Path.Combine(keyContainer, "ServerPrivate.json")));
-
-                RSAParameters privateKey = new RSAParameters
+                    Type = s.ValueIfExists<int?>("type"),
+                    BeneficiaryId = s.ValueIfExists<int?>("beneficiaryId"),
+                    AmountCredited = s.ValueIfExists<decimal?>("amountCredited"),
+                    AmountRemaining = s.ValueIfExists<decimal?>("amountRemaining"),
+                    Date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(s.ValueIfExists<int>("date")),
+                    Checksum = s.ValueIfExists<string>("checksum"),
+                    TransactionCode = s.ValueIfExists<string>("transactionCode"),
+                    Quarantine = s.ValueIfExists<bool?>("quarantine"),
+                    ConfirmationCode = s.ValueIfExists<string>("confirmationCode"),
+                    VoucherCode = s.ValueIfExists<string>("voucherCode"),
+                })
+                .Select(s => new TransactionLogItem
                 {
-                    D = serverPrivate.D,
-                    DP = serverPrivate.DP,
-                    DQ = serverPrivate.DQ,
-                    Exponent = serverPrivate.Exponent,
-                    InverseQ = serverPrivate.InverseQ,
-                    Modulus = serverPrivate.Modulus,
-                    P = serverPrivate.P,
-                    Q = serverPrivate.Q,
-                };
-                rsa.ImportParameters(privateKey);
-                var payload = "gZ/4JTqFQkRVxhY3pCZqVyhMSN0L0491b3kxik+fbvnm+B8JPrP8TuB69NeH7Gto|FTCR8GdWT7X7s7QHAhQSpYWRybfuEBN5kHhX0AFt7sHTV1GEQwBGsMdMbIQETZ4H6KaoLe2Q+/iB5B3mlNYrxJQVkCaIi6nFG/dJfxN9onFFdXFQ2H1bNQR01u8KtugElSVo8kmWnnDdK/Xl0CBGsaiJ48bzMWkC6i0FRGn8A0o=|SBituKtBu1IvdvMAuIIzXSzKAhRmR74C3BDY6AcxwQvg/Y6PLxV/b9qAhLinjM1vC9QkZB6oTP8QiubvjcLvdPJaH5BJtnCMUm5rsibnqQzcVihjEcMoI1myprGFEZE5G9+SuZtXDXDzG6zVorWoybRWjnl/H1eeRq29H6hZFWs=";
-                string[] arguments = payload.Split('|');
-                var key = rsa.Decrypt(Convert.FromBase64String(arguments[1]), true);
-                var iv = rsa.Decrypt(Convert.FromBase64String(arguments[2]), true);
+                    Type = s.Type.Value,
+                    BeneficiaryId = s.BeneficiaryId.Value,
+                    AmountCredited = s.AmountCredited ?? 0m,
+                    AmountRemaining = s.AmountRemaining ?? 0m,
+                    Date = s.Date,
+                    Checksum = s.Checksum,
+                    TransactionCode = s.TransactionCode,
+                    Quarantine = s.Quarantine.Value,
+                    VendorId = vendor.Id,
+                    ConfirmationCode = s.ConfirmationCode,
+                    VoucherCode = s.VoucherCode,
 
-                using (var aes = new AesCryptoServiceProvider())
-                {
-                    aes.Key = key;
-                    aes.IV = iv;
+                    CountryId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().CountryId,
+                    OrganizationId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().OrganizationId,
+                });
 
-                    var decrypted = arguments[0].Decrypt(iv, key);
 
-                    return Ok<string>(Encoding.UTF8.GetString(decrypted));
-                }
+                var transactionCodes = mapped.Select(t => t.TransactionCode);
+                var existing = ctx.TransactionLogItems
+                    .Where(t => transactionCodes.Contains(t.TransactionCode) && t.VendorId == vendor.Id)
+                    .Select(t => t.TransactionCode)
+                    .ToArray();
+                var filtered = mapped.Where(t => !existing.Contains(t.TransactionCode)).ToArray();
+
+                ctx.TransactionLogItems.AddRange(filtered);
+                await ctx.SaveChangesAsync();
             }
-
-
         }
 
-        #region Private Methods
+        private async Task ProcessCardLoadsInternal(JArray cardLoads, Vendor vendor)
+        {
+            using (var ctx = new Models.Vouchers.Context())
+            using (var md5 = new MD5CryptoServiceProvider())
+            {
+
+                var mapped = cardLoads.OfType<JObject>().Select(s => new
+                {
+                    BeneficiaryId = s.ValueIfExists<int?>("beneficiaryId"),
+                    Amount = s.ValueIfExists<decimal?>("amount"),
+                    Date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(s.ValueIfExists<int>("date")),
+                    DistributionDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(s.ValueIfExists<int>("distributionDate")),
+                    Checksum = Convert.ToBase64String(md5.ComputeHash(Encoding.ASCII.GetBytes(s.ValueIfExists<int>("date").ToString()))),
+                })
+                .Select(s => new CardLoad
+                {
+                    BeneficiaryId = s.BeneficiaryId.Value,
+                    Amount = s.Amount.Value,
+                    Date = s.Date,
+                    DistributionDate = s.DistributionDate,
+                    VendorId = vendor.Id,
+                    Checksum = s.Checksum,
+
+
+                    CountryId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().CountryId,
+                    OrganizationId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().OrganizationId,
+                });
+
+                var cardLoadDates = mapped.Select(t => t.Checksum);
+                var existing = ctx.CardLoads
+                    .Where(t => cardLoadDates.Contains(t.Checksum) && t.VendorId == vendor.Id)
+                    .Select(t => t.Checksum)
+                    .ToArray();
+                var filtered = mapped.Where(t => !existing.Contains(t.Checksum)).ToArray();
+
+                ctx.CardLoads.AddRange(filtered);
+
+                await ctx.SaveChangesAsync();
+            }
+        }
 
         public async Task<JToken> DownloadBeneficiaryKeysInternal()
         {
@@ -575,7 +791,7 @@ namespace TalonAdmin.Controllers.Api
                     .FilterCountry(this)
                     .Where(t =>
                     t.Voucher.Distribution.Program.DistributionMechanism == 3
-                    &&t.Voucher.Status == 1
+                    && t.Voucher.Status == 1
                     && t.Type == 1
                     && t.Beneficiary.CardKey != null
                 ).Select(t => new
@@ -605,26 +821,39 @@ namespace TalonAdmin.Controllers.Api
         #endregion
 
         #region Helper Methods
-        private static RSAParameters JsonToRSAParameters(JToken keyJson)
+        private string DecryptUsingRSA(string payload, string keyName)
         {
-
-            dynamic key = keyJson;
-
-            RSAParameters rsaParameters = new RSAParameters
+            using (var rsa = new RSACryptoServiceProvider())
             {
-                D = key.D,
-                DP = key.DP,
-                DQ = key.DQ,
-                Exponent = key.Exponent,
-                InverseQ = key.InverseQ,
-                Modulus = key.Modulus,
-                P = key.P,
-                Q = key.Q,
-            };
+                dynamic serverPrivate = JToken.Parse(File.ReadAllText(Path.Combine(keyContainer, keyName)));
 
-            return rsaParameters;
+                RSAParameters privateKey = new RSAParameters
+                {
+                    D = serverPrivate.D,
+                    DP = serverPrivate.DP,
+                    DQ = serverPrivate.DQ,
+                    Exponent = serverPrivate.Exponent,
+                    InverseQ = serverPrivate.InverseQ,
+                    Modulus = serverPrivate.Modulus,
+                    P = serverPrivate.P,
+                    Q = serverPrivate.Q,
+                };
+                rsa.ImportParameters(privateKey);
+
+                string[] arguments = payload.Split('|');
+                var key = rsa.Decrypt(Convert.FromBase64String(arguments[1]), true);
+                var iv = rsa.Decrypt(Convert.FromBase64String(arguments[2]), true);
+
+                using (var aes = new AesCryptoServiceProvider())
+                {
+                    aes.Key = key;
+                    aes.IV = iv;
+
+                    return Encoding.UTF8.GetString(arguments[0].Decrypt(iv, key));
+                }
+
+            }
         }
-
         private string EncryptUsingRSA(JToken result, string keyName)
         {
             string encrypted = "";
@@ -651,6 +880,27 @@ namespace TalonAdmin.Controllers.Api
             }
             return encrypted;
         }
+
+        private static RSAParameters JsonToRSAParameters(JToken keyJson)
+        {
+
+            dynamic key = keyJson;
+
+            RSAParameters rsaParameters = new RSAParameters
+            {
+                D = key.D,
+                DP = key.DP,
+                DQ = key.DQ,
+                Exponent = key.Exponent,
+                InverseQ = key.InverseQ,
+                Modulus = key.Modulus,
+                P = key.P,
+                Q = key.Q,
+            };
+
+            return rsaParameters;
+        }
+
 
         private async Task<Vendor> VendorFromRequest()
         {
@@ -708,7 +958,7 @@ namespace TalonAdmin.Controllers.Api
 
         private string EncodeLoad(int beneficiaryId, decimal? value, DateTime createdOn)
         {
-            int unixTime = (int)(createdOn.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalSeconds;
+            int unixTime = (int)(createdOn.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             var payload = String.Format("1933|{0}|{1:X}", value, unixTime);
 
             return payload.Encrypt(KeyForBeneficiary(beneficiaryId));
@@ -717,7 +967,7 @@ namespace TalonAdmin.Controllers.Api
 
         private string EncodeQRLoad(int beneficiaryId, decimal? value, DateTime? validAfter, string voucherCode)
         {
-            int unixTime = validAfter != null ? (int)(validAfter.Value.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalSeconds : 0;
+            int unixTime = validAfter != null ? (int)(validAfter.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds : 0;
             var payload = String.Format("1933|{0}|{1:X}|{2}", value, unixTime, voucherCode);
 
             return payload.Encrypt(KeyForBeneficiary(beneficiaryId));

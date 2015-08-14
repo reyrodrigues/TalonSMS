@@ -173,6 +173,24 @@ namespace TalonAdmin.Controllers.Breeze
                 .FilterOrganization(this);
         }
 
+
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.TransactionLogItem> TransactionLogItems()
+        {
+            return _contextProvider.Context.TransactionLogItems
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Vouchers.CardLoad> CardLoads()
+        {
+            return _contextProvider.Context.CardLoads
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
+
         [HttpGet]
         public IQueryable<Models.Vouchers.Vendor> DistributionVendors(int distributionId)
         {

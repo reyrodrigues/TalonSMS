@@ -1,7 +1,7 @@
 {
   "author": "The International Rescue Committee",
   "name": "talon",
-  "version": "1.0.1",
+  "version": "1.2.0",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.1",

@@ -20,8 +20,14 @@ namespace TalonAdmin.Attributes
             var authToken = actionContext.Request.Headers.Authorization.Parameter;
             using (var ctx = new Models.Vouchers.Context())
             {
-                return ctx.Vendors
-                    .Where(v => v.AuthorizationToken == authToken).Any();
+                var vendorQuery = ctx.Vendors
+                    .Where(v => v.AuthorizationToken == authToken);
+
+                if (vendorQuery.Any()) {
+                    actionContext.Request.Headers.Add("X-Vendor-Id", vendorQuery.First().Id.ToString());
+                }
+
+                return vendorQuery.Any();
             }
         }
     }

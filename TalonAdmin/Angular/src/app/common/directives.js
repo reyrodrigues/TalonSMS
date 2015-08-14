@@ -170,6 +170,7 @@ angular.module('talon.common')
             select: '=',
             parent: '=',
             parameters: '=',
+            itemsPerPage: '=',
             parameter: '@',
             key: '@'
         },
@@ -177,12 +178,12 @@ angular.module('talon.common')
             var $q = $injector.get('$q');
             var gridName = $scope.name || $scope.collection;
             var entityManager = entityManagerFactory[$scope.entityManager || 'entityManager']();
-
+            var itemsPerPage = $scope.itemsPerPage || 25;
             $scope.gridName = gridName;
 
             var pagingOptions = {
                 pageNumber: 1,
-                pageSize: 25
+                pageSize: itemsPerPage
             };
             var sortOptions = [];
 
@@ -192,8 +193,8 @@ angular.module('talon.common')
                 showFooter: true,
                 rowHeight: 36,
                 headerRowHeight: 36,
-                paginationPageSizes: [25, 50, 100, 500],
-                paginationPageSize: 25,
+                paginationPageSizes: [itemsPerPage * 01, itemsPerPage * 02, itemsPerPage * 04, itemsPerPage * 010, itemsPerPage * 020, itemsPerPage * 040],
+                paginationPageSize: itemsPerPage,
                 useExternalPagination: true,
                 enableRowSelection: false,
                 useExternalSorting: true,
@@ -675,7 +676,7 @@ angular.module('talon.common')
 
             var input = scope.form.$name + '.' + scope.name;
 
-            if ($rootScope.helpText) {
+            if ($rootScope.helpText && scope.$parent.settings && scope.$parent.settings.entityType) {
                 var helpTextObject = $rootScope.helpText[scope.$parent.settings.entityType];
 
                 if (helpTextObject && helpTextObject[scope.name]) {

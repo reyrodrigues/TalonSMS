@@ -70,6 +70,7 @@ namespace TalonAdmin.Models.Vouchers
 #endif
 #if DEBUG
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
+            //Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
            // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
 #endif
 
@@ -91,6 +92,8 @@ namespace TalonAdmin.Models.Vouchers
             modelBuilder.Entity<Beneficiary>()
                 .HasOptional(p => p.Group)
                 .WithMany(p => p.Beneficiaries);
+
+            modelBuilder.Entity<BeneficiaryAdditionalData>().ToTable("BeneficiaryAdditionalData");
         }
 
         public DbSet<Vendor> Vendors { get; set; }
@@ -110,5 +113,9 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<VoucherType> VoucherTypes { get; set; }
         public DbSet<VoucherTransactionRecord> VoucherTransactionRecords { get; set; }
         public DbSet<MessageLog> MessageLogs { get; set; }
+
+        public DbSet<TransactionLogItem> TransactionLogItems { get; set; }
+        public DbSet<CardLoad> CardLoads { get; set; }
+
     }
 }

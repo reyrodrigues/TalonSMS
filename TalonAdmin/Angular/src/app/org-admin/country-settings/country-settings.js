@@ -84,11 +84,31 @@ CountrySettingsController.prototype.getEntities = function () {
 CountrySettingsController.prototype.configure = function () {
     var $rootScope = this.$injector.get('$rootScope');
     var $localStorage = this.$injector.get('$localStorage');
+    var gettext = this.$injector.get('gettext');
+    var toaster = this.$injector.get('toaster');
+    var dialogs = this.$injector.get('dialogs');
     var self = this;
 
+    this.actions = [
+       {
+           label: gettext("Import Vendor Data"),
+           css: "btn-default",
+           condition: function () { return $rootScope.canI('Import Vendor Data'); },
+           action: function action() {
+               var dlg = dialogs.create('org-admin/country-settings/upload-vendor-data.tpl.html', UploadVendorDataController);
+               dlg.result.then(function (result) {
+                   if (result) {
+                       toaster.pop('success', gettext('Success'), gettext('Data successfuly imported.'));
+                   }
+               }).catch(function (res) {
+                   toaster.pop('error', gettext('Error'), res.data);
+               });
+
+           }
+       }];
     this.forms = [
         {
-            label: "Export Card Loads",
+            label: gettext("Export Card Loads"),
             condition: function () { return $rootScope.canI('Export CardLoads'); },
             css: "btn-info",
             countryId: function () { return self.entity.country ? self.entity.country.id : null; },
@@ -97,6 +117,30 @@ CountrySettingsController.prototype.configure = function () {
             }
         }
     ];
+
+    function UploadVendorDataController($scope, $modalInstance, Upload) {
+        $scope.files = [];
+        $scope.fileNames = "";
+
+        $scope.$watchCollection('files', function () {
+            var files = $scope.files;
+            $scope.fileNames = (files && files.length) ? files.map(function (f) { return f.name; }).join(',') : "No file selected";
+        });
+
+        $scope.upload = function () {
+            $scope.uploading = Upload.upload({
+                url: serviceRoot + 'api/App/MobileClient/UploadVendorPayload',
+                file: $scope.files
+            }).then(function (result) {
+                $modalInstance.close(result.data);
+            }).catch(function () {
+            });
+        };
+
+        $scope.close = function () {
+            $modalInstance.close(false);
+        };
+    }
 };
 
 function CountrySettingsController($injector, $scope) {

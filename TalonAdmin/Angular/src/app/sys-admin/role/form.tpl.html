@@ -29,7 +29,8 @@
             <sub-grid collection="Actions"
                       entity-manager="adminEntityManager"
                       entity="vm.entity"
-                      select="vm.mergeActions">
+                      select="vm.mergeActions"
+                      items-per-page="400">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="{{ 'Name'|translate }}" field="name">
 
