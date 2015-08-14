@@ -373,8 +373,13 @@ namespace TalonAdmin.Controllers.Api
 
         [Route("UploadCardLoads")]
         [AuthorizeVendor]
-        public async Task<IHttpActionResult> UploadCardLoads([FromBody]JArray cardLoads)
+        public async Task<IHttpActionResult> UploadCardLoads([FromBody]dynamic cardLoads)
         {
+            if (cardLoads == null || String.IsNullOrEmpty(cardLoads.ToString()))
+            {
+                return Ok();
+            }
+
             var vendor = await VendorFromRequest();
             await ProcessCardLoadsInternal(cardLoads, vendor);
 
@@ -385,6 +390,11 @@ namespace TalonAdmin.Controllers.Api
         [AuthorizeVendor]
         public async Task<IHttpActionResult> UploadTransactions([FromBody]JArray transactions)
         {
+            if (transactions == null || String.IsNullOrEmpty(transactions.ToString()))
+            {
+                return Ok();
+            }
+
             var vendor = await VendorFromRequest();
             await ProcessTransactionsInternal(transactions, vendor);
 
