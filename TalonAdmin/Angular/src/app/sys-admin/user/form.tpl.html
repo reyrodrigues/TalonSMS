@@ -29,12 +29,12 @@
     <div class="panel-body">
         <div class="col-sm-12">
             <form-group label="{{ 'Password'|translate }}" name="password">
-                <input type="text" class="form-control" ng-model="vm.password.password" form-input />
+                <input type="password" class="form-control" ng-model="vm.password.password" form-input />
             </form-group>
         </div>
         <div class="col-sm-12">
             <form-group label="{{ 'Confirm Password'|translate }}" name="confirmPassword">
-                <input type="text" class="form-control" ng-model="vm.password.confirmPassword" form-input ui-validate="'$value==vm.password.confirmPassword'" ui-validate-watch="'vm.password.confirmPassword'" />
+                <input type="password" class="form-control" ng-model="vm.password.confirmPassword" form-input ui-validate="'$value==vm.password.confirmPassword'" ui-validate-watch="'vm.password.confirmPassword'" />
             </form-group>
         </div>
     </div>

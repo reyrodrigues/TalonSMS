@@ -260,12 +260,19 @@ SysUserEditController.prototype.save = function save(continueEditing) {
         if (self.isNew) {
             self.entity.id = ne.Id;
 
+            var defaults = self.defaults();
+
+            self.entity = self.entityManager.createEntity(self.settings.entityType, defaults);
+
             $state.go('^.edit', { id: ne.data.Id });
         }
-        if (self.entity.entityAspect) {
-            self.entity.entityAspect.setUnchanged();
-        }
-
+        
+        try {
+            if (self.entity.entityAspect) {
+                self.entity.entityAspect.setUnchanged();
+            }
+        } catch (e) { }
+        
         self.isEditing = continueEditing;
     }).catch(function (error) {
         console.log(error);

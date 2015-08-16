@@ -27,6 +27,7 @@ function EditController($injector, $scope) {
 
     this.canEdit = $rootScope.canI('Edit ' + this.settings.collectionType);
     this.canCreate = $rootScope.canI('Create ' + this.settings.collectionType);
+    this.showBack = true;
 
     var entityManagerFunction = this.settings.entityManager || 'entityManager';
     this.entityManager = entityManagerFactory[entityManagerFunction]();

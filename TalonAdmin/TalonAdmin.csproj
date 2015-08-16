@@ -390,6 +390,7 @@
     <Content Include="Angular\lib\ui-utils.min.js" />
     <Content Include="Angular\src\app\app.js" />
     <Content Include="Angular\src\app\country-admin\transaction\transaction.js" />
+    <Content Include="Angular\src\app\country-admin\user\user.js" />
     <Content Include="Angular\src\app\distribution\assign-voucher-book.tpl.html" />
     <Content Include="Angular\src\app\helpText.js" />
     <Content Include="Angular\src\app\org-admin\country-settings\form.tpl.html" />

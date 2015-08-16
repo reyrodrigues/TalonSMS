@@ -147,9 +147,9 @@ angular.module('talon', [
 
     function logOut() {
         $scope.isLoggedIn = false;
-        delete $localStorage.authorizationData;
 
-        $state.go('login', { location: 'replace' });
+        $localStorage.$reset();
+        location.reload();
     }
 })
 
