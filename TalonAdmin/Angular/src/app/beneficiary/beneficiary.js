@@ -152,7 +152,7 @@ BeneficiaryEditController.prototype.configure = function configure() {
             label: gettext("Disable Beneficiary"),
             css: "btn-info",
             condition: function (entity) {
-                return !entity.disabled;
+                return !entity.disabled && self.$scope.canI('Disable Beneficiaries');
             },
             action: function action() {
                 self.entity.disabled = true;

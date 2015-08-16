@@ -29,7 +29,6 @@ angular.module('talon.sys-admin')
             settings: {
                 expand: ['organization', 'roles', 'claims', 'logins'],
                 columns: [
-                    ['id', '#'],
                     ['userName', 'User Name'],
                     ['fullName', 'Full Name'],
                     ['organization.name', 'Organization'],

@@ -28,7 +28,6 @@ angular.module('talon.org-admin')
             settings: {
                 expand: ['roles', 'claims', 'logins'],
                 columns: [
-                    ['id', '#'],
                     ['userName', 'User Name'],
                     ['fullName', 'Full Name'],
                     ['email', 'Email']
