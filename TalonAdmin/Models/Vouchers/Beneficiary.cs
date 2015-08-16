@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Web;
 using System.Xml.Serialization;
@@ -45,6 +46,17 @@ namespace TalonAdmin.Models.Vouchers
 
         [JsonIgnore, XmlIgnore]
         public virtual string CardKey { get; set; }
+
+        public JToken AdditionalDataObject
+        {
+            get
+            {
+                if (AdditionalData == null) {
+                    return new JObject();
+                }
+                return JToken.FromObject(AdditionalData.ToDictionary(k => k.Key, v => v.Value));
+            }
+        }
 
         public virtual BeneficiaryGroup Group { get; set; }
         public virtual Location Location { get; set; }

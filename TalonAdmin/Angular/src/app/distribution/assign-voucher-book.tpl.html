@@ -5,14 +5,16 @@
         </h4>
     </div>
     <div class="modal-body">
-        <div class="col-sm-12">
-            <form-group label="{{ 'Starting Serial Number'|translate }}" name="serialNumber" required="true">
-                <input type="text" class="form-control" ng-model="serialNumber" form-input required />
-            </form-group>
-        </div>
-        <div class="alert alert-info" role="alert">
-            The system will auto fill the vouchers with the serial numbers starting from the number above.
-            This distribution should include as many voucher categories as there are pages in a voucher book.
+        <div class="row">
+            <div class="col-sm-12">
+                <form-group label="{{ 'Starting Serial Number'|translate }}" name="serialNumber" required="true">
+                    <input type="text" class="form-control" ng-model="serialNumber" form-input required />
+                </form-group>
+            </div>
+            <div class="alert alert-info" role="alert">
+                The system will auto fill the vouchers with the serial numbers starting from the number above.
+                This distribution should include as many voucher categories as there are pages in a voucher book.
+            </div>
         </div>
     </div>
     <div class="modal-footer">

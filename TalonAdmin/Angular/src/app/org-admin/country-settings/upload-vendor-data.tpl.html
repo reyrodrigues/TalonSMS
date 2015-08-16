@@ -2,14 +2,15 @@
     <h4 class="modal-title" translate>
         Upload Vendor Data
     </h4>
-
 </div>
 <div class="modal-body">
     <form class="form-horizontal" ng-submit="done()">
-        <div class="form-group">
-            <div class="col-sm-11">
-                <div class="btn btn-info" ngf-select ng-model="files" ng-multiple="true">Select File</div>&nbsp;&nbsp;
-                {{ fileNames }} &nbsp;&nbsp;
+        <div class="row">
+            <div class="form-group">
+                <div class="col-sm-11">
+                    <div class="btn btn-info" ngf-select ng-model="files" ng-multiple="true">Select File</div>&nbsp;&nbsp;
+                    {{ fileNames }} &nbsp;&nbsp;
+                </div>
             </div>
         </div>
     </form>
