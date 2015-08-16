@@ -313,6 +313,7 @@ function ListController($injector, $scope) {
         .withOption('order', $localStorage[stateName + '_Order'])
         .withBootstrap()
         .withDisplayLength(25)
+        .withOption('autoWidth', false)
         .withOption('createdRow', createdRow)
         .withPaginationType('full_numbers');
 
@@ -331,6 +332,10 @@ function ListController($injector, $scope) {
 
                 if (c.length > 4 && c[4]) {
                     col = col.renderWith(c[4]);
+                }
+
+                if (c[0] === 'id') {
+                    col.withOption('width', '50px');
                 }
                 return col;
 

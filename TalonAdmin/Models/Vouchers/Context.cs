@@ -69,9 +69,9 @@ namespace TalonAdmin.Models.Vouchers
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
 #endif
 #if DEBUG
-            //Database.SetInitializer(new NullDatabaseInitializer<Context>());
+            Database.SetInitializer(new NullDatabaseInitializer<Context>());
             //Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
-           Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
+          // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
 #endif
 
 
@@ -101,6 +101,7 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<VendorDevice> VendorDevices { get; set; }
         public DbSet<VendorType> VendorTypes { get; set; }
         public DbSet<Beneficiary> Beneficiaries { get; set; }
+        public DbSet<BeneficiaryAdditionalData> BeneficiaryAdditionalData { get; set; }
         public DbSet<BeneficiaryGroup> BeneficiaryGroups { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Program> Programs { get; set; }

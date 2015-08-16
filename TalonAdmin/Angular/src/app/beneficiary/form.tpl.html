@@ -71,15 +71,15 @@
                       { 'voucher.status': { '==': 1 } }
                       ]}"
                       collection="VoucherTransactionRecords"
-                      expand="vendor, voucher"
+                      expand="vendor, voucher, voucher.distribution, voucher.distribution.program"
                       key="beneficiaryId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
                 <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
-                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true">
+                <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true" ng-if="canI('Cancel Vouchers')">
                     <div class="ui-grid-cell-contents">
-                        <div class="btn-group">
+                        <div class="btn-group" ng-if="row.entity.voucher.distribution.program.distributionMechanism == 1">
                             <a href ng-click="grid.appScope.$parent.cancelVoucher(row.entity, grid)" class="btn btn-default btn-xs">Cancel Voucher</a>
                             <a href ng-click="grid.appScope.$parent.resendVoucher(row.entity, grid)" class="btn btn-default btn-xs">Resend Voucher</a>
                         </div>
@@ -106,7 +106,6 @@
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="{{ 'Vendor'|translate }}" field="vendor.name"></sub-grid-column>
                 <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
-                <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Used On'|translate }}" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Status'|translate }}" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
             </sub-grid>

@@ -13,7 +13,6 @@
                 <div class="btn-group pull-left" ng-repeat="a in vm.actions">
                     <a href class="btn btn-sm {{ a.css }}" ng-click="a.action()" ng-if="!a.condition || a.condition(vm.entity)" translate>{{a.label}}</a>
                 </div>
-                <a ui-sref="^.create" class="btn btn-primary btn-sm " ng-if="vm.canCreate" translate>Add Another</a>
 
                 <div class=" pull-right">
                     <div class="btn-group">

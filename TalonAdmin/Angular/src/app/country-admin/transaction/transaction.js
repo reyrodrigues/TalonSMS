@@ -33,13 +33,12 @@
                 defaults: {
                 },
                 columns: [
-                    ['id', '#'],
+                    ['id', '#'], ,
                     ['transactionCode', 'Transaction Code'],
+                    ['date', 'Date'],
                     ['beneficiary.name', 'Beneficiary', true],
                     ['vendor.name', 'Vendor'],
-                    ['amountCredited', 'Credit'],
-                    ['amountRemaining', 'Amount Remaining on Card'],
-                    ['date', 'Date'],
+                    ['amountCredited', 'Amount Debited'],
                     ['confirmationCode', 'Confirmation Code'],
                     ['quarantine', 'In Quarantine']
                 ]
@@ -77,12 +76,46 @@
                 columns: [
                     ['id', '#'],
                     ['transactionCode', 'Transaction Code'],
+                    ['date', 'Date'],
                     ['beneficiary.name', 'Beneficiary', true],
                     ['vendor.name', 'Vendor'],
-                    ['amountCredited', 'Credit'],
-                    ['amountRemaining', 'Amount Remaining on Card'],
-                    ['date', 'Date'],
+                    ['amountCredited', 'Amount Debited'],
                     ['confirmationCode', 'Confirmation Code']
+                ]
+            }
+        }
+    })
+
+    .state('country-admin.transaction.card-load-log', {
+        url: '/card-load-log',
+        controller: 'CardLoadListController as vm',
+        templateUrl: 'index.tpl.html',
+        data: {
+            pageTitle: 'Card Load Logs',
+            settings: {
+                filterFunction: function (value) {
+                    return {
+                        'or': [
+                            { 'beneficiary.firstName': { 'contains': value } },
+                            { 'beneficiary.lastName': { 'contains': value } },
+                            { 'vendor.name': { 'contains': value } }
+                        ]
+                    };
+                },
+                collectionType: "TransactionLogItems",
+                entityType: 'TransactionLogItem',
+                expand: ['beneficiary', 'vendor'],
+                defaults: {
+                },
+                filter: {
+                    'and': [{ 'quarantine': { '==': true } }]
+                },
+                columns: [
+                    ['id', '#'],
+                    ['date', 'Date'],
+                    ['beneficiary.name', 'Beneficiary', true],
+                    ['vendor.name', 'Vendor'],
+                    ['amount', 'Amount Credited']
                 ]
             }
         }
@@ -93,6 +126,7 @@
 })
 .controller('TransactionLogListController', TransactionLogListController)
 .controller('QuarantineListController', QuarantineListController)
+.controller('CardLoadListController', CardLoadListController)
 
 ;
 
@@ -105,15 +139,22 @@ QuarantineListController.prototype.actionsHtml = function (data, type, full, met
 };
 
 
+CardLoadListController.prototype.actionsHtml = function (data, type, full, meta) {
+    return '';
+};
+
+
 TransactionLogListController.prototype.actionsHtml = function (data, type, full, meta) {
     return '';
 };
 
-function TransactionLogListController($injector, $scope) {
+function CardLoadListController($injector, $scope) {
     ListController.call(this, $injector, $scope);
 }
 
-
+function TransactionLogListController($injector, $scope) {
+    ListController.call(this, $injector, $scope);
+}
 
 function QuarantineListController($injector, $scope) {
     this.canProcessTransaction = $scope.canI('Process Quarantined Transactions');

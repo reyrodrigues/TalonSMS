@@ -23,7 +23,6 @@ angular.module('talon.sys-admin')
             pageTitle: 'Application Role',
             settings: {
                 columns: [
-                    ['id', '#'],
                     ['name', 'Name']
                 ]
             }

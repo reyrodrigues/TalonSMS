@@ -83,6 +83,7 @@ namespace TalonAdmin.Controllers
                 ctx.Configuration.ProxyCreationEnabled = false;
 
                 var beneficiaryQuery = await ctx.Beneficiaries
+                    .Include("AdditionalData")
                     .Include("Group")
                     .Include("Location")
                     .Where(b => b.OrganizationId == organizationId && b.CountryId == countryId)
@@ -99,19 +100,24 @@ namespace TalonAdmin.Controllers
                     jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].Type != JTokenType.Null ? (jsonBeneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
                 }
 
-                jsonBeneficiaries.RemoveProperties("Group");
+                jsonBeneficiaries.Flatten("AdditionalDataObject", "AdditionalData/");
+                jsonBeneficiaries.RemoveProperties("Group", "AdditionalDataObject", "AdditionalData");
 
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
 
                 if (beneficiaryQuery.Count() == 0)
                 {
-                    dataTable = JToken.FromObject(new Beneficiary[] { new Beneficiary() }).ToObject<DataTable>();
+                    var empty = JArray.FromObject(new Beneficiary[] { new Beneficiary() });
+                    empty.RemoveProperties("Group");
+
+                    dataTable = empty.ToObject<DataTable>();
                     dataTable.Rows.Clear();
                 }
 
                 dataTable.TableName = "Beneficiaries";
 
                 // Removing Id Columns because they are parsed later on in the import
+                dataTable.Columns.RemoveSafe("AdditionalData");
                 dataTable.Columns.RemoveSafe("Name");
                 dataTable.Columns.RemoveSafe("GroupId");
                 dataTable.Columns.RemoveSafe("LocationId");
@@ -166,7 +172,10 @@ namespace TalonAdmin.Controllers
                     ctx.Configuration.LazyLoadingEnabled = false;
                     ctx.Configuration.ProxyCreationEnabled = false;
 
-                    var beneficiaryQuery = await ctx.Beneficiaries.ToListAsync();
+                    var beneficiaryQuery = await ctx.Beneficiaries
+                        .Where(b => b.CountryId == countryId && b.OrganizationId == organizationId)
+                        .ToListAsync();
+
                     var locationQuery = ctx.Locations.Where(l => l.CountryId == countryId);
                     var groupQuery = ctx.BeneficiaryGroups.Where(g => g.CountryId == countryId && g.OrganizationId == organizationId);
 
@@ -186,15 +195,7 @@ namespace TalonAdmin.Controllers
 
                                 jsonBeneficiary["Sex"] = (jsonBeneficiary.ValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
 
-                                jsonBeneficiary.Remove("Name");
-
-                                // Removing string fields
-                                jsonBeneficiary.Remove("Cycle");
-                                jsonBeneficiary.Remove("Location");
-
-                                // Trust no one
-                                jsonBeneficiary.Remove("OrganizationId");
-                                jsonBeneficiary.Remove("CountryId");
+                                jsonBeneficiary.RemoveProperties("Name", "Cycle", "Location", "OrganizationId", "CountryId");
 
                                 var isNew = beneficiaryId == null;
                                 Models.Vouchers.Beneficiary beneficiary = null;
@@ -283,6 +284,38 @@ namespace TalonAdmin.Controllers
                                     beneficiary.Location = null;
                                     beneficiary.LocationId = null;
                                 }
+
+                                #endregion
+
+                                #region Additional Data
+                                var currentData = new BeneficiaryAdditionalData[0];
+
+                                if (!isNew)
+                                    currentData = await ctx.BeneficiaryAdditionalData.Where(b => b.ParentId == beneficiary.Id).ToArrayAsync();
+
+                                var additionalData = jsonBeneficiary.Properties()
+                                    .Where(p => p.Name.StartsWith("AdditionalData/"))
+                                    .Select(p => new BeneficiaryAdditionalData
+                                        {
+                                            Id = 0,
+                                            ParentId = beneficiary.Id,
+                                            Key = p.Name.Replace("AdditionalData/", ""),
+                                            Value = p.Value.ToString()
+                                        })
+                                    .ToList();
+
+                                additionalData.ForEach(a =>
+                                {
+                                    var q = currentData.Where(o => o.Key == a.Key);
+                                    if (q.Any())
+                                    {
+                                        var other = q.First();
+                                        a.Id = other.Id;
+                                        other.Value = a.Value;
+                                    }
+                                });
+
+                                ctx.BeneficiaryAdditionalData.AddRange(additionalData.Where(a => a.Id == 0));
 
                                 #endregion
 
@@ -616,5 +649,5 @@ namespace TalonAdmin.Controllers
                 return this.File(dataSet.ToExcelSpreadsheet(), "Metadata.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             }
         }
-        }
+    }
 }

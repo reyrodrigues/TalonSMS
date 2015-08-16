@@ -62,9 +62,9 @@ namespace Newtonsoft.Json.Linq
         /// <param name="self">JArray of JObjects</param>
         /// <param name="properties">JPath queries for properties</param>
         /// <returns>self</returns>
-        public static JArray Flatten(this JArray self, params string[] properties)
+        public static JArray Flatten(this JArray self,string property, string prefix = "")
         {
-            self.OfType<JObject>().ToList().ForEach(o => o.Flatten(properties));
+            self.OfType<JObject>().ToList().ForEach(o => o.Flatten(property, prefix));
 
             return self;
         }
@@ -74,21 +74,18 @@ namespace Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="self">JObject with complex properties</param>
         /// <param name="properties">JPath queries for properties</param>
-        public static JObject Flatten(this JObject self, params string[] properties)
+        public static JObject Flatten(this JObject self, string property, string prefix = "")
         {
-            foreach (string property in properties)
+            var prop = self.SelectToken(property).Parent as JProperty;
+            if (prop != null)
             {
-                var prop = self.SelectToken(property).Parent as JProperty;
-                if (prop != null)
+                var parent = prop.Parent as JObject;
+                var child = prop.Value as JObject;
+                if (child != null)
                 {
-                    var parent = prop.Parent as JObject;
-                    var child = prop.Value as JObject;
-                    if (child != null)
-                    {
-                        prop.Remove();
+                    prop.Remove();
 
-                        child.Properties().ToList().ForEach(p => parent.Add(p));
-                    }
+                    child.Properties().ToList().ForEach(p => parent.Add(String.Format("{0}{1}", prefix, p.Name), p.Value));
                 }
             }
 
