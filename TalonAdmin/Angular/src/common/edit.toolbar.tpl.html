@@ -17,7 +17,7 @@
                 <div class=" pull-right">
                     <div class="btn-group">
                         <a ng-click="vm.beginEditing()" class="btn btn-primary btn-sm" ng-if="vm.canEdit" translate>Edit</a>
-                        <a ui-sref="^.list" class="btn btn-info btn-sm" translate>Back</a>
+                        <a ui-sref="^.list" class="btn btn-info btn-sm" translate ng-if="vm.showBack">Back</a>
                     </div>
                 </div>
             </div>

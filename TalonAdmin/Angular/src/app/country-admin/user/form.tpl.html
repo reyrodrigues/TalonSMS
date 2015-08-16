@@ -1,0 +1,41 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-sm-6">
+            <form-group label="{{ 'Full Name'|translate }}" name="fullName" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.fullName" form-input required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Account Name'|translate }}" name="userName" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.userName" form-input required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+
+        <div class="col-sm-6">
+            <form-group label="{{ 'Email'|translate }}" name="email" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.email" form-input required />
+            </form-group>
+        </div>
+        <div class="col-sm-6">
+            <form-group label="{{ 'Organization'|translate }}" name="userName">
+                <select disabled class="form-control keep-disabled" ng-model="vm.entity.organizationId"
+                        ng-options="item.id as item.name for item in vm.lists.organizations | orderBy:'item.name'"></select>
+            </form-group>
+        </div>
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-sm-12">
+            <form-group label="{{ 'Password'|translate }}" name="password">
+                <input type="password" class="form-control" ng-model="vm.password.password" form-input />
+            </form-group>
+        </div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Confirm Password'|translate }}" name="confirmPassword">
+                <input type="password" class="form-control" ng-model="vm.password.confirmPassword" form-input ui-validate="'$value==vm.password.confirmPassword'" ui-validate-watch="'vm.password.confirmPassword'" />
+            </form-group>
+        </div>
+    </div>
+</div>
