@@ -181,6 +181,9 @@ namespace TalonAdmin.Controllers.Api
             using (var ctx = new Models.Vouchers.Context())
             {
                 var voucher = await ctx.Vouchers.Where(v => v.Id == voucherId).FirstAsync();
+                voucher.Status = 4;
+                await ctx.SaveChangesAsync();
+
                 SendCancelledVoucher(voucher);
             }
 
