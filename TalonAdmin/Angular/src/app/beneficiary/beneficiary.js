@@ -111,13 +111,10 @@ BeneficiaryListController.prototype.configure = function configure() {
                             });
                         }
 
-
                         self.instance.rerender();
                     }
                 }).catch(function (res) {
-                    toaster.pop('error', gettext('Error'), res.data);
                 });
-
             }
         }];
 

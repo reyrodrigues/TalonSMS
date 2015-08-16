@@ -662,8 +662,8 @@ angular.module('talon.common')
             name: '@'
         },
         template: '<div class="form-group" ng-class="{\'has-error\':hasError, cssClass:true, \'required\':required }">' +
-                    '<label class="col-sm-4 control-label" for="{{name}}" ng-if="!checkbox">{{label}}</label>    ' +
-                    '<div  class="input-container" ng-class="{\'col-sm-8\': !checkbox, \'col-sm-12\': checkbox}">' +
+                    '<label class="{{labelSize}} control-label" for="{{name}}" ng-if="!checkbox">{{label}}</label>    ' +
+                    '<div class="input-container {{controlSize}}">' +
                     '<div ng-transclude></div>' +
                     '<div class="help-block" ng-show="helpText">{{ helpText }}</div>' +
                     '<div class="help-block" ng-messages="$error" ng-show="hasError">' +
@@ -673,8 +673,15 @@ angular.module('talon.common')
                     '</div>',
         link: function (scope, element, attrs, ctrl) {
             scope.form = ctrl;
+            var isLarge = $(element).parent().is('.col-sm-12') ||
+                    $(element).parent().is('.col-xs-12') ||
+                    $(element).parent().is('.col-md-12') ||
+                    $(element).parent().is('.col-lg-12');
 
             var input = scope.form.$name + '.' + scope.name;
+
+            scope.labelSize = isLarge ? 'col-sm-2' : 'col-sm-4';
+            scope.controlSize = scope.checkbox ? 'col-sm-12' : (isLarge ? 'col-sm-10' : 'col-sm-8');
 
             if ($rootScope.helpText && scope.$parent.settings && scope.$parent.settings.entityType) {
                 var helpTextObject = $rootScope.helpText[scope.$parent.settings.entityType];

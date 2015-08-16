@@ -50,10 +50,10 @@
 
     </div>
 </div>
-<div class="panel panel-default">
+<div class="panel panel-default" ng-if="!vm.isNew">
     <div class="panel-heading font-bold">Access Information</div>
     <div class="panel-body">
-        <div class="col-sm-6">
+        <div class="col-sm-12">
             <form-group label="{{ 'User Name'|translate }}" name="locationId">
                 <input type="text" class="form-control" ng-model="vm.entity.userName" form-input />
             </form-group>
@@ -64,7 +64,6 @@
                 <input type="password" class="form-control" form-input ng-model="vm.password.NewPassword">
             </form-group>
         </div>
-        <div class="line line-dashed b-b line-lg pull-in"></div>
         <div class="col-sm-6">
             <form-group label="{{ 'Confirm Password'|translate }}" name="locationId">
                 <input type="password" class="form-control" form-input ng-model="vm.password.ConfirmPassword"
