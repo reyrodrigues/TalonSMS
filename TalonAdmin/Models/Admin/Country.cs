@@ -13,6 +13,7 @@ namespace TalonAdmin.Models.Admin
 
         public virtual string CurrencyIsoCode { get; set; }
         public virtual string CountryCallingCode { get; set; }
+        public virtual string LanguageCode { get; set; }
 
         public virtual int SettingsId { get; set; }
 

@@ -18,7 +18,7 @@
             </form-group>
         </div>
         <div class="col-sm-6">
-            <form-group label="{{ 'Organization'|translate }}" name="userName">
+            <form-group label="{{ 'Organization'|translate }}" name="organizationId">
                 <select class="form-control" ng-model="vm.entity.organizationId"
                         ng-options="item.id as item.name for item in vm.lists.organizations | orderBy:'item.name'"></select>
             </form-group>

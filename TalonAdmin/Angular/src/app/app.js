@@ -40,7 +40,7 @@ angular.module('talon', [
 .run(function run(gettextCatalog) {
     gettextCatalog.setCurrentLanguage('en');
 })
-.controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, $q, entityManagerFactory, authService) {
+.controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, $q, $timeout, entityManagerFactory, authService) {
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
         if (angular.isDefined(toState.data.pageTitle)) {
             $scope.pageTitle = 'Talon | ' + toState.data.pageTitle;
@@ -48,7 +48,9 @@ angular.module('talon', [
 
         // NOT KOSHER, BUT MAYBE THE ONLY WAY TO DEAL WITH THIS 
         // TODO: refactor
-        $(window).scrollTop(0);
+        $timeout(function () {
+            $(window).scrollTop(0);
+        }, 100);
     });
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
