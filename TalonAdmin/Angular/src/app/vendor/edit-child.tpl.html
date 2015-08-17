@@ -1,0 +1,43 @@
+﻿<div class="modal-header">
+    <h4 class="modal-title" translate>
+        Edit Sales Person
+    </h4>
+
+</div>
+<div class="modal-body">
+    <div class="row">
+        <form class="form-horizontal" name="popupForm" ng-submit="void()">
+            <div class="col-sm-12">
+                <form-group label="{{ 'First Name'|translate }}" name="firstName" required="true">
+                    <input type="text" class="form-control" form-input ng-model="entity.firstName" required />
+                </form-group>
+            </div>
+            <div class="col-sm-12">
+                <form-group label="{{ 'Last Name'|translate }}" name="lastName" required="true">
+                    <input type="text" class="form-control" form-input ng-model="entity.lastName" required />
+                </form-group>
+            </div>
+            <div class="col-sm-12">
+                <form-group label="{{ 'Mobile Number'|translate }}" name="mobileNumber" required="true">
+                    <div class="input-group m-b">
+                        <span class="input-group-addon">+{{ country.CountryCallingCode }}</span>
+                        <input type="text" class="form-control" ng-model="entity.mobileNumber" phone-number form-input required />
+                    </div>
+                </form-group>
+            </div>
+            <div class="col-sm-12">
+                <form-group label="{{ 'National Id'|translate }}" name="nationalId" required="true">
+                    <input type="text" class="form-control" form-input ng-model="entity.nationalId" required />
+                </form-group>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-success" ng-click="save()" translate>
+        Save
+    </button>
+    <button class="btn btn-default" ng-click="close()" translate>
+        Back
+    </button>
+</div>
