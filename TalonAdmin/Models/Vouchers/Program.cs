@@ -21,6 +21,8 @@ namespace TalonAdmin.Models.Vouchers
         [DefaultValue(6)]
         public virtual int VoucherCodeLength { get; set; }
 
+        public virtual bool? ShowInDashboard { get; set; }
+
         public virtual string CreatedBy { get; set; }
         public virtual string ModifiedBy { get; set; }
         public virtual DateTime CreatedOn { get; set; }

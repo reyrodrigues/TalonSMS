@@ -34,7 +34,7 @@ namespace TalonAdmin.Controllers.Api
         [HttpGet, EnableQuery]
         public async Task<IHttpActionResult> DashboardSummary()
         {
-            string dirName = HostingEnvironment.MapPath("~/App_Data/Dashboards");
+            string dirName = HostingEnvironment.MapPath("~/Dashboards");
             string fileName = System.IO.Path.Combine(dirName, String.Format("{0}-{1}.json", this.GetOrganizationId(), this.GetCountryId()));
 
             if (!System.IO.Directory.Exists(dirName))
@@ -59,7 +59,7 @@ namespace TalonAdmin.Controllers.Api
                 .Include("Distributions")
                 .FilterCountry(this)
                 .FilterOrganization(this)
-                .Where(p => p.Distributions.Any(d => d.Vouchers.Any(v => v.Status == 2 || v.Status == 3)))
+                .Where(p => p.Distributions.Any(d => d.Vouchers.Any(v => v.Status == 2 || v.Status == 3)) && p.ShowInDashboard == true)
                 .ToArrayAsync();
 
                 var programIds = programs.Select(p => p.Id);

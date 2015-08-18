@@ -17,6 +17,14 @@
                 <input type="text" class="form-control" ng-model="vm.entity.voucherCodeLength" form-input required />
             </form-group>
         </div>
+        <div class="col-sm-6">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="vm.entity.showInDashboard" />
+                    {{ 'Show in Dashboard'|translate }}
+                </label>
+            </div>
+        </div>
         <div ng-if="!vm.isNew">
             <div class="line b-b line-lg pull-in"></div>
             <div class="col-sm-6">
@@ -92,7 +100,8 @@
             <sub-grid collection="Distributions"
                       expand="location, group"
                       key="programId"
-                      entity="vm.entity">
+                      entity="vm.entity"
+                      parent="vm">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="{{ 'Title'|translate }}" field="title"></sub-grid-column>
                 <sub-grid-column label="{{ 'Cycle'|translate }}" field="group.name"></sub-grid-column>

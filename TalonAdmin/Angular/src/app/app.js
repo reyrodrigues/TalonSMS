@@ -9,6 +9,7 @@ angular.module('talon', [
   'ngMessages',
   'blockUI',
   'gettext',
+  'SignalR',
 
   // modules
   'talon.auth',
@@ -40,7 +41,8 @@ angular.module('talon', [
 .run(function run(gettextCatalog) {
     gettextCatalog.setCurrentLanguage('en');
 })
-.controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, $q, $timeout, entityManagerFactory, authService) {
+.controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, $q,
+    $timeout, toaster, entityManagerFactory, authService, Hub) {
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
         if (angular.isDefined(toState.data.pageTitle)) {
             $scope.pageTitle = 'Talon | ' + toState.data.pageTitle;
@@ -132,6 +134,49 @@ angular.module('talon', [
             container: false
         }
     };
+
+
+    if (!window.dashboardHub) {
+        window.dashboardHub = new Hub('dashboardHub', {
+            //client side methods
+            listeners: {
+                'message': function (type, title, message) {
+                    toaster.pop(type, title, message);
+                },
+                'updateDashboard': function () {
+                    if (window.loadDashboard) {
+                        $timeout(function () {
+                            window.loadDashboard();
+                        });
+                        $rootScope.$apply();
+                    }
+                }
+            },
+            methods: [],
+            //handle connection error
+            errorHandler: function (error) {
+                console.error(error);
+            },
+            //specify a non default root
+            rootPath: serviceRoot + 'signalR/hubs/',
+
+            hubDisconnected: function () {
+                if (hub.connection.lastError) {
+                    hub.connection.start()
+                    .done(function () {
+                        if (hub.connection.state === 0) {
+                            $timeout(function () { }, 2000);
+                        }
+                        else {
+                        }
+                    })
+                    .fail(function (reason) {
+                        console.log(reason);
+                    });
+                }
+            }
+        });
+    }
 
     function CanI(action) {
         if (!$rootScope.currentUser && !$rootScope.currentUser.AvailableActions) {

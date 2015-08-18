@@ -14,10 +14,15 @@
     <link href="//code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css" rel="stylesheet" />
     <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
     <link rel="stylesheet" type="text/css" href="assets/ui-grid.min.css" />
-    <link rel="stylesheet" type="text/css" href="{{app.serviceRoot}}Content/Flags/Css/flag-icon.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/Content/Flags/Css/flag-icon.min.css"/>
 
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/r/bs/dt-1.10.8,cr-1.2.0,r-1.0.7/datatables.min.css" />
+
+    <script type="text/javascript" src="https://cdn.datatables.net/r/bs/dt-1.10.8,cr-1.2.0,r-1.0.7/datatables.min.js"></script>
+    <script type="text/javascript" src="/Scripts/jquery.signalR-2.2.0.min.js"></script>
+    <script type="text/javascript" src="/SignalR/Hubs"></script>
 
 
 
@@ -55,6 +60,7 @@
 
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
+
     <script>
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';

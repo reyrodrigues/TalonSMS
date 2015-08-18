@@ -407,6 +407,8 @@ namespace TalonAdmin.Controllers.Api
         [Route("ProcessNFCTransaction")]
         public async Task<IHttpActionResult> ProcessNFCTransaction([FromBody]dynamic request)
         {
+            NotifyClients();
+
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
             decimal amountCredited = request.amountCredited;
@@ -513,6 +515,8 @@ namespace TalonAdmin.Controllers.Api
         [Route("ProcessQRTransaction")]
         public async Task<IHttpActionResult> ProcessQRTransaction([FromBody]dynamic request)
         {
+            NotifyClients();
+
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
             string voucherCode = request.voucherCode;
@@ -633,6 +637,17 @@ namespace TalonAdmin.Controllers.Api
         }
 
         #region Private Methods
+        internal static void NotifyClients()
+        {
+            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
+
+            string dirName = HostingEnvironment.MapPath("~/Dashboards");
+
+            if (System.IO.Directory.Exists(dirName)) System.IO.Directory.Delete(dirName, true);
+
+            context.Clients.All.updateDashboard();
+        }
+
         private async Task ProcessTransactionsInternal(JArray transactions, Vendor vendor)
         {
             using (var ctx = new Models.Vouchers.Context())

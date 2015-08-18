@@ -66,6 +66,7 @@
 ;
 
 ProgramEditController.prototype.configure = function configure() {
+    var $scope = this.$scope;
     this.$scope.addCategory = AddCategory;
     this.$scope.removeCategory = RemoveCategory;
     this.$scope.copyCategory = CopyCategory;
@@ -93,6 +94,10 @@ ProgramEditController.prototype.configure = function configure() {
 
                 var dlg = dialogs.create('program/distribute-vouchers.tpl.html', DistributeVouchersController);
                 dlg.result.then(function (result) {
+                    console.log('Modal Closed, result:', result, 'and self is', self);
+                    if (result) {
+                        self.reloadDistributions();
+                    }
                 });
             }
         }
@@ -130,7 +135,7 @@ ProgramEditController.prototype.configure = function configure() {
                         value: category.value,
                         vendorTypeId: category.vendorTypeId,
                         validAfterOffsetType: result.dateOffset,
-                        validAfterOffset:  i
+                        validAfterOffset: i
                     }));
                 }
             }
@@ -157,7 +162,7 @@ ProgramEditController.prototype.configure = function configure() {
         $scope.entity = {
             programId: self.entity.id
         };
-        
+
 
         $scope.save = function () {
             if ($scope.popupForm.$invalid) {
@@ -169,13 +174,16 @@ ProgramEditController.prototype.configure = function configure() {
                 return;
             }
 
-                $http.post(serviceRoot + 'Api/VoucherWorkflow/DistributeVouchers', $scope.entity)
-                    .then(function () {
-                        toaster.pop('success', 'Success!', 'Distribution created successfully!');
-                    }).catch(function (res) {
-                        toaster.pop('error', 'Error', res.data.Message);
-                    });
-                $modalInstance.close(true);
+            $http.post(serviceRoot + 'Api/VoucherWorkflow/DistributeVouchers', $scope.entity)
+                .then(function () {
+                    $modalInstance.close(true);
+
+                    toaster.pop('success', 'Success!', 'Distribution created successfully!');
+                }).catch(function (res) {
+                    $modalInstance.close(true);
+
+                    toaster.pop('error', 'Error', res.data.Message);
+                });
         };
 
         $scope.close = function () {
@@ -195,7 +203,8 @@ function ProgramEditController($injector, $scope) {
             createdBy: $scope.currentUser.Id,
             modifiedOn: moment().utc().toJSON(),
             modifiedBy: $scope.currentUser.Id,
-            voucherCodeLength: 6
+            voucherCodeLength: 6,
+            showInDashboard: true
         };
     };
 

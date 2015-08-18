@@ -1,5 +1,5 @@
 ﻿<div class="bg-light lter b-b wrapper-md">
-    <h1 class="m-n font-thin h3">Vendor Receipt History</h1>
+    <h1 class="m-n font-thin h3">Report History</h1>
 </div>
 <div class="wrapper-md">
     <div class="row">
@@ -30,33 +30,39 @@
 
                 <div class="col-sm-12">
                     <div class="panel panel-default">
-                            <table class="table" ui-jq="footable">
-                                <thead>
-                                    <tr>
-                                        <th style="width:30%" data-toggle="true">Description</th>
-                                        <th style="width:20%" data-hide="phone,tablet" data-type="numeric">Report Run On</th>
-                                        <th style="width:25%" data-hide="phone,tablet" data-sort-ignore="true">PDF</th>
-                                        <th style="width:25%" data-hide="all" data-sort-ignore="true">Spreadsheet</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr ng-repeat="report in reconciliation.Reports">
-                                        <td>{{ report.description }}</td>
-                                        <td data-value="{{report.reportRunOn|unixTime}}">{{ report.reportRunOn|localeDateTime }}</td>
-                                        <td><a href mime-type="application/xlsx" download="Report.xlsx" file-download ng-model="report.spreadsheet" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></td>
-                                        <td><a href mime-type="application/pdf" download="Report.pdf" file-download ng-model="report.originalReport" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="7">
-                                            <div class="text-center">
-                                                <ul class="pagination pagination-centered"></ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                        <table class="table" ui-jq="footable">
+                            <thead>
+                                <tr>
+                                    <th style="width:30%" data-toggle="true">Description</th>
+                                    <th data-hide="phone,tablet" data-type="numeric">Report Run On</th>
+                                    <th style="width:15%" data-hide="phone,tablet" data-sort-ignore="true">Signed Report</th>
+                                    <th style="width:15%" data-hide="phone,tablet" data-sort-ignore="true">Exported Format</th>
+                                    <th style="width:25%" data-hide="all" data-sort-ignore="true">Spreadsheet With Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="report in reconciliation.Reports">
+                                    <td>{{ report.description }}</td>
+                                    <td data-value="{{report.reportRunOn|unixTime}}">{{ report.reportRunOn|localeDateTime }}</td>
+                                    <td ng-if="!report.signedReport">
+                                        <input type="file" class="form-control" id="{{ 'upload_' + report.id }}" ng-model="report.signedReport" file-reader style="display:none">
+                                        <a href ng-click="upload(report)" target="_blank" class="btn btn-xs btn-block btn-primary">Upload</a>
+                                    </td>
+                                    <td ng-if="report.signedReport"><a href mime-type="application/pdf" download="SignedReport.pdf" file-download ng-model="report.signedReport" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></td>
+                                    <td><a href mime-type="application/pdf" download="Report.pdf" file-download ng-model="report.originalReport" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></td>
+                                    <td><a href mime-type="application/xlsx" download="Report.xlsx" file-download ng-model="report.spreadsheet" target="_blank" class="btn btn-xs btn-block btn-success">Download</a></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="text-center">
+                                            <ul class="pagination pagination-centered"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>

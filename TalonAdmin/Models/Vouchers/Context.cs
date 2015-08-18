@@ -71,27 +71,32 @@ namespace TalonAdmin.Models.Vouchers
 #if DEBUG
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
             //Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
-          // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
+            // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
 #endif
-
-
-            modelBuilder.Entity<DistributionVoucherCategory>()
-                .HasRequired(p => p.Distribution)
-                .WithMany(p => p.Categories);
-
-            modelBuilder.Entity<Voucher>()
-                .HasRequired(p => p.Distribution)
-                .WithMany(p => p.Vouchers)
-                .WillCascadeOnDelete(false);
-
-            modelBuilder.Entity<VoucherTransactionRecord>()
-                .HasRequired(p => p.Voucher)
-                .WithMany(p => p.TransactionRecords)
-                .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<Beneficiary>()
                 .HasOptional(p => p.Group)
                 .WithMany(p => p.Beneficiaries);
+
+            modelBuilder.Entity<Distribution>()
+                .HasMany(p => p.Categories)
+                .WithRequired(p => p.Distribution)
+                .WillCascadeOnDelete();
+
+            modelBuilder.Entity<Distribution>()
+                .HasMany(p => p.Vouchers)
+                .WithRequired(p => p.Distribution)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Voucher>()
+                .HasMany(p => p.TransactionRecords)
+                .WithRequired(p => p.Voucher)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Program>()
+                .HasMany(p => p.Distributions)
+                .WithRequired(p => p.Program)
+                .WillCascadeOnDelete();
 
             modelBuilder.Entity<BeneficiaryAdditionalData>().ToTable("BeneficiaryAdditionalData");
         }

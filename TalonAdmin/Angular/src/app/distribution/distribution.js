@@ -95,10 +95,12 @@ DistributionEditController.prototype.configure = function () {
 
     function AssignVoucherBook(beneficiary, grid) {
         var dlg = dialogs.create('distribution/assign-voucher-book.tpl.html', function ($scope, $modalInstance) {
-            $scope.serialNumber = "";
+            $scope.assign = {
+                serialNumber: ""
+            };
 
             $scope.save = function () {
-                $modalInstance.close($scope.serialNumber);
+                $modalInstance.close($scope.assign.serialNumber);
             };
 
             $scope.close = function () {
@@ -107,6 +109,7 @@ DistributionEditController.prototype.configure = function () {
         });
 
         dlg.result.then(function (result) {
+            console.log('result?', result);
             if (result) {
                 var payload = {
                     BeneficiaryId: beneficiary.id,

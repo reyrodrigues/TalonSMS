@@ -24,7 +24,7 @@ using System.Net.Http;
 
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
-
+using System.Web.Hosting;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -69,7 +69,9 @@ namespace TalonAdmin.Controllers.Api
                     )
                     .Select(v => v.Voucher)
                     .Distinct()
-                    .ToArrayAsync();
+                    .ToArrayAsync()                    ;
+
+                vouchers = vouchers.OrderBy(v => v.Category.ValidAfter).ToArray();
 
                 for (int i = 0; i < vouchers.Count(); i++)
                 {
@@ -272,9 +274,6 @@ namespace TalonAdmin.Controllers.Api
             int distributionId = request.DistributionId;
             int groupId = request.GroupId;
 
-            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-
-            context.Clients.All.lockAssignment(distributionId);
 
             using (var ctx = new Models.Vouchers.Context())
             {
@@ -382,8 +381,6 @@ namespace TalonAdmin.Controllers.Api
                 ctx.SaveChanges();
             }
 
-
-            context.Clients.All.unlockAssignment(distributionId);
 
             return Ok();
         }
@@ -556,10 +553,14 @@ namespace TalonAdmin.Controllers.Api
 
         #region Private Functions and Methods
 
+        private void NotifyClients() {
+            MobileClientController.NotifyClients();
+        }
+
         private DateTime? CalculateOffset(DateTime date, int? offsetType, int? offset)
         {
             if (offsetType == null || offset == null)
-                return null;
+                return date;
 
             if (offsetType == 2)
                 return date.AddDays((double)offset);
@@ -696,10 +697,7 @@ namespace TalonAdmin.Controllers.Api
 
         private void ConfirmTransaction(Models.Vouchers.Voucher voucher)
         {
-            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-
-            context.Clients.All.message("success", "Incoming voucher", "Confirmed voucher!");
-            context.Clients.All.updateDashboard();
+            NotifyClients();
 
             var transactionRecord = voucher.TransactionRecords.Where(t => t.Type == 2).OrderByDescending(o => o.LastModifiedOn).FirstOrDefault();
             var model = new

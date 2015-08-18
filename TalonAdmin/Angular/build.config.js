@@ -73,7 +73,6 @@ module.exports = {
         'vendor/breeze-client/build/breeze.min.js',
         'vendor/breeze-client/build/adapters/breeze.bridge.angular.js',
         'vendor/angular-ui-grid/ui-grid.min.js',
-        'vendor/datatables/media/js/jquery.dataTables.min.js',
         'vendor/angular-datatables/dist/plugins/bootstrap/angular-datatables.bootstrap.min.js',
         'vendor/angular-datatables/dist/angular-datatables.min.js',
         'vendor/angular-sanitize/angular-sanitize.min.js',
@@ -93,6 +92,7 @@ module.exports = {
         'vendor/flot-spline/js/jquery.flot.spline.js',
         'vendor/angular-block-ui/dist/angular-block-ui.min.js',
         'vendor/angular-gettext/dist/angular-gettext.js',
+        'vendor/angular-signalr-hub/signalr-hub.min.js',
 
 
         'lib/angular-dialog-service/dialogs.js',
@@ -100,8 +100,6 @@ module.exports = {
         'lib/ui-utils.min.js'
         ],
         css: [
-          'vendor/datatables/media/css/jquery.dataTables.min.css',
-          'vendor/angular-datatables/dist/plugins/bootstrap/datatables.bootstrap.min.css',
           'vendor/angularjs-toaster/toaster.min.css',
           'vendor/angular-dialog-service/dist/dialogs.min.css',
           'vendor/angular-block-ui/dist/angular-block-ui.min.css',

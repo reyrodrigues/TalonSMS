@@ -312,33 +312,43 @@ function ListController($injector, $scope) {
         .withOption('filter', false)
         .withOption('serverSide', true)
         .withOption('order', $localStorage[stateName + '_Order'])
-        .withBootstrap()
-        .withDisplayLength(25)
         .withOption('autoWidth', false)
+        .withOption('responsive', true)
         .withOption('createdRow', createdRow)
-        .withPaginationType('full_numbers');
+        .withOption('dom', '<\'row\'<\'col-sm-6\'l><\'col-sm-6\'f>r>t<\'row\'<\'col-sm-6\'i><\'col-sm-6\'p>>')
+        .withDisplayLength(25)
+        .withBootstrap()
+        .withPaginationType('simple');
 
-        self.columns = self.settings.columns.map(function (c) {
-                var col = DTColumnBuilder
-                    .newColumn(c[0])
-                    .withTitle(c.length > 1 ? c[1] : c[0]);
+        self.columns = self.settings.columns.map(function (c, i) {
+            var col = DTColumnBuilder
+                .newColumn(c[0])
+                .withTitle(c.length > 1 ? c[1] : c[0]);
 
-                if (c.length > 2 && c[2]) {
-                    col = col.notSortable();
-                }
+            if (c.length > 2 && c[2]) {
+                col = col.notSortable();
+            }
 
-                if (c.length > 3 && c[3]) {
-                    col = col.notVisible();
-                }
+            if (c.length > 3 && c[3]) {
+                col = col.notVisible();
+            }
 
-                if (c.length > 4 && c[4]) {
-                    col = col.renderWith(c[4]);
-                }
+            if (c.length > 4 && c[4]) {
+                col = col.renderWith(c[4]);
+            }
 
-                if (c[0] === 'id') {
-                    col.withOption('width', '50px');
-                }
-                return col;
+            if (c[0] === 'id') {
+                col = col.withOption('width', '50px');
+            }
+            if (i > 0 && i <= 3) {
+                col = col.withOption('className', 'min-tablet-l');
+            }
+
+            if (i > 3) {
+                col = col.withOption('className', 'min-desktop');
+            }
+
+            return col;
 
         });
 

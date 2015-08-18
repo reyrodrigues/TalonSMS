@@ -563,7 +563,12 @@ angular.module('talon.common')
                 };
                 scope.$watch(viewWatch, function () {
                     if (ngModel.$viewValue) {
-                        a.attr('href', 'data:' + (attrs['mimeType'] || 'text/plain') + ';base64,' + ngModel.$viewValue);
+                        if (ngModel.$viewValue.indexOf('data:') === 0) {
+                            // Is a data url already
+                            a.attr('href', ngModel.$viewValue);
+                        } else {
+                            a.attr('href', 'data:' + (attrs['mimeType'] || 'text/plain') + ';base64,' + ngModel.$viewValue);
+                        }
                     }
                 }, true);
             }

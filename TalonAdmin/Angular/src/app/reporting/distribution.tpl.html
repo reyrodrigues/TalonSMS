@@ -15,18 +15,36 @@
 
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" translate>Distribution</label>
-                            <div class="col-sm-4">
-                                <select chosen class="form-control" ng-model="report.DistributionId"
-                                        ng-options="item.id as item.title for item in distributions | orderBy:'item.title'"></select>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label" translate>Program</label>
+                                <div class="col-sm-8">
+                                    <select chosen class="form-control" ng-model="report.ProgramId"
+                                            ng-options="item.id as item.name for item in programs | orderBy:'item.title'"></select>
+                                </div>
                             </div>
-                            <label class="col-sm-2 control-label" translate>Paper Size</label>
-                            <div class="col-sm-4">
-                                <select  class="form-control" ng-model="report.PaperSize">
-                                    <option value="A4" selected>A4</option>
-                                    <option value="Letter">US Letter</option>
-                                </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label" translate>Distribution</label>
+                                <div class="col-sm-8">
+                                    <select chosen class="form-control" 
+                                            ng-disabled="!report.ProgramId"
+                                            ng-model="report.DistributionId"
+                                            ng-options="item.id as item.title for item in distributions | filter:{programId: report.ProgramId} | orderBy:'item.title'"
+                                            ></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label" translate>Paper Size</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" ng-model="report.PaperSize">
+                                        <option value="A4" selected>A4</option>
+                                        <option value="Letter">US Letter</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>

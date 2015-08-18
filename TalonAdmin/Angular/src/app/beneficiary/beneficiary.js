@@ -33,7 +33,7 @@ angular.module('talon.beneficiary', [
                 },
                 collectionType: "Beneficiaries",
                 entityType: 'Beneficiary',
-                expand: ['group', 'location'],
+                expand: ['group', 'location', 'additionalData'],
                 controlledLists: ['locations', 'beneficiaryGroups', 'sexes'],
                 form: 'beneficiary/form.tpl.html'
             }
@@ -83,7 +83,6 @@ angular.module('talon.beneficiary', [
 .controller('ImportBeneficiariesCtrl', ImportBeneficiariesController)
 ;
 
-
 BeneficiaryListController.prototype.configure = function configure() {
     var gettext = this.$injector.get('gettext');
     var $rootScope = this.$injector.get('$rootScope');
@@ -128,6 +127,12 @@ BeneficiaryListController.prototype.configure = function configure() {
             }
         }
     ];
+};
+
+BeneficiaryEditController.prototype.getEntities = function getEntities() {
+    var self = this;
+
+    return [self.entity].concat(self.entity.additionalData);
 };
 
 BeneficiaryEditController.prototype.canEdit = function canEdit() {

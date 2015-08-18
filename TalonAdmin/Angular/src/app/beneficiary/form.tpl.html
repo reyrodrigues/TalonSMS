@@ -63,6 +63,21 @@
         </div>
     </div>
 </div>
+
+<accordion ng-if="vm.entity.additionalData.length > 0">
+    <accordion-group is-open="false" is-disabled="false">
+        <accordion-heading>
+            Additional Data <a href="#" tooltip-placement="top" tooltip="These fields can be added during the bulk import of beneficiary data.">
+            <i class="fa fa-question-circle"></i></a>
+        </accordion-heading>
+        <div class="col-sm-6" ng-repeat="d in vm.entity.additionalData">
+            <form-group label="{{ d.key }}" name="Field_{{ d.id }}">
+                <input type="text" class="form-control" ng-model="d.value" form-input readonly />
+            </form-group>
+        </div>
+    </accordion-group>
+</accordion>
+
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
     <tab heading="{{ 'Unused Vouchers'|translate }}">
         <div class="panel panel-default">
@@ -71,11 +86,12 @@
                       { 'voucher.status': { '==': 1 } }
                       ]}"
                       collection="VoucherTransactionRecords"
-                      expand="vendor, voucher, voucher.distribution, voucher.distribution.program"
+                      expand="vendor, voucher, voucher.category, voucher.distribution, voucher.distribution.program"
                       key="beneficiaryId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Valid After'|translate }}" field="voucher.category.validAfter"></sub-grid-column>
                 <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true" ng-if="canI('Cancel Vouchers')">
                     <div class="ui-grid-cell-contents">
@@ -100,7 +116,7 @@
                       } ]}
                       "
                       collection="VoucherTransactionRecords"
-                      expand="vendor, voucher"
+                      expand="vendor, voucher, voucher.category"
                       key="beneficiaryId"
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>

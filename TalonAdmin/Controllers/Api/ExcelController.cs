@@ -100,7 +100,7 @@ namespace TalonAdmin.Controllers
                     jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].Type != JTokenType.Null ? (jsonBeneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
                 }
 
-                jsonBeneficiaries.Flatten("AdditionalDataObject", "AdditionalData/");
+                jsonBeneficiaries.Flatten("AdditionalDataObject", "Additional Data/");
                 jsonBeneficiaries.RemoveProperties("Group", "AdditionalDataObject", "AdditionalData");
 
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
@@ -294,12 +294,12 @@ namespace TalonAdmin.Controllers
                                     currentData = await ctx.BeneficiaryAdditionalData.Where(b => b.ParentId == beneficiary.Id).ToArrayAsync();
 
                                 var additionalData = jsonBeneficiary.Properties()
-                                    .Where(p => p.Name.StartsWith("AdditionalData/"))
+                                    .Where(p => p.Name.StartsWith("Additional Data/"))
                                     .Select(p => new BeneficiaryAdditionalData
                                         {
                                             Id = 0,
                                             ParentId = beneficiary.Id,
-                                            Key = p.Name.Replace("AdditionalData/", ""),
+                                            Key = p.Name.Replace("Additional Data/", ""),
                                             Value = p.Value.ToString()
                                         })
                                     .ToList();
