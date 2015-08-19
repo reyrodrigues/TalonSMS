@@ -28,9 +28,11 @@ angular.module('talon.common')
                       e.preventDefault();
                   }
                   // mobile
-                  if (_this.next().is('ul') || _window.width() < _mb) {
-                      $('.app-aside').removeClass('show off-screen');
-                  }
+                  scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+                      if (_this.next().is('ul') || _window.width() < _mb) {
+                          $('.app-aside').removeClass('show off-screen');
+                      }
+                  });
               });
 
               // folded & fixed
