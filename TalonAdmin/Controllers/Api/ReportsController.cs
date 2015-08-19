@@ -546,6 +546,87 @@ namespace TalonAdmin.Controllers.Api
             }
         }
 
+        [Route("LiveBeneficiaryReport/{programId}/")]
+        [Authorize, HttpGet]
+        public async Task<IHttpActionResult> LiveBeneficiaryReport([FromUri]int programId) {
+            using (var ctx = new Models.Vouchers.Context()) {
+                ctx.Configuration.LazyLoadingEnabled = false;
+                ctx.Configuration.ProxyCreationEnabled = false;
+
+                var program = ctx.Programs.Where(t => t.Id == programId).First();
+                var transactions = ctx.VoucherTransactionRecords.Where(t => t.Voucher.Distribution.ProgramId == programId);
+
+                var voucherUsedByBeneficiaries = await transactions.Where(t=>t.Type==2)
+                    .GroupBy(g => g.BeneficiaryId)
+                    .ToDictionaryAsync(k => k.Key, g => g.Select(v => v.VoucherId).Distinct().Count());
+
+                var amountUsedByBeneficiaries = await transactions
+                    .Where(t => t.Type == 2)
+                    .GroupBy(g => g.BeneficiaryId)
+                    .ToDictionaryAsync(k => k.Key, g => g.Select(v => v.Value).Sum());
+
+                var voucherIssuedToBeneficiaries = await transactions.Where(t => t.Type == 1)
+                    .GroupBy(g => g.BeneficiaryId)
+                    .ToDictionaryAsync(k => k.Key, g => g.Select(v => v.VoucherId).Count());
+
+                var amountIssuedToBeneficiaries = await transactions
+                    .Where(t => t.Type == 2)
+                    .GroupBy(g => g.BeneficiaryId)
+                    .ToDictionaryAsync(k => k.Key, g => g.Select(v => v.Value).Sum());
+
+                var affectedBeneficiaries = voucherIssuedToBeneficiaries.Keys
+                    .Union(amountIssuedToBeneficiaries.Keys)
+                    .Union(voucherIssuedToBeneficiaries.Keys)
+                    .Union(amountIssuedToBeneficiaries.Keys)
+                    .Distinct();
+
+                var beneficiaries = JArray.FromObject(await ctx.Beneficiaries.AsNoTracking()
+                    .Include(b => b.AdditionalData)
+                    .Include(b => b.Location)
+                    .Where(b => affectedBeneficiaries.Contains(b.Id))
+                    .ToArrayAsync(), new JsonSerializer { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+
+                var groups = await ctx.BeneficiaryGroups.AsNoTracking().Where(g => g.CountryId == program.CountryId && g.OrganizationId == program.OrganizationId).ToArrayAsync();
+
+                foreach (var beneficiary in beneficiaries.OfType<JObject>())
+                {
+                    var groupId = beneficiary.ValueIfExists<int?>("GroupId");
+                    if (groupId != null)
+                    {
+                        beneficiary["Group"] = JToken.FromObject(groups.Where(g => g.Id == groupId.Value).First());
+                    }
+                    beneficiary["Sex"] = beneficiary["Sex"].Type != JTokenType.Null ? (beneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
+                }
+
+
+                beneficiaries.Flatten("AdditionalDataObject", "Additional Data/")
+                    .Flatten("Group", "Cycle/")
+                    .Flatten("Location", "Location/");
+                beneficiaries.RemoveProperties("Cycle/Beneficiaries", "Cycle/OrganizationId", "Cycle/CountryId");
+                beneficiaries.RemoveProperties("Location/CountryId");
+                beneficiaries.RemoveProperties("Group", "Location", "AdditionalDataObject", "AdditionalData");
+
+                foreach (dynamic beneficiary in beneficiaries)
+                {
+                    int beneficiaryId = beneficiary.Id;
+                    beneficiary.VouchersIssued = voucherIssuedToBeneficiaries.ContainsKey(beneficiaryId) ? voucherIssuedToBeneficiaries[beneficiaryId] : 0;
+                    beneficiary.VouchersUsed = voucherUsedByBeneficiaries.ContainsKey(beneficiaryId) ? voucherUsedByBeneficiaries[beneficiaryId] : 0;
+                    beneficiary.AmountIssued = amountIssuedToBeneficiaries.ContainsKey(beneficiaryId) ? amountIssuedToBeneficiaries[beneficiaryId] : 0;
+                    beneficiary.AmountUsed = amountUsedByBeneficiaries.ContainsKey(beneficiaryId) ? amountUsedByBeneficiaries[beneficiaryId] : 0;
+                }
+
+                var datatable = beneficiaries.ToDataTable();
+
+                #region Somewhat Necessary Garbage Collection
+                beneficiaries = null;
+                groups = null;
+                GC.Collect();
+                #endregion
+
+                return this.File(datatable.ToExcelSpreadsheet(), "LiveData.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+        }
+
         private byte[] GenerateReport(string reportName, string reportTitle, object model, PaperKind paperKind = PaperKind.A4)
         {
             byte[] reportData = null;

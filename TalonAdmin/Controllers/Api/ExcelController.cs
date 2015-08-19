@@ -82,9 +82,14 @@ namespace TalonAdmin.Controllers
                 ctx.Configuration.LazyLoadingEnabled = false;
                 ctx.Configuration.ProxyCreationEnabled = false;
 
+                var groups = await ctx.BeneficiaryGroups
+                    .AsNoTracking()
+                    .Where(b => b.OrganizationId == organizationId && b.CountryId == countryId)
+                    .ToArrayAsync();
+
                 var beneficiaryQuery = await ctx.Beneficiaries
+                    .AsNoTracking()
                     .Include("AdditionalData")
-                    .Include("Group")
                     .Include("Location")
                     .Where(b => b.OrganizationId == organizationId && b.CountryId == countryId)
                     .ToArrayAsync();
@@ -93,9 +98,12 @@ namespace TalonAdmin.Controllers
                 {
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 }) as JArray;
-                foreach (var jsonBeneficiary in jsonBeneficiaries)
+                foreach (var jsonBeneficiary in jsonBeneficiaries.OfType<JObject>())
                 {
-                    jsonBeneficiary["Cycle"] = jsonBeneficiary["Group"].Type != JTokenType.Null ? jsonBeneficiary["Group"]["Name"] : "";
+                    var groupId = jsonBeneficiary.ValueIfExists<int?>("GroupId");
+                    if (groupId != null) {
+                        jsonBeneficiary["Cycle"] = groups.Where(g => g.Id == groupId).First().Name;
+                    }
                     jsonBeneficiary["Location"] = jsonBeneficiary["Location"].Type != JTokenType.Null ? jsonBeneficiary["Location"]["Name"] : "";
                     jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].Type != JTokenType.Null ? (jsonBeneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
                 }
@@ -104,6 +112,11 @@ namespace TalonAdmin.Controllers
                 jsonBeneficiaries.RemoveProperties("Group", "AdditionalDataObject", "AdditionalData");
 
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
+                
+                #region Somewhat Necessary Garbage Collection
+                jsonBeneficiaries = null;
+                System.GC.Collect(); 
+                #endregion
 
                 if (beneficiaryQuery.Count() == 0)
                 {
@@ -194,6 +207,9 @@ namespace TalonAdmin.Controllers
                                 var locationName = jsonBeneficiary.ValueIfExists<string>("Location");
 
                                 jsonBeneficiary["Sex"] = (jsonBeneficiary.ValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
+
+                                var isDisabled = (jsonBeneficiary.ValueIfExists<string>("Disabled") ?? "false").ToString().Trim().ToLower();
+                                jsonBeneficiary["Disabled"] = isDisabled == "true" || isDisabled== "1";
 
                                 jsonBeneficiary.RemoveProperties("Name", "Cycle", "Location", "OrganizationId", "CountryId");
 
@@ -357,6 +373,7 @@ namespace TalonAdmin.Controllers
                 ctx.Configuration.ProxyCreationEnabled = false;
 
                 var vendorQuery = await ctx.Vendors
+                    .AsNoTracking()
                     .Include("Location")
                     .Include("Type")
                     .Where(b => b.CountryId == countryId)

@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace TalonAdmin.Models
 {
@@ -12,6 +14,7 @@ namespace TalonAdmin.Models
         public virtual string Value { get; set; }
         public virtual ParentIdType ParentId { get; set; }
 
+        [JsonIgnore, XmlIgnore]
         public virtual ParentType Parent { get; set; }
     }
 }

@@ -294,8 +294,10 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Attributes\AuthorizeTenantAttribute.cs" />
     <Compile Include="Attributes\AuthorizeVendorAttribute.cs" />
+    <Compile Include="Extensions\DynamicExtensions.cs" />
     <Compile Include="Extensions\ReportExtensions.cs" />
     <Compile Include="Extensions\SystemDotDataExtensions.cs" />
+    <Compile Include="Middleware\BasicAuthenticationMiddleware.cs" />
     <Compile Include="Models\BindingModels\ApplicationRoleBindingModel.cs" />
     <Compile Include="Controllers\Api\ApplicationRoleController.cs" />
     <Compile Include="Controllers\Api\ApplicationUserController.cs" />

@@ -27,7 +27,7 @@ namespace TalonAdmin
         {
             app.MapSignalR();
             // Configure the db context and user manager to use a single instance per request
-            app.CreatePerOwinContext<AdminContext>(() => new AdminContext());
+            app.CreatePerOwinContext(() => new AdminContext());
             app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
             app.CreatePerOwinContext<ApplicationRoleManager>(ApplicationRoleManager.Create);
 
@@ -35,6 +35,7 @@ namespace TalonAdmin
             // and to use a cookie to temporarily store information about a user logging in with a third party login provider
             app.UseCookieAuthentication(new CookieAuthenticationOptions { SlidingExpiration = true, ExpireTimeSpan = new TimeSpan(365,0,0,0) });
             app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
+            app.Use<Middleware.BasicAuthenticationMiddleware>();
             app.Use<Middleware.FormAuthenticationMiddleware>();
             app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
 
