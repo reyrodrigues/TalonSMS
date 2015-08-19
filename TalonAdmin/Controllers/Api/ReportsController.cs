@@ -570,7 +570,7 @@ namespace TalonAdmin.Controllers.Api
                     .ToDictionaryAsync(k => k.Key, g => g.Select(v => v.VoucherId).Count());
 
                 var amountIssuedToBeneficiaries = await transactions
-                    .Where(t => t.Type == 2)
+                    .Where(t => t.Type == 1)
                     .GroupBy(g => g.BeneficiaryId)
                     .ToDictionaryAsync(k => k.Key, g => g.Select(v => v.Value).Sum());
 

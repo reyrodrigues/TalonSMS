@@ -22,6 +22,17 @@ namespace TalonAdmin.Middleware
         {
             var request = context.Request;
             var response = context.Response;
+
+            response.OnSendingHeaders(state =>
+            {
+                var resp = (OwinResponse)state;
+
+                if (resp.StatusCode == 401)
+                {
+                    resp.Headers["WWW-Authenticate"] = "Basic";
+                }
+            }, response);
+
             if (request.Headers.ContainsKey("Authorization") && !String.IsNullOrEmpty(request.Headers["Authorization"]))
             {
                 var header = AuthenticationHeaderValue.Parse(request.Headers["Authorization"]);
