@@ -161,10 +161,10 @@ angular.module('talon', [
             rootPath: serviceRoot + 'signalR/hubs/',
 
             hubDisconnected: function () {
-                if (hub.connection.lastError) {
-                    hub.connection.start()
+                if (window.dashboardHub.connection.lastError) {
+                    window.dashboardHub.connection.start()
                     .done(function () {
-                        if (hub.connection.state === 0) {
+                        if (window.dashboardHub.connection.state === 0) {
                             $timeout(function () { }, 2000);
                         }
                         else {
