@@ -47,19 +47,20 @@ namespace TalonAdmin.Models.Vouchers
         [JsonIgnore, XmlIgnore]
         public virtual string CardKey { get; set; }
 
+        public virtual BeneficiaryGroup Group { get; set; }
+        public virtual Location Location { get; set; }
+
         public JToken AdditionalDataObject
         {
             get
             {
-                if (AdditionalData == null) {
+                if (AdditionalData == null)
+                {
                     return new JObject();
                 }
                 return JToken.FromObject(AdditionalData.ToDictionary(k => k.Key, v => v.Value));
             }
         }
-
-        public virtual BeneficiaryGroup Group { get; set; }
-        public virtual Location Location { get; set; }
 
         public virtual ICollection<BeneficiaryAdditionalData> AdditionalData { get; set; }
 

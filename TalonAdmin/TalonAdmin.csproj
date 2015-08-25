@@ -77,6 +77,18 @@
     <Reference Include="EPPlus">
       <HintPath>..\packages\EPPlus.4.0.3\lib\net20\EPPlus.dll</HintPath>
     </Reference>
+    <Reference Include="Ghostscript.NET, Version=1.2.0.0, Culture=neutral, PublicKeyToken=f85051de34525b59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ghostscript.NET.1.2.0\lib\net40\Ghostscript.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Magick.NET-AnyCPU, Version=7.0.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=MSIL">
+      <HintPath>..\packages\Magick.NET-Q16-HDRI-AnyCPU.7.0.0.0017\lib\net40-client\Magick.NET-AnyCPU.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Magick.NET.Core, Version=7.0.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=MSIL">
+      <HintPath>..\packages\Magick.NET-Q16-HDRI-AnyCPU.7.0.0.0017\lib\net40-client\Magick.NET.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core">
       <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
     </Reference>
@@ -342,6 +354,7 @@
     <Compile Include="Models\JsonProperty.cs" />
     <Compile Include="Models\ViewModels\AccountViewModels.cs" />
     <Compile Include="Models\ViewModels\DistributionVendorViewModel.cs" />
+    <Compile Include="Models\Vouchers\AuditLogItem.cs" />
     <Compile Include="Models\Vouchers\Beneficiary.cs" />
     <Compile Include="Models\ViewModels\DashboardSummaryViewModel.cs" />
     <Compile Include="Models\Vouchers\BeneficiaryAdditionalData.cs" />
@@ -359,6 +372,7 @@
     <Compile Include="Models\Vouchers\Program.cs" />
     <Compile Include="Models\Vouchers\TenantEntity.cs" />
     <Compile Include="Models\Vouchers\TransactionLogItem.cs" />
+    <Compile Include="Models\Vouchers\VendorAdditionalData.cs" />
     <Compile Include="Models\Vouchers\VendorDevice.cs" />
     <Compile Include="Models\Vouchers\VendorSalesPerson.cs" />
     <Compile Include="Models\Vouchers\VendorType.cs" />

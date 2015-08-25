@@ -10,6 +10,23 @@ namespace Newtonsoft.Json.Linq
     public static class JsonExtensions
     {
         /// <summary>
+        /// Checks JToken for specific property
+        /// </summary>
+        /// <param name="self">JToken</param>
+        /// <param name="property">Property name</param>
+        /// <returns>
+        /// True if there is a property with that name
+        /// False if the JToken is not a JObject or if the property is not found
+        /// </returns>
+        public static bool HasProperty(this JToken self, string property) {
+            var obj = self as JObject;
+            if (obj == null)
+                return true;
+
+            return obj.Properties().Where(p => p.Name == property).Any();
+        }
+
+        /// <summary>
         /// Gets value of JSON Property or default(T) if nothing is found
         /// </summary>
         /// <typeparam name="T">Type of property</typeparam>

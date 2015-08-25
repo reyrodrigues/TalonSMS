@@ -73,6 +73,21 @@
     </div>
 </div>
 
+<accordion ng-if="vm.entity.additionalData.length > 0">
+    <accordion-group is-open="false" is-disabled="false">
+        <accordion-heading>
+            Additional Data <a href="#" tooltip-placement="top" tooltip="These fields can be added during the bulk import of vendor data.">
+                <i class="fa fa-question-circle"></i>
+            </a>
+        </accordion-heading>
+        <div class="col-sm-6" ng-repeat="d in vm.entity.additionalData">
+            <form-group label="{{ d.key }}" name="Field_{{ d.id }}">
+                <input type="text" class="form-control" ng-model="d.value" form-input readonly />
+            </form-group>
+        </div>
+    </accordion-group>
+</accordion>
+
 <tabset justified="true" class="tab-container grid" ng-if="!vm.isNew">
     <tab heading="{{ 'Sales Personnel'|translate }}">
         <div class="panel panel-default">
@@ -140,6 +155,17 @@
                 <sub-grid-column label="{{ 'Claimed On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Used On'|translate }}" field="lastModifiedOn"><div class="ui-grid-cell-contents">{{row.entity.lastModifiedOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Status'|translate }}" field="voucher.status"><div class="ui-grid-cell-contents">{{row.entity.voucher.statusString}}</div></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
+    <tab heading="{{ 'Audit Log'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="AuditLogItems"
+                      key="objectId"
+                      filter="{'objectType': {'==': 'Vendor'} }"
+                      entity="vm.entity">
+                <sub-grid-column label="{{ 'Updated By'|translate }}" field="modifiedBy"></sub-grid-column>
+                <sub-grid-column label="{{ 'Updated On'|translate }}" field="modifiedOn"><div class="ui-grid-cell-contents">{{row.entity.modifiedOn|localeDateTime}}</div></sub-grid-column>
             </sub-grid>
         </div>
     </tab>

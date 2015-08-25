@@ -70,7 +70,7 @@ namespace TalonAdmin.Models.Vouchers
 #endif
 #if DEBUG
             Database.SetInitializer(new NullDatabaseInitializer<Context>());
-            //Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
+           // Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
             // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
 #endif
 
@@ -99,9 +99,12 @@ namespace TalonAdmin.Models.Vouchers
                 .WillCascadeOnDelete();
 
             modelBuilder.Entity<BeneficiaryAdditionalData>().ToTable("BeneficiaryAdditionalData");
+            modelBuilder.Entity<VendorAdditionalData>().ToTable("VendorAdditionalData");
         }
 
+        public DbSet<AuditLogItem> AuditLogItems { get; set; }
         public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<VendorAdditionalData> VendorAdditionalData { get; set; }
         public DbSet<VendorSalesPerson> VendorSalesPersons { get; set; }
         public DbSet<VendorDevice> VendorDevices { get; set; }
         public DbSet<VendorType> VendorTypes { get; set; }

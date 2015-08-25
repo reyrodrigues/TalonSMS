@@ -110,6 +110,12 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
+        public IQueryable<Models.Vouchers.AuditLogItem> AuditLogItems()
+        {
+            return _contextProvider.Context.AuditLogItems;
+        }
+
+        [HttpGet]
         public IQueryable<Models.Vouchers.Vendor> Vendors()
         {
             return _contextProvider.Context.Vendors
@@ -172,8 +178,6 @@ namespace TalonAdmin.Controllers.Breeze
                 .FilterCountry(this)
                 .FilterOrganization(this);
         }
-
-
 
         [HttpGet]
         public IQueryable<Models.Vouchers.TransactionLogItem> TransactionLogItems()

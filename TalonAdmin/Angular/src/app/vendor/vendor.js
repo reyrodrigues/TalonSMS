@@ -127,7 +127,8 @@ VendorEditController.prototype.postSave = function postSave() {
     var $http = this.$injector.get('$http');
     var $q = this.$injector.get('$q');
     var entityManagerFactory = this.$injector.get('entityManagerFactory');
-    var entityManager = entityManagerFactory.adminEntityManager();
+    var entityManager = this.entityManager;
+    var $scope = this.$scope;
 
     var url = serviceRoot + 'Api/App/VendorProfile/UpdatePassword';
 
@@ -143,7 +144,14 @@ VendorEditController.prototype.postSave = function postSave() {
         def.resolve();
     }
 
-    return def.promise;
+    var logItem = entityManager.createEntity('AuditLogItem', {
+        objectType: 'Vendor',
+        objectId: this.entity.id,
+        modifiedOn: moment().utc().toDate(),
+        modifiedBy: $scope.currentUser.UserName
+    });
+
+    return def.promise.then(entityManager.saveChanges([logItem]));
 
 };
 

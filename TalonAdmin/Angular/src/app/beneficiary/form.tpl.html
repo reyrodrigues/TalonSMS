@@ -127,4 +127,15 @@
             </sub-grid>
         </div>
     </tab>
+    <tab heading="{{ 'Audit Log'|translate }}">
+        <div class="panel panel-default">
+            <sub-grid collection="AuditLogItems"
+                      key="objectId"
+                      filter="{'objectType': {'==': 'Beneficiary'} }"
+                      entity="vm.entity">
+                <sub-grid-column label="{{ 'Updated By'|translate }}" field="modifiedBy"></sub-grid-column>
+                <sub-grid-column label="{{ 'Updated On'|translate }}" field="modifiedOn"><div class="ui-grid-cell-contents">{{row.entity.modifiedOn|localeDateTime}}</div></sub-grid-column>
+            </sub-grid>
+        </div>
+    </tab>
 </tabset>

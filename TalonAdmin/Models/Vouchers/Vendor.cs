@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,21 @@ namespace TalonAdmin.Models.Vouchers
 
         public virtual Vendor ParentRecord { get; set; }
         public virtual ICollection<VendorSalesPerson> SalesPersons { get; set;  }
+
+
+        public JToken AdditionalDataObject
+        {
+            get
+            {
+                if (AdditionalData == null)
+                {
+                    return new JObject();
+                }
+                return JToken.FromObject(AdditionalData.ToDictionary(k => k.Key, v => v.Value));
+            }
+        }
+
+        public virtual ICollection<VendorAdditionalData> AdditionalData { get; set; }
 
         public void SetPassword(string plainText)
         {

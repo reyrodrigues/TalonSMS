@@ -135,6 +135,26 @@ BeneficiaryEditController.prototype.getEntities = function getEntities() {
     return [self.entity].concat(self.entity.additionalData);
 };
 
+
+/*// Custom Save Marker
+BeneficiaryEditController.prototype.save = auditSave;
+*/
+
+BeneficiaryEditController.prototype.postSave = function postSave() {
+    var entityManagerFactory = this.$injector.get('entityManagerFactory');
+    var entityManager = this.entityManager;
+    var $scope = this.$scope;
+
+    var logItem = entityManager.createEntity('AuditLogItem', {
+        objectType: 'Beneficiary',
+        objectId: this.entity.id,
+        modifiedOn: moment().utc().toDate(),
+        modifiedBy: $scope.currentUser.UserName
+    });
+
+    return entityManager.saveChanges([logItem]);
+};
+
 BeneficiaryEditController.prototype.canEdit = function canEdit() {
     return !this.entity.disabled;
 };
@@ -215,6 +235,39 @@ BeneficiaryEditController.prototype.configure = function configure() {
         });
     }
 };
+
+function auditSave(continueEditing) {
+    var self = this;
+    self.isEditing = false;
+
+    var $scope = this.$scope;
+    if ($scope.dataForm.$invalid) {
+        angular.forEach($scope.dataForm.$error.required, function (field) {
+            field.$setDirty();
+            field.$setTouched();
+        });
+
+        return;
+    }
+
+    $scope.dataForm.$setPristine();
+    $scope.dataForm.$setUntouched();
+
+    var breeze = self.$injector.get('breeze');
+
+    var auditSaveOption = new breeze.SaveOptions({ resourceName: 'AuditSaveChanges' });
+
+    self.entityManager.saveChanges(self.getEntities(), auditSaveOption).then(function (ne) {
+        self.success('Record successfully saved.');
+        if (self.isNew) {
+            $state.go('^.edit', { id: self.entity.id });
+        }
+
+        self.isEditing = continueEditing;
+    }).catch(function (error) {
+        self.failure(error);
+    });
+}
 
 function BeneficiaryListController($injector, $scope) {
     ListController.call(this, $injector, $scope);

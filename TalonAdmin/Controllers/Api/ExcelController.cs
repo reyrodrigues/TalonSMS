@@ -98,10 +98,12 @@ namespace TalonAdmin.Controllers
                 {
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 }) as JArray;
+
                 foreach (var jsonBeneficiary in jsonBeneficiaries.OfType<JObject>())
                 {
                     var groupId = jsonBeneficiary.ValueIfExists<int?>("GroupId");
-                    if (groupId != null) {
+                    if (groupId != null)
+                    {
                         jsonBeneficiary["Cycle"] = groups.Where(g => g.Id == groupId).First().Name;
                     }
                     jsonBeneficiary["Location"] = jsonBeneficiary["Location"].Type != JTokenType.Null ? jsonBeneficiary["Location"]["Name"] : "";
@@ -112,10 +114,10 @@ namespace TalonAdmin.Controllers
                 jsonBeneficiaries.RemoveProperties("Group", "AdditionalDataObject", "AdditionalData");
 
                 var dataTable = jsonBeneficiaries.ToObject<DataTable>();
-                
+
                 #region Somewhat Necessary Garbage Collection
                 jsonBeneficiaries = null;
-                System.GC.Collect(); 
+                System.GC.Collect();
                 #endregion
 
                 if (beneficiaryQuery.Count() == 0)
@@ -156,6 +158,7 @@ namespace TalonAdmin.Controllers
             {
                 return BadRequest();
             }
+            var currentUser = await this.WhoAmI();
 
             dynamic response = new JObject();
             response.Errors = new JArray();
@@ -206,10 +209,17 @@ namespace TalonAdmin.Controllers
                                 var groupName = jsonBeneficiary.ValueIfExists<string>("Cycle");
                                 var locationName = jsonBeneficiary.ValueIfExists<string>("Location");
 
-                                jsonBeneficiary["Sex"] = (jsonBeneficiary.ValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
+                                var hasGroupColumn = jsonBeneficiary.HasProperty("Cycle");
+                                var hasLocationColumn = jsonBeneficiary.HasProperty("Location");
 
-                                var isDisabled = (jsonBeneficiary.ValueIfExists<string>("Disabled") ?? "false").ToString().Trim().ToLower();
-                                jsonBeneficiary["Disabled"] = isDisabled == "true" || isDisabled== "1";
+                                if (jsonBeneficiary.HasProperty("Sex"))
+                                    jsonBeneficiary["Sex"] = (jsonBeneficiary.ValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
+
+                                if (jsonBeneficiary.HasProperty("Disabled"))
+                                {
+                                    var isDisabled = (jsonBeneficiary.ValueIfExists<string>("Disabled") ?? "false").ToString().Trim().ToLower();
+                                    jsonBeneficiary["Disabled"] = isDisabled == "true" || isDisabled == "1";
+                                }
 
                                 jsonBeneficiary.RemoveProperties("Name", "Cycle", "Location", "OrganizationId", "CountryId");
 
@@ -230,8 +240,12 @@ namespace TalonAdmin.Controllers
                                     jsonBeneficiary["OrganizationId"] = organizationId;
                                 }
 
-                                var numberRegex = new System.Text.RegularExpressions.Regex(String.Format("^(\\+{0}|{0}|0|1)", country.CountryCallingCode));
-                                jsonBeneficiary["MobileNumber"] = String.Format("+{0}{1}", country.CountryCallingCode, numberRegex.Replace(jsonBeneficiary["MobileNumber"].ToString(), ""));
+                                if (jsonBeneficiary.HasProperty("MobileNumber"))
+                                {
+
+                                    var numberRegex = new System.Text.RegularExpressions.Regex(String.Format("^(\\+{0}|{0}|0|1)", country.CountryCallingCode));
+                                    jsonBeneficiary["MobileNumber"] = String.Format("+{0}{1}", country.CountryCallingCode, numberRegex.Replace(jsonBeneficiary["MobileNumber"].ToString(), ""));
+                                }
 
 
                                 jsonBeneficiary.MergeChangesInto(beneficiary);
@@ -262,7 +276,7 @@ namespace TalonAdmin.Controllers
                                     beneficiary.Group = group;
                                     beneficiary.GroupId = group.Id;
                                 }
-                                else
+                                else if (hasGroupColumn)
                                 {
                                     beneficiary.GroupId = null;
                                     beneficiary.Group = null;
@@ -295,7 +309,7 @@ namespace TalonAdmin.Controllers
                                     beneficiary.Location = location;
                                     beneficiary.LocationId = location.Id;
                                 }
-                                else
+                                else if (hasGroupColumn)
                                 {
                                     beneficiary.Location = null;
                                     beneficiary.LocationId = null;
@@ -312,12 +326,13 @@ namespace TalonAdmin.Controllers
                                 var additionalData = jsonBeneficiary.Properties()
                                     .Where(p => p.Name.StartsWith("Additional Data/"))
                                     .Select(p => new BeneficiaryAdditionalData
-                                        {
-                                            Id = 0,
-                                            ParentId = beneficiary.Id,
-                                            Key = p.Name.Replace("Additional Data/", ""),
-                                            Value = p.Value.ToString()
-                                        })
+                                    {
+                                        Id = 0,
+                                        ParentId = beneficiary.Id,
+                                        Key = p.Name.Replace("Additional Data/", ""),
+                                        Value = p.Value.ToString()
+                                    })
+                                    .Where(a => !String.IsNullOrEmpty(a.Value))
                                     .ToList();
 
                                 additionalData.ForEach(a =>
@@ -331,6 +346,7 @@ namespace TalonAdmin.Controllers
                                     }
                                 });
 
+                                ctx.BeneficiaryAdditionalData.RemoveRange(currentData.Where(a => String.IsNullOrEmpty(a.Value)).ToArray());
                                 ctx.BeneficiaryAdditionalData.AddRange(additionalData.Where(a => a.Id == 0));
 
                                 #endregion
@@ -340,7 +356,26 @@ namespace TalonAdmin.Controllers
                                     ctx.Beneficiaries.Add(beneficiary);
                                 }
 
-                                await ctx.SaveChangesAsync();
+                                int changeCount = await ctx.SaveChangesAsync();
+                                try
+                                {
+                                    if (changeCount > 0)
+                                    {
+                                        ctx.AuditLogItems.Add(new AuditLogItem
+                                        {
+                                            ModifiedBy = currentUser.UserName,
+                                            ModifiedOn = DateTime.UtcNow,
+                                            ObjectId = beneficiary.Id,
+                                            ObjectType = "Beneficiary"
+                                        });
+
+                                        await ctx.SaveChangesAsync();
+                                    }
+                                }
+                                catch
+                                {
+                                    // Ignore audit exceptions
+                                }
                             }
                             catch (Exception e)
                             {
@@ -386,16 +421,16 @@ namespace TalonAdmin.Controllers
 
                 var jsonCollection = JToken.Parse(jsonString) as JArray;
 
-                jsonCollection.Descendants().OfType<JProperty>()
-                  .Where(p => new string[] { "LocationId", "CountryId", "TypeId", "ParentRecord" }.Contains(p.Name))
-                  .ToList()
-                  .ForEach(att => att.Remove());
-
                 foreach (var jsonObject in jsonCollection)
                 {
                     jsonObject["Location"] = jsonObject["Location"].Type != JTokenType.Null ? jsonObject["Location"]["Name"] : "";
                     jsonObject["Type"] = jsonObject["Type"].Type != JTokenType.Null ? jsonObject["Type"]["Name"] : "";
                 }
+
+                jsonCollection.Flatten("AdditionalDataObject", "Additional Data/");
+                jsonCollection.RemoveProperties("AdditionalDataObject", "AdditionalData");
+                jsonCollection.RemoveProperties("LocationId", "CountryId", "TypeId", "ParentRecord");
+
                 var dataTable = jsonCollection.ToObject<DataTable>();
 
                 if (vendorQuery.Count() == 0)
@@ -403,8 +438,6 @@ namespace TalonAdmin.Controllers
                     dataTable = JToken.FromObject(new Vendor[] { new Vendor() }).ToObject<DataTable>();
                     dataTable.Rows.Clear();
                 }
-
-                // Removing Id Columns because they are parsed later on in the import
 
                 dataTable.TableName = "Vendors";
 
@@ -424,6 +457,7 @@ namespace TalonAdmin.Controllers
             {
                 return BadRequest();
             }
+            var currentUser = await this.WhoAmI();
 
             dynamic response = new JObject();
             response.Errors = new JArray();
@@ -471,11 +505,10 @@ namespace TalonAdmin.Controllers
                                 var locationName = jsonVendor.ValueIfExists<string>("Location");
                                 var typeName = jsonVendor.ValueIfExists<string>("Type");
 
-                                jsonVendor.Remove("Location");
-                                jsonVendor.Remove("Type");
+                                var hasTypeColumn = jsonVendor.HasProperty("Type");
+                                var hasLocationColumn = jsonVendor.HasProperty("Location");
 
-                                // Trust no one
-                                jsonVendor.Remove("CountryId");
+                                jsonVendor.RemoveProperties("Location", "Type", "CountryId");
 
                                 var isNew = vendorId == null;
                                 Models.Vouchers.Vendor vendor = null;
@@ -493,9 +526,11 @@ namespace TalonAdmin.Controllers
                                     jsonVendor["CountryId"] = countryId;
                                 }
 
-                                var numberRegex = new System.Text.RegularExpressions.Regex(String.Format("^(\\+{0}|{0}|0|1)", country.CountryCallingCode));
-                                jsonVendor["MobileNumber"] = String.Format("+{0}{1}", country.CountryCallingCode, numberRegex.Replace(jsonVendor["MobileNumber"].ToString(), ""));
-
+                                if (jsonVendor.HasProperty("MobileNumber"))
+                                {
+                                    var numberRegex = new System.Text.RegularExpressions.Regex(String.Format("^(\\+{0}|{0}|0|1)", country.CountryCallingCode));
+                                    jsonVendor["MobileNumber"] = String.Format("+{0}{1}", country.CountryCallingCode, numberRegex.Replace(jsonVendor["MobileNumber"].ToString(), ""));
+                                }
 
                                 jsonVendor.MergeChangesInto(vendor);
 
@@ -524,7 +559,7 @@ namespace TalonAdmin.Controllers
                                     vendor.Location = location;
                                     vendor.LocationId = location.Id;
                                 }
-                                else
+                                else if (hasLocationColumn)
                                 {
                                     vendor.Location = null;
                                     vendor.LocationId = null;
@@ -558,7 +593,7 @@ namespace TalonAdmin.Controllers
                                     vendor.Type = type;
                                     vendor.TypeId = type.Id;
                                 }
-                                else
+                                else if (hasTypeColumn)
                                 {
                                     vendor.Type = null;
                                     vendor.TypeId = null;
@@ -567,12 +602,66 @@ namespace TalonAdmin.Controllers
 
                                 #endregion
 
+
+                                #region Additional Data
+                                var currentData = new VendorAdditionalData[0];
+
+                                if (!isNew)
+                                    currentData = await ctx.VendorAdditionalData.Where(b => b.ParentId == vendor.Id).ToArrayAsync();
+
+                                var additionalData = jsonVendor.Properties()
+                                    .Where(p => p.Name.StartsWith("Additional Data/"))
+                                    .Select(p => new VendorAdditionalData
+                                    {
+                                        Id = 0,
+                                        ParentId = vendor.Id,
+                                        Key = p.Name.Replace("Additional Data/", ""),
+                                        Value = p.Value.ToString()
+                                    })
+                                    .Where(a => !String.IsNullOrEmpty(a.Value))
+                                    .ToList();
+
+                                additionalData.ForEach(a =>
+                                {
+                                    var q = currentData.Where(o => o.Key == a.Key);
+                                    if (q.Any())
+                                    {
+                                        var other = q.First();
+                                        a.Id = other.Id;
+                                        other.Value = a.Value;
+                                    }
+                                });
+
+                                ctx.VendorAdditionalData.RemoveRange(currentData.Where(a => String.IsNullOrEmpty(a.Value)).ToArray());
+                                ctx.VendorAdditionalData.AddRange(additionalData.Where(a => a.Id == 0));
+
+                                #endregion
+
                                 if (isNew)
                                 {
                                     ctx.Vendors.Add(vendor);
                                 }
 
-                                await ctx.SaveChangesAsync();
+                                int changeCount = await ctx.SaveChangesAsync();
+                                try
+                                {
+                                    if (changeCount > 0)
+                                    {
+                                        ctx.AuditLogItems.Add(new AuditLogItem
+                                        {
+                                            ModifiedBy = currentUser.UserName,
+                                            ModifiedOn = DateTime.UtcNow,
+                                            ObjectId = vendor.Id,
+                                            ObjectType = "Vendor"
+                                        });
+
+                                        await ctx.SaveChangesAsync();
+                                    }
+                                }
+                                catch
+                                {
+                                    // Ignore audit exceptions
+                                }
                             }
                             catch (Exception e)
                             {
