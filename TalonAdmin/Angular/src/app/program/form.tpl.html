@@ -12,6 +12,12 @@
             </form-group>
         </div>
         <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="col-sm-12">
+            <form-group label="{{ 'Fund Codes'|translate }}" name="voucherCodeLength" required="true">
+                <input type="text" class="form-control" ng-model="vm.entity.fundCodes" form-input required />
+            </form-group>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
         <div class="col-sm-6">
             <form-group label="{{ 'Voucher Code Size'|translate }}" name="voucherCodeLength" required="true">
                 <input type="text" class="form-control" ng-model="vm.entity.voucherCodeLength" form-input required />
