@@ -216,8 +216,6 @@ function ProgramEditController($injector, $scope) {
     // Custom Save Marker
     function save(continueEditing) {
         var self = this;
-        self.isEditing = false;
-
         var $scope = this.$scope;
         if ($scope.dataForm.$invalid) {
             angular.forEach($scope.dataForm.$error.required, function (field) {
@@ -227,6 +225,8 @@ function ProgramEditController($injector, $scope) {
 
             return;
         }
+
+        self.isEditing = false;
 
         $scope.dataForm.$setPristine();
         $scope.dataForm.$setUntouched();
