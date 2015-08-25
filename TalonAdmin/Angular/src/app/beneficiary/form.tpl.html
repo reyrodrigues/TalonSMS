@@ -91,6 +91,7 @@
                       entity="vm.entity">
                 <sub-grid-column label="#" field="id" width="40"></sub-grid-column>
                 <sub-grid-column label="{{ 'Voucher Code'|translate }}" field="voucher.voucherCode"></sub-grid-column>
+                <sub-grid-column label="{{ 'Used On'|translate }}" field="voucher.category.validAfter"><div class="ui-grid-cell-contents">{{row.entity.voucher.category.validAfter|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Valid After'|translate }}" field="voucher.category.validAfter"></sub-grid-column>
                 <sub-grid-column label="{{ 'Created On'|translate }}" field="createdOn"><div class="ui-grid-cell-contents">{{row.entity.createdOn|localeDateTime}}</div></sub-grid-column>
                 <sub-grid-column label="{{ 'Actions'|translate }}" name="Actions" disable-sorting="true" ng-if="canI('Cancel Vouchers')">
