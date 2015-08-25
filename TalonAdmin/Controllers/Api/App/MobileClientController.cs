@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -819,6 +819,8 @@ namespace TalonAdmin.Controllers.Api
                     && t.Voucher.Status == 1
                     && t.Type == 1
                     && t.Beneficiary.CardKey != null
+                    && t.Beneficiary.PIN != null
+                    && t.Beneficiary.PIN != ""
                 ).Select(t => new
                 {
                     BeneficiaryId = t.Beneficiary.Id,
