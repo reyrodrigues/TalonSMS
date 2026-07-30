@@ -104,6 +104,42 @@ Several `GroupBy` queries that EF6 evaluated on the client had to be made explic
 to translate a `GroupBy` whose key is a whole entity, so those queries now materialise their
 (server-filtered) rows first and group in memory. The results are unchanged.
 
+### The Breeze client/server contract
+
+The AngularJS client still uses `breeze-client` 1.5 against Breeze 7 on the server. They do
+interoperate, but only with four pieces of configuration that Web API 2 used to provide by
+default. All four are load-bearing — remove any one and list screens break in a different way.
+
+In `Program.cs`, on the MVC Newtonsoft options:
+
+- **`ContractResolver = new DefaultContractResolver()`.** ASP.NET Core defaults to camelCase; Web
+  API 2 used the CLR names. Breeze publishes its metadata with the PascalCase names and matches
+  incoming JSON against those, so camelCase payloads leave *every* property unset — grids render
+  the right number of rows with entirely blank cells.
+- **`TypeNameHandling = TypeNameHandling.Objects`.** Breeze resolves the type of an expanded
+  entity from Newtonsoft's `$type` discriminator. Without it, any query using `expand` on a
+  reference navigation throws `Cannot read properties of undefined (reading 'entityState')`.
+  Collections happen to survive; single references do not.
+- **`SerializationBinder = new TalonSerializationBinder()`.** `TypeNameHandling` also applies when
+  *reading*, which is a remote-code-execution vector. The binder resolves only types declared in
+  this assembly and throws for anything else.
+
+In `Angular/src/app/services/dataAccess.js`:
+
+- **`uriBuilderName: 'json'`** on both `DataService` instances (and the adapter bundled in
+  `build.config.js`). The client otherwise emits `$top`/`$orderby`/`$expand`/`$inlinecount`, which
+  Breeze 7 ignores outright: every row is fetched unpaged, expands stay null and `inlineCount`
+  never arrives, so grids report "NaN total entries".
+- **The `buildUri` wrapper** that PascalCases `expand` paths. `where`/`orderBy` are resolved
+  against the metadata so breeze already translates them, but expand paths are forwarded verbatim
+  and the app writes them in client camelCase (`'group'`, `'settings.propertyCollection'`), which
+  EF Core rejects with a 500. The rewrite has to happen while the URI is built, not on the query —
+  `EntityQuery.expand()` validates each path against the metadata under its *client* name, so
+  translating earlier fails with `unable to locate property: Group on entityType: Beneficiary`.
+
+Upgrading the client to `breeze-client` 2.x would remove the need for the last two; it ships the
+JSON `uriBuilder` wired up correctly, plus an `adapter-ajax-angularjs`.
+
 ## Things that were removed, not ported
 
 - **`HomeController.TestLDAPS`** — used `System.DirectoryServices.AccountManagement`, a
@@ -119,21 +155,6 @@ to translate a `GroupBy` whose key is a whole entity, so those queries now mater
 
 ## Known gaps
 
-- **Breeze list screens do not populate.** The AngularJS client bundles `breeze-client` 1.5, which
-  builds queries with OData-style parameters (`$top`, `$orderby`, `$expand`, `$inlinecount`).
-  Breeze 7 on the server expects Breeze's own JSON query format and ignores those, so grids fetch
-  every row unpaged, never populate expands, and report "NaN total entries". Entities themselves
-  materialise correctly, and the dashboard (which uses the REST API, not Breeze) is unaffected.
-
-  The fix is to upgrade the client to `breeze-client` 2.x from npm, which ships both the matching
-  JSON `uriBuilder` and an `adapter-ajax-angularjs`. Setting `uriBuilderName` on the 1.5
-  `DataService` does not work — that option does not exist in 1.5.
-
-  Related and already fixed: ASP.NET Core's `AddNewtonsoftJson` defaults to a camelCase contract
-  resolver, whereas Web API 2 used the CLR names. Because Breeze publishes its metadata with the
-  PascalCase names and the client matches incoming JSON against those, camelCase payloads left
-  *every* property unset — grids rendered the right number of rows with entirely blank cells.
-  `Program.cs` now pins `DefaultContractResolver`.
 - **EPPlus licensing needs a decision.** EPPlus went from LGPL (4.x) to Polyform Noncommercial
   (5+). `Program.cs` currently declares a non-commercial organisation licence. If that is not
   accurate for this deployment, set `Epplus:LicenseKey` to a commercial key.

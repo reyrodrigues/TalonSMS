@@ -74,6 +74,7 @@ module.exports = {
         'vendor/ngstorage/ngStorage.min.js',
         'vendor/breeze-client/build/breeze.min.js',
         'vendor/breeze-client/build/adapters/breeze.bridge.angular.js',
+        'vendor/breeze-client/build/adapters/breeze.uriBuilder.json.js',
         'vendor/angular-ui-grid/ui-grid.min.js',
         'vendor/angular-datatables/dist/plugins/bootstrap/angular-datatables.bootstrap.min.js',
         'vendor/angular-datatables/dist/angular-datatables.min.js',

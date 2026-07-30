@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,12 +52,40 @@ void ConfigureProvider(DbContextOptionsBuilder options, string connectionStringN
 
     if (string.Equals(provider, "Sqlite", StringComparison.OrdinalIgnoreCase))
     {
-        options.UseSqlite(connectionString);
+        options.UseSqlite(ResolveSqlitePath(connectionString, builder.Environment.ContentRootPath));
     }
     else
     {
         options.UseSqlServer(connectionString);
     }
+}
+
+// SQLite resolves a relative Data Source against the process working directory, which is not the
+// same place depending on whether the app was started with `dotnet run` from the repository root,
+// from the project directory, or as a published DLL in a container. Anchoring the path to the
+// content root — and creating the directory, which is absent on a fresh clone because git does not
+// store empty directories — makes all three behave the same instead of failing with
+// "SQLite Error 10: 'disk I/O error'".
+static string ResolveSqlitePath(string connectionString, string contentRootPath)
+{
+    var connectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
+    if (string.IsNullOrWhiteSpace(connectionStringBuilder.DataSource)
+        || connectionStringBuilder.DataSource == ":memory:"
+        || Path.IsPathRooted(connectionStringBuilder.DataSource))
+    {
+        return connectionString;
+    }
+
+    var fullPath = Path.GetFullPath(Path.Combine(contentRootPath, connectionStringBuilder.DataSource));
+    var directory = Path.GetDirectoryName(fullPath);
+    if (!string.IsNullOrEmpty(directory))
+    {
+        Directory.CreateDirectory(directory);
+    }
+
+    connectionStringBuilder.DataSource = fullPath;
+
+    return connectionStringBuilder.ToString();
 }
 
 builder.Services.AddDbContext<TalonAdmin.Models.Vouchers.Context>(o => ConfigureProvider(o, "VoucherContext"));
@@ -168,6 +197,17 @@ var mvc = builder.Services
         // JSON against those, so camelCase payloads leave every property unset — grids render the
         // right number of rows with entirely blank cells.
         options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+
+        // Breeze resolves the type of an expanded entity from Newtonsoft's $type discriminator.
+        // Web API 2 emitted these by default; without them the client cannot materialise a
+        // reference navigation and throws "Cannot read properties of undefined (reading
+        // 'entityState')" the moment any query uses $expand on one.
+        options.SerializerSettings.TypeNameHandling = TypeNameHandling.Objects;
+        options.SerializerSettings.TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple;
+
+        // TypeNameHandling also applies when reading, which is a remote-code-execution vector
+        // unless the types a payload may name are restricted. See TalonSerializationBinder.
+        options.SerializerSettings.SerializationBinder = new TalonSerializationBinder();
     });
 
 if (builder.Environment.IsDevelopment())
@@ -191,7 +231,20 @@ else
 // The AngularJS client is a static SPA published to wwwroot/app by the Grunt build; this lets
 // "/app/" resolve to its index.html.
 app.UseDefaultFiles();
-app.UseStaticFiles();
+var isDevelopment = app.Environment.IsDevelopment();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // The Grunt build always emits the same filenames (talon-<version>.js), so a rebuilt
+        // bundle is indistinguishable from the cached one and browsers happily serve the stale
+        // copy. Force revalidation while developing.
+        if (isDevelopment)
+        {
+            ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+        }
+    }
+});
 app.UseRouting();
 app.UseCors();
 

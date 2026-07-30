@@ -199,6 +199,6 @@ the Bower registry still resolves. Two caveats:
 - Versions are pinned deliberately. `angular-animate`/`-sanitize`/`-messages` must match `angular`
   exactly (1.4.4); a 1.4.14 animate against a 1.4.4 core breaks the animation runner at startup.
 
-**Known issue:** list/grid screens render empty. `breeze-client` 1.5 and Breeze 7 on the server do
-not agree on the query protocol — see [MIGRATION.md](MIGRATION.md). Login, navigation, the
-dashboard and SignalR all work.
+The client talks to Breeze 7 through a small compatibility shim (a JSON `uriBuilder` plus an
+expand-path rewrite) and matching serializer settings on the server. Both are load-bearing and
+documented in [MIGRATION.md](MIGRATION.md) — read that before changing either.

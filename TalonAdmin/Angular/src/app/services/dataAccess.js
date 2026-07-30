@@ -1,16 +1,24 @@
-﻿angular.module('talon.dataAccess')
+angular.module('talon.dataAccess')
 .factory('entityManagerFactory', ['breeze', 'modelOverrides', emFactory]);
 
 function emFactory(breeze, modelOverrides) {
     // Convert properties between server-side PascalCase and client-side camelCase
     breeze.NamingConvention.camelCase.setAsDefault();
 
-    // KNOWN ISSUE: this client is breeze-client 1.5, which builds queries with OData-style
-    // parameters ($top/$orderby/$expand/$inlinecount). The server is now Breeze 7, which expects
-    // Breeze's own JSON query format and ignores those, so list screens fetch every row unpaged,
-    // never populate expands, and report "NaN total entries". Entities themselves materialise
-    // correctly. The fix is to upgrade to breeze-client 2.x (npm), which ships the matching JSON
-    // uriBuilder and an AngularJS ajax adapter. See MIGRATION.md.
+    // Breeze 7 on the server reads Breeze's own JSON query format. This client defaults to the
+    // 'odata' uriBuilder, which emits $top/$orderby/$expand/$inlinecount; the server ignores those
+    // outright, so list screens would fetch every row unpaged, with no expands and no inlineCount.
+    breeze.config.initializeAdapterInstance('uriBuilder', 'json', true);
+
+    // where/orderBy clauses are resolved against the metadata, so breeze already translates those
+    // to the server names. expand paths are not: the JSON uriBuilder forwards them verbatim, so
+    // the camelCase paths this app is written with ('group', 'settings.propertyCollection') reach
+    // EF Core, which only knows the PascalCase navigation names and answers 500.
+    //
+    // The rewrite has to happen while the URI is built, not on the query: EntityQuery.expand()
+    // validates each path against the metadata under its *client* name, so translating earlier
+    // fails with "unable to locate property: Group on entityType: Beneficiary".
+    patchJsonUriBuilderExpand(breeze);
 
     // Identify the endpoint for the remote data service
     var serviceRoot = window.location.protocol + '//' + window.location.host + '/';
@@ -18,7 +26,8 @@ function emFactory(breeze, modelOverrides) {
 
     var dataService = new breeze.DataService({
         serviceName: serviceName,
-        hasServerMetadata: false
+        hasServerMetadata: false,
+        uriBuilderName: 'json'
     });
 
     var metadataStore = new breeze.MetadataStore({});
@@ -41,7 +50,8 @@ function emFactory(breeze, modelOverrides) {
 
     var adminDataService = new breeze.DataService({
         serviceName: serviceRoot + 'Breeze/Admin',
-        hasServerMetadata: false
+        hasServerMetadata: false,
+        uriBuilderName: 'json'
     });
 
     var adminMetadataStore = new breeze.MetadataStore({});
@@ -60,7 +70,55 @@ function emFactory(breeze, modelOverrides) {
         })
     });
 
+    function patchJsonUriBuilderExpand(breeze) {
+        var builder = breeze.config.getAdapterInstance('uriBuilder', 'json');
+        if (!builder || builder.talonExpandPatched) {
+            return;
+        }
 
+        var baseBuildUri = builder.buildUri;
+
+        builder.buildUri = function (query, metadataStore) {
+            var uri = baseBuildUri.call(this, query, metadataStore);
+            var separator = uri.indexOf('?');
+            if (separator < 0) {
+                return uri;
+            }
+
+            var prefix = uri.substring(0, separator + 1);
+            var payload = uri.substring(separator + 1);
+
+            var parsed;
+            try {
+                parsed = JSON.parse(decodeURIComponent(payload));
+            } catch (e) {
+                return uri;
+            }
+
+            if (!parsed || !parsed.expand) {
+                return uri;
+            }
+
+            parsed.expand = toServerExpandPaths(parsed.expand);
+
+            return prefix + encodeURIComponent(JSON.stringify(parsed));
+        };
+
+        builder.talonExpandPatched = true;
+
+        function toServerExpandPaths(propertyPaths) {
+            var isArray = Object.prototype.toString.call(propertyPaths) === '[object Array]';
+            var paths = isArray ? propertyPaths : String(propertyPaths).split(',');
+
+            var mapped = paths.map(function (path) {
+                return String(path).trim().split('.').map(function (segment) {
+                    return segment ? segment.charAt(0).toUpperCase() + segment.substring(1) : segment;
+                }).join('.');
+            });
+
+            return isArray ? mapped : mapped.join(',');
+        }
+    }
 
     // the "factory" services exposes two members
     var factory = {

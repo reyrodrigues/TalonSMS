@@ -52,8 +52,6 @@ namespace TalonAdmin.Data
                 return;
             }
 
-            EnsureDataDirectoryExists();
-
             await _adminContext.Database.EnsureCreatedAsync();
             await _voucherContext.Database.EnsureCreatedAsync();
 
@@ -69,30 +67,6 @@ namespace TalonAdmin.Data
             }
 
             _logger.LogInformation("Local database ready.");
-        }
-
-        private void EnsureDataDirectoryExists()
-        {
-            foreach (var name in new[] { "AdminContext", "VoucherContext" })
-            {
-                var connectionString = _configuration.GetConnectionString(name);
-                if (string.IsNullOrEmpty(connectionString) || !connectionString.Contains("Data Source="))
-                {
-                    continue;
-                }
-
-                var path = connectionString.Split(new[] { "Data Source=" }, StringSplitOptions.None)
-                    .Last()
-                    .Split(';')
-                    .First()
-                    .Trim();
-
-                var directory = Path.GetDirectoryName(Path.GetFullPath(path));
-                if (!string.IsNullOrEmpty(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-            }
         }
 
         private async Task SeedRolesAsync()
