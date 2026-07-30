@@ -9,6 +9,10 @@ The server is an ASP.NET Core application on .NET 10 backed by Entity Framework 
 [Breeze](https://breeze.github.io/) data API for the admin client, a REST API for the mobile
 vendor client, and generates spreadsheet and PDF reports.
 
+> The client is being rewritten in Vue 3. Both run side by side — AngularJS at `/app/`, Vue at
+> `/next/` — see [docs/VUE-PORT.md](docs/VUE-PORT.md) for what is ported and how to port the next
+> screen.
+>
 > [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
 > country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
 >

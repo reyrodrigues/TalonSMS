@@ -267,6 +267,11 @@ app.MapControllerRoute(
 app.MapControllers();
 app.MapHub<DashboardHub>("/signalr/dashboard");
 
+// The Vue client is a history-mode SPA published to wwwroot/next, so every path below /next/
+// has to serve its index.html rather than 404. It runs alongside the AngularJS client at /app/
+// until the port is complete.
+app.MapFallbackToFile("/next/{*path:nonfile}", "next/index.html");
+
 using (var scope = app.Services.CreateScope())
 {
     await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().InitializeAsync();

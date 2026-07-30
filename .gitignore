@@ -205,3 +205,6 @@ TalonAdmin/wwwroot/app/
 # VendorPrivate.json contain private key material and must never be committed.
 TalonAdmin/Keys/
 .DS_Store
+
+# Vue client build output (rebuild with: cd TalonAdmin/ClientApp && npm ci && npm run build)
+TalonAdmin/wwwroot/next/
