@@ -8,7 +8,9 @@ module.exports = {
      * completely built.
      */
     build_dir: 'build',
-    compile_dir: '../app',
+    // ASP.NET Core serves static files from wwwroot, so the compiled client lands there
+    // (it used to be ../app, served by IIS straight out of the project root).
+    compile_dir: '../wwwroot/app',
 
     /**
      * This is a collection of file patterns that refer to our app code (the
@@ -92,7 +94,6 @@ module.exports = {
         'vendor/flot-spline/js/jquery.flot.spline.js',
         'vendor/angular-block-ui/dist/angular-block-ui.min.js',
         'vendor/angular-gettext/dist/angular-gettext.js',
-        'vendor/angular-signalr-hub/signalr-hub.min.js',
 
 
         'lib/angular-dialog-service/dialogs.js',

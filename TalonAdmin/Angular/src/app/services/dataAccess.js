@@ -5,6 +5,13 @@ function emFactory(breeze, modelOverrides) {
     // Convert properties between server-side PascalCase and client-side camelCase
     breeze.NamingConvention.camelCase.setAsDefault();
 
+    // KNOWN ISSUE: this client is breeze-client 1.5, which builds queries with OData-style
+    // parameters ($top/$orderby/$expand/$inlinecount). The server is now Breeze 7, which expects
+    // Breeze's own JSON query format and ignores those, so list screens fetch every row unpaged,
+    // never populate expands, and report "NaN total entries". Entities themselves materialise
+    // correctly. The fix is to upgrade to breeze-client 2.x (npm), which ships the matching JSON
+    // uriBuilder and an AngularJS ajax adapter. See MIGRATION.md.
+
     // Identify the endpoint for the remote data service
     var serviceRoot = window.location.protocol + '//' + window.location.host + '/';
     var serviceName = serviceRoot + 'Breeze/EVM'; // breeze Web API controller

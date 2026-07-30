@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using TalonAdmin.Auth;
 using TalonAdmin.Data;
 using TalonAdmin.Hubs;
@@ -111,6 +113,27 @@ builder.Services
         AuthConstants.BasicScheme, null)
     .AddJwtBearer(options =>
     {
+        // The AngularJS client sends "Authorization: Token <access_token>", not "Bearer".
+        // Under OWIN that worked by accident: /Token also issued an authentication cookie, so the
+        // admin UI was really authenticated by cookie and the header scheme was never inspected.
+        // Accepting "Token" here keeps that client working unchanged. Vendor devices also use a
+        // "Token" scheme but hit [AuthorizeVendor] endpoints, which do their own lookup against
+        // Vendor.AuthorizationToken and never consult this handler.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                string header = context.Request.Headers.Authorization;
+                if (!string.IsNullOrEmpty(header)
+                    && header.StartsWith("Token ", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Token = header.Substring("Token ".Length).Trim();
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -138,6 +161,13 @@ var mvc = builder.Services
     .AddNewtonsoftJson(options =>
     {
         options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+
+        // Web API 2 serialised with the CLR property names; ASP.NET Core's AddNewtonsoftJson
+        // defaults to a camelCase resolver instead. That matters well beyond cosmetics: Breeze
+        // publishes its metadata with the PascalCase names, and a Breeze client matches incoming
+        // JSON against those, so camelCase payloads leave every property unset — grids render the
+        // right number of rows with entirely blank cells.
+        options.SerializerSettings.ContractResolver = new DefaultContractResolver();
     });
 
 if (builder.Environment.IsDevelopment())
@@ -158,6 +188,9 @@ else
     app.UseExceptionHandler("/Home/Error");
 }
 
+// The AngularJS client is a static SPA published to wwwroot/app by the Grunt build; this lets
+// "/app/" resolve to its index.html.
+app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors();

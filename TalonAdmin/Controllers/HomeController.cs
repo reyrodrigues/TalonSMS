@@ -31,13 +31,11 @@ namespace TalonAdmin.Controllers
             _environment = environment;
         }
 
-        // NOTE: this used to Redirect("~/App/"), i.e. to the compiled AngularJS bundle. That build
-        // output is produced by the Grunt/Bower toolchain under Angular/ and has never been checked
-        // in, so the redirect always 404s on a fresh clone. Serving the SPA shell view directly at
-        // least renders a page and makes the missing asset paths visible in the browser console.
+        // The AngularJS client is a static SPA; "npm install && npm run vendor && npm run build"
+        // in Angular/ publishes it to wwwroot/app.
         public IActionResult Index()
         {
-            return View();
+            return Redirect("~/app/");
         }
 
         public IActionResult Error()

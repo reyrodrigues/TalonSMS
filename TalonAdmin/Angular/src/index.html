@@ -21,8 +21,9 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/r/bs/dt-1.10.8,cr-1.2.0,r-1.0.7/datatables.min.css" />
 
     <script type="text/javascript" src="https://cdn.datatables.net/r/bs/dt-1.10.8,cr-1.2.0,r-1.0.7/datatables.min.js"></script>
-    <script type="text/javascript" src="/Scripts/jquery.signalR-2.2.0.min.js"></script>
-    <script type="text/javascript" src="/SignalR/Hubs"></script>
+    <!-- ASP.NET Core SignalR client. Replaces jquery.signalR-2.2.0 and the /SignalR/Hubs
+         generated proxy, neither of which exists on ASP.NET Core. -->
+    <script type="text/javascript" src="assets/signalr.min.js"></script>
 
 
 

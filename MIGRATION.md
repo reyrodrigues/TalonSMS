@@ -119,11 +119,21 @@ to translate a `GroupBy` whose key is a whole entity, so those queries now mater
 
 ## Known gaps
 
-- **The AngularJS frontend does not build.** `Angular/` is an AngularJS 1.2 app built with Grunt
-  and Bower; its output (`wwwroot/App`) has never been committed and Bower's registry has been shut
-  down, so `bower install` cannot resolve the 28 pinned dependencies. The backend is fully
-  functional and `/` renders a placeholder explaining this. Restoring the UI is a separate project:
-  either vendor the dependencies by hand or rewrite the client on a current toolchain.
+- **Breeze list screens do not populate.** The AngularJS client bundles `breeze-client` 1.5, which
+  builds queries with OData-style parameters (`$top`, `$orderby`, `$expand`, `$inlinecount`).
+  Breeze 7 on the server expects Breeze's own JSON query format and ignores those, so grids fetch
+  every row unpaged, never populate expands, and report "NaN total entries". Entities themselves
+  materialise correctly, and the dashboard (which uses the REST API, not Breeze) is unaffected.
+
+  The fix is to upgrade the client to `breeze-client` 2.x from npm, which ships both the matching
+  JSON `uriBuilder` and an `adapter-ajax-angularjs`. Setting `uriBuilderName` on the 1.5
+  `DataService` does not work — that option does not exist in 1.5.
+
+  Related and already fixed: ASP.NET Core's `AddNewtonsoftJson` defaults to a camelCase contract
+  resolver, whereas Web API 2 used the CLR names. Because Breeze publishes its metadata with the
+  PascalCase names and the client matches incoming JSON against those, camelCase payloads left
+  *every* property unset — grids rendered the right number of rows with entirely blank cells.
+  `Program.cs` now pins `DefaultContractResolver`.
 - **EPPlus licensing needs a decision.** EPPlus went from LGPL (4.x) to Polyform Noncommercial
   (5+). `Program.cs` currently declares a non-commercial organisation licence. If that is not
   accurate for this deployment, set `Epplus:LicenseKey` to a commercial key.

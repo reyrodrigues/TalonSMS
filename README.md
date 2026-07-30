@@ -175,13 +175,30 @@ Spreadsheets use EPPlus 8, which is licensed under Polyform Noncommercial. The a
 declares a non-commercial organisation licence in `Program.cs`. **If that is not accurate for your
 deployment, set `Epplus:LicenseKey` to a commercial key.**
 
-## Known limitation: the admin UI does not build
+## Building the admin UI
 
-`Angular/` holds an AngularJS 1.x client built with Grunt and Bower. Its build output
-(`TalonAdmin/wwwroot/App`) was never committed, and the Bower registry has been shut down, so its
-28 pinned dependencies can no longer be resolved. **The web UI therefore cannot be built from this
-repository as it stands.**
+`Angular/` holds the AngularJS 1.4 client, built with Grunt and Bower. Its output is not committed,
+so build it once before `/` will show anything:
 
-The server is unaffected and fully functional — the API is the product surface today. Visiting `/`
-renders a placeholder that says so. Restoring the UI means either vendoring the dependencies by
-hand or rewriting the client on a current toolchain; it is tracked as separate work.
+```bash
+cd TalonAdmin/Angular
+npm ci            # or: npm install
+npm run vendor    # bower install — resolves the client-side libraries
+npm run build     # compiles to TalonAdmin/wwwroot/app
+```
+
+`/` then redirects to `/app/`. Re-run `npm run build` after changing anything under `Angular/src`.
+
+The toolchain is old but works on current Node (verified on Node 24): Grunt 0.4 still loads, and
+the Bower registry still resolves. Two caveats:
+
+- `grunt compile` is not used directly — `npm run build` runs the working subset. The `ngAnnotate`
+  and `karma` tasks fail to load on modern Node; neither is load-bearing, because `uglify` is
+  configured but never registered in the compile task, so nothing is minified and DI annotations
+  are not required.
+- Versions are pinned deliberately. `angular-animate`/`-sanitize`/`-messages` must match `angular`
+  exactly (1.4.4); a 1.4.14 animate against a 1.4.4 core breaks the animation runner at startup.
+
+**Known issue:** list/grid screens render empty. `breeze-client` 1.5 and Breeze 7 on the server do
+not agree on the query protocol — see [MIGRATION.md](MIGRATION.md). Login, navigation, the
+dashboard and SignalR all work.

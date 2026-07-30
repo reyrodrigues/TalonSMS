@@ -9,7 +9,6 @@ angular.module('talon', [
   'ngMessages',
   'blockUI',
   'gettext',
-  'SignalR',
 
   // modules
   'talon.auth',
@@ -42,7 +41,7 @@ angular.module('talon', [
     gettextCatalog.setCurrentLanguage('en');
 })
 .controller('AppCtrl', function AppCtrl($scope, $location, $localStorage, $http, $state, $rootScope, $q,
-    $timeout, toaster, entityManagerFactory, authService, Hub) {
+    $timeout, toaster, entityManagerFactory, authService) {
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
         if (angular.isDefined(toState.data.pageTitle)) {
             $scope.pageTitle = 'Talon | ' + toState.data.pageTitle;
@@ -137,46 +136,35 @@ angular.module('talon', [
 
 
     if (!window.dashboardHub) {
-        window.dashboardHub = new Hub('dashboardHub', {
-            //client side methods
-            listeners: {
-                'message': function (type, title, message) {
-                    toaster.pop(type, title, message);
-                },
-                'updateDashboard': function () {
-                    if (window.loadDashboard) {
-                        $timeout(function () {
-                            window.loadDashboard();
-                        });
-                        $rootScope.$apply();
-                    }
-                }
-            },
-            methods: [],
-            //handle connection error
-            errorHandler: function (error) {
-                console.error(error);
-            },
-            //specify a non default root
-            rootPath: serviceRoot + 'signalR/hubs/',
+        // ASP.NET Core SignalR. The angular-signalr-hub `Hub` service wrapped SignalR 2's
+        // $.connection and its server-generated /SignalR/Hubs proxy; neither exists any more,
+        // and the wire protocol is different, so the official client builds the connection.
+        // withAutomaticReconnect() replaces the manual hubDisconnected/restart handling.
+        window.dashboardHub = new signalR.HubConnectionBuilder()
+            .withUrl(serviceRoot + 'signalr/dashboard')
+            .withAutomaticReconnect()
+            .build();
 
-            hubDisconnected: function () {
-                if (window.dashboardHub.connection.lastError) {
-                    window.dashboardHub.connection.start()
-                    .done(function () {
-                        if (window.dashboardHub.connection.state === 0) {
-                            $timeout(function () { }, 2000);
-                        }
-                        else {
-                        }
-                    })
-                    .fail(function (reason) {
-                        console.log(reason);
-                    });
-                }
+        window.dashboardHub.on('message', function (type, title, message) {
+            toaster.pop(type, title, message);
+        });
+
+        window.dashboardHub.on('updateDashboard', function () {
+            if (window.loadDashboard) {
+                // $timeout already schedules a digest, so the explicit $rootScope.$apply() the
+                // SignalR 2 callback used is dropped; calling it here would throw
+                // "$digest already in progress".
+                $timeout(function () {
+                    window.loadDashboard();
+                });
             }
         });
+
+        window.dashboardHub.start().catch(function (error) {
+            console.error(error);
+        });
     }
+
 
     function CanI(action) {
         if (!$rootScope.currentUser && !$rootScope.currentUser.AvailableActions) {
