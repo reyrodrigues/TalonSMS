@@ -15,12 +15,12 @@ namespace TalonAdmin.Controllers.Api
     public class ApplicationUserController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly AdminContext _admin;
 
         public ApplicationUserController(
             UserManager<ApplicationUser> userManager,
-            RoleManager<ApplicationRole> roleManager,
+            RoleManager<IdentityRole> roleManager,
             AdminContext admin)
         {
             _userManager = userManager;

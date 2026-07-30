@@ -84,6 +84,13 @@ namespace TalonAdmin.Extensions
                 {
                     var sheet = package.Workbook.Worksheets.Add(table.TableName);
                     sheet.LoadFromDataTable(table);
+
+                    // Dimension is null when nothing was written, i.e. for an empty table.
+                    if (sheet.Dimension == null)
+                    {
+                        continue;
+                    }
+
                     sheet.Cells[sheet.Dimension.Address].AutoFilter = true;
                     sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
                 }
@@ -112,8 +119,12 @@ namespace TalonAdmin.Extensions
                 var sheet = package.Workbook.Worksheets.Add(self.TableName);
 
                 sheet.LoadFromDataTable(self);
-                sheet.Cells[sheet.Dimension.Address].AutoFilter = true;
-                sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
+
+                if (sheet.Dimension != null)
+                {
+                    sheet.Cells[sheet.Dimension.Address].AutoFilter = true;
+                    sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
+                }
 
                 package.SaveAs(outputStream);
 
@@ -130,6 +141,15 @@ namespace TalonAdmin.Extensions
         /// <param name="address">Location of the data points</param>
         public static void LoadFromDataTable(this ExcelWorksheet self, DataTable dataTable, bool printColumns = true, string address = "A1")
         {
+            // EPPlus 4 quietly ignored a DataTable with no columns; EPPlus 8 throws
+            // "Column out of range". A table is column-less whenever it came from an empty JSON
+            // array, which happens for any metadata collection that has no rows yet, so the whole
+            // export used to fail on an otherwise ordinary empty table.
+            if (dataTable.Columns.Count == 0)
+            {
+                return;
+            }
+
             self.Cells[address].LoadFromDataTable(dataTable, printColumns);
 
             var dateColumns = from DataColumn d in dataTable.Columns

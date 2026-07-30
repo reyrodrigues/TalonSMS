@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TalonAdmin.Models.Admin
 {
-    public class AdminContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
+    public class AdminContext : IdentityDbContext<ApplicationUser>
     {
         public AdminContext(DbContextOptions<AdminContext> options)
             : base(options)
@@ -37,18 +37,12 @@ namespace TalonAdmin.Models.Admin
         {
             base.OnModelCreating(modelBuilder);
 
-            // Re-establish the Identity 2 navigations that Core Identity leaves off the model.
+            // Re-establish the ApplicationUser.Roles navigation that Core Identity leaves off the
+            // model; Include("Roles") and user.Roles both depend on it.
             modelBuilder.Entity<ApplicationUser>()
                 .HasMany(u => u.Roles)
                 .WithOne()
                 .HasForeignKey(ur => ur.UserId)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ApplicationRole>()
-                .HasMany(r => r.Users)
-                .WithOne()
-                .HasForeignKey(ur => ur.RoleId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 

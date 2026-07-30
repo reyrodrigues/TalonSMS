@@ -154,7 +154,7 @@ namespace TalonAdmin.Controllers.Breeze
         }
 
         [HttpGet]
-        public IQueryable<Models.Admin.ApplicationRole> Roles()
+        public IQueryable<IdentityRole> Roles()
         {
             return Db.Roles;
         }

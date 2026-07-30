@@ -200,3 +200,8 @@ TalonAdmin/Dashboards/
 
 # AngularJS client build output (rebuild with: cd TalonAdmin/Angular && npm ci && npm run vendor && npm run build)
 TalonAdmin/wwwroot/app/
+
+# RSA keypairs the mobile-client controller generates on first use. ServerPrivate.json and
+# VendorPrivate.json contain private key material and must never be committed.
+TalonAdmin/Keys/
+.DS_Store

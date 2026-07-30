@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace TalonAdmin.Data
         private readonly AdminContext _adminContext;
         private readonly Models.Vouchers.Context _voucherContext;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DatabaseInitializer> _logger;
 
@@ -33,7 +34,7 @@ namespace TalonAdmin.Data
             AdminContext adminContext,
             Models.Vouchers.Context voucherContext,
             UserManager<ApplicationUser> userManager,
-            RoleManager<ApplicationRole> roleManager,
+            RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
             ILogger<DatabaseInitializer> logger)
         {
@@ -60,6 +61,7 @@ namespace TalonAdmin.Data
             await SeedCountryAsync(organization);
             await SeedAdministratorAsync(organization);
             await SeedMenuAsync();
+            await SeedActionsAsync();
 
             if (_configuration.GetValue("Database:SeedDemoData", true))
             {
@@ -81,7 +83,7 @@ namespace TalonAdmin.Data
             {
                 if (!await _roleManager.RoleExistsAsync(roleName))
                 {
-                    await _roleManager.CreateAsync(new ApplicationRole(roleName));
+                    await _roleManager.CreateAsync(new IdentityRole(roleName));
                 }
             }
         }
@@ -359,6 +361,59 @@ namespace TalonAdmin.Data
             _logger.LogInformation(
                 "Seeded demo programme '{Programme}' with {Count} beneficiaries and vouchers.",
                 program.Name, beneficiaries.Length);
+        }
+
+        /// <summary>
+        /// The client gates every create/edit/delete button and several toolbar operations on
+        /// Action rows granted to the signed-in user's roles ($rootScope.canI). With none present
+        /// the UI is read-only and the create states bounce straight back to their list, so the
+        /// full set is granted to System Administrator here.
+        /// </summary>
+        private async Task SeedActionsAsync()
+        {
+            if (await _adminContext.Actions.AnyAsync())
+            {
+                return;
+            }
+
+            var collections = new[]
+            {
+                "Actions", "Beneficiaries", "BeneficiaryGroups", "Countries", "Distributions",
+                "Locations", "MenuCategories", "MenuItems", "OrganizationCountries",
+                "OrganizationUsers", "Organizations", "Programs", "Roles", "TransactionLogItems",
+                "Users", "VendorTypes", "Vendors", "VoucherTypes"
+            };
+
+            var names = new List<string>();
+            foreach (var collection in collections)
+            {
+                names.Add("Create " + collection);
+                names.Add("Edit " + collection);
+                names.Add("Delete " + collection);
+            }
+
+            names.AddRange(new[]
+            {
+                "Add Sales Person", "Cancel Vouchers", "Disable Beneficiaries", "Distribute Vouchers",
+                "Export Beneficiaries", "Export CardLoads", "Generate Test Sheet",
+                "Import Beneficiaries", "Import Vendor Data", "Process Quarantined Transactions"
+            });
+
+            var actions = names.Select(n => new Models.Admin.Action { Name = n }).ToArray();
+            _adminContext.Actions.AddRange(actions);
+            await _adminContext.SaveChangesAsync();
+
+            var systemAdministrator = await _roleManager.FindByNameAsync(SystemAdministratorRole);
+            if (systemAdministrator == null)
+            {
+                return;
+            }
+
+            _adminContext.ActionRoles.AddRange(
+                actions.Select(a => new ActionRole { ActionId = a.Id, RoleId = systemAdministrator.Id }));
+            await _adminContext.SaveChangesAsync();
+
+            _logger.LogInformation("Granted {Count} actions to '{Role}'.", actions.Length, SystemAdministratorRole);
         }
 
         private async Task SeedMenuAsync()

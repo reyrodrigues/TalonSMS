@@ -92,7 +92,7 @@ builder.Services.AddDbContext<TalonAdmin.Models.Vouchers.Context>(o => Configure
 builder.Services.AddDbContext<AdminContext>(o => ConfigureProvider(o, "AdminContext"));
 
 builder.Services
-    .AddIdentity<ApplicationUser, ApplicationRole>(options =>
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.RequireUniqueEmail = true;
         options.User.AllowedUserNameCharacters = null; // Identity 2 allowed non-alphanumeric names

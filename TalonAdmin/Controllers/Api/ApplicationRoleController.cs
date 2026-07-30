@@ -10,9 +10,9 @@ namespace TalonAdmin.Controllers.Api
     [Route("api/ApplicationRole")]
     public class ApplicationRoleController : ControllerBase
     {
-        private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public ApplicationRoleController(RoleManager<ApplicationRole> roleManager)
+        public ApplicationRoleController(RoleManager<IdentityRole> roleManager)
         {
             _roleManager = roleManager;
         }
@@ -25,7 +25,7 @@ namespace TalonAdmin.Controllers.Api
                 return BadRequest(ModelState);
             }
 
-            var role = new ApplicationRole
+            var role = new IdentityRole
             {
                 Name = model.Name
             };

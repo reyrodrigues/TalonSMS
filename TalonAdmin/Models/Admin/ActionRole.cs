@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,6 @@ namespace TalonAdmin.Models.Admin
         public virtual int ActionId { get; set; }
 
         public virtual Action Action { get; set; }
-        public virtual ApplicationRole Role { get; set; }
+        public virtual IdentityRole Role { get; set; }
     }
 }
