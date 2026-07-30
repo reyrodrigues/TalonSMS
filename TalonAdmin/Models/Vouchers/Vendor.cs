@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Web;
 
 namespace TalonAdmin.Models.Vouchers
 {
@@ -33,6 +33,7 @@ namespace TalonAdmin.Models.Vouchers
         public virtual ICollection<VendorSalesPerson> SalesPersons { get; set;  }
 
 
+        [NotMapped]
         public JToken AdditionalDataObject
         {
             get
@@ -49,13 +50,13 @@ namespace TalonAdmin.Models.Vouchers
 
         public void SetPassword(string plainText)
         {
-            RNGCryptoServiceProvider generator = new RNGCryptoServiceProvider();
-            var salt = new byte[16];
-            generator.GetBytes(salt);
+            var salt = RandomNumberGenerator.GetBytes(16);
 
             var iterations = 1000;
-            var passwordHasher = new Rfc2898DeriveBytes(plainText, salt, iterations);
-            this.Password = String.Format("{0}:{1}:{2}", Convert.ToBase64String(salt), Convert.ToBase64String(passwordHasher.GetBytes(16)), iterations);
+            // SHA1 is pinned deliberately: it is what the parameterless EF6 overload used, and
+            // changing it would invalidate every vendor password already in the database.
+            var hash = Rfc2898DeriveBytes.Pbkdf2(plainText, salt, iterations, HashAlgorithmName.SHA1, 16);
+            this.Password = String.Format("{0}:{1}:{2}", Convert.ToBase64String(salt), Convert.ToBase64String(hash), iterations);
         }
 
         public bool ValidatePassword(string plainText)
@@ -68,9 +69,9 @@ namespace TalonAdmin.Models.Vouchers
             var saltAndHash = Password.Split(':');
             var salt = Convert.FromBase64String(saltAndHash[0]);
             var iterations = Convert.ToInt32(saltAndHash[2]);
-            var passwordHasher = new Rfc2898DeriveBytes(plainText, salt, iterations);
-            
-            var rightSide = String.Format("{0}:{1}:{2}", Convert.ToBase64String(salt), Convert.ToBase64String(passwordHasher.GetBytes(16)), iterations);
+            var hash = Rfc2898DeriveBytes.Pbkdf2(plainText, salt, iterations, HashAlgorithmName.SHA1, 16);
+
+            var rightSide = String.Format("{0}:{1}:{2}", Convert.ToBase64String(salt), Convert.ToBase64String(hash), iterations);
 
             return this.Password == rightSide;
         }

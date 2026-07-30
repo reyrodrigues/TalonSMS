@@ -1,0 +1,193 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using TalonAdmin.Auth;
+using TalonAdmin.Data;
+using TalonAdmin.Hubs;
+using TalonAdmin.Models.Admin;
+using TalonAdmin.Reporting;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var configuration = builder.Configuration;
+
+// EPPlus 5+ refuses to open a package until a licence has been declared. The upgrade from the
+// LGPL-era 4.0.3 therefore requires an explicit choice here.
+// ACTION REQUIRED: confirm this matches how the organisation is licensed. If EPPlus is used
+// commercially, set Epplus:LicenseKey instead of relying on the non-commercial declaration.
+var epplusLicenseKey = configuration["Epplus:LicenseKey"];
+if (!string.IsNullOrWhiteSpace(epplusLicenseKey))
+{
+    OfficeOpenXml.ExcelPackage.License.SetCommercial(epplusLicenseKey);
+}
+else
+{
+    OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization(
+        configuration["Epplus:Organization"] ?? "International Rescue Committee");
+}
+var provider = configuration["Database:Provider"] ?? "SqlServer";
+
+void ConfigureProvider(DbContextOptionsBuilder options, string connectionStringName)
+{
+    var connectionString = configuration.GetConnectionString(connectionStringName);
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException(
+            $"Connection string '{connectionStringName}' is not configured.");
+    }
+
+    if (string.Equals(provider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlite(connectionString);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+}
+
+builder.Services.AddDbContext<TalonAdmin.Models.Vouchers.Context>(o => ConfigureProvider(o, "VoucherContext"));
+builder.Services.AddDbContext<AdminContext>(o => ConfigureProvider(o, "AdminContext"));
+
+builder.Services
+    .AddIdentity<ApplicationUser, ApplicationRole>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        options.User.AllowedUserNameCharacters = null; // Identity 2 allowed non-alphanumeric names
+        options.Password.RequiredLength = 6;
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+    })
+    .AddEntityFrameworkStores<AdminContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<TalonUserAuthenticator>();
+builder.Services.AddScoped<JwtTokenIssuer>();
+builder.Services.AddScoped<RazorViewRenderer>();
+builder.Services.AddSingleton<IPdfRenderer, ChromiumPdfRenderer>();
+builder.Services.AddScoped<DatabaseInitializer>();
+
+builder.Services
+    // AddIdentity above points DefaultAuthenticateScheme/DefaultChallengeScheme at its cookie
+    // handlers. All three have to be reset explicitly, or bearer tokens are ignored and an
+    // unauthenticated API call answers with a 302 to a login page that does not exist.
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = AuthConstants.SmartScheme;
+        options.DefaultAuthenticateScheme = AuthConstants.SmartScheme;
+        options.DefaultChallengeScheme = AuthConstants.SmartScheme;
+    })
+    .AddPolicyScheme(AuthConstants.SmartScheme, AuthConstants.SmartScheme, options =>
+    {
+        // One endpoint set serves both bearer-token clients and the Basic-auth field devices.
+        options.ForwardDefaultSelector = context =>
+        {
+            string header = context.Request.Headers.Authorization;
+            if (!string.IsNullOrEmpty(header)
+                && header.StartsWith(AuthConstants.BasicScheme + " ", StringComparison.OrdinalIgnoreCase))
+            {
+                return AuthConstants.BasicScheme;
+            }
+
+            return JwtBearerDefaults.AuthenticationScheme;
+        };
+    })
+    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, BasicAuthenticationHandler>(
+        AuthConstants.BasicScheme, null)
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = configuration["Jwt:Audience"],
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = JwtTokenIssuer.GetSigningKey(configuration),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .SetIsOriginAllowed(_ => true)
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials()));
+
+var mvc = builder.Services
+    .AddControllersWithViews()
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+    });
+
+if (builder.Environment.IsDevelopment())
+{
+    mvc.AddRazorRuntimeCompilation();
+}
+
+builder.Services.AddSignalR();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+}
+
+app.UseStaticFiles();
+app.UseRouting();
+app.UseCors();
+
+app.UseMiddleware<TenantFormMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "breeze",
+    pattern: "breeze/{controller}/{action}");
+
+app.MapControllerRoute(
+    name: "api",
+    pattern: "api/{controller}/{action}/{id?}");
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllers();
+app.MapHub<DashboardHub>("/signalr/dashboard");
+
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().InitializeAsync();
+}
+
+app.Run();
+
+public partial class Program
+{
+}

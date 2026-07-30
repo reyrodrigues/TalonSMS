@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/node_modules/
+**/vendor/
+Angular/build/
+TalonAdmin/App_Data/*.db
+TalonAdmin/Dashboards/
+.git/
+.gitignore
+docker-compose.yml
+Dockerfile
+.dockerignore
+*.md

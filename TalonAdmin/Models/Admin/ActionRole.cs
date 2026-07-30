@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNet.Identity.EntityFramework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 
 namespace TalonAdmin.Models.Admin
 {
@@ -13,6 +11,6 @@ namespace TalonAdmin.Models.Admin
         public virtual int ActionId { get; set; }
 
         public virtual Action Action { get; set; }
-        public virtual IdentityRole Role { get; set; }
+        public virtual ApplicationRole Role { get; set; }
     }
 }

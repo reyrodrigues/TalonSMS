@@ -1,0 +1,93 @@
+# Local dependencies for TalonAdmin.
+#
+#   docker compose up -d                  # SQL Server + the mocked external services
+#   docker compose --profile app up -d    # ...and the application itself
+#
+# SQLite remains the zero-infrastructure default (see README). Use this stack when you want to
+# develop against the same database engine production runs on.
+
+services:
+  sqlserver:
+    # SQL Server has no arm64 image; on Apple Silicon this runs through Rosetta emulation, which
+    # works but is noticeably slower than the SQLite path.
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: talon-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Talon!DevPassword1}"
+      MSSQL_PID: Developer
+    ports:
+      - "${MSSQL_PORT:-1433}:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  # Creates the two databases the application expects, then exits.
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: talon-sqlserver-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Talon!DevPassword1}"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P "$$MSSQL_SA_PASSWORD" -C -b -Q "
+          IF DB_ID('TalonAdmin') IS NULL CREATE DATABASE [TalonAdmin];
+          IF DB_ID('TalonVouchers') IS NULL CREATE DATABASE [TalonVouchers];
+        "
+    restart: "no"
+
+  # Stands in for the SMS gateways (RescueSMS, TurboSMS, Clickatell) and the staff directory
+  # used for fallback authentication, so local runs never reach a real provider.
+  external-services:
+    image: wiremock/wiremock:3.9.1
+    container_name: talon-external-services
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "${WIREMOCK_PORT:-8081}:8080"
+    volumes:
+      - ./docker/wiremock/mappings:/home/wiremock/mappings:ro
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/__admin/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  app:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: talon-app
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      external-services:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Database__Provider: SqlServer
+      ConnectionStrings__AdminContext: "Server=sqlserver,1433;Database=TalonAdmin;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Talon!DevPassword1};TrustServerCertificate=True"
+      ConnectionStrings__VoucherContext: "Server=sqlserver,1433;Database=TalonVouchers;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Talon!DevPassword1};TrustServerCertificate=True"
+      RescueSMS__URL: "http://external-services:8080/rescuesms/"
+      ActiveDirectory__AuthenticationUrl: "http://external-services:8080/SimpleAuthenticationRESTService.aspx"
+    ports:
+      - "${APP_PORT:-5080}:8080"
+
+volumes:
+  sqlserver-data:

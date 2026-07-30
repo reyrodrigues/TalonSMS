@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -7,13 +7,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
-using System.Web;
 using System.Xml.Serialization;
 
 namespace TalonAdmin.Models.Vouchers
 {
     public class Beneficiary : TenantEntity
     {
+        [NotMapped]
         public string Name
         {
             get
@@ -50,6 +50,7 @@ namespace TalonAdmin.Models.Vouchers
         public virtual BeneficiaryGroup Group { get; set; }
         public virtual Location Location { get; set; }
 
+        [NotMapped]
         public JToken AdditionalDataObject
         {
             get
@@ -66,7 +67,7 @@ namespace TalonAdmin.Models.Vouchers
 
         internal void GenerateKey()
         {
-            using (Aes rm = new AesCryptoServiceProvider())
+            using (Aes rm = Aes.Create())
             {
                 rm.GenerateKey();
                 this.CardKey = Convert.ToBase64String(rm.Key);

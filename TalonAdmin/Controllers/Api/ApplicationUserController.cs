@@ -1,36 +1,42 @@
-﻿using Microsoft.AspNet.Identity;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using TalonAdmin.Models;
-using TalonAdmin.Models.Admin;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.Cookies;
-using Microsoft.Owin.Security.OAuth;
-using Microsoft.AspNet.Identity.EntityFramework;
-using Microsoft.AspNet.Identity.Owin;
-using TalonAdmin.Models.BindingModels;
-using System.Data.Entity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
+using TalonAdmin.Extensions;
+using TalonAdmin.Models.Admin;
+using TalonAdmin.Models.BindingModels;
 
 namespace TalonAdmin.Controllers.Api
 {
-    [RoutePrefix("api/ApplicationUser")]
-    public class ApplicationUserController : ApiController
+    [Route("api/ApplicationUser")]
+    public class ApplicationUserController : ControllerBase
     {
-        public async Task<IHttpActionResult> Post(ApplicationUserBindingModel model)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly AdminContext _admin;
+
+        public ApplicationUserController(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<ApplicationRole> roleManager,
+            AdminContext admin)
         {
-            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _admin = admin;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] ApplicationUserBindingModel model)
+        {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var user = new ApplicationUser()
+            var user = new ApplicationUser
             {
                 Id = Guid.NewGuid().ToString(),
                 FullName = model.FullName,
@@ -39,33 +45,31 @@ namespace TalonAdmin.Controllers.Api
                 OrganizationId = model.OrganizationId
             };
 
-            IdentityResult result = await UserManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
 
-            return Json<ApplicationUser>(user, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore });
+            return new JsonResult(user);
         }
 
-        public async Task<IHttpActionResult> Put([FromUri]string id, [FromBody] ApplicationUserBindingModel model)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put([FromRoute] string id, [FromBody] ApplicationUserBindingModel model)
         {
-            IdentityResult result;
-
-            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var user = await UserManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id);
             user.FullName = model.FullName;
             user.UserName = model.UserName;
             user.Email = model.Email;
             user.OrganizationId = model.OrganizationId;
 
-            result = await UserManager.UpdateAsync(user);
+            var result = await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
             {
@@ -74,14 +78,14 @@ namespace TalonAdmin.Controllers.Api
 
             if (!String.IsNullOrEmpty(model.Password))
             {
-                result = await UserManager.RemovePasswordAsync(user.Id);
+                result = await _userManager.RemovePasswordAsync(user);
 
                 if (!result.Succeeded)
                 {
                     return GetErrorResult(result);
                 }
 
-                result = await UserManager.AddPasswordAsync(user.Id, model.Password);
+                result = await _userManager.AddPasswordAsync(user, model.Password);
 
                 if (!result.Succeeded)
                 {
@@ -89,17 +93,14 @@ namespace TalonAdmin.Controllers.Api
                 }
             }
 
-
-            return Json<ApplicationUser>(user, new Newtonsoft.Json.JsonSerializerSettings {  ReferenceLoopHandling  = Newtonsoft.Json.ReferenceLoopHandling.Ignore });
+            return new JsonResult(user);
         }
 
-        [HttpDelete]
-        public async Task<IHttpActionResult> Delete([FromUri]string id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-
-            var user = await UserManager.FindByIdAsync(id);
-            var result = await UserManager.DeleteAsync(user);
+            var user = await _userManager.FindByIdAsync(id);
+            var result = await _userManager.DeleteAsync(user);
 
             if (!result.Succeeded)
             {
@@ -109,56 +110,55 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
-        [Route("Me"), HttpGet]
-        public async Task<IHttpActionResult> Me()
+        [HttpGet("Me")]
+        public async Task<IActionResult> Me()
         {
-            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+            var userId = this.GetUserId();
 
-            using (var admin = new Models.Admin.AdminContext())
+            var user = await _admin.Users
+                .AsNoTracking()
+                .Include(u => u.Countries)
+                .ThenInclude(c => c.Country)
+                .Include(u => u.Roles)
+                .Include(u => u.Organization)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
             {
-                admin.Configuration.ProxyCreationEnabled = false;
-                admin.Configuration.LazyLoadingEnabled = false;
-
-                string userId = User.Identity.GetUserId();
-                if (admin.Users.Where(u => u.Id == userId).Any())
-                {
-                    var user = (await admin.Users
-                        .Include("Countries")
-                        .Include("Roles")
-                        .Include("Countries.Country")
-                        .Include("Organization")
-                        .Where(u => u.Id == userId)
-                        .ToListAsync()).First();
-                    var roles = user.Roles.Select(r => r.RoleId).ToArray();
-
-                    var jsonUser = JObject.FromObject(user);
-                    var role = await RoleManager.FindByNameAsync("System Administrator");
-                    jsonUser["IsSystemAdministrator"] = role.Users.Select(r => r.UserId).Contains(user.Id);
-                    jsonUser["AvailableActions"] = JToken.FromObject(admin.ActionRoles.Include("Action")
-                        .Where(a => roles.Contains(a.RoleId))
-                        .Select(a => a.Action)
-                        .Distinct());
-
-                    return Json<JObject>(jsonUser);
-                }
-
                 return BadRequest();
             }
+
+            var roles = user.Roles.Select(r => r.RoleId).ToArray();
+
+            var jsonUser = JObject.FromObject(user);
+
+            // Core Identity has no IdentityRole.Users navigation, so membership comes from the join table.
+            var systemAdministrator = await _roleManager.FindByNameAsync("System Administrator");
+            jsonUser["IsSystemAdministrator"] = systemAdministrator != null
+                && await _admin.UserRoles.AnyAsync(ur => ur.RoleId == systemAdministrator.Id && ur.UserId == user.Id);
+
+            var availableActions = await _admin.ActionRoles
+                .AsNoTracking()
+                .Include(a => a.Action)
+                .Where(a => roles.Contains(a.RoleId))
+                .Select(a => a.Action)
+                .Distinct()
+                .ToListAsync();
+
+            jsonUser["AvailableActions"] = JToken.FromObject(availableActions);
+
+            return new JsonResult(jsonUser);
         }
 
-        [Route("{id}/RemoveUserFromRole")]
-        public async Task<IHttpActionResult> RemoveUserFromRole([FromUri]string id, [FromBody]dynamic request)
+        [HttpPost("{id}/RemoveUserFromRole")]
+        public async Task<IActionResult> RemoveUserFromRole([FromRoute] string id, [FromBody] JObject request)
         {
-            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+            var roleId = request.Value<string>("roleId");
 
-            string roleId = request.roleId;
+            var user = await _userManager.FindByIdAsync(id);
+            var role = await _roleManager.FindByIdAsync(roleId);
 
-            var user = await UserManager.FindByIdAsync(id);
-            var role = await RoleManager.FindByIdAsync(roleId);
-
-            IdentityResult result = await UserManager.RemoveFromRoleAsync(user.Id, role.Name);
+            var result = await _userManager.RemoveFromRoleAsync(user, role.Name);
 
             if (!result.Succeeded)
             {
@@ -168,18 +168,15 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
-        [Route("{id}/AddUserToRole")]
-        public async Task<IHttpActionResult> AddUserToRole([FromUri]string id, [FromBody]dynamic request)
+        [HttpPost("{id}/AddUserToRole")]
+        public async Task<IActionResult> AddUserToRole([FromRoute] string id, [FromBody] JObject request)
         {
-            var UserManager = Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+            var roleId = request.Value<string>("roleId");
 
-            string roleId = request.roleId;
+            var user = await _userManager.FindByIdAsync(id);
+            var role = await _roleManager.FindByIdAsync(roleId);
 
-            var user = await UserManager.FindByIdAsync(id);
-            var role = await RoleManager.FindByIdAsync(roleId);
-
-            IdentityResult result = await UserManager.AddToRoleAsync(user.Id, role.Name);
+            var result = await _userManager.AddToRoleAsync(user, role.Name);
 
             if (!result.Succeeded)
             {
@@ -189,20 +186,20 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
-        private IHttpActionResult GetErrorResult(IdentityResult result)
+        private IActionResult GetErrorResult(IdentityResult result)
         {
             if (result == null)
             {
-                return InternalServerError();
+                return StatusCode(500);
             }
 
             if (!result.Succeeded)
             {
                 if (result.Errors != null)
                 {
-                    foreach (string error in result.Errors)
+                    foreach (var error in result.Errors)
                     {
-                        ModelState.AddModelError("", error);
+                        ModelState.AddModelError("", error.Description);
                     }
                 }
 
@@ -217,6 +214,5 @@ namespace TalonAdmin.Controllers.Api
 
             return null;
         }
-
     }
 }

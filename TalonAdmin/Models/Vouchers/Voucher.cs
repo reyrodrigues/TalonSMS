@@ -1,10 +1,9 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Web;
 using System.Xml.Serialization;
 
 namespace TalonAdmin.Models.Vouchers
@@ -14,14 +13,14 @@ namespace TalonAdmin.Models.Vouchers
         public virtual int CategoryId { get; set; }
         public virtual int DistributionId { get; set; }
 
-        [Index(IsUnique = false), StringLength(30)]
+        [StringLength(30)]
         public virtual string VoucherCode { get; set; }
 
         /// <summary>
         /// This code is used for backwards compatibility.
         /// This is used to link a paper voucher printed out outside of the system and it is used to correlate with a real voucher in the POSs
         /// </summary>
-        [Index(IsUnique = false), StringLength(30)]
+        [StringLength(30)]
         public virtual string SequentialCode { get; set; }
 
 
@@ -38,7 +37,7 @@ namespace TalonAdmin.Models.Vouchers
         public virtual Distribution Distribution { get; set; }
         public virtual ICollection<VoucherTransactionRecord> TransactionRecords { get; set; }
 
-        [JsonIgnore, XmlIgnore]
+        [JsonIgnore, XmlIgnore, NotMapped]
         public virtual VoucherTransactionRecord IssuingTransactionRecord
         {
             get
@@ -47,7 +46,7 @@ namespace TalonAdmin.Models.Vouchers
             }
         }
 
-        [JsonIgnore, XmlIgnore]
+        [JsonIgnore, XmlIgnore, NotMapped]
         public virtual VoucherTransactionRecord LatestCreditTransactionRecords
         {
             get
@@ -56,7 +55,7 @@ namespace TalonAdmin.Models.Vouchers
             }
         }
 
-        [JsonIgnore, XmlIgnore]
+        [JsonIgnore, XmlIgnore, NotMapped]
         public virtual decimal RemainingValue
         {
             get
@@ -65,6 +64,7 @@ namespace TalonAdmin.Models.Vouchers
             }
         }
 
+        [NotMapped]
         public string StatusString
         {
             get

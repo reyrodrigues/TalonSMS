@@ -1,167 +1,180 @@
-﻿using Breeze.ContextProvider;
-using Breeze.ContextProvider.EF6;
-using Breeze.WebApi2;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.Http;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.AspNet.Identity;
 using System.Threading.Tasks;
-
-using TalonAdmin.Extensions;
+using Breeze.AspNetCore;
+using Breeze.Persistence;
+using Breeze.Persistence.EFCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using TalonAdmin.Attributes;
-using Microsoft.AspNet.Identity.EntityFramework;
+using TalonAdmin.Extensions;
+
 namespace TalonAdmin.Controllers.Breeze
 {
-    [BreezeController, EnableBreezeQuery(MaxExpansionDepth = 5)]
-    public class AdminController : ApiController
+    [BreezeQueryFilter(MaxDepth = 5)]
+    [Route("breeze/Admin/[action]")]
+    public class AdminController : Controller
     {
-        readonly EFContextProvider<Models.Admin.AdminContext> _contextProvider =
-            new EFContextProvider<Models.Admin.AdminContext>();
+        private readonly EFPersistenceManager<Models.Admin.AdminContext> _persistenceManager;
 
-        public ApplicationRoleManager RoleManager { get { return HttpContext.Current.GetOwinContext().GetUserManager<ApplicationRoleManager>(); } }
+        public AdminController(Models.Admin.AdminContext context)
+        {
+            _persistenceManager = new EFPersistenceManager<Models.Admin.AdminContext>(context);
+        }
 
+        private Models.Admin.AdminContext Db
+        {
+            get { return _persistenceManager.Context; }
+        }
+
+        /// <summary>
+        /// Core Identity has no IdentityRole.Users navigation and does not eagerly load one, so
+        /// membership is resolved by querying the join table directly.
+        /// </summary>
+        private async Task<string[]> UserIdsInRolesAsync(params string[] roleNames)
+        {
+            var roleIds = await Db.Roles
+                .Where(r => roleNames.Contains(r.Name))
+                .Select(r => r.Id)
+                .ToArrayAsync();
+
+            return await Db.UserRoles
+                .Where(ur => roleIds.Contains(ur.RoleId))
+                .Select(ur => ur.UserId)
+                .Distinct()
+                .ToArrayAsync();
+        }
 
         [HttpGet]
         public string Metadata()
         {
-            return _contextProvider.Metadata();
+            return _persistenceManager.Metadata();
         }
 
         [HttpGet]
         [Authorize(Roles = "System Administrator")]
-        public async Task<IQueryable<TalonAdmin.Models.Admin.ApplicationUser>> Administrators()
+        public async Task<IQueryable<Models.Admin.ApplicationUser>> Administrators()
         {
-            var systemAdmins = await RoleManager.FindByNameAsync("System Administrator");
-            var orgAdmins = await RoleManager.FindByNameAsync("Organization Administrator");
+            var users = await UserIdsInRolesAsync("System Administrator", "Organization Administrator");
 
-            var users = systemAdmins.Users.Select(r => r.UserId).Union(orgAdmins.Users.Select(u => u.UserId)).Distinct().ToArray();
-
-            return _contextProvider.Context.Users.Where(u => users.Contains(u.Id));
+            return Db.Users.Where(u => users.Contains(u.Id));
         }
 
         [HttpGet]
         [Authorize(Roles = "Organization Administrator,System Administrator"), AuthorizeTenant]
-        public async Task<IQueryable<TalonAdmin.Models.Admin.ApplicationUser>> OrganizationUsers()
+        public async Task<IQueryable<Models.Admin.ApplicationUser>> OrganizationUsers()
         {
-            var role = await RoleManager.FindByNameAsync("System Administrator");
-            var users = role.Users.Select(r => r.UserId).ToArray();
+            var users = await UserIdsInRolesAsync("System Administrator");
 
-            return _contextProvider.Context.Users
+            return Db.Users
                 .FilterOrganization(this)
                 .Where(u => !users.Contains(u.Id));
         }
 
         [HttpGet]
         [Authorize(Roles = "Country Administrator, Organization Administrator,System Administrator"), AuthorizeTenant]
-        public async Task<IQueryable<TalonAdmin.Models.Admin.ApplicationUser>> CountryUsers()
+        public async Task<IQueryable<Models.Admin.ApplicationUser>> CountryUsers()
         {
+            var users = await UserIdsInRolesAsync("System Administrator", "Organization Administrator");
+            var tenantCountry = this.GetCountryId();
 
-            var sysAdmin = await RoleManager.FindByNameAsync("System Administrator");
-            var orgAdmin = await RoleManager.FindByNameAsync("Organization Administrator");
-            var users = sysAdmin.Users.Select(r => r.UserId).Union(orgAdmin.Users.Select(u=> u.UserId)).Distinct().ToArray();
-
-            var headers = Request.Headers.AsEnumerable().ToDictionary(k => k.Key, v => v.Value);
-            int tenantCountry = Convert.ToInt32(headers.ContainsKey("X-Tenant-Country") ? headers["X-Tenant-Country"].First() : "0");
-            var userQuery = _contextProvider.Context.Users.FilterOrganization(this).Select(u=>u.Id);
-
-            return _contextProvider.Context.Users
+            return Db.Users
                 .FilterOrganization(this)
-                .Where(u => u.Countries.Select(c=>c.CountryId == tenantCountry).Any())
+                .Where(u => u.Countries.Any(c => c.CountryId == tenantCountry))
                 .Where(u => !users.Contains(u.Id));
         }
 
         [HttpGet]
         [Authorize(Roles = "Organization Administrator,System Administrator")]
-        public async Task<IQueryable<TalonAdmin.Models.Admin.OrganizationCountry>> OrganizationCountries()
+        public IQueryable<Models.Admin.OrganizationCountry> OrganizationCountries()
         {
-            return _contextProvider.Context.OrganizationCountries
-                .Include("Country")
-                .Include("Settings")
+            return Db.OrganizationCountries
+                .Include(o => o.Country)
+                .Include(o => o.Settings)
                 .FilterOrganization(this);
         }
 
         [HttpGet]
         [Authorize(Roles = "Organization Administrator,System Administrator")]
-        public async Task<IQueryable<TalonAdmin.Models.Admin.OrganizationCountry>> UnfilteredOrganizationCountries()
+        public IQueryable<Models.Admin.OrganizationCountry> UnfilteredOrganizationCountries()
         {
-            return _contextProvider.Context.OrganizationCountries
-                .Include("Country")
-                .Include("Settings");
+            return Db.OrganizationCountries
+                .Include(o => o.Country)
+                .Include(o => o.Settings);
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.Organization> Organizations()
+        public IQueryable<Models.Admin.Organization> Organizations()
         {
-            return _contextProvider.Context.Organizations;
+            return Db.Organizations;
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.Country> Countries()
+        public IQueryable<Models.Admin.Country> Countries()
         {
-            return _contextProvider.Context.Countries;
-        }
-        [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.Action> Actions()
-        {
-            return _contextProvider.Context.Actions;
+            return Db.Countries;
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.ActionRole> ActionRoles()
+        public IQueryable<Models.Admin.Action> Actions()
         {
-            return _contextProvider.Context.ActionRoles;
+            return Db.Actions;
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.MenuCategory> MenuCategories()
+        public IQueryable<Models.Admin.ActionRole> ActionRoles()
         {
-            return _contextProvider.Context.MenuCategories;
+            return Db.ActionRoles;
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.MenuCategoryRole> MenuCategoryRoles()
+        public IQueryable<Models.Admin.MenuCategory> MenuCategories()
         {
-            return _contextProvider.Context.MenuCategoryRoles;
+            return Db.MenuCategories;
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.MenuItem> MenuItems()
+        public IQueryable<Models.Admin.MenuCategoryRole> MenuCategoryRoles()
         {
-            return _contextProvider.Context.MenuItems;
+            return Db.MenuCategoryRoles;
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.ApplicationUser> Users()
+        public IQueryable<Models.Admin.MenuItem> MenuItems()
         {
-            return _contextProvider.Context.Users;
+            return Db.MenuItems;
         }
 
         [HttpGet]
-        public IQueryable<IdentityRole> Roles()
+        public IQueryable<Models.Admin.ApplicationUser> Users()
         {
-            return _contextProvider.Context.Roles;
+            return Db.Users;
         }
 
         [HttpGet]
-        public IQueryable<IdentityUserRole> UserRoles()
+        public IQueryable<Models.Admin.ApplicationRole> Roles()
         {
-            return _contextProvider.Context.UserRoles;
+            return Db.Roles;
         }
 
         [HttpGet]
-        public IQueryable<TalonAdmin.Models.Admin.ApplicationUserCountry> ApplicationUserCountries()
+        public IQueryable<IdentityUserRole<string>> UserRoles()
         {
-            return _contextProvider.Context.ApplicationUserCountries;
+            return Db.UserRoles;
+        }
+
+        [HttpGet]
+        public IQueryable<Models.Admin.ApplicationUserCountry> ApplicationUserCountries()
+        {
+            return Db.ApplicationUserCountries;
         }
 
         [HttpPost]
-        public SaveResult SaveChanges(JObject saveBundle)
+        public SaveResult SaveChanges([FromBody] JObject saveBundle)
         {
-            return _contextProvider.SaveChanges(saveBundle);
+            return _persistenceManager.SaveChanges(saveBundle);
         }
     }
 }

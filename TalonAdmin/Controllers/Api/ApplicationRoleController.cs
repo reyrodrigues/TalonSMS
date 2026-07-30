@@ -1,79 +1,72 @@
-﻿using Microsoft.AspNet.Identity;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using TalonAdmin.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using TalonAdmin.Models.Admin;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.Cookies;
-using Microsoft.Owin.Security.OAuth;
-using Microsoft.AspNet.Identity.EntityFramework;
-using Microsoft.AspNet.Identity.Owin;
 using TalonAdmin.Models.BindingModels;
-
 
 namespace TalonAdmin.Controllers.Api
 {
-    public class ApplicationRoleController : ApiController
+    [Route("api/ApplicationRole")]
+    public class ApplicationRoleController : ControllerBase
     {
-        public async Task<IHttpActionResult> Post(ApplicationRoleBindingModel model)
+        private readonly RoleManager<ApplicationRole> _roleManager;
+
+        public ApplicationRoleController(RoleManager<ApplicationRole> roleManager)
+        {
+            _roleManager = roleManager;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] ApplicationRoleBindingModel model)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
-
-            var role = new IdentityRole()
+            var role = new ApplicationRole
             {
                 Name = model.Name
             };
 
-            var result = await RoleManager.CreateAsync(role);
+            var result = await _roleManager.CreateAsync(role);
 
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
 
-            return Json<IdentityRole>(role, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore });
-
+            return new JsonResult(role);
         }
 
-        public async Task<IHttpActionResult> Put([FromUri]string id, [FromBody] ApplicationRoleBindingModel model)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put([FromRoute] string id, [FromBody] ApplicationRoleBindingModel model)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
-
-            var role = await RoleManager.FindByIdAsync(id);
+            var role = await _roleManager.FindByIdAsync(id);
 
             role.Name = model.Name;
 
-            var result = await RoleManager.UpdateAsync(role);
+            var result = await _roleManager.UpdateAsync(role);
 
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
 
-            return Json<IdentityRole>(role, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore });
+            return new JsonResult(role);
         }
 
-        public async Task<IHttpActionResult> Delete([FromUri]string id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            var RoleManager = Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
-
-            var role = await RoleManager.FindByIdAsync(id);
-            var result = await RoleManager.DeleteAsync(role);
+            var role = await _roleManager.FindByIdAsync(id);
+            var result = await _roleManager.DeleteAsync(role);
 
             if (!result.Succeeded)
             {
@@ -83,20 +76,20 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
-        private IHttpActionResult GetErrorResult(IdentityResult result)
+        private IActionResult GetErrorResult(IdentityResult result)
         {
             if (result == null)
             {
-                return InternalServerError();
+                return StatusCode(500);
             }
 
             if (!result.Succeeded)
             {
                 if (result.Errors != null)
                 {
-                    foreach (string error in result.Errors)
+                    foreach (var error in result.Errors)
                     {
-                        ModelState.AddModelError("", error);
+                        ModelState.AddModelError("", error.Description);
                     }
                 }
 

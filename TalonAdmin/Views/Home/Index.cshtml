@@ -1,42 +1,70 @@
-﻿<!DOCTYPE html>
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@{
+    Layout = null;
+    // The AngularJS client is built by the Grunt/Bower toolchain under Angular/ and its output
+    // (wwwroot/App) is not committed. Everything below is the original shell; until the frontend
+    // is rebuilt these asset requests 404 and the page renders empty.
+    var frontendBuilt = System.IO.Directory.Exists(
+        System.IO.Path.Combine(HostEnvironment.WebRootPath ?? "", "App"));
+}
+<!DOCTYPE html>
 <html lang="en" data-ng-app="app">
 <head>
     <meta charset="utf-8" />
     <title>Talon</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-    <link rel="stylesheet" href="~/App/css/app.min.css" type="text/css" />
-    <link rel="stylesheet" href="~/App/bower/ng-grid/ng-grid.min.css" type="text/css" />
-    <link rel="stylesheet" href="~/App/lib/ng-grid.bootstrap.css" type="text/css" />
+    @if (frontendBuilt)
+    {
+        <link rel="stylesheet" href="~/App/css/app.min.css" type="text/css" />
+        <link rel="stylesheet" href="~/App/bower/ng-grid/ng-grid.min.css" type="text/css" />
+        <link rel="stylesheet" href="~/App/lib/ng-grid.bootstrap.css" type="text/css" />
+        <link rel="stylesheet" href="~/app/lib/bootstrap-chosen/bootstrap-chosen.css" type="text/css" />
+        <link rel="stylesheet" href="~/app/bower/footable/css/footable.core.css" type="text/css" />
+    }
     <link rel="stylesheet" href="~/Content/Flags/css/flag-icon.min.css" type="text/css" />
-    <link rel="stylesheet" href="~/Content/NonAngularCss" type="text/css" />
-    <link rel="stylesheet" href="~/app/lib/bootstrap-chosen/bootstrap-chosen.css" type="text/css" />
-    <link rel="stylesheet" href="~/app/bower/footable/css/footable.core.css" type="text/css" />
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon" />
 </head>
 <body ng-controller="AppCtrl">
+    @if (!frontendBuilt)
+    {
+        <noscript></noscript>
+        <div style="font-family: system-ui, sans-serif; max-width: 46rem; margin: 4rem auto; line-height: 1.6;">
+            <h1 style="font-size: 1.4rem;">Talon server is running</h1>
+            <p>
+                The .NET backend started successfully, but the AngularJS client bundle
+                (<code>wwwroot/App</code>) has not been built, so there is no UI to show.
+            </p>
+            <p>
+                The API is live: <code>POST /Token</code> to authenticate, then
+                <code>GET /breeze/EVM/Metadata</code> and <code>GET /breeze/Admin/Metadata</code>.
+            </p>
+        </div>
+    }
+
     <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
 
     <div class="app" id="app" ng-class="{
-         'app-header-fixed':app.settings.headerFixed, 
-         'app-aside-fixed':app.settings.asideFixed, 
-         'app-aside-folded':app.settings.asideFolded, 
-         'app-aside-dock':app.settings.asideDock, 
+         'app-header-fixed':app.settings.headerFixed,
+         'app-aside-fixed':app.settings.asideFixed,
+         'app-aside-folded':app.settings.asideFolded,
+         'app-aside-dock':app.settings.asideDock,
          'container':app.settings.container
          }" ui-view></div>
-    <!-- jQuery -->
-    <script src="~/Home/ServerScript"></script>
-    <script src="~/App/lib/crypto/forge.min.js"></script>
-    @if (Context.IsDebuggingEnabled)
+
+    @if (frontendBuilt)
     {
-        <script src="~/App/js/app.src.js"></script>
+        <script src="~/Home/ServerScript"></script>
+        <script src="~/App/lib/crypto/forge.min.js"></script>
+        if (HostEnvironment.IsDevelopment())
+        {
+            <script src="~/App/js/app.src.js"></script>
+        }
+        else
+        {
+            <script src="~/App/js/app.min.js"></script>
+        }
     }
-    else
-    { 
-        <script src="~/App/js/app.min.js"></script>
-    }
-    <script src="~/Scripts/NonAngularJs"></script>
-    <!-- Lazy loading -->
 </body>
 </html>

@@ -1,144 +1,55 @@
-﻿using Newtonsoft.Json.Linq;
-using RazorEngine;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Diagnostics;
-using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Mvc;
-using TuesPechkin;
-using RazorEngine.Templating;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using System.DirectoryServices.AccountManagement;
-using System.Globalization;
-using Breeze.ContextProvider.EF6;
+using Breeze.Persistence.EFCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using TalonAdmin.Extensions;
 
 namespace TalonAdmin.Controllers
 {
     public class HomeController : Controller
     {
-        private ApplicationUserManager _userManager;
-        public ApplicationUserManager UserManager
+        private readonly Models.Vouchers.Context _voucherContext;
+        private readonly Models.Admin.AdminContext _adminContext;
+        private readonly IWebHostEnvironment _environment;
+
+        public HomeController(
+            Models.Vouchers.Context voucherContext,
+            Models.Admin.AdminContext adminContext,
+            IWebHostEnvironment environment)
         {
-            get
-            {
-                return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
+            _voucherContext = voucherContext;
+            _adminContext = adminContext;
+            _environment = environment;
         }
 
-        public ActionResult Index()
+        // NOTE: this used to Redirect("~/App/"), i.e. to the compiled AngularJS bundle. That build
+        // output is produced by the Grunt/Bower toolchain under Angular/ and has never been checked
+        // in, so the redirect always 404s on a fresh clone. Serving the SPA shell view directly at
+        // least renders a page and makes the missing asset paths visible in the browser console.
+        public IActionResult Index()
         {
-            return  Redirect("~/App/");
+            return View();
         }
 
-        public ActionResult TestReport(int vendorId, int distributionId, string period)
+        public IActionResult Error()
         {
-            var content = new StringBuilder();
-            var report = System.IO.File.ReadAllText(Server.MapPath("~/Reports/VendorReceiptReport.cshtml"));
-            var image = System.IO.File.ReadAllBytes(Server.MapPath("~/Content/IRCLogo.svg"));
-            var periodDate = DateTime.Parse(period);
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                var items = (from v in ctx.VoucherTransactionRecords
-                             where
-                             v.VendorId == vendorId && v.Voucher.DistributionId == distributionId
-                             orderby v.Beneficiary.Name
-                             select v).ToArray();
-
-                int pageSize = 12;
-                var pages = new List<dynamic>();
-                var numberOfPages = (int)Math.Ceiling(items.Length / (double)pageSize);
-                if (numberOfPages == 0)
-                {
-                    numberOfPages = 1;
-                }
-                for (int i = 0; i < numberOfPages; i++)
-                {
-                    pages.Add(new
-                    {
-                        Page = i + 1,
-                        IsLastPage = (i + 1) == numberOfPages,
-                        Items = items.Skip(i * pageSize).Take(pageSize).ToArray(),
-                        SubTotal = items.Skip(i * pageSize).Take(pageSize).Select(v => v.Voucher.Value).Sum()
-                    });
-                }
-                var user = UserManager.FindByName(User.Identity.Name);
-
-                var model = new
-                {
-                    User = user,
-                    Distribution = ctx.Distributions.Where(d => d.Id == distributionId).First(),
-                    Period = periodDate,
-                    Pages = pages,
-                    Items = items,
-                    PageSize = pageSize,
-                    Vendor = ctx.Vendors.Where(v => v.Id == vendorId).First(),
-                    Logo = Convert.ToBase64String(image),
-                    LogoMimeType = "image/svg+xml",
-                    Total = items.Select(i => i.Voucher.Value).Sum()
-                };
-                var compiled = Engine.Razor.RunCompile(report, Guid.NewGuid().ToString(), null, model);
-
-                content.Append(compiled);
-
-            }
-
-            var document = new HtmlToPdfDocument
-            {
-                GlobalSettings =
-                {
-                    ProduceOutline = true,
-                    DocumentTitle = "Pretty Websites",
-                    PaperSize = PaperKind.A4, // Implicit conversion to PechkinPaperSize
-                    Margins =
-                    {
-                        All = 1,
-                        Unit = Unit.Centimeters
-                    },
-                    Orientation = TuesPechkin.GlobalSettings.PaperOrientation.Landscape
-                },
-                Objects = {
-                    new ObjectSettings { HtmlText = content.ToString() },
-                }
-            };
-
-            return File(WebApiApplication.converter.Convert(document), "application/pdf");
+            return View();
         }
 
-
-        public ActionResult TestLDAPS()
+        public IActionResult ServerScript()
         {
-            using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, "ldaps://ldaps.rescue.org:636/", "ou=All Users,dc=theirc,dc=org"))
-            {
-                // validate the credentials
-                bool b = pc.ValidateCredentials("otis", "P@ssw0rd");
-                return Content("TRUE!");
-            }
+            var appPath = Request.PathBase.HasValue ? Request.PathBase.Value : "";
 
-        }
-
-        public ActionResult ServerScript()
-        {
-            StringBuilder content = new StringBuilder();
-            var isAuthenticated = User.Identity.IsAuthenticated;
-
-            var appPath = Request.ApplicationPath;
-            if (appPath == "/")
-                appPath = "";
-
-            if (Request.Headers.AllKeys.Contains("X-Proxy-Path"))
+            if (Request.Headers.ContainsKey("X-Proxy-Path"))
             {
                 appPath = Request.Headers["X-Proxy-Path"];
             }
@@ -150,60 +61,69 @@ namespace TalonAdmin.Controllers
 
             ViewBag.AppPath = appPath;
 
-            var talonContextProvider = new EFContextProvider<Models.Vouchers.Context>();
-            var adminContextProvider = new EFContextProvider<Models.Admin.AdminContext>();
-
-            ViewBag.MainMetadata = talonContextProvider.Metadata();
-            ViewBag.AdminMetadata = adminContextProvider.Metadata();
-
+            ViewBag.MainMetadata = new EFPersistenceManager<Models.Vouchers.Context>(_voucherContext).Metadata();
+            ViewBag.AdminMetadata = new EFPersistenceManager<Models.Admin.AdminContext>(_adminContext).Metadata();
 
             return View();
         }
 
         [Authorize]
-        public ActionResult NavigationItems()
+        public async Task<IActionResult> NavigationItems()
         {
-            var userId = User.Identity.GetUserId();
-            using (var ctx = new Models.Admin.AdminContext())
+            var userId = this.GetUserId();
+
+            // Core Identity exposes no ApplicationUser.Roles shortcut on a bare query, so role
+            // membership is read from the join table.
+            var roles = await _adminContext.UserRoles
+                .Where(ur => ur.UserId == userId)
+                .Select(ur => ur.RoleId)
+                .ToArrayAsync();
+
+            var categories = (await _adminContext.MenuCategories
+                    .AsNoTracking()
+                    .Include(c => c.Roles)
+                    .Include(c => c.Items)
+                    .ToArrayAsync())
+                .Where(c => !c.Roles.Any() || c.Roles.Select(r => r.RoleId).Intersect(roles).Any())
+                .OrderBy(c => c.SortOrder)
+                .ToArray();
+
+            var jsonSerializer = new JsonSerializer
             {
-                var user = ctx.Users.Where(u => u.Id == userId).First();
-                var roles = user.Roles.Select(r => r.RoleId).ToArray();
-                var categories = ctx.MenuCategories.ToArray().Where(c =>!c.Roles.Any() || c.Roles.Select(r => r.RoleId).Intersect(roles).Any())
-                    .OrderBy(c => c.SortOrder).ToArray();
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
 
-                var jsonSerializer  = new JsonSerializer {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                };
-
-                return Content(JToken.FromObject(categories, jsonSerializer).ToString(), "application/json");
-            }
+            return Content(JToken.FromObject(categories, jsonSerializer).ToString(), "application/json");
         }
 
-        public ActionResult MetadataJS() {
-            var talonContextProvider = new EFContextProvider<Models.Vouchers.Context>();
-            var adminContextProvider = new EFContextProvider<Models.Admin.AdminContext>();
-
+        public IActionResult MetadataJS()
+        {
             var buffer = new StringBuilder();
-            buffer.AppendFormat("window.ContextMetadata = JSON.stringify({0});\n", talonContextProvider.Metadata());
-            buffer.AppendFormat("window.AdminMetadata = JSON.stringify({0});\n", adminContextProvider.Metadata());
+            buffer.AppendFormat("window.ContextMetadata = JSON.stringify({0});\n",
+                new EFPersistenceManager<Models.Vouchers.Context>(_voucherContext).Metadata());
+            buffer.AppendFormat("window.AdminMetadata = JSON.stringify({0});\n",
+                new EFPersistenceManager<Models.Admin.AdminContext>(_adminContext).Metadata());
 
             return Content(buffer.ToString(), "application/javascript");
         }
 
-        public ActionResult OfflineManifest()
+        public IActionResult OfflineManifest()
         {
+            // Static assets now live under wwwroot, which is what the browser actually fetches.
+            var root = _environment.WebRootPath;
 
-            //throw new HttpException(404, "Some description");
+            // NOTE: guarded because App/ only exists once the frontend has been built; the EF6
+            // version threw a DirectoryNotFoundException on a fresh checkout.
+            var files = new[] { "App", "Scripts", "Content" }
+                .Select(d => Path.Combine(root, d))
+                .Where(Directory.Exists)
+                .SelectMany(d => Directory.EnumerateFiles(d, "*.*", SearchOption.AllDirectories))
+                .Select(f => f.Replace(root, ""))
+                .Select(f => f.Replace(Path.DirectorySeparatorChar, '/'))
+                .Select(f => (Request.PathBase + f).Replace("//", "/"))
+                .ToArray();
 
-            var files = Directory.EnumerateFiles(Server.MapPath("~/App"), "*.*", SearchOption.AllDirectories)
-                                .Union(Directory.EnumerateFiles(Server.MapPath("~/Scripts"), "*.*", SearchOption.AllDirectories))
-                                .Union(Directory.EnumerateFiles(Server.MapPath("~/Content"), "*.*", SearchOption.AllDirectories))
-                                .Select(f => f.Replace(Server.MapPath("~"), ""))
-                                .Select(f => f.Replace(Path.DirectorySeparatorChar, '/'))
-                                .Select(f => (Request.ApplicationPath + f).Replace("//", "/"))
-                                .ToArray();
             ViewBag.Files = files;
-
 
             return View();
         }

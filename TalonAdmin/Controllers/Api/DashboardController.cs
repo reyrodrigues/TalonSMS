@@ -1,45 +1,43 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Hosting;
-using System.Web.Http;
-using System.Web.Http.OData;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using TalonAdmin.Extensions;
 
 namespace TalonAdmin.Controllers.Api
 {
     [Authorize]
-    [RoutePrefix("api/Dashboard")]
-    public class DashboardController : ApiController
+    [Route("api/Dashboard")]
+    public class DashboardController : ControllerBase
     {
-        private Models.Vouchers.Context ctx = new Models.Vouchers.Context();
+        // NOTE: the action used to carry [EnableQuery] from System.Web.Http.OData. It returns a
+        // materialised JToken rather than an IQueryable, so the attribute never had any effect;
+        // it is dropped rather than pulling in Microsoft.AspNetCore.OData for a no-op.
+        private readonly Models.Vouchers.Context ctx;
+        private readonly IWebHostEnvironment _environment;
 
-        public DashboardController()
+        public DashboardController(Models.Vouchers.Context context, IWebHostEnvironment environment)
         {
-            ctx.Configuration.LazyLoadingEnabled = false;
-            ctx.Configuration.ProxyCreationEnabled = false;
+            ctx = context;
+            _environment = environment;
         }
 
-        protected override void Dispose(bool disposing)
+        [HttpGet("DashboardSummary")]
+        public async Task<IActionResult> DashboardSummary()
         {
-            ctx.Dispose();
-            base.Dispose(disposing);
-        }
+            string dirName = Path.Combine(_environment.ContentRootPath, "Dashboards");
+            string fileName = Path.Combine(dirName, String.Format("{0}-{1}.json", this.GetOrganizationId(), this.GetCountryId()));
 
-        [HttpGet, EnableQuery]
-        public async Task<IHttpActionResult> DashboardSummary()
-        {
-            string dirName = HostingEnvironment.MapPath("~/Dashboards");
-            string fileName = System.IO.Path.Combine(dirName, String.Format("{0}-{1}.json", this.GetOrganizationId(), this.GetCountryId()));
-
-            if (!System.IO.Directory.Exists(dirName))
+            if (!Directory.Exists(dirName))
             {
-                System.IO.Directory.CreateDirectory(dirName);
+                Directory.CreateDirectory(dirName);
             }
 
             var recreateDashboard = !System.IO.File.Exists(fileName);
@@ -56,7 +54,8 @@ namespace TalonAdmin.Controllers.Api
             if (recreateDashboard)
             {
                 var programs = await ctx.Programs
-                .Include("Distributions")
+                .AsNoTracking()
+                .Include(p => p.Distributions)
                 .FilterCountry(this)
                 .FilterOrganization(this)
                 .Where(p => p.Distributions.Any(d => d.Vouchers.Any(v => v.Status == 2 || v.Status == 3)) && p.ShowInDashboard == true)
@@ -65,13 +64,14 @@ namespace TalonAdmin.Controllers.Api
                 var programIds = programs.Select(p => p.Id);
 
                 var vouchers = ctx.Vouchers
+                    .AsNoTracking()
                     .FilterCountry(this)
                     .FilterOrganization(this)
                     .Where(v => v.Distribution.ProgramId != null && programIds.Contains(v.Distribution.ProgramId.Value));
 
                 var locations = ctx.Locations
+                    .AsNoTracking()
                     .FilterCountry(this);
-
 
                 var distributionSummary = programs.Select(p => p.Distributions.Select(d => new
                 {
@@ -104,7 +104,8 @@ namespace TalonAdmin.Controllers.Api
                         .Where(v => v.DistributionId == d.Id)
                         .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
                         .SelectMany(r => r)
-                        .Distinct(),
+                        .Distinct()
+                        .ToArray(),
                     ClaimedAmount =
                         vouchers
                         .Where(v => v.Status == 2 || v.Status == 3)
@@ -131,14 +132,15 @@ namespace TalonAdmin.Controllers.Api
                         .Where(v => v.Status == 2 || v.Status == 3)
                         .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
                         .SelectMany(r => r)
-                        .Distinct(),
+                        .Distinct()
+                        .ToArray(),
                 }).ToArray()).ToArray();
 
                 var dashboardQuery = distributionSummary
                     .SelectMany(r => r.Select(d => new
                     {
                         Program = programs.Where(p => p.Id == d.ProgramId).FirstOrDefault(),
-                        Distribution = ctx.Distributions.Where(p => p.Id == d.DistributionId).FirstOrDefault(),
+                        Distribution = ctx.Distributions.AsNoTracking().Where(p => p.Id == d.DistributionId).FirstOrDefault(),
                         Location = locations.Where(p => p.Id == d.LocationId).FirstOrDefault(),
                         d.TotalVouchers,
                         d.VouchersUsed,
@@ -178,34 +180,43 @@ namespace TalonAdmin.Controllers.Api
 
                     });
 
-                System.IO.File.WriteAllText(fileName, jsonString);
+                await System.IO.File.WriteAllTextAsync(fileName, jsonString);
             }
+
             using (var stream = System.IO.File.OpenRead(fileName))
-            using (var reader = new System.IO.StreamReader(stream))
+            using (var reader = new StreamReader(stream))
             using (var jsonReader = new JsonTextReader(reader))
             {
-                return Ok<JToken>(JToken.Load(jsonReader));
+                return Ok(JToken.Load(jsonReader));
             }
         }
 
         #region Intenal Reporting Funcs
         private dynamic GenerateVendorReport(Models.Vouchers.Program program)
         {
-            var transactionRecordQuery = ctx.VoucherTransactionRecords.FilterCountry(this).FilterOrganization(this);
+            var transactionRecordQuery = ctx.VoucherTransactionRecords.AsNoTracking().FilterCountry(this).FilterOrganization(this);
 
-            return transactionRecordQuery
+            // NOTE: EF Core cannot translate a GroupBy that projects whole entities as the key, so
+            // the rows are materialised first and grouped in memory. EF6 evaluated this on the client too.
+            var records = transactionRecordQuery
                 .Where(v => v.Type == 2 && v.Voucher.Distribution.ProgramId == program.Id && v.VendorId != null)
+                .Include(v => v.Vendor)
+                .ThenInclude(v => v.ParentRecord)
+                .ToArray();
+
+            return records
                 .GroupBy(v => v.Vendor.ParentRecordId == null ? v.Vendor : v.Vendor.ParentRecord)
-                .ToArray()
                 .Select(v => new object[] { v.Key.Name, v.Count() });
         }
+
         private dynamic GenerateUsedVsIssuedReport(Models.Vouchers.Program program)
         {
             return GenerateUsedVsIssuedReport(program, null, null);
         }
+
         private dynamic GenerateUsedVsIssuedReport(Models.Vouchers.Program program, DateTime? start, DateTime? end)
         {
-            var voucherQuery = ctx.Vouchers.FilterCountry(this).FilterOrganization(this).Where(v => v.Distribution.Program.Id == program.Id);
+            var voucherQuery = ctx.Vouchers.AsNoTracking().FilterCountry(this).FilterOrganization(this).Where(v => v.Distribution.Program.Id == program.Id);
 
             var issued = voucherQuery.Where(v => v.TransactionRecords.Where(t => t.Type == 1).Any())
                 .Select(v => new { Value = 1, Key = v.TransactionRecords.Select(t => t.CreatedOn).Min() })
@@ -216,7 +227,7 @@ namespace TalonAdmin.Controllers.Api
             var used = voucherQuery.Where(v => v.TransactionRecords.Where(t => t.Type == 2).Any())
                 .Select(v => new { Value = 1, Key = v.TransactionRecords.Where(t => t.Type == 2).Select(t => t.LastModifiedOn).Min() })
                 .ToArray()
-                .Where(a=>a.Key != null)
+                .Where(a => a.Key != null)
                 .GroupBy(k => k.Key.Value.ToUniversalTime().ToShortDateString())
                 .ToDictionary(k => k.Key, v => v.Sum(s => s.Value));
 
@@ -225,9 +236,8 @@ namespace TalonAdmin.Controllers.Api
             if (end == null)
                 end = ctx.VoucherTransactionRecords.Where(d => d.Voucher.Distribution.ProgramId == program.Id && d.LastModifiedOn != null).Select(c => c.LastModifiedOn.Value).ToArray().Select(c => c.ToUniversalTime()).Max();
 
-
             return Enumerable
-                .Range(0, (int)Math.Ceiling((end.Value - start.Value).TotalDays) +1)
+                .Range(0, (int)Math.Ceiling((end.Value - start.Value).TotalDays) + 1)
                 .Select(d => new
                 {
                     Date = DateTime.Parse(start.Value.ToShortDateString()).AddDays(d),

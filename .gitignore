@@ -191,3 +191,9 @@ _Pvt_Extensions/
 ModelManifest.xml
 
 TalonAdmin/web.config
+
+# Talon local runtime artifacts
+TalonAdmin/App_Data/*.db
+TalonAdmin/App_Data/*.db-shm
+TalonAdmin/App_Data/*.db-wal
+TalonAdmin/Dashboards/

@@ -1,321 +1,325 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Http;
-using System.Data.Entity;
-using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using TalonAdmin.Extensions;
-using System.Security.Cryptography.X509Certificates;
-using System.IO;
-using System.Security;
-using System.Web.Hosting;
-using Newtonsoft.Json;
+using System.Threading.Tasks;
 using System.Xml.Linq;
-using TalonAdmin.ActionResults;
-using TalonAdmin.Utils;
-using System.IO.Compression;
-using TalonAdmin.Models.Vouchers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using TalonAdmin.Attributes;
-using System.Net.Http;
+using TalonAdmin.Auth;
+using TalonAdmin.Extensions;
+using TalonAdmin.Models.Vouchers;
 
 
 namespace TalonAdmin.Controllers.Api
 {
-    [RoutePrefix("api/App/MobileClient")]
-    public class MobileClientController : ApiController
+    [Route("api/App/MobileClient")]
+    public class MobileClientController : ControllerBase
     {
         public readonly string keyContainer;
 
-        public MobileClientController()
+        private readonly Models.Vouchers.Context ctx;
+        private readonly Models.Admin.AdminContext adminCtx;
+        private readonly IWebHostEnvironment environment;
+        private readonly IHubContext<Hubs.DashboardHub> hubContext;
+
+        public MobileClientController(
+            Models.Vouchers.Context ctx,
+            Models.Admin.AdminContext adminCtx,
+            IWebHostEnvironment environment,
+            IHubContext<Hubs.DashboardHub> hubContext)
         {
-            keyContainer = HostingEnvironment.MapPath("~/Keys");
+            this.ctx = ctx;
+            this.adminCtx = adminCtx;
+            this.environment = environment;
+            this.hubContext = hubContext;
+
+            keyContainer = Path.Combine(environment.ContentRootPath, "Keys");
         }
 
         /// <summary>
         /// Noop action that returns whatever is passed in the request. Used to determine if an wifi connection can reach the system.
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
-        [Route("IsAlive")]
-        public IHttpActionResult IsAlive(string echo)
+        [HttpGet("IsAlive")]
+        public IActionResult IsAlive(string echo)
         {
 
-            return Ok<string>(echo);
+            return Ok(echo);
         }
 
         #region Provisioning
 
-        [HttpGet]
-        [Route("GenerateInitialLoad")]
-        public async Task<IHttpActionResult> GenerateInitialLoad(int beneficiaryId)
+        [HttpGet("GenerateInitialLoad")]
+        public async Task<IActionResult> GenerateInitialLoad(int beneficiaryId)
         {
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                Aes rm = KeyForBeneficiary(beneficiaryId);
+            Aes rm = KeyForBeneficiary(beneficiaryId);
 
-                var preQuery = ctx.VoucherTransactionRecords.Where(t =>
+            // NOTE: the grouping and the aggregates used to run on the server. EF Core cannot
+            // translate an aggregate applied on top of a GroupBy projection, so the rows are
+            // materialized first and grouped in memory. The result is identical.
+            var preQuery = (await ctx.VoucherTransactionRecords
+                .AsNoTracking()
+                .Where(t =>
                     t.Voucher.Distribution.Program.DistributionMechanism == 2
                     && t.BeneficiaryId == beneficiaryId
-                ).Select(t => new
+                )
+                .Select(t => new
                 {
                     Voucher = t.VoucherId,
                     Value = t.Type == 1 ? t.Value : -t.Value,
                     CreatedOn = t.CreatedOn,
                 })
+                .ToArrayAsync())
                 .GroupBy(t => t.Voucher);
 
-                if (preQuery.Count() == 0)
-                {
-                    return Ok<JToken>(JToken.FromObject(EncodeLoad(beneficiaryId, 0, DateTime.UtcNow)));
-                }
-
-                var loadQuery = preQuery.Select(t => new
-                {
-                    Voucher = t.Key,
-                    Value = t.Sum(v => v.Value),
-                    CreatedOn = t.Min(v => v.CreatedOn)
-                });
-
-                var value = await loadQuery.SumAsync(v => v.Value);
-                var createdOn = await loadQuery.MaxAsync(v => v.CreatedOn);
-
-                return Ok<JToken>(JToken.FromObject(EncodeLoad(beneficiaryId, value, createdOn)));
+            if (preQuery.Count() == 0)
+            {
+                return Ok(JToken.FromObject(EncodeLoad(beneficiaryId, 0, DateTime.UtcNow)));
             }
+
+            var loadQuery = preQuery.Select(t => new
+            {
+                Voucher = t.Key,
+                Value = t.Sum(v => v.Value),
+                CreatedOn = t.Min(v => v.CreatedOn)
+            });
+
+            var value = loadQuery.Sum(v => v.Value);
+            var createdOn = loadQuery.Max(v => v.CreatedOn);
+
+            return Ok(JToken.FromObject(EncodeLoad(beneficiaryId, value, createdOn)));
         }
 
-        [HttpPost]
+        [HttpPost("ProvisionBeneficiary")]
         [Authorize]
-        [Route("ProvisionBeneficiary")]
-        public async Task<IHttpActionResult> ProvisionBeneficiary([FromBody]dynamic request)
+        public async Task<IActionResult> ProvisionBeneficiary([FromBody]dynamic request)
         {
             int beneficiaryId = request.beneficiaryId;
             string cardId = request.cardId;
-            using (var ctx = new Models.Vouchers.Context())
+
+            var beneficiary = await ctx.Beneficiaries.Where(b => b.Id == beneficiaryId).FirstOrDefaultAsync();
+            var others = await ctx.Beneficiaries.Where(b => b.CardId == cardId).ToListAsync();
+
+            if (beneficiary == null)
+                return NotFound();
+
+            foreach (var other in others)
             {
-                var beneficiary = await ctx.Beneficiaries.Where(b => b.Id == beneficiaryId).FirstOrDefaultAsync();
-                var others = await ctx.Beneficiaries.Where(b => b.CardId == cardId).ToListAsync();
-
-                if (beneficiary == null)
-                    return NotFound();
-
-                foreach (var other in others)
-                {
-                    other.CardId = null;
-                }
-
-                if (String.IsNullOrEmpty(beneficiary.CardKey))
-                {
-                    beneficiary.GenerateKey();
-                }
-                beneficiary.CardId = cardId;
-
-                await ctx.SaveChangesAsync();
-
-                return Ok<JToken>(JToken.FromObject(new
-                {
-                    _id = beneficiary.Id.ToString(),
-                    BeneficiaryId = beneficiary.Id,
-                    CardKey = beneficiary.CardKey,
-                    CardId = beneficiary.CardId,
-                }));
+                other.CardId = null;
             }
+
+            if (String.IsNullOrEmpty(beneficiary.CardKey))
+            {
+                beneficiary.GenerateKey();
+            }
+            beneficiary.CardId = cardId;
+
+            await ctx.SaveChangesAsync();
+
+            return Ok(JToken.FromObject(new
+            {
+                _id = beneficiary.Id.ToString(),
+                BeneficiaryId = beneficiary.Id,
+                CardKey = beneficiary.CardKey,
+                CardId = beneficiary.CardId,
+            }));
         }
 
-        [HttpGet]
+        [HttpGet("ListDistributionsForBeneficiary")]
         [Authorize]
-        [Route("ListDistributionsForBeneficiary")]
-        public async Task<IHttpActionResult> ListDistributionsForBeneficiary([FromUri]int beneficiaryId)
+        public async Task<IActionResult> ListDistributionsForBeneficiary([FromQuery]int beneficiaryId)
         {
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                var distributions = await ctx.VoucherTransactionRecords
-                    .Where(v => v.Type == 1 && v.BeneficiaryId == beneficiaryId && v.Voucher.Distribution.Program.DistributionMechanism == 3)
-                    .Select(v => v.Voucher.Distribution)
-                    .Distinct()
-                    .ToListAsync();
+            var distributions = await ctx.VoucherTransactionRecords
+                .AsNoTracking()
+                .Where(v => v.Type == 1 && v.BeneficiaryId == beneficiaryId && v.Voucher.Distribution.Program.DistributionMechanism == 3)
+                .Select(v => v.Voucher.Distribution)
+                .Distinct()
+                .ToListAsync();
 
-                return Ok<JToken>(JToken.FromObject(distributions.Select(d => new
-                {
-                    id = d.Id,
-                    name = d.Title,
-                })));
-            }
+            return Ok(JToken.FromObject(distributions.Select(d => new
+            {
+                id = d.Id,
+                name = d.Title,
+            })));
         }
 
 
 
-        [HttpPost]
+        [HttpPost("SetBeneficiaryPin")]
         [Authorize]
-        [Route("SetBeneficiaryPin")]
-        public async Task<IHttpActionResult> SetBeneficiaryPin([FromBody]dynamic request)
+        public async Task<IActionResult> SetBeneficiaryPin([FromBody]dynamic request)
         {
             int beneficiaryId = request.beneficiaryId;
             string pin = request.pin;
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                var beneficiary = await ctx.Beneficiaries.Where(b => b.Id == beneficiaryId).FirstOrDefaultAsync();
-                if (beneficiary == null)
-                    return NotFound();
 
-                beneficiary.PIN = pin;
+            var beneficiary = await ctx.Beneficiaries.Where(b => b.Id == beneficiaryId).FirstOrDefaultAsync();
+            if (beneficiary == null)
+                return NotFound();
 
-                await ctx.SaveChangesAsync();
+            beneficiary.PIN = pin;
 
-                return Ok();
-            }
+            await ctx.SaveChangesAsync();
+
+            return Ok();
         }
 
-        [HttpPost]
+        [HttpPost("AssignVoucherBook")]
         [Authorize]
-        [Route("AssignVoucherBook")]
-        public async Task<IHttpActionResult> AssignVoucherBook([FromBody]dynamic request)
+        public async Task<IActionResult> AssignVoucherBook([FromBody]dynamic request)
         {
             int beneficiaryId = request.beneficiaryId;
             int distributionId = request.distributionId;
             int serialNumber = request.serialNumber;
 
-            var controller = new VoucherWorkflowController();
-            controller.ActionContext = ActionContext;
-            controller.Configuration = Configuration;
-            controller.Request = Request;
+            // NOTE: controllers are not registered in DI, so the collaborating controller is built
+            // through ActivatorUtilities and handed this request's ControllerContext (which carries
+            // the HttpContext, the Request and the User the old code copied over one by one).
+            var controller = ActivatorUtilities.CreateInstance<VoucherWorkflowController>(HttpContext.RequestServices);
             controller.ControllerContext = ControllerContext;
-            controller.User = User;
 
-            return await controller.AssignVoucherBook(new
+            return await controller.AssignVoucherBook(JObject.FromObject(new
             {
                 DistributionId = distributionId,
                 BeneficiaryId = beneficiaryId,
                 SerialNumber = serialNumber,
-            });
+            }));
         }
         #endregion
 
         #region Beneficiary Keys
 
-        [HttpGet]
-        [Route("DownloadBeneficiaryKeys")]
-        public async Task<IHttpActionResult> DownloadBeneficiaryKeys()
+        [HttpGet("DownloadBeneficiaryKeys")]
+        public async Task<IActionResult> DownloadBeneficiaryKeys()
         {
-            return Ok<JToken>(await DownloadBeneficiaryKeysInternal());
+            return Ok(await DownloadBeneficiaryKeysInternal());
 
         }
 
-        [HttpGet]
-        [Route("DownloadEncryptedBeneficiaryKeys")]
-        public async Task<IHttpActionResult> DownloadEncryptedBeneficiaryKeys()
+        [HttpGet("DownloadEncryptedBeneficiaryKeys")]
+        public async Task<IActionResult> DownloadEncryptedBeneficiaryKeys()
         {
             JToken result = await DownloadBeneficiaryKeysInternal();
             string encrypted = EncryptUsingRSA(result, "VendorPublic.json");
 
-            return Ok<string>(encrypted);
+            return Ok(encrypted);
         }
 
         #endregion
 
         #region Card Loads
 
-        [HttpGet]
-        [Route("GenerateCardLoads")]
-        public async Task<IHttpActionResult> GenerateCardLoads()
+        [HttpGet("GenerateCardLoads")]
+        public async Task<IActionResult> GenerateCardLoads()
         {
             JToken result = await GenerateCardLoadsInternal();
-            return Ok<JToken>(result);
+            return Ok(result);
         }
-        [HttpGet]
-        [Route("GenerateQRCodes")]
-        public async Task<IHttpActionResult> GenerateQRCodes()
+
+        [HttpGet("GenerateQRCodes")]
+        public async Task<IActionResult> GenerateQRCodes()
         {
             JToken result = await GenerateQRCodesInternal();
-            return Ok<JToken>(result);
+            return Ok(result);
         }
 
         #endregion
 
         #region Offline Load
-        [Route("DownloadOfflinePayload")]
-        public async Task<IHttpActionResult> DownloadOfflinePayload()
+        // NOTE: Web API defaulted actions whose name does not start with a verb to POST; the
+        // Angular client posts a form to this endpoint, so the verb is pinned to POST here.
+        [HttpPost("DownloadOfflinePayload")]
+        public async Task<IActionResult> DownloadOfflinePayload()
         {
-            using (var ctx = new Models.Admin.AdminContext())
+            var countryId = this.GetCountryId();
+            var country = await adminCtx.Countries
+                .AsNoTracking()
+                .Where(c => c.Id == countryId)
+                .FirstOrDefaultAsync();
+
+            JToken cardLoadsJson = await GenerateCardLoadsInternal();
+            string cardLoads = EncryptUsingRSA(cardLoadsJson, "VendorPublic.json");
+
+            JToken beneficiaryKeysJson = await DownloadBeneficiaryKeysInternal();
+            string beneficiaryKeys = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
+
+            // NOTE: pre-existing behaviour: the QR codes entry is filled with the beneficiary keys
+            // payload, not with qrCodesJson. Kept as is.
+            JToken qrCodesJson = await DownloadBeneficiaryKeysInternal();
+            string qrCodes = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
+            using (var memoryStream = new MemoryStream())
             {
-                var countryId = this.GetCountryId();
-                var country = await ctx.Countries
-                    .Where(c => c.Id == countryId)
-                    .FirstOrDefaultAsync();
-
-                JToken cardLoadsJson = await GenerateCardLoadsInternal();
-                string cardLoads = EncryptUsingRSA(cardLoadsJson, "VendorPublic.json");
-
-                JToken beneficiaryKeysJson = await DownloadBeneficiaryKeysInternal();
-                string beneficiaryKeys = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
-
-                JToken qrCodesJson = await DownloadBeneficiaryKeysInternal();
-                string qrCodes = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
-                using (var memoryStream = new MemoryStream())
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
-                    using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                    var cardLoadsEntry = archive.CreateEntry("CardLoads.b64");
+
+                    using (var entryStream = cardLoadsEntry.Open())
+                    using (var streamWriter = new StreamWriter(entryStream))
                     {
-                        var cardLoadsEntry = archive.CreateEntry("CardLoads.b64");
-
-                        using (var entryStream = cardLoadsEntry.Open())
-                        using (var streamWriter = new StreamWriter(entryStream))
-                        {
-                            streamWriter.Write(cardLoads);
-                        }
-
-                        var beneficiaryKeysEntry = archive.CreateEntry("BeneficiaryKeys.b64");
-
-                        using (var entryStream = beneficiaryKeysEntry.Open())
-                        using (var streamWriter = new StreamWriter(entryStream))
-                        {
-                            streamWriter.Write(beneficiaryKeys);
-                        }
-
-                        var qrCodesEntry = archive.CreateEntry("QRCodes.b64");
-
-                        using (var entryStream = qrCodesEntry.Open())
-                        using (var streamWriter = new StreamWriter(entryStream))
-                        {
-                            streamWriter.Write(qrCodes);
-                        }
+                        streamWriter.Write(cardLoads);
                     }
 
-                    using (var outputStream = new MemoryStream())
-                    {
-                        memoryStream.Seek(0, SeekOrigin.Begin);
-                        memoryStream.CopyTo(outputStream);
+                    var beneficiaryKeysEntry = archive.CreateEntry("BeneficiaryKeys.b64");
 
-                        return this.File(outputStream.ToArray(), country.IsoAlpha3 + ".zip", "application/octet-stream");
+                    using (var entryStream = beneficiaryKeysEntry.Open())
+                    using (var streamWriter = new StreamWriter(entryStream))
+                    {
+                        streamWriter.Write(beneficiaryKeys);
                     }
+
+                    var qrCodesEntry = archive.CreateEntry("QRCodes.b64");
+
+                    using (var entryStream = qrCodesEntry.Open())
+                    using (var streamWriter = new StreamWriter(entryStream))
+                    {
+                        streamWriter.Write(qrCodes);
+                    }
+                }
+
+                using (var outputStream = new MemoryStream())
+                {
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    memoryStream.CopyTo(outputStream);
+
+                    return File(outputStream.ToArray(), "application/octet-stream", country.IsoAlpha3 + ".zip");
                 }
             }
         }
 
-        [Route("UploadVendorPayload")]
-        public async Task<IHttpActionResult> UploadVendorPayload()
+        [HttpPost("UploadVendorPayload")]
+        public async Task<IActionResult> UploadVendorPayload()
         {
-            if (!Request.Content.IsMimeMultipartContent())
+            if (!Request.HasFormContentType
+                || Request.ContentType == null
+                || !Request.ContentType.StartsWith("multipart/", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest();
             }
 
-            string root = HostingEnvironment.MapPath("~/App_Data/uploads");
-            var provider = new MultipartFormDataStreamProvider(root);
-
-            var streamProvider = new MultipartFormDataStreamProvider(root);
-            await Request.Content.ReadAsMultipartAsync(streamProvider);
+            // NOTE: MultipartFormDataStreamProvider is gone; ASP.NET Core buffers the uploaded
+            // files for us, so nothing is written to ~/App_Data/uploads anymore.
+            var form = await Request.ReadFormAsync();
 
             StringBuilder builder = new StringBuilder();
 
-            foreach (MultipartFileData fileData in streamProvider.FileData)
+            foreach (var fileData in form.Files)
             {
-                var fileBytes = File.ReadAllBytes(fileData.LocalFileName);
-
-                // No need to keep the file lying around
-                File.Delete(fileData.LocalFileName);
+                byte[] fileBytes;
+                using (var uploadStream = new MemoryStream())
+                {
+                    await fileData.CopyToAsync(uploadStream);
+                    fileBytes = uploadStream.ToArray();
+                }
 
                 using (var memoryStream = new MemoryStream(fileBytes))
                 using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Read))
@@ -365,15 +369,15 @@ namespace TalonAdmin.Controllers.Api
                     await ProcessTransactionsInternal(transactions, vendorObject);
                 }
             }
-            return Ok<string>(builder.ToString());
+            return Ok(builder.ToString());
         }
         #endregion
 
         #region Cached Transactions
 
-        [Route("UploadCardLoads")]
+        [HttpPost("UploadCardLoads")]
         [AuthorizeVendor]
-        public async Task<IHttpActionResult> UploadCardLoads([FromBody]dynamic cardLoads)
+        public async Task<IActionResult> UploadCardLoads([FromBody]dynamic cardLoads)
         {
             if (cardLoads == null || String.IsNullOrEmpty(cardLoads.ToString()))
             {
@@ -386,9 +390,9 @@ namespace TalonAdmin.Controllers.Api
             return Ok();
         }
 
-        [Route("UploadTransactions")]
+        [HttpPost("UploadTransactions")]
         [AuthorizeVendor]
-        public async Task<IHttpActionResult> UploadTransactions([FromBody]JArray transactions)
+        public async Task<IActionResult> UploadTransactions([FromBody]JArray transactions)
         {
             if (transactions == null || String.IsNullOrEmpty(transactions.ToString()))
             {
@@ -402,19 +406,18 @@ namespace TalonAdmin.Controllers.Api
         }
         #endregion
 
-        [HttpPost]
+        [HttpPost("ProcessNFCTransaction")]
         [AuthorizeVendor]
-        [Route("ProcessNFCTransaction")]
-        public async Task<IHttpActionResult> ProcessNFCTransaction([FromBody]dynamic request)
+        public async Task<IActionResult> ProcessNFCTransaction([FromBody]dynamic request)
         {
-            NotifyClients();
+            await NotifyClients(hubContext, environment);
 
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
             decimal amountCredited = request.amountCredited;
             int beneficiaryId = request.beneficiaryId;
 
-            return Ok<JToken>(await ProccessNFCTransactionInternal(vendor, beneficiaryId, amountCredited));
+            return Ok(await ProccessNFCTransactionInternal(vendor, beneficiaryId, amountCredited));
         }
 
         private async Task<JToken> ProccessNFCTransactionInternal(Vendor vendor, int beneficiaryId, decimal amountCredited)
@@ -425,102 +428,105 @@ namespace TalonAdmin.Controllers.Api
         private async Task<JToken> ProccessNFCTransactionInternal(Vendor vendor, int beneficiaryId, decimal amountCredited, DateTime transactionDate)
         {
             var confirmationCodes = new List<string>();
-            using (var db = new Models.Vouchers.Context())
+
+            // NOTE: lazy loading is gone, so Distribution (ordering) and TransactionRecords
+            // (IssuingTransactionRecord) are eagerly loaded. The grouping by voucher moved to
+            // memory because EF Core cannot group by an entity and project it back out.
+            var vouchers = (await ctx.VoucherTransactionRecords
+                .Include(v => v.Voucher).ThenInclude(v => v.Distribution)
+                .Include(v => v.Voucher).ThenInclude(v => v.TransactionRecords)
+                .Where(v => v.Voucher.Status != null &&
+                    new int[] { 1, 2 }.Contains(v.Voucher.Status.Value) &&
+                    v.Voucher.Distribution.Program.DistributionMechanism == 2 &&
+                    v.BeneficiaryId == beneficiaryId)
+                .ToListAsync())
+                .Select(v => new
+                {
+                    Voucher = v.Voucher,
+                    Amount = v.Type == 1 ? v.Value : -v.Value
+                })
+                .GroupBy(v => v.Voucher)
+                .Select(v => new
+                {
+                    Voucher = v.Key,
+                    Amount = v.Sum(a => a.Amount ?? 0)
+                })
+                .ToList();
+            foreach (var voucherData in vouchers.OrderBy(v => v.Voucher.Distribution.CreatedOn))
             {
-                var vouchers = await db.VoucherTransactionRecords
-                    .Where(v => v.Voucher.Status != null &&
-                        new int[] { 1, 2 }.Contains(v.Voucher.Status.Value) &&
-                        v.Voucher.Distribution.Program.DistributionMechanism == 2 &&
-                        v.BeneficiaryId == beneficiaryId)
-                    .Select(v => new
-                    {
-                        Voucher = v.Voucher,
-                        Amount = v.Type == 1 ? v.Value : -v.Value
-                    })
-                    .GroupBy(v => v.Voucher)
-                    .Select(v => new
-                    {
-                        Voucher = v.Key,
-                        Amount = v.Sum(a => a.Amount ?? 0)
-                    })
-                    .ToListAsync();
-                foreach (var voucherData in vouchers.OrderBy(v => v.Voucher.Distribution.CreatedOn))
+                var voucher = voucherData.Voucher;
+
+                if (amountCredited > voucherData.Amount)
                 {
-                    var voucher = voucherData.Voucher;
-
-                    if (amountCredited > voucherData.Amount)
+                    var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
+                    var transactionRecord = new VoucherTransactionRecord()
                     {
-                        var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
-                        var transactionRecord = new VoucherTransactionRecord()
-                        {
-                            VoucherId = voucher.Id,
-                            BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
-                            VendorId = vendor.Id,
-                            Type = 2,
-                            ConfirmationCode = confirmationCode,
-                            LastModifiedOn = transactionDate,
-                            CreatedOn = transactionDate,
-                            Value = voucherData.Amount, // Spending out the remaining amount in this voucher
-                            CountryId = voucher.CountryId,
-                            OrganizationId = voucher.OrganizationId
-                        };
+                        VoucherId = voucher.Id,
+                        BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
+                        VendorId = vendor.Id,
+                        Type = 2,
+                        ConfirmationCode = confirmationCode,
+                        LastModifiedOn = transactionDate,
+                        CreatedOn = transactionDate,
+                        Value = voucherData.Amount, // Spending out the remaining amount in this voucher
+                        CountryId = voucher.CountryId,
+                        OrganizationId = voucher.OrganizationId
+                    };
 
-                        db.VoucherTransactionRecords.Add(transactionRecord);
-                        voucher.Status = 3;
-                        amountCredited = amountCredited - voucherData.Amount;
+                    ctx.VoucherTransactionRecords.Add(transactionRecord);
+                    voucher.Status = 3;
+                    amountCredited = amountCredited - voucherData.Amount;
 
-                        confirmationCodes.Add(confirmationCode);
+                    confirmationCodes.Add(confirmationCode);
 
-                        continue;
-                    }
-                    if (amountCredited <= voucherData.Amount)
-                    {
-
-                        var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
-                        var transactionRecord = new VoucherTransactionRecord()
-                        {
-                            VoucherId = voucher.Id,
-                            BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
-                            VendorId = vendor.Id,
-                            Type = 2,
-                            ConfirmationCode = confirmationCode,
-                            LastModifiedOn = transactionDate,
-                            CreatedOn = transactionDate,
-                            Value = amountCredited,
-                            CountryId = voucher.CountryId,
-                            OrganizationId = voucher.OrganizationId
-                        };
-
-                        confirmationCodes.Add(confirmationCode);
-                        db.VoucherTransactionRecords.Add(transactionRecord);
-                        voucher.Status = 2;
-                        amountCredited = 0;
-
-                        break;
-                    }
+                    continue;
                 }
-
-                await db.SaveChangesAsync();
-
-                return JToken.FromObject(new
+                if (amountCredited <= voucherData.Amount)
                 {
-                    Success = true,
-                    ConfirmationCode = String.Join(",", confirmationCodes)
-                });
+
+                    var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
+                    var transactionRecord = new VoucherTransactionRecord()
+                    {
+                        VoucherId = voucher.Id,
+                        BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
+                        VendorId = vendor.Id,
+                        Type = 2,
+                        ConfirmationCode = confirmationCode,
+                        LastModifiedOn = transactionDate,
+                        CreatedOn = transactionDate,
+                        Value = amountCredited,
+                        CountryId = voucher.CountryId,
+                        OrganizationId = voucher.OrganizationId
+                    };
+
+                    confirmationCodes.Add(confirmationCode);
+                    ctx.VoucherTransactionRecords.Add(transactionRecord);
+                    voucher.Status = 2;
+                    amountCredited = 0;
+
+                    break;
+                }
             }
+
+            await ctx.SaveChangesAsync();
+
+            return JToken.FromObject(new
+            {
+                Success = true,
+                ConfirmationCode = String.Join(",", confirmationCodes)
+            });
         }
 
-        [HttpPost]
+        [HttpPost("ProcessQRTransaction")]
         [AuthorizeVendor]
-        [Route("ProcessQRTransaction")]
-        public async Task<IHttpActionResult> ProcessQRTransaction([FromBody]dynamic request)
+        public async Task<IActionResult> ProcessQRTransaction([FromBody]dynamic request)
         {
-            NotifyClients();
+            await NotifyClients(hubContext, environment);
 
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
             string voucherCode = request.voucherCode;
-            return Ok<JToken>(await ProcessQRTransactionInternal(vendor, voucherCode));
+            return Ok(await ProcessQRTransactionInternal(vendor, voucherCode));
         }
 
         private async Task<JToken> ProcessQRTransactionInternal(Vendor vendor, string voucherCode)
@@ -530,106 +536,101 @@ namespace TalonAdmin.Controllers.Api
 
         private async Task<JToken> ProcessQRTransactionInternal(Vendor vendor, string voucherCode, DateTime transactionDate)
         {
-            using (var db = new Models.Vouchers.Context())
+            // NOTE: TransactionRecords is included because IssuingTransactionRecord walks it and
+            // lazy loading is no longer available.
+            var voucher = await ctx.Vouchers
+                .Include(v => v.TransactionRecords)
+                .Where(v => voucherCode == v.SequentialCode || voucherCode == v.VoucherCode)
+                .FirstOrDefaultAsync();
+
+            if (voucher == null || voucher.Status != 1)
             {
-                var voucher = await db.Vouchers
-                    .Where(v => voucherCode == v.SequentialCode || voucherCode == v.VoucherCode)
-                    .FirstOrDefaultAsync();
-
-                if (voucher == null || voucher.Status != 1)
-                {
-                    return JToken.FromObject(new
-                    {
-                        Success = false,
-                        Message = "Voucher Already Used",
-                        VoucherCode = voucherCode
-                    });
-                }
-                var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
-                var transactionRecord = new VoucherTransactionRecord()
-                {
-                    VoucherId = voucher.Id,
-                    BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
-                    VendorId = vendor.Id,
-                    Type = 2,
-                    ConfirmationCode = confirmationCode,
-                    LastModifiedOn = transactionDate,
-                    CreatedOn = transactionDate,
-                    Value = voucher.Value, // QR claims full price,
-                    CountryId = voucher.CountryId,
-                    OrganizationId = voucher.OrganizationId
-                };
-
-                db.VoucherTransactionRecords.Add(transactionRecord);
-                voucher.Status = 3;
-
-                await db.SaveChangesAsync();
-
                 return JToken.FromObject(new
                 {
-                    Success = true,
-                    VoucherCode = voucher.VoucherCode,
-                    ConfirmationCode = confirmationCode
+                    Success = false,
+                    Message = "Voucher Already Used",
+                    VoucherCode = voucherCode
                 });
             }
-        }
-
-        [HttpPost]
-        [Authorize]
-        [Route("ProcessQuarantinedTransaction")]
-        public async Task<IHttpActionResult> ProcessQuarantinedTransaction(int transactionId)
-        {
-            using (var ctx = new Models.Vouchers.Context())
+            var confirmationCode = RandomNumber.RandomLong(6).ToString("D6");
+            var transactionRecord = new VoucherTransactionRecord()
             {
-                var transaction = await ctx.TransactionLogItems.Include("Vendor").Where(t => t.Id == transactionId).FirstOrDefaultAsync();
-                if (transaction == null)
-                {
-                    return Ok<JToken>(JToken.FromObject(new
-                    {
-                        Success = false,
-                        Message = "Invalid transaction id."
-                    }));
-                }
-                dynamic result = new JObject() { };
-                if (transaction.Type == 2)
-                {
-                    //NFC
-                    result = await ProccessNFCTransactionInternal(transaction.Vendor, transaction.BeneficiaryId, transaction.AmountCredited, transaction.Date);
-                }
-                else
-                {
-                    // QR And SMS should be the same?
-                    result = await ProcessQRTransactionInternal(transaction.Vendor, transaction.VoucherCode, transaction.Date);
-                }
-                var me = await this.WhoAmI();
+                VoucherId = voucher.Id,
+                BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
+                VendorId = vendor.Id,
+                Type = 2,
+                ConfirmationCode = confirmationCode,
+                LastModifiedOn = transactionDate,
+                CreatedOn = transactionDate,
+                Value = voucher.Value, // QR claims full price,
+                CountryId = voucher.CountryId,
+                OrganizationId = voucher.OrganizationId
+            };
 
-                if (result.Success == true)
+            ctx.VoucherTransactionRecords.Add(transactionRecord);
+            voucher.Status = 3;
+
+            await ctx.SaveChangesAsync();
+
+            return JToken.FromObject(new
+            {
+                Success = true,
+                VoucherCode = voucher.VoucherCode,
+                ConfirmationCode = confirmationCode
+            });
+        }
+
+        [HttpPost("ProcessQuarantinedTransaction")]
+        [Authorize]
+        public async Task<IActionResult> ProcessQuarantinedTransaction(int transactionId)
+        {
+            var transaction = await ctx.TransactionLogItems.Include(t => t.Vendor).Where(t => t.Id == transactionId).FirstOrDefaultAsync();
+            if (transaction == null)
+            {
+                return Ok(JToken.FromObject(new
                 {
-                    transaction.Processed = true;
-                    transaction.Quarantine = false;
-                    transaction.ProcessedOn = DateTime.UtcNow;
-                    transaction.ProcessedBy = me.UserName;
-                    transaction.ConfirmationCode = result.ConfirmationCode;
-                }
-
-                await ctx.SaveChangesAsync();
-
-                return Ok<JToken>(result);
+                    Success = false,
+                    Message = "Invalid transaction id."
+                }));
             }
+            dynamic result = new JObject() { };
+            if (transaction.Type == 2)
+            {
+                //NFC
+                result = await ProccessNFCTransactionInternal(transaction.Vendor, transaction.BeneficiaryId, transaction.AmountCredited, transaction.Date);
+            }
+            else
+            {
+                // QR And SMS should be the same?
+                result = await ProcessQRTransactionInternal(transaction.Vendor, transaction.VoucherCode, transaction.Date);
+            }
+            var me = await this.WhoAmI(adminCtx);
+
+            if (result.Success == true)
+            {
+                transaction.Processed = true;
+                transaction.Quarantine = false;
+                transaction.ProcessedOn = DateTime.UtcNow;
+                transaction.ProcessedBy = me.UserName;
+                transaction.ConfirmationCode = result.ConfirmationCode;
+            }
+
+            await ctx.SaveChangesAsync();
+
+            return Ok((JToken)result);
         }
 
 
-        [HttpGet]
-        [Route("DownloadKeyset")]
-        public async Task<IHttpActionResult> DownloadKeyset()
+        [HttpGet("DownloadKeyset")]
+        public async Task<IActionResult> DownloadKeyset()
         {
             /// TODO: PLEASE REMOVE ME FROM THE FILE SYSTEM SOMEHOW
             GenerateKeys(keyContainer);
 
-            var serverPublic = ExportPublicKey(JsonToRSAParameters(JToken.Parse(File.ReadAllText(Path.Combine(keyContainer, "ServerPublic.json")))));
-            var vendorPrivate = ExportPrivateKey(JsonToRSAParameters(JToken.Parse(File.ReadAllText(Path.Combine(keyContainer, "VendorPrivate.json")))));
+            var serverPublic = ExportPublicKey(JsonToRSAParameters(JToken.Parse(System.IO.File.ReadAllText(Path.Combine(keyContainer, "ServerPublic.json")))));
+            var vendorPrivate = ExportPrivateKey(JsonToRSAParameters(JToken.Parse(System.IO.File.ReadAllText(Path.Combine(keyContainer, "VendorPrivate.json")))));
 
-            return Ok<JToken>(JToken.FromObject(new
+            return Ok(JToken.FromObject(new
             {
                 Server = serverPublic,
                 Vendor = vendorPrivate
@@ -637,69 +638,68 @@ namespace TalonAdmin.Controllers.Api
         }
 
         #region Private Methods
-        internal static void NotifyClients()
+        // NOTE: this used to be a parameterless static that reached for the SignalR GlobalHost and
+        // the hosting environment. Both are DI services now, so callers pass them in.
+        internal static async Task NotifyClients(IHubContext<Hubs.DashboardHub> hubContext, IWebHostEnvironment environment)
         {
-            var context = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<Hubs.DashboardHub>();
-
-            string dirName = HostingEnvironment.MapPath("~/Dashboards");
+            string dirName = Path.Combine(environment.ContentRootPath, "Dashboards");
 
             if (System.IO.Directory.Exists(dirName)) System.IO.Directory.Delete(dirName, true);
 
-            context.Clients.All.updateDashboard();
+            await hubContext.Clients.All.SendAsync("updateDashboard");
         }
 
         private async Task ProcessTransactionsInternal(JArray transactions, Vendor vendor)
         {
-            using (var ctx = new Models.Vouchers.Context())
+            var mapped = transactions.OfType<JObject>().Select(s => new
             {
-                var mapped = transactions.OfType<JObject>().Select(s => new
-                {
-                    Type = s.ValueIfExists<int?>("type"),
-                    BeneficiaryId = s.ValueIfExists<int?>("beneficiaryId"),
-                    AmountCredited = s.ValueIfExists<decimal?>("amountCredited"),
-                    AmountRemaining = s.ValueIfExists<decimal?>("amountRemaining"),
-                    Date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(s.ValueIfExists<int>("date")),
-                    Checksum = s.ValueIfExists<string>("checksum"),
-                    TransactionCode = s.ValueIfExists<string>("transactionCode"),
-                    Quarantine = s.ValueIfExists<bool?>("quarantine"),
-                    ConfirmationCode = s.ValueIfExists<string>("confirmationCode"),
-                    VoucherCode = s.ValueIfExists<string>("voucherCode"),
-                })
-                .Select(s => new TransactionLogItem
-                {
-                    Type = s.Type.Value,
-                    BeneficiaryId = s.BeneficiaryId.Value,
-                    AmountCredited = s.AmountCredited ?? 0m,
-                    AmountRemaining = s.AmountRemaining ?? 0m,
-                    Date = s.Date,
-                    Checksum = s.Checksum,
-                    TransactionCode = s.TransactionCode,
-                    Quarantine = s.Quarantine.Value,
-                    VendorId = vendor.Id,
-                    ConfirmationCode = s.ConfirmationCode,
-                    VoucherCode = s.VoucherCode,
+                Type = s.ValueIfExists<int?>("type"),
+                BeneficiaryId = s.ValueIfExists<int?>("beneficiaryId"),
+                AmountCredited = s.ValueIfExists<decimal?>("amountCredited"),
+                AmountRemaining = s.ValueIfExists<decimal?>("amountRemaining"),
+                Date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(s.ValueIfExists<int>("date")),
+                Checksum = s.ValueIfExists<string>("checksum"),
+                TransactionCode = s.ValueIfExists<string>("transactionCode"),
+                Quarantine = s.ValueIfExists<bool?>("quarantine"),
+                ConfirmationCode = s.ValueIfExists<string>("confirmationCode"),
+                VoucherCode = s.ValueIfExists<string>("voucherCode"),
+            })
+            .Select(s => new TransactionLogItem
+            {
+                Type = s.Type.Value,
+                BeneficiaryId = s.BeneficiaryId.Value,
+                AmountCredited = s.AmountCredited ?? 0m,
+                AmountRemaining = s.AmountRemaining ?? 0m,
+                Date = s.Date,
+                Checksum = s.Checksum,
+                TransactionCode = s.TransactionCode,
+                Quarantine = s.Quarantine.Value,
+                VendorId = vendor.Id,
+                ConfirmationCode = s.ConfirmationCode,
+                VoucherCode = s.VoucherCode,
 
-                    CountryId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().CountryId,
-                    OrganizationId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().OrganizationId,
-                });
+                CountryId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().CountryId,
+                OrganizationId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().OrganizationId,
+            })
+            // NOTE: materialized up front so the per-beneficiary lookups above do not run while the
+            // context is executing the existence query below.
+            .ToArray();
 
 
-                var transactionCodes = mapped.Select(t => t.TransactionCode);
-                var existing = ctx.TransactionLogItems
-                    .Where(t => transactionCodes.Contains(t.TransactionCode) && t.VendorId == vendor.Id)
-                    .Select(t => t.TransactionCode)
-                    .ToArray();
-                var filtered = mapped.Where(t => !existing.Contains(t.TransactionCode)).ToArray();
+            var transactionCodes = mapped.Select(t => t.TransactionCode).ToArray();
+            var existing = ctx.TransactionLogItems
+                .Where(t => transactionCodes.Contains(t.TransactionCode) && t.VendorId == vendor.Id)
+                .Select(t => t.TransactionCode)
+                .ToArray();
+            var filtered = mapped.Where(t => !existing.Contains(t.TransactionCode)).ToArray();
 
-                ctx.TransactionLogItems.AddRange(filtered);
-                await ctx.SaveChangesAsync();
-            }
+            ctx.TransactionLogItems.AddRange(filtered);
+            await ctx.SaveChangesAsync();
         }
 
         private async Task ProcessCardLoadsInternal(JArray cardLoads, Vendor vendor)
         {
-            using (var ctx = new Models.Vouchers.Context())
-            using (var md5 = new MD5CryptoServiceProvider())
+            using (var md5 = MD5.Create())
             {
 
                 var mapped = cardLoads.OfType<JObject>().Select(s => new
@@ -722,9 +722,12 @@ namespace TalonAdmin.Controllers.Api
 
                     CountryId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().CountryId,
                     OrganizationId = ctx.Beneficiaries.Where(b => b.Id == s.BeneficiaryId.Value).First().OrganizationId,
-                });
+                })
+                // NOTE: materialized up front so the per-beneficiary lookups above do not run while
+                // the context is executing the existence query below.
+                .ToArray();
 
-                var cardLoadDates = mapped.Select(t => t.Checksum);
+                var cardLoadDates = mapped.Select(t => t.Checksum).ToArray();
                 var existing = ctx.CardLoads
                     .Where(t => cardLoadDates.Contains(t.Checksum) && t.VendorId == vendor.Id)
                     .Select(t => t.Checksum)
@@ -739,21 +742,19 @@ namespace TalonAdmin.Controllers.Api
 
         public async Task<JToken> DownloadBeneficiaryKeysInternal()
         {
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                var cardKeys = await ctx.Beneficiaries
-                    .FilterCountry(this)
-                    .Where(b => b.CardKey != null)
-                    .Select(b => new
-                    {
-                        _id = b.Id.ToString(),
-                        BeneficiaryId = b.Id,
-                        CardKey = b.CardKey,
-                        CardId = b.CardId,
-                    }).ToArrayAsync();
+            var cardKeys = await ctx.Beneficiaries
+                .AsNoTracking()
+                .FilterCountry(this)
+                .Where(b => b.CardKey != null)
+                .Select(b => new
+                {
+                    _id = b.Id.ToString(),
+                    BeneficiaryId = b.Id,
+                    CardKey = b.CardKey,
+                    CardId = b.CardId,
+                }).ToArrayAsync();
 
-                return JToken.FromObject(cardKeys);
-            }
+            return JToken.FromObject(cardKeys);
         }
 
         /// <summary>
@@ -763,44 +764,44 @@ namespace TalonAdmin.Controllers.Api
         /// <returns></returns>
         private async Task<JToken> GenerateCardLoadsInternal()
         {
-            using (var ctx = new Models.Vouchers.Context())
+            // NOTE: the grouping by beneficiary was pushed to memory; EF Core cannot group by an
+            // entity and then project the group's elements. The rows and the output are the same.
+            var loadDictionary = (await ctx.VoucherTransactionRecords
+                .AsNoTracking()
+                .FilterCountry(this)
+                .Where(t =>
+                t.Voucher.Distribution.Program.DistributionMechanism == 2
+                && t.Type == 1
+                && t.Beneficiary.CardId != null
+            ).Select(t => new
             {
-                var loadDictionary = (await ctx.VoucherTransactionRecords
-                    .FilterCountry(this)
-                    .Where(t =>
-                    t.Voucher.Distribution.Program.DistributionMechanism == 2
-                    && t.Type == 1
-                    && t.Beneficiary.CardId != null
-                ).Select(t => new
+                BeneficiaryId = t.Beneficiary.Id,
+                CardId = t.Beneficiary.CardId,
+                Value = t.Value,
+                CreatedOn = t.CreatedOn,
+            })
+            .ToArrayAsync())
+            .GroupBy(k => k.BeneficiaryId)
+            .Select(l => new
+            {
+                CardId = l.First().CardId,
+                Load = l.Select(b => new
                 {
-                    Beneficiary = t.Beneficiary,
-                    Value = t.Value,
-                    CreatedOn = t.CreatedOn,
+                    BeneficiaryId = b.BeneficiaryId,
+                    Value = b.Value,
+                    CreatedOn = b.CreatedOn,
                 })
-                .GroupBy(k => k.Beneficiary)
-                .Select(l => new
-                {
-                    CardId = l.Key.CardId,
-                    Load = l.Select(b => new
-                    {
-                        BeneficiaryId = b.Beneficiary.Id,
-                        Value = b.Value,
-                        CreatedOn = b.CreatedOn,
-                    })
-                })
-                .ToArrayAsync())
-                .Select(l => new
-                {
-                    _id = l.CardId,
-                    CardId = l.CardId,
-                    Load = l.Load.Select(v => EncodeLoad(v.BeneficiaryId, v.Value, v.CreatedOn)).ToArray(),
-                })
-                .ToArray();
+            })
+            .Select(l => new
+            {
+                _id = l.CardId,
+                CardId = l.CardId,
+                Load = l.Load.Select(v => EncodeLoad(v.BeneficiaryId, v.Value, v.CreatedOn)).ToArray(),
+            })
+            .ToArray();
 
-                var result = JToken.FromObject(loadDictionary);
-                return result;
-
-            }
+            var result = JToken.FromObject(loadDictionary);
+            return result;
         }
 
         /// <summary>
@@ -810,38 +811,35 @@ namespace TalonAdmin.Controllers.Api
         /// <returns></returns>
         private async Task<JToken> GenerateQRCodesInternal()
         {
-            using (var ctx = new Models.Vouchers.Context())
+            var loadDictionary = (await ctx.VoucherTransactionRecords
+                .AsNoTracking()
+                .FilterCountry(this)
+                .Where(t =>
+                t.Voucher.Distribution.Program.DistributionMechanism == 3
+                && t.Voucher.Status == 1
+                && t.Type == 1
+                && t.Beneficiary.CardKey != null
+                && t.Beneficiary.PIN != null
+                && t.Beneficiary.PIN != ""
+            ).Select(t => new
             {
-                var loadDictionary = (await ctx.VoucherTransactionRecords
-                    .FilterCountry(this)
-                    .Where(t =>
-                    t.Voucher.Distribution.Program.DistributionMechanism == 3
-                    && t.Voucher.Status == 1
-                    && t.Type == 1
-                    && t.Beneficiary.CardKey != null
-                    && t.Beneficiary.PIN != null
-                    && t.Beneficiary.PIN != ""
-                ).Select(t => new
-                {
-                    BeneficiaryId = t.Beneficiary.Id,
-                    VoucherCode = t.Voucher.SequentialCode == null ? t.Voucher.VoucherCode : t.Voucher.SequentialCode,
-                    Value = t.Value,
-                    ValidAfter = t.Voucher.Category.ValidAfter,
-                })
-                .ToArrayAsync())
-                .Select(l => new
-                {
-                    _id = l.VoucherCode,
-                    VoucherCode = l.VoucherCode,
-                    BeneficiaryId = l.BeneficiaryId,
-                    Payload = EncodeQRLoad(l.BeneficiaryId, l.Value, l.ValidAfter, l.VoucherCode)
-                })
-                .ToArray();
+                BeneficiaryId = t.Beneficiary.Id,
+                VoucherCode = t.Voucher.SequentialCode == null ? t.Voucher.VoucherCode : t.Voucher.SequentialCode,
+                Value = t.Value,
+                ValidAfter = t.Voucher.Category.ValidAfter,
+            })
+            .ToArrayAsync())
+            .Select(l => new
+            {
+                _id = l.VoucherCode,
+                VoucherCode = l.VoucherCode,
+                BeneficiaryId = l.BeneficiaryId,
+                Payload = EncodeQRLoad(l.BeneficiaryId, l.Value, l.ValidAfter, l.VoucherCode)
+            })
+            .ToArray();
 
-                var result = JToken.FromObject(loadDictionary);
-                return result;
-
-            }
+            var result = JToken.FromObject(loadDictionary);
+            return result;
         }
 
 
@@ -850,9 +848,11 @@ namespace TalonAdmin.Controllers.Api
         #region Helper Methods
         private string DecryptUsingRSA(string payload, string keyName)
         {
-            using (var rsa = new RSACryptoServiceProvider())
+            // NOTE: RSACryptoServiceProvider is Windows/CAPI bound on .NET; RSA.Create() is the
+            // portable equivalent and OaepSHA1 is exactly what Decrypt(..., fOAEP: true) used.
+            using (var rsa = RSA.Create())
             {
-                dynamic serverPrivate = JToken.Parse(File.ReadAllText(Path.Combine(keyContainer, keyName)));
+                dynamic serverPrivate = JToken.Parse(System.IO.File.ReadAllText(Path.Combine(keyContainer, keyName)));
 
                 RSAParameters privateKey = new RSAParameters
                 {
@@ -868,10 +868,10 @@ namespace TalonAdmin.Controllers.Api
                 rsa.ImportParameters(privateKey);
 
                 string[] arguments = payload.Split('|');
-                var key = rsa.Decrypt(Convert.FromBase64String(arguments[1]), true);
-                var iv = rsa.Decrypt(Convert.FromBase64String(arguments[2]), true);
+                var key = rsa.Decrypt(Convert.FromBase64String(arguments[1]), RSAEncryptionPadding.OaepSHA1);
+                var iv = rsa.Decrypt(Convert.FromBase64String(arguments[2]), RSAEncryptionPadding.OaepSHA1);
 
-                using (var aes = new AesCryptoServiceProvider())
+                using (var aes = Aes.Create())
                 {
                     aes.Key = key;
                     aes.IV = iv;
@@ -884,10 +884,10 @@ namespace TalonAdmin.Controllers.Api
         private string EncryptUsingRSA(JToken result, string keyName)
         {
             string encrypted = "";
-            using (var rsa = new RSACryptoServiceProvider())
+            using (var rsa = RSA.Create())
             {
-                rsa.PersistKeyInCsp = false;
-                dynamic serverPublic = JToken.Parse(File.ReadAllText(Path.Combine(keyContainer, keyName)));
+                // NOTE: PersistKeyInCsp is a CAPI-only concept; RSA.Create() keys are never persisted.
+                dynamic serverPublic = JToken.Parse(System.IO.File.ReadAllText(Path.Combine(keyContainer, keyName)));
 
                 RSAParameters publicKey = new RSAParameters
                 {
@@ -897,11 +897,11 @@ namespace TalonAdmin.Controllers.Api
 
                 rsa.ImportParameters(publicKey);
 
-                using (var aes = new AesCryptoServiceProvider())
+                using (var aes = Aes.Create())
                 {
                     encrypted = result.ToString().Encrypt(aes);
-                    encrypted += "|" + Convert.ToBase64String(rsa.Encrypt(aes.Key, true));
-                    encrypted += "|" + Convert.ToBase64String(rsa.Encrypt(aes.IV, true));
+                    encrypted += "|" + Convert.ToBase64String(rsa.Encrypt(aes.Key, RSAEncryptionPadding.OaepSHA1));
+                    encrypted += "|" + Convert.ToBase64String(rsa.Encrypt(aes.IV, RSAEncryptionPadding.OaepSHA1));
 
                 }
             }
@@ -931,18 +931,18 @@ namespace TalonAdmin.Controllers.Api
 
         private async Task<Vendor> VendorFromRequest()
         {
+            // NOTE: [AuthorizeVendor] already resolved the "Authorization: Token <token>" header and
+            // published the vendor id on the request, so the token lookup happens there now.
+            var vendorIdHeader = Request.Headers[AuthConstants.VendorIdHeader];
+            int vendorId;
 
-            if (Request.Headers.Authorization.Scheme.ToLower() != "token")
+            if (vendorIdHeader.Count == 0 || !Int32.TryParse(vendorIdHeader[0], out vendorId))
             {
                 return null;
             }
 
-            var authToken = Request.Headers.Authorization.Parameter;
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                return await ctx.Vendors
-                    .Where(v => v.AuthorizationToken == authToken).FirstOrDefaultAsync();
-            }
+            return await ctx.Vendors
+                .Where(v => v.Id == vendorId).FirstOrDefaultAsync();
         }
 
         private static void GenerateKeys(string keyContainer)
@@ -950,35 +950,33 @@ namespace TalonAdmin.Controllers.Api
             if (!Directory.Exists(keyContainer))
                 Directory.CreateDirectory(keyContainer);
 
-            if (!File.Exists(Path.Combine(keyContainer, "VendorPublic.json")) || !File.Exists(Path.Combine(keyContainer, "VendorPrivate.json")))
+            if (!System.IO.File.Exists(Path.Combine(keyContainer, "VendorPublic.json")) || !System.IO.File.Exists(Path.Combine(keyContainer, "VendorPrivate.json")))
             {
-                using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+                using (RSA rsa = RSA.Create())
                 {
-                    rsa.PersistKeyInCsp = false;
                     string publicKey = rsa.ToXmlString(false);
                     string privateKey = rsa.ToXmlString(true);
 
 
                     var jsonPublicKey = JToken.Parse(JsonConvert.SerializeXNode(XDocument.Parse(publicKey)));
                     var jsonPrivateKey = JToken.Parse(JsonConvert.SerializeXNode(XDocument.Parse(privateKey)));
-                    File.WriteAllText(Path.Combine(keyContainer, "VendorPublic.json"), jsonPublicKey["RSAKeyValue"].ToString());
-                    File.WriteAllText(Path.Combine(keyContainer, "VendorPrivate.json"), jsonPrivateKey["RSAKeyValue"].ToString());
+                    System.IO.File.WriteAllText(Path.Combine(keyContainer, "VendorPublic.json"), jsonPublicKey["RSAKeyValue"].ToString());
+                    System.IO.File.WriteAllText(Path.Combine(keyContainer, "VendorPrivate.json"), jsonPrivateKey["RSAKeyValue"].ToString());
                 }
             }
 
-            if (!File.Exists(Path.Combine(keyContainer, "ServerPublic.json")) || !File.Exists(Path.Combine(keyContainer, "ServerPrivate.json")))
+            if (!System.IO.File.Exists(Path.Combine(keyContainer, "ServerPublic.json")) || !System.IO.File.Exists(Path.Combine(keyContainer, "ServerPrivate.json")))
             {
-                using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+                using (RSA rsa = RSA.Create())
                 {
-                    rsa.PersistKeyInCsp = false;
                     string publicKey = rsa.ToXmlString(false);
                     string privateKey = rsa.ToXmlString(true);
 
 
                     var jsonPublicKey = JToken.Parse(JsonConvert.SerializeXNode(XDocument.Parse(publicKey)));
                     var jsonPrivateKey = JToken.Parse(JsonConvert.SerializeXNode(XDocument.Parse(privateKey)));
-                    File.WriteAllText(Path.Combine(keyContainer, "ServerPublic.json"), jsonPublicKey["RSAKeyValue"].ToString());
-                    File.WriteAllText(Path.Combine(keyContainer, "ServerPrivate.json"), jsonPrivateKey["RSAKeyValue"].ToString());
+                    System.IO.File.WriteAllText(Path.Combine(keyContainer, "ServerPublic.json"), jsonPublicKey["RSAKeyValue"].ToString());
+                    System.IO.File.WriteAllText(Path.Combine(keyContainer, "ServerPrivate.json"), jsonPrivateKey["RSAKeyValue"].ToString());
                 }
             }
         }
@@ -1002,20 +1000,17 @@ namespace TalonAdmin.Controllers.Api
 
         private Aes KeyForBeneficiary(int beneficiaryId)
         {
-            using (var ctx = new Models.Vouchers.Context())
-            {
-                Aes rm = new AesCryptoServiceProvider();
-                var beneficiary = ctx.Beneficiaries.Where(b => b.Id == beneficiaryId).FirstOrDefault();
+            Aes rm = Aes.Create();
+            var beneficiary = ctx.Beneficiaries.AsNoTracking().Where(b => b.Id == beneficiaryId).FirstOrDefault();
 
-                var passwordBytes = Encoding.UTF8.GetBytes(beneficiary.PIN);
-                var iv = new byte[rm.BlockSize / 8];
-                Array.Copy(passwordBytes, iv, passwordBytes.Length < iv.Length ? passwordBytes.Length : iv.Length);
+            var passwordBytes = Encoding.UTF8.GetBytes(beneficiary.PIN);
+            var iv = new byte[rm.BlockSize / 8];
+            Array.Copy(passwordBytes, iv, passwordBytes.Length < iv.Length ? passwordBytes.Length : iv.Length);
 
-                rm.Key = Convert.FromBase64String(beneficiary.CardKey);
-                rm.IV = iv;
-                rm.Mode = CipherMode.CBC;
-                return rm;
-            }
+            rm.Key = Convert.FromBase64String(beneficiary.CardKey);
+            rm.IV = iv;
+            rm.Mode = CipherMode.CBC;
+            return rm;
         }
 
         private static string ExportPrivateKey(RSAParameters parameters)

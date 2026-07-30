@@ -1,105 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity.Core.Objects;
-using System.ComponentModel.DataAnnotations;
-using System.Data.Entity.Infrastructure.Annotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.Entity.ModelConfiguration.Conventions;
-using System.Data.Entity.ModelConfiguration.Configuration;
-
-
+using Microsoft.EntityFrameworkCore;
 
 namespace TalonAdmin.Models.Vouchers
 {
-    public class DataTypePropertyAttributeConvention
-    : PrimitivePropertyAttributeConfigurationConvention<DataTypeAttribute>
-    {
-        public override void Apply(ConventionPrimitivePropertyConfiguration configuration,
-            DataTypeAttribute attribute)
-        {
-            if (attribute.DataType == DataType.Date)
-            {
-                configuration.HasColumnType("Date");
-            }
-        }
-    }
-
     public class Context : DbContext
     {
-        public Context()
-            : base("name=VoucherContext")
+        public Context(DbContextOptions<Context> options)
+            : base(options)
         {
-            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += (sender, e) => ApplyUTC(e.Entity);
-
-        }
-
-        private static void ApplyUTC(object entity)
-        {
-            if (entity == null)
-                return;
-
-            var properties = entity.GetType().GetProperties()
-                .Where(x => x.PropertyType == typeof(DateTime) || x.PropertyType == typeof(DateTime?));
-
-            foreach (var property in properties)
-            {
-                
-                var dt = property.PropertyType == typeof(DateTime?)
-                    ? (DateTime?)property.GetValue(entity, null)
-                    : (DateTime)property.GetValue(entity, null);
-
-                if (dt == null)
-                    continue;
-
-                property.SetValue(entity, DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc), null);
-            }
-        }
-
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-            //modelBuilder.Conventions.Add(new DataTypePropertyAttributeConvention());
-
-#if !DEBUG
-            Database.SetInitializer(new NullDatabaseInitializer<Context>());
-#endif
-#if DEBUG
-            Database.SetInitializer(new NullDatabaseInitializer<Context>());
-           // Database.SetInitializer(new CreateDatabaseIfNotExists<Context>());
-            // Database.SetInitializer(new DropCreateDatabaseAlways<Context>());
-#endif
-
-            modelBuilder.Entity<Beneficiary>()
-                .HasOptional(p => p.Group)
-                .WithMany(p => p.Beneficiaries);
-
-            modelBuilder.Entity<Distribution>()
-                .HasMany(p => p.Categories)
-                .WithRequired(p => p.Distribution)
-                .WillCascadeOnDelete();
-
-            modelBuilder.Entity<Distribution>()
-                .HasMany(p => p.Vouchers)
-                .WithRequired(p => p.Distribution)
-                .WillCascadeOnDelete(false);
-
-            modelBuilder.Entity<Voucher>()
-                .HasMany(p => p.TransactionRecords)
-                .WithRequired(p => p.Voucher)
-                .WillCascadeOnDelete(false);
-
-            modelBuilder.Entity<Program>()
-                .HasMany(p => p.Distributions)
-                .WithRequired(p => p.Program)
-                .WillCascadeOnDelete();
-
-            modelBuilder.Entity<BeneficiaryAdditionalData>().ToTable("BeneficiaryAdditionalData");
-            modelBuilder.Entity<VendorAdditionalData>().ToTable("VendorAdditionalData");
         }
 
         public DbSet<AuditLogItem> AuditLogItems { get; set; }
@@ -122,9 +32,90 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<VoucherType> VoucherTypes { get; set; }
         public DbSet<VoucherTransactionRecord> VoucherTransactionRecords { get; set; }
         public DbSet<MessageLog> MessageLogs { get; set; }
-
         public DbSet<TransactionLogItem> TransactionLogItems { get; set; }
         public DbSet<CardLoad> CardLoads { get; set; }
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+        {
+            base.ConfigureConventions(builder);
+
+            builder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+            builder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Beneficiary>()
+                .HasOne(p => p.Group)
+                .WithMany(p => p.Beneficiaries)
+                .HasForeignKey(p => p.GroupId)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Distribution>()
+                .HasMany(p => p.Categories)
+                .WithOne(p => p.Distribution)
+                .HasForeignKey(p => p.DistributionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Distribution>()
+                .HasMany(p => p.Vouchers)
+                .WithOne(p => p.Distribution)
+                .HasForeignKey(p => p.DistributionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Voucher>()
+                .HasMany(p => p.TransactionRecords)
+                .WithOne(p => p.Voucher)
+                .HasForeignKey(p => p.VoucherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Voucher.Category and Distribution.Categories would otherwise give SQL Server two
+            // cascade paths into Voucher.
+            modelBuilder.Entity<Voucher>()
+                .HasOne(p => p.Category)
+                .WithMany()
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Program>()
+                .HasMany(p => p.Distributions)
+                .WithOne(p => p.Program)
+                .HasForeignKey(p => p.ProgramId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<BeneficiaryAdditionalData>().ToTable("BeneficiaryAdditionalData");
+            modelBuilder.Entity<VendorAdditionalData>().ToTable("VendorAdditionalData");
+
+            // Replaces the EF6 property-level [Index] attributes on CountryEntity/TenantEntity.
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var clrType = entityType.ClrType;
+                if (typeof(CountryEntity).IsAssignableFrom(clrType))
+                {
+                    modelBuilder.Entity(clrType).HasIndex(nameof(CountryEntity.CountryId));
+                }
+
+                if (typeof(TenantEntity).IsAssignableFrom(clrType))
+                {
+                    modelBuilder.Entity(clrType).HasIndex(nameof(TenantEntity.OrganizationId));
+                }
+            }
+
+            modelBuilder.Entity<Voucher>().HasIndex(v => v.VoucherCode);
+            modelBuilder.Entity<Voucher>().HasIndex(v => v.SequentialCode);
+
+            // Restrict the remaining conventional required relationships so a delete cannot
+            // fan out through several paths at once (SQL Server rejects that outright).
+            foreach (var fk in modelBuilder.Model.GetEntityTypes()
+                         .SelectMany(t => t.GetForeignKeys())
+                         .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade
+                                      && fk.DeclaringEntityType.ClrType != typeof(DistributionVoucherCategory)
+                                      && fk.DeclaringEntityType.ClrType != typeof(Distribution)))
+            {
+                fk.DeleteBehavior = DeleteBehavior.Restrict;
+            }
+        }
     }
 }

@@ -1,56 +1,23 @@
-﻿using Microsoft.AspNet.Identity.EntityFramework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity.Core.Objects;
-using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace TalonAdmin.Models.Admin
 {
-    public class AdminContext : IdentityDbContext<ApplicationUser>
+    public class AdminContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
-        public AdminContext()
-            : base("name=AdminContext")
+        public AdminContext(DbContextOptions<AdminContext> options)
+            : base(options)
         {
-            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += (sender, e) => ApplyUTC(e.Entity);
-
         }
 
-        private static void ApplyUTC(object entity)
-        {
-            if (entity == null)
-                return;
-
-            var properties = entity.GetType().GetProperties()
-                .Where(x => x.PropertyType == typeof(DateTime) || x.PropertyType == typeof(DateTime?));
-
-            foreach (var property in properties)
-            {
-
-                var dt = property.PropertyType == typeof(DateTime?)
-                    ? (DateTime?)property.GetValue(entity, null)
-                    : (DateTime)property.GetValue(entity, null);
-
-                if (dt == null)
-                    continue;
-
-                property.SetValue(entity, DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc), null);
-            }
-        }
-
-        public static AdminContext Create()
-        {
-            return new AdminContext();
-        }
-
-        public DbSet<IdentityUserRole> UserRoles { get; set; }
         public DbSet<Action> Actions { get; set; }
         public DbSet<ActionRole> ActionRoles { get; set; }
         public DbSet<Country> Countries { get; set; }
+        public DbSet<CountrySettings> CountrySettings { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<MenuCategoryRole> MenuCategoryRoles { get; set; }
         public DbSet<MenuCategory> MenuCategories { get; set; }
@@ -58,29 +25,79 @@ namespace TalonAdmin.Models.Admin
         public DbSet<OrganizationCountry> OrganizationCountries { get; set; }
         public DbSet<ApplicationUserCountry> ApplicationUserCountries { get; set; }
 
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+        {
+            base.ConfigureConventions(builder);
+
+            builder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+            builder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            // Re-establish the Identity 2 navigations that Core Identity leaves off the model.
+            modelBuilder.Entity<ApplicationUser>()
+                .HasMany(u => u.Roles)
+                .WithOne()
+                .HasForeignKey(ur => ur.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ApplicationRole>()
+                .HasMany(r => r.Users)
+                .WithOne()
+                .HasForeignKey(ur => ur.RoleId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ApplicationUserCountry>()
-                .HasRequired(p => p.ApplicationUser)
-                .WithMany(p => p.Countries);
+                .HasOne(p => p.ApplicationUser)
+                .WithMany(p => p.Countries)
+                .HasForeignKey(p => p.ApplicationUserId)
+                .IsRequired();
 
             modelBuilder.Entity<MenuCategory>()
                 .HasMany(p => p.Items)
-                .WithOptional(p => p.Category);
+                .WithOne(p => p.Category)
+                .HasForeignKey(p => p.CategoryId)
+                .IsRequired(false);
 
             modelBuilder.Entity<MenuCategory>()
                 .HasMany(p => p.Roles)
-                .WithRequired(p => p.Category);
+                .WithOne(p => p.Category)
+                .HasForeignKey(p => p.CategoryId)
+                .IsRequired();
 
             modelBuilder.Entity<MenuItem>()
                 .HasMany(p => p.Children)
-                .WithOptional(p => p.Parent);
+                .WithOne(p => p.Parent)
+                .HasForeignKey(p => p.ParentId)
+                .IsRequired(false);
 
+            // EF6 declared this key with [Key, Column(Order = ...)]; EF Core needs it in fluent config.
+            modelBuilder.Entity<CountrySettingsProperty>(b =>
+            {
+                b.HasKey(p => new { p.SettingsId, p.Name });
+                b.Property(p => p.Name).HasMaxLength(200);
+                b.HasOne(p => p.Settings)
+                    .WithMany(p => p.PropertyCollection)
+                    .HasForeignKey(p => p.SettingsId)
+                    .IsRequired();
+            });
 
-            Database.SetInitializer(new NullDatabaseInitializer<AdminContext>());
+            modelBuilder.Entity<Country>()
+                .HasOne(p => p.Settings)
+                .WithMany()
+                .HasForeignKey(p => p.SettingsId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<OrganizationCountry>()
+                .HasOne(p => p.Settings)
+                .WithMany()
+                .HasForeignKey(p => p.SettingsId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
-
 }

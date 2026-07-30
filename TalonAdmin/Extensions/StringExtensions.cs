@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 
 namespace System
 {
@@ -44,7 +43,7 @@ namespace System
 
         public static string Encrypt(this string self, byte[] iv, byte[] key)
         {
-            using (var cipher = new AesManaged())
+            using (var cipher = Aes.Create())
             {
                 cipher.IV = iv;
                 cipher.Key = key;
@@ -76,7 +75,7 @@ namespace System
 
         public static byte[] Decrypt(this string self, byte[] iv, byte[] key)
         {
-            using (var cipher = new AesManaged())
+            using (var cipher = Aes.Create())
             {
                 cipher.IV = iv;
                 cipher.Key = key;

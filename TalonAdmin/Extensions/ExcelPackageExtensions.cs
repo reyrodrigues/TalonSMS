@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Web;
 
 namespace TalonAdmin.Extensions
 {
@@ -188,6 +187,9 @@ namespace TalonAdmin.Extensions
             return returnArray;
         }
 
+        // NOTE: EPPlus 8 keeps the v4 semantics of ExcelRange.Value - a date formatted cell still comes back as
+        // the raw OADate double rather than a DateTime (only GetValue<DateTime>() converts). That is what the
+        // FromOADate branch in MergeChangesInto above relies on, so neither side needed changing for the upgrade.
         public static JToken ToJToken(this ExcelRange excelRange)
         {
             object returnValue = "";
