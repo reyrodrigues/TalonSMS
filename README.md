@@ -89,6 +89,31 @@ directory used for fallback authentication, so a local run never sends a real me
 real provider. Stubs live in `docker/wiremock/mappings/`; inspect traffic at
 <http://localhost:8081/__admin/requests>.
 
+## Tests
+
+```bash
+dotnet test
+```
+
+`TalonAdmin.Tests` boots the real application with `WebApplicationFactory` against a throwaway
+SQLite database and drives it over HTTP exactly as the AngularJS client does — OAuth password
+grant, the `Token` authorization scheme, tenant headers, and Breeze's own JSON query and
+save-bundle formats. The whole suite runs in a few seconds; nothing is stubbed except the PDF
+renderer, which captures the HTML each report produced so tests can assert on report *content*
+rather than on opaque PDF bytes.
+
+| File | Covers |
+| --- | --- |
+| `VoucherDistributionScenarioTests` | The end-to-end business workflow: stand up a country, register a vendor and beneficiaries, define a programme, distribute vouchers to a cycle, redeem one by SMS, then check the dashboard and the distribution report agree |
+| `BreezeContractTests` | The breeze-client 1.5 ↔ Breeze 7 wire contract: property casing, `$type` discriminators, `take`/`skip`, `inlineCount`, `where`, `expand`, and save round-trips |
+| `AuthenticationTests` | `/Token`'s OAuth shape, the `Token`/`Bearer`/`Basic` schemes, 401-not-302, vendor sign-in, and the deserialization type binder |
+| `ReportingAndExportTests` | Every report type, the QR test sheet, Excel export/import, and the EPPlus empty-table case |
+| `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links) and the action grants the UI gates buttons on |
+
+Most of these are regression guards for specific defects this migration hit — each one was verified
+to fail when its fix is reverted, so they are not just documentation. `MIGRATION.md` explains why
+each contract matters.
+
 ## Configuration
 
 Settings come from `appsettings.json`, then `appsettings.{Environment}.json`, then environment
