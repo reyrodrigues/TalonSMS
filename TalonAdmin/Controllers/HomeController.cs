@@ -77,10 +77,13 @@ namespace TalonAdmin.Controllers
                 .Select(ur => ur.RoleId)
                 .ToArrayAsync();
 
+            // The sidebar renders three levels: category -> item -> child link. Children have to be
+            // loaded explicitly now that lazy loading is gone, or every menu group renders empty.
             var categories = (await _adminContext.MenuCategories
                     .AsNoTracking()
                     .Include(c => c.Roles)
-                    .Include(c => c.Items)
+                    .Include(c => c.Items.OrderBy(i => i.Id))
+                    .ThenInclude(i => i.Children.OrderBy(child => child.Id))
                     .ToArrayAsync())
                 .Where(c => !c.Roles.Any() || c.Roles.Select(r => r.RoleId).Intersect(roles).Any())
                 .OrderBy(c => c.SortOrder)

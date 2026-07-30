@@ -416,6 +416,11 @@ namespace TalonAdmin.Data
             _logger.LogInformation("Granted {Count} actions to '{Role}'.", actions.Length, SystemAdministratorRole);
         }
 
+        /// <summary>
+        /// The sidebar is data-driven: categories hold expandable items, and each item holds the
+        /// child links that carry the ui-router state name. Dashboard is hard-coded in nav.tpl.html,
+        /// so it is deliberately not repeated here.
+        /// </summary>
         private async Task SeedMenuAsync()
         {
             if (await _adminContext.MenuCategories.AnyAsync())
@@ -423,18 +428,153 @@ namespace TalonAdmin.Data
                 return;
             }
 
-            var dashboard = new MenuCategory { Name = "Dashboard", SortOrder = 1, NeedsCountry = true };
-            _adminContext.MenuCategories.Add(dashboard);
-            await _adminContext.SaveChangesAsync();
-
-            _adminContext.MenuItems.Add(new MenuItem
+            var menu = new[]
             {
-                CategoryId = dashboard.Id,
-                State = "app.dashboard",
-                Title = "Dashboard",
-                CssClass = "fa fa-dashboard"
-            });
-            await _adminContext.SaveChangesAsync();
+                new MenuSeed("Programme", 1, true, null, new[]
+                {
+                    new MenuGroupSeed("Beneficiaries", "fa fa-users", new[]
+                    {
+                        new MenuLinkSeed("Beneficiaries", "beneficiaries.list"),
+                        new MenuLinkSeed("Cycles", "groups.list")
+                    }),
+                    new MenuGroupSeed("Distribution", "fa fa-share-alt", new[]
+                    {
+                        new MenuLinkSeed("Programs", "programs.list"),
+                        new MenuLinkSeed("Distributions", "distributions.list")
+                    }),
+                    new MenuGroupSeed("Vendors", "fa fa-shopping-cart", new[]
+                    {
+                        new MenuLinkSeed("Vendors", "vendors.list"),
+                        new MenuLinkSeed("Vendor Types", "vendor-types.list")
+                    })
+                }),
+                new MenuSeed("Reporting", 2, true, null, new[]
+                {
+                    new MenuGroupSeed("Reports", "fa fa-bar-chart", new[]
+                    {
+                        new MenuLinkSeed("Distribution Report", "reporting.distribution"),
+                        new MenuLinkSeed("Program Closure Report", "reporting.program-closure"),
+                        new MenuLinkSeed("Vendor Financial Report", "reporting.vendor-financial")
+                    }),
+                    new MenuGroupSeed("Reconciliation", "fa fa-check-square-o", new[]
+                    {
+                        new MenuLinkSeed("Report History", "reconciliation.report-history"),
+                        new MenuLinkSeed("Vendor Receipt", "reconciliation.vendor-receipt")
+                    })
+                }),
+                new MenuSeed("Country Administration", 3, true,
+                    new[] { CountryAdministratorRole, OrganizationAdministratorRole, SystemAdministratorRole }, new[]
+                {
+                    new MenuGroupSeed("Transactions", "fa fa-exchange", new[]
+                    {
+                        new MenuLinkSeed("Transaction Log", "country-admin.transaction.transaction-log"),
+                        new MenuLinkSeed("Quarantine", "country-admin.transaction.quarantine"),
+                        new MenuLinkSeed("Card Load Log", "country-admin.transaction.card-load-log")
+                    }),
+                    new MenuGroupSeed("Reference Data", "fa fa-map-marker", new[]
+                    {
+                        new MenuLinkSeed("Locations", "country-admin.locations.list"),
+                        new MenuLinkSeed("Voucher Types", "country-admin.voucher-types.list")
+                    }),
+                    new MenuGroupSeed("My Account", "fa fa-user", new[]
+                    {
+                        new MenuLinkSeed("My Profile", "country-admin.users.my-profile")
+                    })
+                }),
+                new MenuSeed("Organization Administration", 4, false,
+                    new[] { OrganizationAdministratorRole, SystemAdministratorRole }, new[]
+                {
+                    new MenuGroupSeed("Organization", "fa fa-building", new[]
+                    {
+                        new MenuLinkSeed("Users", "org-admin.users.list"),
+                        new MenuLinkSeed("Country Settings", "org-admin.country-settings.list")
+                    })
+                }),
+                new MenuSeed("System Administration", 5, false,
+                    new[] { SystemAdministratorRole }, new[]
+                {
+                    new MenuGroupSeed("Access", "fa fa-lock", new[]
+                    {
+                        new MenuLinkSeed("Users", "sys-admin.users.list"),
+                        new MenuLinkSeed("Roles", "sys-admin.roles.list"),
+                        new MenuLinkSeed("Actions", "sys-admin.actions.list")
+                    }),
+                    new MenuGroupSeed("Reference Data", "fa fa-globe", new[]
+                    {
+                        new MenuLinkSeed("Organizations", "sys-admin.organizations.list"),
+                        new MenuLinkSeed("Countries", "sys-admin.countries.list")
+                    }),
+                    new MenuGroupSeed("Navigation", "fa fa-bars", new[]
+                    {
+                        new MenuLinkSeed("Menu Categories", "sys-admin.menu-categories.list"),
+                        new MenuLinkSeed("Menu Items", "sys-admin.menu-items.list")
+                    })
+                })
+            };
+
+            foreach (var categorySeed in menu)
+            {
+                var category = new MenuCategory
+                {
+                    Name = categorySeed.Name,
+                    SortOrder = categorySeed.SortOrder,
+                    NeedsCountry = categorySeed.NeedsCountry
+                };
+                _adminContext.MenuCategories.Add(category);
+                await _adminContext.SaveChangesAsync();
+
+                if (categorySeed.Roles != null)
+                {
+                    foreach (var roleName in categorySeed.Roles)
+                    {
+                        var role = await _roleManager.FindByNameAsync(roleName);
+                        if (role != null)
+                        {
+                            _adminContext.MenuCategoryRoles.Add(new MenuCategoryRole
+                            {
+                                CategoryId = category.Id,
+                                RoleId = role.Id
+                            });
+                        }
+                    }
+
+                    await _adminContext.SaveChangesAsync();
+                }
+
+                foreach (var groupSeed in categorySeed.Groups)
+                {
+                    // Top-level items belong to the category; their children carry only ParentId,
+                    // so MenuCategory.Items stays the list of expandable groups.
+                    var group = new MenuItem
+                    {
+                        CategoryId = category.Id,
+                        Title = groupSeed.Title,
+                        CssClass = groupSeed.CssClass,
+                        State = groupSeed.Links.First().State
+                    };
+                    _adminContext.MenuItems.Add(group);
+                    await _adminContext.SaveChangesAsync();
+
+                    _adminContext.MenuItems.AddRange(groupSeed.Links.Select(l => new MenuItem
+                    {
+                        ParentId = group.Id,
+                        Title = l.Title,
+                        State = l.State
+                    }));
+                    await _adminContext.SaveChangesAsync();
+                }
+            }
+
+            _logger.LogInformation(
+                "Seeded {Categories} menu categories with {Links} links.",
+                menu.Length, menu.Sum(c => c.Groups.Sum(g => g.Links.Length)));
         }
+
+        private sealed record MenuSeed(string Name, int SortOrder, bool NeedsCountry, string[] Roles, MenuGroupSeed[] Groups);
+
+        private sealed record MenuGroupSeed(string Title, string CssClass, MenuLinkSeed[] Links);
+
+        private sealed record MenuLinkSeed(string Title, string State);
+
     }
 }
