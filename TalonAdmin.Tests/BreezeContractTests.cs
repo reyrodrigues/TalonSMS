@@ -132,6 +132,25 @@ public class BreezeContractTests : IClassFixture<SeededTalonAppFactory>
     }
 
     [Fact]
+    public async Task Users_expand_the_identity_navigations_the_admin_screens_ask_for()
+    {
+        await AuthenticateAsync();
+
+        // The sys-admin and org-admin user screens both request this exact set. Identity 2 had all
+        // three on IdentityUser; Core Identity has none of them, and EF Core rejects an include
+        // path it cannot resolve, so the screens returned 500 until they were re-declared.
+        var users = await _api.BreezeQueryAsync("Users",
+            new { expand = new[] { "Organization", "Roles", "Claims", "Logins" } }, admin: true);
+
+        var user = Assert.Single(users);
+
+        Assert.NotNull(user["Organization"]);
+        Assert.NotEmpty(user["Roles"]!);
+        Assert.NotNull(user["Claims"]);
+        Assert.NotNull(user["Logins"]);
+    }
+
+    [Fact]
     public async Task Both_breeze_endpoints_publish_metadata()
     {
         await AuthenticateAsync();

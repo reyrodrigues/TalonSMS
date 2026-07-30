@@ -9,6 +9,9 @@ The server is an ASP.NET Core application on .NET 10 backed by Entity Framework 
 [Breeze](https://breeze.github.io/) data API for the admin client, a REST API for the mobile
 vendor client, and generates spreadsheet and PDF reports.
 
+> [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
+> country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
+>
 > Migrating from the old .NET Framework 4.5 codebase? See [MIGRATION.md](MIGRATION.md) for what
 > changed, what was dropped, and what still needs attention before a production deploy.
 
