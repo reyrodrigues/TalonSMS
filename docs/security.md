@@ -10,11 +10,14 @@ the people holding them are, by definition, people with little margin for being 
 is an honest account of what the system protects, what it does not, and what you have to do yourself.
 
 {: .warning }
-> **Talon has not had an independent security review.** The 2026 modernisation fixed defects found by
-> reading the code — including a measurably biased voucher code generator and a total absence of rate
-> limiting — but finding and fixing some bugs is not the same as being audited. Treat everything below
-> as a description of the current design, not as an assurance about it. If you have the means to
-> commission a review before running this at scale, do.
+> **Talon has not had an independent security review, and I make no claim that it is secure.** The
+> 2026 modernisation fixed defects found by reading the code — including a measurably biased voucher
+> code generator and a total absence of rate limiting — but finding and fixing some bugs is not the
+> same as being audited. Treat everything below as a description of the current design, not as an
+> assurance about it. If you have the means to commission a review before running this at scale, do.
+>
+> See [Disclaimer and responsible use](disclaimer.html) for the terms this is published under and what
+> deploying it responsibly requires of you.
 
 ---
 

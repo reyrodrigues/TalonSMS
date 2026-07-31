@@ -135,8 +135,8 @@ AngularJS client needed a compatibility shim for:
   AngularJS client wrote them in camelCase and rewrote them while building the URI; the Vue client
   simply uses the server's names throughout, so there is nothing to translate.
 
-See [docs/VUE-PORT.md](docs/VUE-PORT.md) for the details that only surfaced under test — endpoint
-arguments, client-keyed rows, and unmapped computed properties.
+See [migration/VUE-PORT.md](migration/VUE-PORT.md) for the details that only surfaced under test —
+endpoint arguments, client-keyed rows, and unmapped computed properties.
 
 ## Things that were removed, not ported
 

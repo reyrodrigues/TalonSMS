@@ -34,6 +34,7 @@ No blockchain, no tokens, no wallet — just codes and a ledger.
 | Put it on the internet on a free or cheap host | [Deploy](deploy.html) |
 | Understand how a real programme is run through it | [Operating a programme](operate.html) |
 | Know what it does and does not protect against | [Security](security.html) |
+| Understand what you take on by deploying it | [Disclaimer and responsible use](disclaimer.html) |
 | See every screen, with screenshots | [Walkthrough](WALKTHROUGH.html) |
 
 ---
@@ -88,11 +89,15 @@ has aged better than the code did.
 ## Before you run this for real
 
 {: .caution }
-> Talon has not had an independent security review. The 2026 modernisation fixed defects that were
-> found while reading the code — the voucher code generator was replaced because its output was
-> measurably biased, and rate limiting was added because there was none — but "some bugs were found
-> and fixed" is not the same as "audited". The [Security](security.html) page sets out what is protected,
-> what is not, and what to change before real beneficiary data goes near it. Read it first.
+> Talon is provided as is, with no warranty and **no claim that it is secure.** It has not had an
+> independent security review. The 2026 modernisation fixed defects that were found while reading the
+> code — the voucher code generator was replaced because its output was measurably biased, and rate
+> limiting was added because there was none — but "some bugs were found and fixed" is not the same as
+> "audited".
+>
+> Read [Security](security.html) for what is protected and what is not, and
+> [Disclaimer and responsible use](disclaimer.html) for what you take on by deploying it with real
+> people's data. Both before you go live, please.
 
 ---
 

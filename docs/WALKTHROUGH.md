@@ -1,6 +1,6 @@
 ---
 title: Walkthrough
-nav_order: 6
+nav_order: 7
 ---
 
 # Walkthrough: from an empty database to a redeemed voucher

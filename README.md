@@ -16,12 +16,12 @@ Render or Railway with a free Neon or Supabase database in about fifteen minutes
 it for real.
 
 > The admin client is a Vue 3 application served from `/app/`. It replaced the AngularJS 1.4
-> client, which has been removed — see [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the client is
-> built and what it still lacks.
+> client, which has been removed — see [migration/VUE-PORT.md](migration/VUE-PORT.md) for how the
+> client is built and what it still lacks.
 >
-> [docs/MESSAGING.md](docs/MESSAGING.md) covers how voucher codes reach beneficiaries — the outbound
-> queue, retries and the delivery log — and the three delivery channels: Clickatell, a phone acting
-> as an SMS gateway, and a Telegram bot.
+> [docs/MESSAGING.md](docs/MESSAGING.md) covers how voucher codes reach beneficiaries and how
+> redemptions come back — the outbound queue, the per-country channel chain, the delivery log, and
+> the three channels: Clickatell, a phone acting as an SMS gateway, and a Telegram bot.
 >
 > [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
 > country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
@@ -31,10 +31,15 @@ it for real.
 
 ## Security status
 
-**Talon has not had an independent security review.** The 2026 modernisation fixed defects found while
-reading the code — the voucher code generator was replaced because its output was measurably biased,
-and rate limiting was added to the sign-in and redemption endpoints because there was none — but that
-is not the same as being audited.
+**Talon is provided as is, with no warranty and no claim that it is secure.** It has not had an
+independent security review. The 2026 modernisation fixed defects found while reading the code — the
+voucher code generator was replaced because its output was measurably biased, and rate limiting was
+added to the sign-in and redemption endpoints because there was none — but that is not the same as
+being audited.
+
+It holds names, national ID numbers, phone numbers and locations for people who are often vulnerable
+precisely because of who and where they are. If you deploy it, that responsibility is yours — see
+[Disclaimer and responsible use](https://reyrodrigues.github.io/TalonSMS/disclaimer.html).
 
 Before running this with real beneficiary data, at minimum: set `Jwt:SigningKey`, set `SystemSecret`,
 change the seeded `admin` password, disable demo data, and serve it over HTTPS only. Voucher codes
@@ -189,7 +194,8 @@ rather than on opaque PDF bytes.
 | `ReportingAndExportTests` | Every report type, the QR test sheet, Excel export/import, and the EPPlus empty-table case |
 | `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links), the action grants the UI gates buttons on, and the four-row bundle that creating a country writes |
 | `OutboundMessagingTests` | The messaging queue: a message is persisted before it is attempted, transient failures retry with backoff, rejections do not, and an unconfigured country fails visibly |
-| `MessageChannelTests` | The Clickatell, Android-gateway and Telegram adapters: the wire format each produces, which failures are worth retrying, and that a Telegram enrolment payload cannot be forged |
+| `MessageChannelTests` | The Clickatell, Android-gateway and Telegram adapters: the wire format each produces, which failures are worth retrying, that a Telegram enrolment payload cannot be forged, and how a country's channel chain resolves |
+| `InboundRedemptionTests` | Redemption through the extracted processor, which is the path a Telegram reply takes as well as an inbound SMS |
 
 Most of these are regression guards for specific defects this migration hit — each one was verified
 to fail when its fix is reverted, so they are not just documentation. `MIGRATION.md` explains why
@@ -304,6 +310,7 @@ npm run build     # typechecks, then compiles to TalonAdmin/wwwroot/app
 The Docker image builds the client itself in a Node stage, so `docker compose up` needs no
 separate step.
 
-See [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the client is structured and what it still lacks.
+See [migration/VUE-PORT.md](migration/VUE-PORT.md) for how the client is structured and what it
+still lacks.
 The wire format it speaks to Breeze 7 is documented in [MIGRATION.md](MIGRATION.md) — read that
 before changing `src/api/breeze.ts` or the serializer settings in `Program.cs`.
