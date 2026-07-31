@@ -58,6 +58,11 @@ export interface ResourceDef<T extends object = Record<string, unknown>> {
   emptyMessage?: string
   /** Read-only screens hide the New button and render the form disabled. */
   readOnly?: boolean
+  /**
+   * Set when the resource has a hand-written edit screen registered under the same route names.
+   * The router then skips generating the generic create/edit routes for it.
+   */
+  customEditView?: boolean
   describe?: (row: T) => string
 }
 

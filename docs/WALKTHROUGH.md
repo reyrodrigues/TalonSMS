@@ -6,9 +6,13 @@ households in one cycle, two voucher categories, distributed and then partly red
 
 All names, numbers and identifiers below are fabricated demo data.
 
+> **The screenshots predate the Vue 3 cutover** and show the AngularJS client that used to serve
+> `/app/`. Every step, field and figure still matches — the screens were ported like for like — but
+> the chrome looks different. They have not been recaptured yet.
+
 ## 1. Sign in
 
-The AngularJS client is served from `wwwroot/app`; `/` redirects to it.
+The client is served from `wwwroot/app`; `/` redirects to it.
 
 ![Login](screenshots/01-login.png)
 

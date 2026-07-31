@@ -3,8 +3,7 @@
 **/.vs/
 **/.vscode/
 **/node_modules/
-**/vendor/
-Angular/build/
+TalonAdmin/wwwroot/app/
 TalonAdmin/App_Data/*.db
 TalonAdmin/Dashboards/
 .git/

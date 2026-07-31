@@ -1,23 +1,24 @@
-# Porting the client to Vue 3
+# The Vue 3 client
 
-The AngularJS 1.4 client has been replaced by a Vue 3 client under `TalonAdmin/ClientApp`. Both
-still run side by side against the same API: AngularJS at `/app/`, Vue at `/next/`. Nothing on the
-server changed to accommodate the new client, apart from one seed fix noted below.
+The AngularJS 1.4 client has been replaced by a Vue 3 client under `TalonAdmin/ClientApp`, served
+from `/app/` — the path AngularJS used, so existing links and bookmarks still work. The AngularJS
+sources, its Grunt/Bower toolchain and the static assets only it used have been deleted.
 
 **Every screen the navigation menu offers is ported.** All 27 seeded menu links resolve to a Vue
-screen; none are hidden any more.
+screen; none are hidden.
 
 ## Running it
 
 ```bash
 cd TalonAdmin/ClientApp
 npm ci
-npm run build          # typechecks, then publishes to wwwroot/next
+npm run build          # typechecks, then publishes to wwwroot/app
 npm test               # wire-format tests
 npm run dev            # Vite dev server on :5173, proxying the API to :5080
 ```
 
-Then browse to <http://localhost:5080/next/>.
+Then browse to <http://localhost:5080/app/>, or just <http://localhost:5080/>, which redirects
+there. The Docker image runs this build in its own Node stage, so a container needs no extra step.
 
 ## What is ported
 
@@ -100,34 +101,55 @@ Three details of that format only surfaced when testing against the running serv
 - **`Beneficiary.Name` is a computed getter with no column behind it**, so it can be displayed but
   never sorted on. Ordering uses `LastName, FirstName`.
 
-## How the sidebar works during the transition
+## How the sidebar works
 
-The menu is data on the server, and each link stores an AngularJS ui-router state name. Rather
-than migrate that data — the AngularJS client still reads it — `src/router/stateMap.ts` maps state
-names to Vue routes. A state that is not in that map is hidden from the Vue sidebar. All 27 seeded
-states are now mapped, so nothing is hidden.
+The menu is data on the server, and each link still stores an AngularJS ui-router state name.
+Rather than migrate that data, `src/router/stateMap.ts` maps state names to Vue routes; a state
+that is not in that map is hidden from the sidebar rather than rendering a dead link. All 27
+seeded states are mapped.
 
-## Server change
+Migrating the seed to Vue route names is a reasonable follow-up, but it would need a data
+migration for existing deployments, so the translation layer stays for now.
 
-`DatabaseInitializer` now seeds a `ProgramVoucherCategory` for the demo programme. Distributing
-vouchers copies the programme's categories onto the new distribution, so without one the demo
-programme's *Distribute Vouchers* succeeded but handed out nothing.
+## Server changes
+
+Three, all small:
+
+- `Program.cs` serves the SPA fallback at `/app/{*path:nonfile}`, so a deep link or a refresh on
+  `/app/programs/3` reaches the client instead of 404ing.
+- `HomeController` lost `ServerScript`, `MetadataJS` and `OfflineManifest`. The first two
+  bootstrapped breeze-client's metadata store, which no longer exists; the third emitted an
+  AppCache manifest for a deprecated web standard. All three were reachable only from the
+  AngularJS `index.html`.
+- `DatabaseInitializer` seeds a `ProgramVoucherCategory` for the demo programme. Distributing
+  vouchers copies the programme's categories onto the new distribution, so without one the demo
+  programme's *Distribute Vouchers* succeeded but handed out nothing.
+
+`wwwroot/Content` (500 flag SVGs and two logos) and `wwwroot/Scripts` (jQuery 1.10, SignalR 2.2,
+Bootstrap 3, modernizr, respond — .NET Framework MVC scaffolding) went with them. The flags were
+referenced only by the AngularJS `index.html`; the scripts were referenced nowhere at all.
 
 ## Not done
 
-- Translation. The AngularJS client used angular-gettext with `.po` files under `Angular/po`;
-  the Vue client has no i18n layer yet.
+- Translation. The AngularJS client used angular-gettext with `.po` files; those catalogues are in
+  git history under `TalonAdmin/Angular/po` if the strings are worth recovering. The Vue client has
+  no i18n layer yet.
 - Component tests. Only the wire format is covered by unit tests; the screens were verified by
   driving the running app in a browser.
 - Sub-vendors and vendor sales people. The vendor form edits the vendor itself; the AngularJS
   screen also managed child records.
 - Copying voucher categories with a date offset (the AngularJS "copy category" dialog).
-- The five mobile point-of-sale endpoints, which need encrypted device payloads and have no web UI
-  in either client.
+- The five mobile point-of-sale endpoints, which need encrypted device payloads and have never had
+  a web UI.
 
-## Cutting over
+## If you need the AngularJS client back
 
-When you are ready to retire AngularJS, change `base` and `outDir` in `vite.config.ts` from `next`
-to `app`, drop the `MapFallbackToFile` line for `/next`, and delete `Angular/`. Until then both
-clients work and share a session — they read the same token from local storage under different
-keys, so signing in to one does not sign you in to the other.
+It is in git history, at the commit before the cutover:
+
+```bash
+git log --oneline -- TalonAdmin/Angular
+git checkout <commit>^ -- TalonAdmin/Angular TalonAdmin/wwwroot/Content TalonAdmin/wwwroot/Scripts
+```
+
+You would also need to restore `HomeController.ServerScript`/`MetadataJS` and the two views under
+`Views/Home`, and move the Vue client off `/app/`.

@@ -42,10 +42,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The AngularJS 1.x/Bower frontend is not part of the .NET build -->
-    <Compile Remove="Angular/**" />
-    <Content Remove="Angular/**" />
-    <None Remove="Angular/**" />
+    <!-- The Vue frontend has its own toolchain and is not part of the .NET build -->
+    <Compile Remove="ClientApp/**" />
+    <Content Remove="ClientApp/**" />
+    <None Remove="ClientApp/**" />
     <Content Remove="App_Data/**" />
   </ItemGroup>
 

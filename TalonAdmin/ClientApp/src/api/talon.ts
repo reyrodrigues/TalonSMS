@@ -268,6 +268,76 @@ export const distributionsForProgram = (programId: number) =>
 
 // ---- administration -------------------------------------------------------------------
 
+/**
+ * A country is four rows, not one:
+ *
+ *  - `CountrySettings`, which the Country's foreign key points at — creating only the Country
+ *    fails outright on that constraint;
+ *  - the `Country` itself;
+ *  - an `OrganizationCountry` granting the organization access to it;
+ *  - an `ApplicationUserCountry` granting the *creating user* access, without which the new
+ *    country never appears in their country switcher and cannot be worked in.
+ *
+ * Breeze resolves the temporary settings key inside the first bundle; the two link rows need the
+ * real keys, so they go in a second.
+ */
+export async function createCountry(
+  values: Partial<Country>,
+  organizationId: number,
+  userId: string
+) {
+  const settingsTempId = breeze.tempId()
+  const countryTempId = breeze.tempId()
+
+  const first = await breeze.saveChanges('Admin', [
+    breeze.added(
+      'Admin',
+      'CountrySettings',
+      'CountrySettings',
+      { SmsBackendType: 1 },
+      settingsTempId
+    ),
+    breeze.added(
+      'Admin',
+      'Country',
+      'Countries',
+      { ...values, SettingsId: settingsTempId },
+      countryTempId
+    )
+  ])
+
+  const countryId = first.realId(countryTempId)
+  const settingsId = first.realId(settingsTempId)
+
+  await breeze.saveChanges('Admin', [
+    breeze.added('Admin', 'OrganizationCountry', 'OrganizationCountries', {
+      OrganizationId: organizationId,
+      CountryId: countryId,
+      SettingsId: settingsId
+    }),
+    breeze.added('Admin', 'ApplicationUserCountry', 'ApplicationUserCountries', {
+      ApplicationUserId: userId,
+      CountryId: countryId
+    })
+  ])
+
+  return countryId
+}
+
+export const country = (id: number) =>
+  breeze.first<Country>('Admin', 'Countries', { where: { Id: id } })
+
+export const updateCountry = (values: Partial<Country>, original: Country) =>
+  breeze.saveChanges<Country>('Admin', [
+    breeze.modified('Admin', 'Country', 'Countries', values as Record<string, unknown>, {
+      ...Object.fromEntries(
+        Object.keys(values)
+          .filter(k => (original as unknown as Record<string, unknown>)[k] !== (values as Record<string, unknown>)[k])
+          .map(k => [k, (original as unknown as Record<string, unknown>)[k] ?? null])
+      )
+    })
+  ])
+
 export const organizationCountries = () =>
   breeze.query<OrganizationCountry>('Admin', 'OrganizationCountries', {
     expand: ['Country', 'Settings', 'Settings.PropertyCollection']

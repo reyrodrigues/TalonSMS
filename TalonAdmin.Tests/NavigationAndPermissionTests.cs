@@ -83,6 +83,64 @@ public class NavigationAndPermissionTests : IClassFixture<SeededTalonAppFactory>
         Assert.Contains("sys-admin.users.list", states);
     }
 
+    /// <summary>
+    /// Creating a country writes four rows, and the client has to send all four. The generic CRUD
+    /// form sent only the Country and failed on the CountrySettings foreign key; sending three
+    /// rows saved, but the new country never appeared in the country switcher because that reads
+    /// ApplicationUserCountry. This pins the whole bundle down.
+    /// </summary>
+    [Fact]
+    public async Task Creating_a_country_grants_the_organisation_and_the_creating_user_access_to_it()
+    {
+        await AuthenticateAsync();
+
+        var me = (JObject)await _api.GetJsonAsync("/api/ApplicationUser/Me");
+        var userId = me.Value<string>("Id")!;
+        var organizationId = me.Value<int>("OrganizationId");
+        var countriesBefore = ((JArray)me["Countries"]!).Count;
+
+        const int settingsTempId = -1;
+        const int countryTempId = -2;
+
+        var save = await _api.BreezeSaveAsync(new[]
+        {
+            TalonApiClient.NewEntity("CountrySettings", "CountrySettings", TalonApiClient.AdminNamespace,
+                settingsTempId, new { SmsBackendType = 1 }),
+            TalonApiClient.NewEntity("Country", "Countries", TalonApiClient.AdminNamespace, countryTempId, new
+            {
+                Name = "Testland",
+                IsoAlpha2 = "T9",
+                IsoAlpha3 = "TS9",
+                CurrencyIsoCode = "USD",
+                CurrencyUnicodeSymbol = "$",
+                CountryCallingCode = "99",
+                LanguageCode = "en",
+                SettingsId = settingsTempId
+            })
+        }, admin: true);
+
+        var countryId = save.RealId(countryTempId);
+        var settingsId = save.RealId(settingsTempId);
+
+        await _api.BreezeSaveAsync(new[]
+        {
+            TalonApiClient.NewEntity("OrganizationCountry", "OrganizationCountries",
+                TalonApiClient.AdminNamespace, -1,
+                new { OrganizationId = organizationId, CountryId = countryId, SettingsId = settingsId }),
+            TalonApiClient.NewEntity("ApplicationUserCountry", "ApplicationUserCountries",
+                TalonApiClient.AdminNamespace, -2,
+                new { ApplicationUserId = userId, CountryId = countryId })
+        }, admin: true);
+
+        // Without the ApplicationUserCountry row the country exists but is unreachable: the
+        // switcher offers only the countries this endpoint returns.
+        var after = (JObject)await _api.GetJsonAsync("/api/ApplicationUser/Me");
+        var countries = (JArray)after["Countries"]!;
+
+        Assert.Equal(countriesBefore + 1, countries.Count);
+        Assert.Contains(countries, c => c["Country"]!.Value<string>("Name") == "Testland");
+    }
+
     [Fact]
     public async Task Administration_categories_are_restricted_by_role()
     {

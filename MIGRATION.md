@@ -106,9 +106,8 @@ to translate a `GroupBy` whose key is a whole entity, so those queries now mater
 
 ### The Breeze client/server contract
 
-The AngularJS client still uses `breeze-client` 1.5 against Breeze 7 on the server. They do
-interoperate, but only with four pieces of configuration that Web API 2 used to provide by
-default. All four are load-bearing — remove any one and list screens break in a different way.
+Breeze 7 on the server needs three pieces of configuration that Web API 2 used to provide by
+default. All three are load-bearing — remove any one and list screens break in a different way.
 
 In `Program.cs`, on the MVC Newtonsoft options:
 
@@ -124,21 +123,20 @@ In `Program.cs`, on the MVC Newtonsoft options:
   *reading*, which is a remote-code-execution vector. The binder resolves only types declared in
   this assembly and throws for anything else.
 
-In `Angular/src/app/services/dataAccess.js`:
+On the client side, `TalonAdmin/ClientApp/src/api/breeze.ts` speaks the wire format directly
+rather than going through `breeze-client`. Two things it has to get right, both of which the old
+AngularJS client needed a compatibility shim for:
 
-- **`uriBuilderName: 'json'`** on both `DataService` instances (and the adapter bundled in
-  `build.config.js`). The client otherwise emits `$top`/`$orderby`/`$expand`/`$inlinecount`, which
-  Breeze 7 ignores outright: every row is fetched unpaged, expands stay null and `inlineCount`
-  never arrives, so grids report "NaN total entries".
-- **The `buildUri` wrapper** that PascalCases `expand` paths. `where`/`orderBy` are resolved
-  against the metadata so breeze already translates them, but expand paths are forwarded verbatim
-  and the app writes them in client camelCase (`'group'`, `'settings.propertyCollection'`), which
-  EF Core rejects with a 500. The rewrite has to happen while the URI is built, not on the query —
-  `EntityQuery.expand()` validates each path against the metadata under its *client* name, so
-  translating earlier fails with `unable to locate property: Group on entityType: Beneficiary`.
+- **Queries go on the query string as Breeze's own JSON** (`{where, orderBy, skip, take, expand,
+  inlineCount}`). The OData-style `$top`/`$orderby`/`$expand`/`$inlinecount` parameters that
+  `breeze-client` 1.5 emitted by default are ignored outright by Breeze 7: every row comes back
+  unpaged, expands stay null and `inlineCount` never arrives.
+- **Property and expand paths are PascalCase**, matching the CLR names in the metadata. The
+  AngularJS client wrote them in camelCase and rewrote them while building the URI; the Vue client
+  simply uses the server's names throughout, so there is nothing to translate.
 
-Upgrading the client to `breeze-client` 2.x would remove the need for the last two; it ships the
-JSON `uriBuilder` wired up correctly, plus an `adapter-ajax-angularjs`.
+See [docs/VUE-PORT.md](docs/VUE-PORT.md) for the details that only surfaced under test — endpoint
+arguments, client-keyed rows, and unmapped computed properties.
 
 ## Things that were removed, not ported
 

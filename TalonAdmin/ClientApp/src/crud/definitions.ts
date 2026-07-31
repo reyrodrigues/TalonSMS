@@ -144,6 +144,9 @@ export const countries: ResourceDef<Country> = {
   ],
   searchFields: ['Name', 'IsoAlpha2'],
   permission: 'Countries',
+  // Creating a country writes three rows, so its form is CountryEditView rather than the generic
+  // one; the descriptor still drives the list and the delete button.
+  customEditView: true,
   describe: row => row.Name
 }
 

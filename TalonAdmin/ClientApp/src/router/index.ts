@@ -16,7 +16,7 @@ function resourceRoutes(def: ResourceDef<never>): RouteRecordRaw[] {
     meta: { title: def.title, resource: def }
   }
 
-  if (def.readOnly) return [list]
+  if (def.readOnly || def.customEditView) return [list]
 
   return [
     list,
@@ -178,6 +178,19 @@ const routes: RouteRecordRaw[] = [
       ...userRoutes('org-users', 'Organization Users', 'OrganizationUsers'),
       ...userRoutes('sys-users', 'Administrators', 'Administrators'),
       {
+        path: 'countries/new',
+        name: 'countries-create',
+        component: () => import('@/views/admin/CountryEditView.vue'),
+        meta: { title: 'New Country' }
+      },
+      {
+        path: 'countries/:id(\\d+)',
+        name: 'countries-edit',
+        component: () => import('@/views/admin/CountryEditView.vue'),
+        props: true,
+        meta: { title: 'Country' }
+      },
+      {
         path: 'roles',
         name: 'roles',
         component: () => import('@/views/admin/RoleListView.vue'),
@@ -202,7 +215,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 export const router = createRouter({
-  history: createWebHistory('/next/'),
+  history: createWebHistory('/app/'),
   routes,
   scrollBehavior: () => ({ top: 0 })
 })

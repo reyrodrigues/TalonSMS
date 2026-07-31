@@ -9,9 +9,9 @@ The server is an ASP.NET Core application on .NET 10 backed by Entity Framework 
 [Breeze](https://breeze.github.io/) data API for the admin client, a REST API for the mobile
 vendor client, and generates spreadsheet and PDF reports.
 
-> The client has been rewritten in Vue 3, and every screen the menu offers is ported. Both clients
-> still run side by side — AngularJS at `/app/`, Vue at `/next/` — see
-> [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the Vue client is built and what it still lacks.
+> The admin client is a Vue 3 application served from `/app/`. It replaced the AngularJS 1.4
+> client, which has been removed — see [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the client is
+> built and what it still lacks.
 >
 > [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
 > country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
@@ -103,7 +103,7 @@ dotnet test
 ```
 
 `TalonAdmin.Tests` boots the real application with `WebApplicationFactory` against a throwaway
-SQLite database and drives it over HTTP exactly as the AngularJS client does — OAuth password
+SQLite database and drives it over HTTP exactly as the browser client does — OAuth password
 grant, the `Token` authorization scheme, tenant headers, and Breeze's own JSON query and
 save-bundle formats. The whole suite runs in a few seconds; nothing is stubbed except the PDF
 renderer, which captures the HTML each report produced so tests can assert on report *content*
@@ -112,7 +112,7 @@ rather than on opaque PDF bytes.
 | File | Covers |
 | --- | --- |
 | `VoucherDistributionScenarioTests` | The end-to-end business workflow: stand up a country, register a vendor and beneficiaries, define a programme, distribute vouchers to a cycle, redeem one by SMS, then check the dashboard and the distribution report agree |
-| `BreezeContractTests` | The breeze-client 1.5 ↔ Breeze 7 wire contract: property casing, `$type` discriminators, `take`/`skip`, `inlineCount`, `where`, `expand`, and save round-trips |
+| `BreezeContractTests` | The Breeze 7 wire contract the client speaks: property casing, `$type` discriminators, `take`/`skip`, `inlineCount`, `where`, `expand`, and save round-trips |
 | `AuthenticationTests` | `/Token`'s OAuth shape, the `Token`/`Bearer`/`Basic` schemes, 401-not-302, vendor sign-in, and the deserialization type binder |
 | `ReportingAndExportTests` | Every report type, the QR test sheet, Excel export/import, and the EPPlus empty-table case |
 | `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links) and the action grants the UI gates buttons on |
@@ -193,7 +193,7 @@ TalonAdmin/
   Views/Reports/        Report templates
   Data/                 Schema creation and seeding
   Soap/TurboSMS/        SOAP client for the TurboSMS gateway
-  Angular/              Legacy AngularJS 1.x client (see below)
+  ClientApp/            Vue 3 client (see below)
 docker/                 WireMock stubs for the external services
 ```
 
@@ -209,28 +209,22 @@ deployment, set `Epplus:LicenseKey` to a commercial key.**
 
 ## Building the admin UI
 
-`Angular/` holds the AngularJS 1.4 client, built with Grunt and Bower. Its output is not committed,
-so build it once before `/` will show anything:
+`TalonAdmin/ClientApp/` holds the Vue 3 client. Its output is not committed, so build it once
+before `/` will show anything:
 
 ```bash
-cd TalonAdmin/Angular
-npm ci            # or: npm install
-npm run vendor    # bower install — resolves the client-side libraries
-npm run build     # compiles to TalonAdmin/wwwroot/app
+cd TalonAdmin/ClientApp
+npm ci
+npm run build     # typechecks, then compiles to TalonAdmin/wwwroot/app
 ```
 
-`/` then redirects to `/app/`. Re-run `npm run build` after changing anything under `Angular/src`.
+`/` then redirects to `/app/`. Re-run `npm run build` after changing anything under
+`ClientApp/src`, or use `npm run dev` for a Vite dev server on :5173 that proxies the API to the
+.NET app on :5080.
 
-The toolchain is old but works on current Node (verified on Node 24): Grunt 0.4 still loads, and
-the Bower registry still resolves. Two caveats:
+The Docker image builds the client itself in a Node stage, so `docker compose up` needs no
+separate step.
 
-- `grunt compile` is not used directly — `npm run build` runs the working subset. The `ngAnnotate`
-  and `karma` tasks fail to load on modern Node; neither is load-bearing, because `uglify` is
-  configured but never registered in the compile task, so nothing is minified and DI annotations
-  are not required.
-- Versions are pinned deliberately. `angular-animate`/`-sanitize`/`-messages` must match `angular`
-  exactly (1.4.4); a 1.4.14 animate against a 1.4.4 core breaks the animation runner at startup.
-
-The client talks to Breeze 7 through a small compatibility shim (a JSON `uriBuilder` plus an
-expand-path rewrite) and matching serializer settings on the server. Both are load-bearing and
-documented in [MIGRATION.md](MIGRATION.md) — read that before changing either.
+See [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the client is structured and what it still lacks.
+The wire format it speaks to Breeze 7 is documented in [MIGRATION.md](MIGRATION.md) — read that
+before changing `src/api/breeze.ts` or the serializer settings in `Program.cs`.

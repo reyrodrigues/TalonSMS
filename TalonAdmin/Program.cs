@@ -228,17 +228,16 @@ else
     app.UseExceptionHandler("/Home/Error");
 }
 
-// The AngularJS client is a static SPA published to wwwroot/app by the Grunt build; this lets
-// "/app/" resolve to its index.html.
+// The Vue client is a static SPA published to wwwroot/app by `npm run build`; this lets "/app/"
+// resolve to its index.html.
 app.UseDefaultFiles();
 var isDevelopment = app.Environment.IsDevelopment();
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-        // The Grunt build always emits the same filenames (talon-<version>.js), so a rebuilt
-        // bundle is indistinguishable from the cached one and browsers happily serve the stale
-        // copy. Force revalidation while developing.
+        // Vite fingerprints its asset filenames, but index.html keeps the same name, so a rebuilt
+        // client is indistinguishable from the cached one. Force revalidation while developing.
         if (isDevelopment)
         {
             ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
@@ -267,10 +266,9 @@ app.MapControllerRoute(
 app.MapControllers();
 app.MapHub<DashboardHub>("/signalr/dashboard");
 
-// The Vue client is a history-mode SPA published to wwwroot/next, so every path below /next/
-// has to serve its index.html rather than 404. It runs alongside the AngularJS client at /app/
-// until the port is complete.
-app.MapFallbackToFile("/next/{*path:nonfile}", "next/index.html");
+// The client uses history-mode routing, so every path below /app/ has to serve its index.html
+// rather than 404 — a deep link or a refresh on /app/programs/3 must reach the SPA.
+app.MapFallbackToFile("/app/{*path:nonfile}", "app/index.html");
 
 using (var scope = app.Services.CreateScope())
 {

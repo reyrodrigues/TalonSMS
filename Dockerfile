@@ -1,5 +1,18 @@
 # syntax=docker/dockerfile:1
 
+# The client build output is not committed, so the image has to produce it. Doing it in its own
+# stage keeps Node out of the runtime image and lets the npm layer cache on package-lock alone.
+# The working directory mirrors the repository layout because vite's outDir is the relative
+# ../wwwroot/app, which is where the .NET app serves the client from.
+FROM node:24-slim AS client
+WORKDIR /src/TalonAdmin/ClientApp
+
+COPY TalonAdmin/ClientApp/package.json TalonAdmin/ClientApp/package-lock.json ./
+RUN npm ci
+
+COPY TalonAdmin/ClientApp/ ./
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -8,6 +21,7 @@ COPY TalonAdmin/TalonAdmin.csproj TalonAdmin/
 RUN dotnet restore TalonAdmin/TalonAdmin.csproj
 
 COPY . .
+COPY --from=client /src/TalonAdmin/wwwroot/app TalonAdmin/wwwroot/app
 RUN dotnet publish TalonAdmin/TalonAdmin.csproj -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

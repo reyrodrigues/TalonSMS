@@ -2,16 +2,16 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// The client is published into the ASP.NET app's wwwroot and served from /next/ while the
-// AngularJS client still lives at /app/. Flip the base and outDir to 'app' to cut over.
+// The client is published into the ASP.NET app's wwwroot and served from /app/, which is where
+// the AngularJS client used to live — so existing links and bookmarks still work.
 export default defineConfig({
   plugins: [vue()],
-  base: '/next/',
+  base: '/app/',
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
   },
   build: {
-    outDir: '../wwwroot/next',
+    outDir: '../wwwroot/app',
     emptyOutDir: true,
     sourcemap: true
   },
