@@ -339,7 +339,7 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
     [Fact]
     public void A_removed_backend_maps_to_nothing_rather_than_falling_through_to_a_default()
     {
-        // 0 and 1 were RescueSMS and TurboSMS in the old dispatch. Silently rerouting a country
+        // 0 and 1 belonged to gateways that have since been removed. Silently rerouting a country
         // left on one of them would send its voucher codes through the wrong gateway.
         Assert.Null(MessageChannelRegistry.KeyFor(new CountrySettings { SmsBackendType = 0 }));
         Assert.Null(MessageChannelRegistry.KeyFor(new CountrySettings { SmsBackendType = 1 }));

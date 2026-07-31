@@ -43,10 +43,10 @@ namespace TalonAdmin.Messaging
         /// </summary>
         /// <remarks>
         /// The numbering here is the contract with <see cref="SmsBackendType"/> and with the
-        /// <c>SmsBackendType</c> column. It used to disagree with itself: the enum declared
-        /// <c>RescueSMS = 1</c> while the dispatch treated 1 as TurboSMS, so a country configured
-        /// through the UI was routed to a different gateway than the one it named. An unrecognised
-        /// value resolves to nothing rather than falling through to whichever branch was last.
+        /// <c>SmsBackendType</c> column. It used to disagree with itself — the enum and the
+        /// dispatch that read it numbered the gateways differently, so a country configured through
+        /// the UI was routed to a different gateway than the one it named. An unrecognised value
+        /// resolves to nothing rather than falling through to whichever branch was last.
         /// </remarks>
         public static string KeyFor(CountrySettings settings) =>
             settings == null

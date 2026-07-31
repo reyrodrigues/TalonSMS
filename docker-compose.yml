@@ -50,8 +50,7 @@ services:
         "
     restart: "no"
 
-  # Stands in for the SMS gateways (RescueSMS, TurboSMS, Clickatell), so local runs never reach a
-  # real provider.
+  # Stands in for the Clickatell SMS gateway, so local runs never reach a real provider.
   external-services:
     image: wiremock/wiremock:3.9.1
     container_name: talon-external-services
@@ -84,7 +83,6 @@ services:
       Database__Provider: SqlServer
       ConnectionStrings__AdminContext: "Server=sqlserver,1433;Database=TalonAdmin;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Talon!DevPassword1};TrustServerCertificate=True"
       ConnectionStrings__VoucherContext: "Server=sqlserver,1433;Database=TalonVouchers;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Talon!DevPassword1};TrustServerCertificate=True"
-      RescueSMS__URL: "http://external-services:8080/rescuesms/"
     ports:
       - "${APP_PORT:-5080}:8080"
 

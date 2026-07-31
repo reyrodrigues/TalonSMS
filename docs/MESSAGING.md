@@ -21,10 +21,10 @@ no interface and no tests. Three things about it mattered more than its age.
 - **There was no outbound record at all.** `MessageLog` stores only *inbound* messages, so there
   was nothing to reconcile a distribution against.
 
-There was also a latent bug: `SmsBackendType` declared `RescueSMS = 1, Twilio = 2, CustomRest = 3`
-while the dispatch compared `0` = RescueSMS, `1` = TurboSMS, `2` = Clickatell. The two never
-agreed, so a country configured through the UI was routed to a gateway other than the one it named,
-and Twilio appeared in the picker without existing anywhere in the code.
+There was also a latent bug: the `SmsBackendType` enum and the dispatch that read it numbered the
+gateways differently, and the two never agreed — so a country configured through the UI was routed
+to a gateway other than the one it named. The picker also offered a gateway that existed nowhere in
+the code.
 
 ## How it works now
 

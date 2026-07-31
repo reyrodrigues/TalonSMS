@@ -219,7 +219,7 @@ public class OutboundMessagingTests : IClassFixture<TalonAppFactory>
         try
         {
             // 99 is not a channel any build knows about — the shape a country left on a removed
-            // gateway (RescueSMS, TurboSMS) ends up in.
+            // gateway ends up in.
             settings.SmsBackendType = 99;
             await admin.SaveChangesAsync();
 
