@@ -4,10 +4,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { useResource } from './useResource'
 import type { FieldDef, ResourceDef, SelectOption } from './resource'
 import FormField from '@/components/FormField.vue'
+import { useI18n } from 'vue-i18n'
 import { notifyError, notifySaved } from '@/composables/useToast'
 
 const props = defineProps<{ id?: string }>()
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -38,7 +40,7 @@ onMounted(async () => {
     if (props.id) {
       const found = await resource.load(Number(props.id))
       if (!found) {
-        notifyError(null, `That ${def.value.singular.toLowerCase()} no longer exists.`)
+        notifyError(null, t('toast.somethingWentWrong'))
         await router.replace({ name: def.value.name })
         return
       }
@@ -50,7 +52,7 @@ onMounted(async () => {
       )
     }
   } catch (error) {
-    notifyError(error, `Could not load the ${def.value.singular.toLowerCase()}.`)
+    notifyError(error, t('toast.somethingWentWrong'))
   } finally {
     loading.value = false
   }
@@ -68,10 +70,10 @@ async function save() {
     if (model.value.Id) values.Id = model.value.Id
 
     await resource.save(values, original.value ?? undefined)
-    notifySaved(def.value.singular)
+    notifySaved(t(def.value.singular))
     await router.push({ name: def.value.name })
   } catch (error) {
-    notifyError(error, `Could not save the ${def.value.singular.toLowerCase()}.`)
+    notifyError(error, t('toast.somethingWentWrong'))
   } finally {
     saving.value = false
   }
@@ -79,17 +81,17 @@ async function save() {
 </script>
 
 <template>
-  <h1>{{ isNew ? `New ${def.singular}` : def.singular }}</h1>
+  <h1>{{ isNew ? t('action.new') + ' ' + t(def.singular) : t(def.singular) }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <form v-else @submit.prevent="save">
     <div class="panel panel__head">
       <button v-if="!readOnly" class="btn btn--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? t('action.saving') : t('action.save') }}
       </button>
       <button class="btn btn--ghost" type="button" @click="router.push({ name: def.name })">
-        Back
+        {{ t('action.back') }}
       </button>
     </div>
 

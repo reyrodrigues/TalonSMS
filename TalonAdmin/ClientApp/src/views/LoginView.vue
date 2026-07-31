@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { ApiError } from '@/api/http'
+
+const { t } = useI18n()
 
 const session = useSessionStore()
 const router = useRouter()
@@ -14,7 +17,7 @@ const error = ref('')
 const busy = ref(false)
 
 async function submit() {
-  error.value = ''
+  error.value = t('login.failed')
   busy.value = true
 
   try {
@@ -36,12 +39,12 @@ async function submit() {
 <template>
   <div class="login">
     <form class="login__card" @submit.prevent="submit">
-      <h1 class="login__brand">Talon</h1>
+      <h1 class="login__brand">{{ t('app.name') }}</h1>
 
       <p v-if="error" class="alert alert--danger">{{ error }}</p>
 
       <div class="field">
-        <label class="field__label" for="userName">User Name</label>
+        <label class="field__label" for="userName">{{ t('login.userName') }}</label>
         <input
           id="userName"
           v-model="userName"
@@ -53,7 +56,7 @@ async function submit() {
       </div>
 
       <div class="field">
-        <label class="field__label" for="password">Password</label>
+        <label class="field__label" for="password">{{ t('login.password') }}</label>
         <input
           id="password"
           v-model="password"
@@ -65,7 +68,7 @@ async function submit() {
       </div>
 
       <button class="btn btn--primary login__submit" type="submit" :disabled="busy">
-        {{ busy ? 'Signing in…' : 'Log in' }}
+        {{ busy ? t('login.signingIn') : t('login.submit') }}
       </button>
     </form>
   </div>

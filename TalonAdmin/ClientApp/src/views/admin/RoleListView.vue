@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import type { ApplicationRole } from '@/api/types'
 import { notify, notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * Roles are edited in place: there are only a handful, and the only editable field is the name.
@@ -22,7 +25,7 @@ async function load() {
     roles.value = await api.roles()
     editing.value = Object.fromEntries(roles.value.map(r => [r.Id, r.Name]))
   } catch (error) {
-    notifyError(error, 'Could not load the roles.')
+    notifyError(error, t('role.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -35,10 +38,10 @@ async function create() {
   try {
     await api.createRole(newName.value.trim())
     newName.value = ''
-    notify('success', 'Role created.')
+    notify('success', t('role.created'))
     await load()
   } catch (error) {
-    notifyError(error, 'Could not create the role.')
+    notifyError(error, t('role.createFailed'))
   } finally {
     busy.value = false
   }
@@ -51,25 +54,25 @@ async function rename(role: ApplicationRole) {
   busy.value = true
   try {
     await api.updateRole(role.Id, name)
-    notify('success', 'Role renamed.')
+    notify('success', t('role.renamed'))
     await load()
   } catch (error) {
-    notifyError(error, 'Could not rename the role.')
+    notifyError(error, t('role.renameFailed'))
   } finally {
     busy.value = false
   }
 }
 
 async function remove(role: ApplicationRole) {
-  if (!window.confirm(`Delete the ${role.Name} role?`)) return
+  if (!window.confirm(t('role.confirmDelete', { name: role.Name }))) return
 
   busy.value = true
   try {
     await api.deleteRole(role.Id)
-    notify('success', 'Role deleted.')
+    notify('success', t('role.deleted'))
     await load()
   } catch (error) {
-    notifyError(error, 'Could not delete the role.')
+    notifyError(error, t('role.deleteFailed'))
   } finally {
     busy.value = false
   }
@@ -77,11 +80,11 @@ async function remove(role: ApplicationRole) {
 </script>
 
 <template>
-  <h1>Roles</h1>
+  <h1>{{ t('role.title') }}</h1>
 
   <form class="panel panel__head" @submit.prevent="create">
-    <input v-model="newName" class="input" placeholder="New role name" style="max-width: 420px" />
-    <button class="btn btn--primary" type="submit" :disabled="!newName.trim() || busy">Add</button>
+    <input v-model="newName" class="input" :placeholder="t('role.newName')" style="max-width: 420px" />
+    <button class="btn btn--primary" type="submit" :disabled="!newName.trim() || busy">{{ t('action.add') }}</button>
   </form>
 
   <div class="panel">
@@ -89,8 +92,8 @@ async function remove(role: ApplicationRole) {
       <table class="table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th class="table__actions">Actions</th>
+            <th>{{ t('common.name') }}</th>
+            <th class="table__actions">{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -102,18 +105,18 @@ async function remove(role: ApplicationRole) {
                 :disabled="busy || editing[role.Id] === role.Name"
                 @click="rename(role)"
               >
-                Rename
+                {{ t('action.rename') }}
               </button>
               <button class="btn btn--sm btn--danger" :disabled="busy" @click="remove(role)">
-                Delete
+                {{ t('action.delete') }}
               </button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
-      <p v-else-if="roles.length === 0" class="empty">No roles have been defined.</p>
+      <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
+      <p v-else-if="roles.length === 0" class="empty">{{ t('role.empty') }}</p>
     </div>
   </div>
 </template>

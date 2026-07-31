@@ -6,6 +6,7 @@ import type { ReportRequest } from '@/api/talon'
  * so one screen renders all of them. Each route carries its spec in `meta.report`.
  */
 export interface ReportSpec {
+  /** Catalogue keys, resolved when the screen renders so they follow the locale. */
   title: string
   description: string
   /** Which pickers to show; the first one listed is the required one. */
@@ -15,24 +16,24 @@ export interface ReportSpec {
 }
 
 export const distributionReport: ReportSpec = {
-  title: 'Distribution Report',
-  description: 'Every voucher issued in one distribution, with its redemption status.',
+  title: 'report.distribution.title',
+  description: 'report.distribution.description',
   selectors: ['distribution'],
   fileName: 'distribution-report',
   run: api.distributionReport
 }
 
 export const programClosureReport: ReportSpec = {
-  title: 'Program Closure Report',
-  description: 'The full financial picture for a programme, for sign-off at closure.',
+  title: 'report.programClosure.title',
+  description: 'report.programClosure.description',
   selectors: ['program'],
   fileName: 'program-closure-report',
   run: api.programClosureReport
 }
 
 export const vendorFinancialReport: ReportSpec = {
-  title: 'Vendor Financial Report',
-  description: 'What one vendor is owed for the vouchers they redeemed on a programme.',
+  title: 'report.vendorFinancial.title',
+  description: 'report.vendorFinancial.description',
   selectors: ['vendor', 'program'],
   fileName: 'vendor-financial-report',
   run: api.vendorFinancialReport

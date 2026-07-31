@@ -44,7 +44,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   min-width: 0;
   display: flex;
   flex-direction: column;
-  margin-left: var(--sidebar-width);
+  margin-inline-start: var(--sidebar-width);
 }
 
 .shell__body { flex: 1; padding: 20px; }
@@ -59,7 +59,8 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 
 .sidebar {
   position: fixed;
-  inset: 0 auto 0 0;
+  inset-block: 0;
+  inset-inline: 0 auto;
   width: var(--sidebar-width);
   background: var(--sidebar);
   color: #b8c7d4;
@@ -98,7 +99,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   border: 0;
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -135,7 +136,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   border-bottom: 1px solid var(--line);
 }
 
-.topbar__spacer { margin-right: auto; }
+.topbar__spacer { margin-inline-end: auto; }
 
 .dropdown { position: relative; }
 
@@ -172,7 +173,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   border: 0;
   font: inherit;
   color: var(--ink);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -197,7 +198,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 }
 
 .panel__body { padding: 16px; }
-.panel__spacer { margin-left: auto; }
+.panel__spacer { margin-inline-start: auto; }
 
 .btn {
   display: inline-flex;
@@ -255,7 +256,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   align-items: center;
   padding: 0 10px;
   border: 1px solid var(--line);
-  border-right: 0;
+  border-inline-end: 0;
   border-radius: var(--radius) 0 0 var(--radius);
   background: var(--canvas);
   color: var(--muted);
@@ -267,7 +268,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 
 @media (max-width: 800px) {
   .grid-2 { grid-template-columns: 1fr; }
-  .shell__main { margin-left: 0; }
+  .shell__main { margin-inline-start: 0; }
   .sidebar { position: static; width: 100%; }
   .shell { flex-direction: column; }
 }
@@ -282,7 +283,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 .table td {
   padding: 9px 12px;
   border-bottom: 1px solid var(--line);
-  text-align: left;
+  text-align: start;
   vertical-align: middle;
 }
 
@@ -290,7 +291,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 .table th[aria-sort] { cursor: pointer; user-select: none; }
 .table th[aria-sort]:hover { color: var(--ink); }
 .table tbody tr:hover { background: #fafbfc; }
-.table__numeric { text-align: right; }
+.table__numeric { text-align: end; }
 .table__actions { width: 1%; white-space: nowrap; }
 
 .table-foot {
@@ -303,7 +304,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   font-size: 13px;
 }
 
-.table-foot__spacer { margin-left: auto; }
+.table-foot__spacer { margin-inline-start: auto; }
 
 .empty { padding: 28px 16px; text-align: center; color: var(--muted); }
 
@@ -410,3 +411,34 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 }
 
 .modal__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+/* The active-link marker sits on the reading edge; box-shadow has no logical form. */
+[dir='rtl'] .sidebar__link.router-link-active {
+  box-shadow: inset -3px 0 0 var(--accent);
+}
+
+/*
+ * Right-to-left. The layout is flexbox and grid throughout and the spacing uses logical
+ * properties, so `dir="rtl"` on <html> mirrors almost everything on its own. What is left are the
+ * few places that carry a direction of their own.
+ */
+[dir='rtl'] .field__prefix .field__control {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+[dir='rtl'] .field__prefix-label {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* Arrows point at a position on screen, not a reading order, so they do not flip. */
+[dir='rtl'] .sidebar__chevron--open { transform: rotate(-90deg); }
+
+/*
+ * Codes, phone numbers and money keep their own direction inside an RTL sentence. Without this a
+ * voucher code renders with its digits reordered, which is worse than useless in a tool whose
+ * whole job is reading codes back correctly.
+ */
+[dir='rtl'] .table td,
+[dir='rtl'] .field__control {
+  unicode-bidi: plaintext;
+}

@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { ApplicationRole, ApplicationUser, Organization } from '@/api/types'
 import { useSessionStore } from '@/stores/session'
 import { notifyError, notifySaved } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * A user is created through the Identity endpoints rather than Breeze — Identity owns password
@@ -41,15 +44,15 @@ const isNew = computed(() => !props.id)
 
 const problems = computed(() => {
   const found: string[] = []
-  if (!model.value.UserName.trim()) found.push('A user name is required.')
-  if (!model.value.Email.trim()) found.push('An email address is required.')
-  if (!model.value.FullName.trim()) found.push('A full name is required.')
-  if (!model.value.OrganizationId) found.push('An organization is required.')
+  if (!model.value.UserName.trim()) found.push(t('user.problems.userName'))
+  if (!model.value.Email.trim()) found.push(t('user.problems.email'))
+  if (!model.value.FullName.trim()) found.push(t('user.problems.fullName'))
+  if (!model.value.OrganizationId) found.push(t('user.problems.organization'))
   if (isNew.value && model.value.Password.length < 6) {
-    found.push('The password must be at least 6 characters.')
+    found.push(t('user.problems.passwordLength'))
   }
   if (model.value.Password !== model.value.ConfirmPassword) {
-    found.push('The passwords do not match.')
+    found.push(t('user.problems.passwordMismatch'))
   }
   return found
 })
@@ -66,7 +69,7 @@ onMounted(async () => {
       const found = people.find((u: ApplicationUser) => u.Id === props.id)
 
       if (!found) {
-        notifyError(null, 'That user no longer exists.')
+        notifyError(null, t('user.gone'))
         await router.replace({ name: listRoute })
         return
       }
@@ -85,7 +88,7 @@ onMounted(async () => {
       originalAssigned.value = new Set(mine)
     }
   } catch (error) {
-    notifyError(error, 'Could not load the user.')
+    notifyError(error, t('user.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -132,10 +135,10 @@ async function save() {
         .map(r => api.removeUserFromRole(userId, r))
     ])
 
-    notifySaved('User')
+    notifySaved(t('user.singular'))
     await router.push({ name: listRoute })
   } catch (error) {
-    notifyError(error, 'Could not save the user.')
+    notifyError(error, t('user.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -143,17 +146,17 @@ async function save() {
 </script>
 
 <template>
-  <h1>{{ isNew ? 'New User' : 'User' }}</h1>
+  <h1>{{ isNew ? t('user.new') : t('user.singular') }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <form v-else @submit.prevent="save">
     <div class="panel panel__head">
       <button class="btn btn--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? t('action.saving') : t('action.save') }}
       </button>
       <button class="btn btn--ghost" type="button" @click="router.push({ name: listRoute })">
-        Back
+        {{ t('action.back') }}
       </button>
     </div>
 
@@ -164,23 +167,23 @@ async function save() {
     <div class="panel">
       <div class="panel__body grid-2">
         <div class="field">
-          <label class="field__label" for="userName">User Name <span class="field__required">*</span></label>
+          <label class="field__label" for="userName">{{ t('login.userName') }} <span class="field__required">*</span></label>
           <input id="userName" v-model="model.UserName" class="field__control" autocomplete="off" />
         </div>
 
         <div class="field">
-          <label class="field__label" for="fullName">Full Name <span class="field__required">*</span></label>
+          <label class="field__label" for="fullName">{{ t('user.fullName') }} <span class="field__required">*</span></label>
           <input id="fullName" v-model="model.FullName" class="field__control" />
         </div>
 
         <div class="field">
-          <label class="field__label" for="email">Email <span class="field__required">*</span></label>
+          <label class="field__label" for="email">{{ t('user.email') }} <span class="field__required">*</span></label>
           <input id="email" v-model="model.Email" type="email" class="field__control" />
         </div>
 
         <div class="field">
           <label class="field__label" for="organization">
-            Organization <span class="field__required">*</span>
+            {{ t('user.organization') }} <span class="field__required">*</span>
           </label>
           <select id="organization" v-model.number="model.OrganizationId" class="field__control">
             <option :value="0">—</option>
@@ -192,7 +195,7 @@ async function save() {
 
         <div class="field">
           <label class="field__label" for="password">
-            Password <span v-if="isNew" class="field__required">*</span>
+            {{ t('login.password') }} <span v-if="isNew" class="field__required">*</span>
           </label>
           <input
             id="password"
@@ -202,12 +205,12 @@ async function save() {
             autocomplete="new-password"
           />
           <p v-if="!isNew" class="muted" style="font-size: 12px; margin: 4px 0 0">
-            Leave blank to keep the current password.
+            {{ t('user.keepPassword') }}
           </p>
         </div>
 
         <div class="field">
-          <label class="field__label" for="confirm">Confirm Password</label>
+          <label class="field__label" for="confirm">{{ t('user.confirmPassword') }}</label>
           <input
             id="confirm"
             v-model="model.ConfirmPassword"
@@ -220,13 +223,13 @@ async function save() {
     </div>
 
     <div class="panel">
-      <div class="panel__head"><h2 style="margin: 0">Roles</h2></div>
+      <div class="panel__head"><h2 style="margin: 0">{{ t('user.roles') }}</h2></div>
       <div class="panel__body">
         <label v-for="role in roles" :key="role.Id" class="row-gap" style="margin-bottom: 8px">
           <input type="checkbox" :checked="assigned.has(role.Id)" @change="toggleRole(role.Id)" />
           {{ role.Name }}
         </label>
-        <p v-if="roles.length === 0" class="muted">No roles have been defined.</p>
+        <p v-if="roles.length === 0" class="muted">{{ t('user.noRoles') }}</p>
       </div>
     </div>
   </form>

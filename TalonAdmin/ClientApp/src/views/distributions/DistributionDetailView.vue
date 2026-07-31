@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import { downloadBlob } from '@/api/http'
@@ -7,6 +8,8 @@ import type { Beneficiary, Distribution, VoucherTransactionRecord } from '@/api/
 import { useSessionStore } from '@/stores/session'
 import { useFormat } from '@/composables/useFormat'
 import { notify, notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * What a distribution actually produced: the vouchers still outstanding, the ones that have been
@@ -48,7 +51,7 @@ async function load() {
     ])
 
     if (!found) {
-      notifyError(null, 'That distribution no longer exists.')
+      notifyError(null, t('distribution.gone'))
       await router.replace({ name: 'distributions' })
       return
     }
@@ -58,7 +61,7 @@ async function load() {
     used.value = usedList
     beneficiaries.value = people
   } catch (error) {
-    notifyError(error, 'Could not load the distribution.')
+    notifyError(error, t('distribution.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -66,15 +69,15 @@ async function load() {
 
 async function cancel(record: VoucherTransactionRecord) {
   if (!record.VoucherId) return
-  if (!window.confirm(`Cancel voucher ${record.Voucher?.VoucherCode ?? record.VoucherId}?`)) return
+  if (!window.confirm(t('distribution.confirmCancel', { code: record.Voucher?.VoucherCode ?? record.VoucherId }))) return
 
   busy.value = true
   try {
     await api.cancelVoucher(record.VoucherId)
-    notify('success', 'Voucher cancelled.')
+    notify('success', t('distribution.cancelled'))
     await load()
   } catch (error) {
-    notifyError(error, 'Could not cancel the voucher.')
+    notifyError(error, t('distribution.cancelFailed'))
   } finally {
     busy.value = false
   }
@@ -86,9 +89,9 @@ async function resend(record: VoucherTransactionRecord) {
   busy.value = true
   try {
     await api.resendVoucherSms(record.BeneficiaryId, record.VoucherId)
-    notify('success', 'Voucher re-sent.')
+    notify('success', t('distribution.resent'))
   } catch (error) {
-    notifyError(error, 'Could not re-send the voucher.')
+    notifyError(error, t('distribution.resendFailed'))
   } finally {
     busy.value = false
   }
@@ -109,7 +112,7 @@ async function downloadReport() {
 
     downloadBlob(blob, `distribution-${id.value}.pdf`)
   } catch (error) {
-    notifyError(error, 'Could not generate the report.')
+    notifyError(error, t('distribution.documentFailed'))
   } finally {
     busy.value = false
   }
@@ -117,29 +120,29 @@ async function downloadReport() {
 </script>
 
 <template>
-  <h1>Distribution</h1>
+  <h1>{{ t('distribution.singular') }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <template v-else-if="distribution">
     <div class="panel panel__head">
       <button class="btn btn--info" :disabled="busy" @click="downloadReport">
-        Distribution Report
+        {{ t('distribution.report') }}
       </button>
       <div class="panel__spacer" />
-      <button class="btn btn--ghost" @click="router.push({ name: 'distributions' })">Back</button>
+      <button class="btn btn--ghost" @click="router.push({ name: 'distributions' })">{{ t('action.back') }}</button>
     </div>
 
     <div class="panel">
       <dl class="summary">
-        <div><dt>Title</dt><dd>{{ distribution.Title }}</dd></div>
-        <div><dt>Program</dt><dd>{{ distribution.Program?.Name }}</dd></div>
-        <div><dt>Cycle</dt><dd>{{ distribution.Group?.Name }}</dd></div>
-        <div><dt>Location</dt><dd>{{ distribution.Location?.Name }}</dd></div>
-        <div><dt>Fund Codes</dt><dd>{{ distribution.FundCodes }}</dd></div>
+        <div><dt>{{ t('distribution.heading') }}</dt><dd>{{ distribution.Title }}</dd></div>
+        <div><dt>{{ t('program.singular') }}</dt><dd>{{ distribution.Program?.Name }}</dd></div>
+        <div><dt>{{ t('beneficiary.cycle') }}</dt><dd>{{ distribution.Group?.Name }}</dd></div>
+        <div><dt>{{ t('beneficiary.location') }}</dt><dd>{{ distribution.Location?.Name }}</dd></div>
+        <div><dt>{{ t('program.fundCodes') }}</dt><dd>{{ distribution.FundCodes }}</dd></div>
         <div>
-          <dt>Status</dt>
-          <dd>{{ distribution.IsClosed ? 'Closed' : 'Open' }}</dd>
+          <dt>{{ t('common.status') }}</dt>
+          <dd>{{ distribution.IsClosed ? t('distribution.closed') : t('distribution.open') }}</dd>
         </div>
       </dl>
     </div>
@@ -154,7 +157,7 @@ async function downloadReport() {
         :aria-selected="tab === option"
         @click="tab = option"
       >
-        {{ option === 'unused' ? 'Unused Vouchers' : option === 'used' ? 'Used Vouchers' : 'Beneficiaries' }}
+        {{ option === 'unused' ? t('distribution.unusedVouchers') : option === 'used' ? t('distribution.usedVouchers') : t('dashboard.beneficiaries') }}
         ({{ option === 'unused' ? unused.length : option === 'used' ? used.length : beneficiaries.length }})
       </button>
     </div>
@@ -163,7 +166,7 @@ async function downloadReport() {
       <div v-if="tab === 'beneficiaries'" class="table-wrap">
         <table class="table">
           <thead>
-            <tr><th style="width: 70px">#</th><th>Name</th><th>Mobile</th><th>Location</th></tr>
+            <tr><th style="width: 70px">{{ t('common.id') }}</th><th>{{ t('common.name') }}</th><th>{{ t('beneficiary.mobileNumber') }}</th><th>{{ t('beneficiary.location') }}</th></tr>
           </thead>
           <tbody>
             <tr v-for="person in beneficiaries" :key="person.Id">
@@ -174,20 +177,20 @@ async function downloadReport() {
             </tr>
           </tbody>
         </table>
-        <p v-if="beneficiaries.length === 0" class="empty">No households were reached.</p>
+        <p v-if="beneficiaries.length === 0" class="empty">{{ t('distribution.noHouseholds') }}</p>
       </div>
 
       <div v-else class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th style="width: 70px">#</th>
-              <th>Beneficiary</th>
-              <th>Voucher Code</th>
-              <th>Serial Number</th>
-              <th class="table__numeric">Value</th>
-              <th>{{ tab === 'used' ? 'Used On' : 'Created On' }}</th>
-              <th v-if="tab === 'unused' && isSms" class="table__actions">Actions</th>
+              <th style="width: 70px">{{ t('common.id') }}</th>
+              <th>{{ t('beneficiary.singular') }}</th>
+              <th>{{ t('distribution.voucherCode') }}</th>
+              <th>{{ t('distribution.serialNumber') }}</th>
+              <th class="table__numeric">{{ t('common.value') }}</th>
+              <th>{{ tab === 'used' ? t('distribution.usedOn') : t('distribution.createdOn') }}</th>
+              <th v-if="tab === 'unused' && isSms" class="table__actions">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -202,16 +205,16 @@ async function downloadReport() {
               <td class="table__numeric">{{ money(record.Value) }}</td>
               <td>{{ dateTime(record.CreatedOn) }}</td>
               <td v-if="tab === 'unused' && isSms" class="table__actions">
-                <button class="btn btn--sm" :disabled="busy" @click="resend(record)">Resend</button>
+                <button class="btn btn--sm" :disabled="busy" @click="resend(record)">{{ t('distribution.resend') }}</button>
                 <button class="btn btn--sm btn--danger" :disabled="busy" @click="cancel(record)">
-                  Cancel
+                  {{ t('distribution.cancelVoucher') }}
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
         <p v-if="rows.length === 0" class="empty">
-          {{ tab === 'used' ? 'No vouchers have been redeemed yet.' : 'Every voucher has been redeemed.' }}
+          {{ tab === 'used' ? t('distribution.noneRedeemed') : t('distribution.allRedeemed') }}
         </p>
       </div>
     </div>

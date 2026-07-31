@@ -50,5 +50,69 @@ const ROUTE_BY_STATE: Record<string, RouteLocationRaw> = {
 
 export const routeForState = (state: string): RouteLocationRaw | undefined => ROUTE_BY_STATE[state]
 
+/**
+ * Catalogue keys for the menu rows the seed creates.
+ *
+ * The sidebar is data on the server, so its labels are English text in a table rather than keys.
+ * Rather than migrate that data — and overwrite whatever a deployment has renamed things to — the
+ * seeded names are mapped here. Anything unmapped keeps the text the server sent, which is what a
+ * customised menu needs.
+ */
+const LABEL_BY_STATE: Record<string, string> = {
+  'beneficiaries.list': 'beneficiary.title',
+  'groups.list': 'resource.cycles',
+  'programs.list': 'program.title',
+  'distributions.list': 'distribution.title',
+  'vendors.list': 'vendor.title',
+  'vendor-types.list': 'resource.vendorTypes',
+  'reporting.distribution': 'report.distribution.title',
+  'reporting.program-closure': 'report.programClosure.title',
+  'reporting.vendor-financial': 'report.vendorFinancial.title',
+  'reconciliation.report-history': 'report.history.title',
+  'reconciliation.vendor-receipt': 'report.receipt.title',
+  'country-admin.transaction.transaction-log': 'resource.transactionLog',
+  'country-admin.transaction.quarantine': 'resource.quarantine',
+  'country-admin.transaction.card-load-log': 'resource.cardLoads',
+  'country-admin.transaction.message-log': 'resource.messageLog',
+  'country-admin.locations.list': 'resource.locations',
+  'country-admin.voucher-types.list': 'resource.voucherTypes',
+  'country-admin.users.my-profile': 'profile.title',
+  'org-admin.users.list': 'user.organizationUsers',
+  'org-admin.country-settings.list': 'settings.title',
+  'sys-admin.users.list': 'user.administrators',
+  'sys-admin.roles.list': 'role.title',
+  'sys-admin.actions.list': 'resource.actions',
+  'sys-admin.organizations.list': 'resource.organizations',
+  'sys-admin.countries.list': 'country.title',
+  'sys-admin.menu-categories.list': 'resource.menuCategories',
+  'sys-admin.menu-items.list': 'resource.menuItems'
+}
+
+/** The seeded category and group names, which carry no state of their own. */
+const LABEL_BY_NAME: Record<string, string> = {
+  Programme: 'menu.programme',
+  Reporting: 'menu.reporting',
+  'Country Administration': 'menu.countryAdministration',
+  'Organization Administration': 'menu.organizationAdministration',
+  'System Administration': 'menu.systemAdministration',
+  Beneficiaries: 'beneficiary.title',
+  Distribution: 'distribution.singular',
+  Vendors: 'vendor.title',
+  Reports: 'menu.reports',
+  Reconciliation: 'menu.reconciliation',
+  Transactions: 'menu.transactions',
+  'Reference Data': 'menu.referenceData',
+  'My Account': 'menu.myAccount',
+  Organization: 'resource.organization',
+  Access: 'menu.access',
+  Navigation: 'menu.navigation'
+}
+
+export const labelKeyForState = (state: string | null | undefined) =>
+  state ? LABEL_BY_STATE[state] : undefined
+
+export const labelKeyForName = (name: string | null | undefined) =>
+  name ? LABEL_BY_NAME[name] : undefined
+
 /** States the server publishes that the Vue client has yet to implement. */
 export const isPorted = (state: string) => state in ROUTE_BY_STATE

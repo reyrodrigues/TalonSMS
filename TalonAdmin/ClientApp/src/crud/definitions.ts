@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import * as api from '@/api/talon'
 import * as breeze from '@/api/breeze'
 import type { ResourceDef, SelectOption } from './resource'
@@ -29,18 +30,18 @@ const voucherTypeOptions = optionsFrom(api.voucherTypes, t => t.Name)
 const menuCategoryOptions = optionsFrom(api.menuCategories, c => c.Name)
 const organizationOptions = optionsFrom(api.organizations, o => o.Name)
 
-const NAME_ONLY = [{ key: 'Name', label: 'Name', required: true, full: true }]
+const NAME_ONLY = [{ key: 'Name', label: 'common.name', required: true, full: true }]
 
 const nameColumns = [
-  { key: 'Id', label: '#', width: '80px' },
-  { key: 'Name', label: 'Name' }
+  { key: 'Id', label: 'common.id', width: '80px' },
+  { key: 'Name', label: 'common.name' }
 ]
 
 /** Country-scoped reference lists: a name and nothing else. */
 export const locations: ResourceDef<Location> = {
   name: 'locations',
-  title: 'Locations',
-  singular: 'Location',
+  title: 'resource.locations',
+  singular: 'resource.location',
   context: 'EVM',
   typeName: 'Location',
   resource: 'Locations',
@@ -54,8 +55,8 @@ export const locations: ResourceDef<Location> = {
 
 export const vendorTypes: ResourceDef<VendorType> = {
   name: 'vendor-types',
-  title: 'Vendor Types',
-  singular: 'Vendor Type',
+  title: 'resource.vendorTypes',
+  singular: 'resource.vendorType',
   context: 'EVM',
   typeName: 'VendorType',
   resource: 'VendorTypes',
@@ -69,8 +70,8 @@ export const vendorTypes: ResourceDef<VendorType> = {
 
 export const voucherTypes: ResourceDef<VoucherType> = {
   name: 'voucher-types',
-  title: 'Voucher Types',
-  singular: 'Voucher Type',
+  title: 'resource.voucherTypes',
+  singular: 'resource.voucherType',
   context: 'EVM',
   typeName: 'VoucherType',
   resource: 'VoucherTypes',
@@ -84,8 +85,8 @@ export const voucherTypes: ResourceDef<VoucherType> = {
 
 export const cycles: ResourceDef<BeneficiaryGroup> = {
   name: 'cycles',
-  title: 'Cycles',
-  singular: 'Cycle',
+  title: 'resource.cycles',
+  singular: 'resource.cycle',
   context: 'EVM',
   typeName: 'BeneficiaryGroup',
   resource: 'BeneficiaryGroups',
@@ -101,20 +102,20 @@ export const cycles: ResourceDef<BeneficiaryGroup> = {
 
 export const organizations: ResourceDef<Organization> = {
   name: 'organizations',
-  title: 'Organizations',
-  singular: 'Organization',
+  title: 'resource.organizations',
+  singular: 'resource.organization',
   context: 'Admin',
   typeName: 'Organization',
   resource: 'Organizations',
   columns: [
-    { key: 'Id', label: '#', width: '80px' },
-    { key: 'Name', label: 'Name' },
-    { key: 'Abbreviation', label: 'Abbreviation' }
+    { key: 'Id', label: 'common.id', width: '80px' },
+    { key: 'Name', label: 'common.name' },
+    { key: 'Abbreviation', label: 'resource.abbreviation' }
   ],
   fields: [
-    { key: 'Name', label: 'Name', required: true },
-    { key: 'Abbreviation', label: 'Abbreviation' },
-    { key: 'LogoSVG', label: 'Logo (SVG)', type: 'textarea', full: true }
+    { key: 'Name', label: 'common.name', required: true },
+    { key: 'Abbreviation', label: 'resource.abbreviation' },
+    { key: 'LogoSVG', label: 'resource.logo', type: 'textarea', full: true }
   ],
   searchFields: ['Name', 'Abbreviation'],
   permission: 'Organizations',
@@ -123,25 +124,25 @@ export const organizations: ResourceDef<Organization> = {
 
 export const countries: ResourceDef<Country> = {
   name: 'countries',
-  title: 'Countries',
-  singular: 'Country',
+  title: 'country.title',
+  singular: 'country.singular',
   context: 'Admin',
   typeName: 'Country',
   resource: 'Countries',
   columns: [
-    { key: 'Id', label: '#', width: '80px' },
-    { key: 'Name', label: 'Name' },
-    { key: 'IsoAlpha2', label: 'ISO' },
-    { key: 'CurrencyIsoCode', label: 'Currency' }
+    { key: 'Id', label: 'common.id', width: '80px' },
+    { key: 'Name', label: 'common.name' },
+    { key: 'IsoAlpha2', label: 'country.isoAlpha2' },
+    { key: 'CurrencyIsoCode', label: 'country.currencyIso' }
   ],
   fields: [
-    { key: 'Name', label: 'Country Name', required: true },
-    { key: 'IsoAlpha2', label: 'ISO Alpha-2 Code', required: true, help: 'Routes the inbound SMS webhook.' },
-    { key: 'IsoAlpha3', label: 'ISO Alpha-3 Code' },
-    { key: 'CurrencyUnicodeSymbol', label: 'Currency Symbol', required: true },
-    { key: 'CurrencyIsoCode', label: 'Currency ISO Code' },
-    { key: 'CountryCallingCode', label: 'Calling Code', required: true },
-    { key: 'LanguageCode', label: 'Language Code', required: true }
+    { key: 'Name', label: 'country.name', required: true },
+    { key: 'IsoAlpha2', label: 'country.isoAlpha2', required: true, help: 'country.isoAlpha2Hint' },
+    { key: 'IsoAlpha3', label: 'country.isoAlpha3' },
+    { key: 'CurrencyUnicodeSymbol', label: 'country.currencySymbol', required: true },
+    { key: 'CurrencyIsoCode', label: 'country.currencyIso' },
+    { key: 'CountryCallingCode', label: 'country.callingCode', required: true },
+    { key: 'LanguageCode', label: 'country.languageCode', required: true }
   ],
   searchFields: ['Name', 'IsoAlpha2'],
   permission: 'Countries',
@@ -153,8 +154,8 @@ export const countries: ResourceDef<Country> = {
 
 export const actions: ResourceDef<ReferenceName> = {
   name: 'actions',
-  title: 'Actions',
-  singular: 'Action',
+  title: 'resource.actions',
+  singular: 'resource.action',
   context: 'Admin',
   typeName: 'Action',
   resource: 'Actions',
@@ -162,26 +163,26 @@ export const actions: ResourceDef<ReferenceName> = {
   fields: NAME_ONLY,
   searchFields: ['Name'],
   permission: 'Actions',
-  emptyMessage: 'No actions are defined. Actions gate the create, edit and delete buttons.',
+  emptyMessage: 'resource.actionsEmpty',
   describe: row => row.Name
 }
 
 export const menuCategories: ResourceDef<MenuCategory> = {
   name: 'menu-categories',
-  title: 'Menu Categories',
-  singular: 'Menu Category',
+  title: 'resource.menuCategories',
+  singular: 'resource.menuCategory',
   context: 'Admin',
   typeName: 'MenuCategory',
   resource: 'MenuCategories',
   columns: [
-    { key: 'Id', label: '#', width: '80px' },
-    { key: 'Name', label: 'Name' },
-    { key: 'SortOrder', label: 'Sort Order', numeric: true }
+    { key: 'Id', label: 'common.id', width: '80px' },
+    { key: 'Name', label: 'common.name' },
+    { key: 'SortOrder', label: 'resource.sortOrder', numeric: true }
   ],
   fields: [
-    { key: 'Name', label: 'Name', required: true },
-    { key: 'SortOrder', label: 'Sort Order', type: 'number' },
-    { key: 'NeedsCountry', label: 'Only show when a country is selected', type: 'checkbox', full: true }
+    { key: 'Name', label: 'common.name', required: true },
+    { key: 'SortOrder', label: 'resource.sortOrder', type: 'number' },
+    { key: 'NeedsCountry', label: 'resource.needsCountry', type: 'checkbox', full: true }
   ],
   defaultSort: 'SortOrder',
   permission: 'MenuCategories',
@@ -190,23 +191,23 @@ export const menuCategories: ResourceDef<MenuCategory> = {
 
 export const menuItems: ResourceDef<MenuLink> = {
   name: 'menu-items',
-  title: 'Menu Items',
-  singular: 'Menu Item',
+  title: 'resource.menuItems',
+  singular: 'resource.menuItem',
   context: 'Admin',
   typeName: 'MenuItem',
   resource: 'MenuItems',
   columns: [
-    { key: 'Id', label: '#', width: '80px' },
-    { key: 'Title', label: 'Title' },
-    { key: 'State', label: 'State' },
-    { key: 'CssClass', label: 'Icon' }
+    { key: 'Id', label: 'common.id', width: '80px' },
+    { key: 'Title', label: 'resource.itemTitle' },
+    { key: 'State', label: 'resource.state' },
+    { key: 'CssClass', label: 'resource.icon' }
   ],
   fields: [
-    { key: 'Title', label: 'Title', required: true },
-    { key: 'State', label: 'State', help: 'Router state this link navigates to.' },
-    { key: 'CssClass', label: 'Icon class' },
-    { key: 'CategoryId', label: 'Category', type: 'select', options: menuCategoryOptions },
-    { key: 'ParentId', label: 'Parent item', type: 'select', options: optionsFrom(api.menuItems, i => i.Title) }
+    { key: 'Title', label: 'resource.itemTitle', required: true },
+    { key: 'State', label: 'resource.state', help: 'resource.stateHint' },
+    { key: 'CssClass', label: 'resource.iconClass' },
+    { key: 'CategoryId', label: 'resource.category', type: 'select', options: menuCategoryOptions },
+    { key: 'ParentId', label: 'resource.parentItem', type: 'select', options: optionsFrom(api.menuItems, i => i.Title) }
   ],
   searchFields: ['Title', 'State'],
   permission: 'MenuItems',
@@ -217,37 +218,37 @@ export const menuItems: ResourceDef<MenuLink> = {
 
 export const transactionLog: ResourceDef<TransactionLogItem> = {
   name: 'transaction-log',
-  title: 'Transaction Log',
-  singular: 'Transaction',
+  title: 'resource.transactionLog',
+  singular: 'resource.transaction',
   context: 'EVM',
   typeName: 'TransactionLogItem',
   resource: 'TransactionLogItems',
   columns: [
-    { key: 'Id', label: '#', width: '80px' },
-    { key: 'Date', label: 'Date' },
-    { key: 'Beneficiary.Name', label: 'Beneficiary', sortBy: null },
-    { key: 'Vendor.Name', label: 'Vendor', sortBy: null },
-    { key: 'AmountCredited', label: 'Credited', numeric: true },
-    { key: 'AmountRemaining', label: 'Remaining', numeric: true },
-    { key: 'TransactionCode', label: 'Code' }
+    { key: 'Id', label: 'common.id', width: '80px' },
+    { key: 'Date', label: 'common.date' },
+    { key: 'Beneficiary.Name', label: 'beneficiary.singular', sortBy: null },
+    { key: 'Vendor.Name', label: 'vendor.singular', sortBy: null },
+    { key: 'AmountCredited', label: 'resource.credited', numeric: true },
+    { key: 'AmountRemaining', label: 'resource.remaining', numeric: true },
+    { key: 'TransactionCode', label: 'resource.code' }
   ],
   fields: [],
   expand: ['Beneficiary', 'Vendor'],
   defaultSort: 'Date',
   readOnly: true,
-  emptyMessage: 'No point-of-sale transactions have been uploaded for this country.'
+  emptyMessage: 'resource.transactionsEmpty'
 }
 
 export const quarantine: ResourceDef<TransactionLogItem> = {
   ...transactionLog,
   name: 'quarantine',
-  title: 'Transaction Quarantine',
+  title: 'resource.quarantine',
   filter: { Quarantine: true },
-  emptyMessage: 'Nothing is in quarantine.'
+  emptyMessage: 'resource.quarantineEmpty'
 }
 
-/** Mirrors OutboundMessageState on the server. */
-const MESSAGE_STATE: Record<number, string> = { 0: 'Pending', 1: 'Sent', 2: 'Failed' }
+/** Mirrors OutboundMessageState on the server. Resolved at render time, so it follows the locale. */
+const messageState = (state: number) => t(`messageState.${state}`)
 
 const localTime = (value: string | null | undefined) =>
   value ? new Date(value).toLocaleString() : ''
@@ -258,46 +259,46 @@ const localTime = (value: string | null | undefined) =>
  */
 export const outboundMessages: ResourceDef<OutboundMessage> = {
   name: 'message-log',
-  title: 'Message Delivery Log',
-  singular: 'Message',
+  title: 'resource.messageLog',
+  singular: 'resource.message',
   context: 'EVM',
   typeName: 'OutboundMessage',
   resource: 'OutboundMessages',
   columns: [
-    { key: 'Id', label: '#', width: '70px' },
-    { key: 'CreatedOn', label: 'Queued', value: row => localTime(row.CreatedOn) },
-    { key: 'To', label: 'Recipient' },
-    { key: 'RecipientName', label: 'Name' },
-    { key: 'State', label: 'Status', value: row => MESSAGE_STATE[row.State] ?? row.State },
-    { key: 'Attempts', label: 'Attempts', numeric: true },
-    { key: 'LastError', label: 'Last Error' }
+    { key: 'Id', label: 'common.id', width: '70px' },
+    { key: 'CreatedOn', label: 'resource.queued', value: row => localTime(row.CreatedOn) },
+    { key: 'To', label: 'resource.recipient' },
+    { key: 'RecipientName', label: 'common.name' },
+    { key: 'State', label: 'common.status', value: row => messageState(row.State) },
+    { key: 'Attempts', label: 'resource.attempts', numeric: true },
+    { key: 'LastError', label: 'resource.lastError' }
   ],
   fields: [],
   defaultSort: 'Id',
   readOnly: true,
   searchFields: ['To', 'RecipientName', 'Body', 'LastError'],
-  emptyMessage: 'No messages have been sent from this country yet.'
+  emptyMessage: 'resource.messageLogEmpty'
 }
 
 export const cardLoads: ResourceDef<CardLoad> = {
   name: 'card-loads',
-  title: 'Card Load Log',
-  singular: 'Card Load',
+  title: 'resource.cardLoads',
+  singular: 'resource.cardLoad',
   context: 'EVM',
   typeName: 'CardLoad',
   resource: 'CardLoads',
   columns: [
-    { key: 'Id', label: '#', width: '80px' },
-    { key: 'Date', label: 'Date' },
-    { key: 'Beneficiary.Name', label: 'Beneficiary', sortBy: null },
-    { key: 'Vendor.Name', label: 'Vendor', sortBy: null },
-    { key: 'Amount', label: 'Amount', numeric: true }
+    { key: 'Id', label: 'common.id', width: '80px' },
+    { key: 'Date', label: 'common.date' },
+    { key: 'Beneficiary.Name', label: 'beneficiary.singular', sortBy: null },
+    { key: 'Vendor.Name', label: 'vendor.singular', sortBy: null },
+    { key: 'Amount', label: 'common.amount', numeric: true }
   ],
   fields: [],
   expand: ['Beneficiary', 'Vendor'],
   defaultSort: 'Date',
   readOnly: true,
-  emptyMessage: 'No card loads have been recorded.'
+  emptyMessage: 'resource.cardLoadsEmpty'
 }
 
 /** Every descriptor-driven screen, in the order the router registers them. */

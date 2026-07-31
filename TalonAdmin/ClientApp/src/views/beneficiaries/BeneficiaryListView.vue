@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { Beneficiary } from '@/api/types'
@@ -9,19 +10,21 @@ import { useDataSource } from '@/composables/useDataSource'
 import { useSessionStore } from '@/stores/session'
 import { notify, notifyError } from '@/composables/useToast'
 
+const { t } = useI18n()
+
 const session = useSessionStore()
 const router = useRouter()
 
 const source = useDataSource<Beneficiary>(api.beneficiaryPage, { sort: 'Id' })
 
 const columns: Column<Beneficiary>[] = [
-  { key: 'Id', label: '#', width: '70px' },
-  { key: 'FirstName', label: 'First Name' },
-  { key: 'LastName', label: 'Last Name' },
-  { key: 'MobileNumber', label: 'Mobile Number' },
-  { key: 'Group.Name', label: 'Cycle', sortBy: null },
-  { key: 'Location.Name', label: 'Location', sortBy: null },
-  { key: 'Disabled', label: 'Is Disabled', sortBy: 'Disabled' }
+  { key: 'Id', label: t('common.id'), width: '70px' },
+  { key: 'FirstName', label: t('beneficiary.firstName') },
+  { key: 'LastName', label: t('beneficiary.lastName') },
+  { key: 'MobileNumber', label: t('beneficiary.mobileNumber') },
+  { key: 'Group.Name', label: t('beneficiary.cycle'), sortBy: null },
+  { key: 'Location.Name', label: t('beneficiary.location'), sortBy: null },
+  { key: 'Disabled', label: t('beneficiary.disabled'), sortBy: 'Disabled' }
 ]
 
 onMounted(source.refresh)
@@ -31,19 +34,19 @@ async function remove(row: Beneficiary) {
 
   try {
     await api.deleteBeneficiary(row)
-    notify('success', 'Beneficiary deleted.')
+    notify('success', t('toast.deleted', { what: t('beneficiary.singular') }))
     await source.refresh()
   } catch (error) {
-    notifyError(error, 'Could not delete the beneficiary.')
+    notifyError(error, t('beneficiary.deleteFailed'))
   }
 }
 </script>
 
 <template>
-  <h1>Beneficiaries</h1>
+  <h1>{{ t('beneficiary.title') }}</h1>
 
   <div class="panel panel__head">
-    <input v-model="source.search.value" class="input" placeholder="Search" style="max-width: 420px" />
+    <input v-model="source.search.value" class="input" :placeholder="t('action.search')" style="max-width: 420px" />
     <div class="panel__spacer" />
     <SpreadsheetButtons kind="beneficiaries" @imported="source.refresh" />
     <button
@@ -51,7 +54,7 @@ async function remove(row: Beneficiary) {
       class="btn btn--primary"
       @click="router.push({ name: 'beneficiary-create' })"
     >
-      New
+      {{ t('action.new') }}
     </button>
   </div>
 
@@ -64,11 +67,11 @@ async function remove(row: Beneficiary) {
     :sort="source.sort.value"
     :descending="source.descending.value"
     :loading="source.loading.value"
-    empty-message="No beneficiaries match this search."
+    :empty-message="t('beneficiary.empty')"
     @sort="source.toggleSort"
   >
     <template #[`cell:Disabled`]="{ row }">
-      <span v-if="row.Disabled" class="badge">Disabled</span>
+      <span v-if="row.Disabled" class="badge">{{ t('beneficiary.disabledBadge') }}</span>
     </template>
 
     <template #actions="{ row }">
@@ -76,14 +79,14 @@ async function remove(row: Beneficiary) {
         class="btn btn--sm btn--info"
         :to="{ name: 'beneficiary-edit', params: { id: row.Id } }"
       >
-        {{ session.can('Edit Beneficiaries') ? 'Edit' : 'View' }}
+        {{ session.can('Edit Beneficiaries') ? t('action.edit') : t('action.view') }}
       </RouterLink>
       <button
         v-if="session.can('Delete Beneficiaries')"
         class="btn btn--sm btn--danger"
         @click="remove(row)"
       >
-        Delete
+        {{ t('action.delete') }}
       </button>
     </template>
   </DataTable>

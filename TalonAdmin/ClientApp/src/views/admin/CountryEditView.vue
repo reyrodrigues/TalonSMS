@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { Country } from '@/api/types'
@@ -7,6 +8,8 @@ import FormField from '@/components/FormField.vue'
 import type { FieldDef } from '@/crud/resource'
 import { useSessionStore } from '@/stores/session'
 import { notifyError, notifySaved } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * Countries are not descriptor-driven CRUD: creating one writes three rows (see
@@ -18,13 +21,13 @@ const session = useSessionStore()
 const router = useRouter()
 
 const FIELDS: FieldDef[] = [
-  { key: 'Name', label: 'Country Name', required: true },
-  { key: 'IsoAlpha2', label: 'ISO Alpha-2 Code', required: true, help: 'Routes the inbound SMS webhook.' },
-  { key: 'IsoAlpha3', label: 'ISO Alpha-3 Code' },
-  { key: 'CurrencyUnicodeSymbol', label: 'Currency Symbol', required: true },
-  { key: 'CurrencyIsoCode', label: 'Currency ISO Code' },
-  { key: 'CountryCallingCode', label: 'Calling Code', required: true },
-  { key: 'LanguageCode', label: 'Language Code', required: true }
+  { key: 'Name', label: 'country.name', required: true },
+  { key: 'IsoAlpha2', label: 'country.isoAlpha2', required: true, help: 'country.isoAlpha2Hint' },
+  { key: 'IsoAlpha3', label: 'country.isoAlpha3' },
+  { key: 'CurrencyUnicodeSymbol', label: 'country.currencySymbol', required: true },
+  { key: 'CurrencyIsoCode', label: 'country.currencyIso' },
+  { key: 'CountryCallingCode', label: 'country.callingCode', required: true },
+  { key: 'LanguageCode', label: 'country.languageCode', required: true }
 ]
 
 const model = ref<Record<string, unknown>>(Object.fromEntries(FIELDS.map(f => [f.key, null])))
@@ -43,7 +46,7 @@ onMounted(async () => {
     if (props.id) {
       const found = await api.country(Number(props.id))
       if (!found) {
-        notifyError(null, 'That country no longer exists.')
+        notifyError(null, t('country.gone'))
         await router.replace({ name: 'countries' })
         return
       }
@@ -53,7 +56,7 @@ onMounted(async () => {
       )
     }
   } catch (error) {
-    notifyError(error, 'Could not load the country.')
+    notifyError(error, t('country.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -77,10 +80,10 @@ async function save() {
       await session.loadSession()
     }
 
-    notifySaved('Country')
+    notifySaved(t('country.singular'))
     await router.push({ name: 'countries' })
   } catch (error) {
-    notifyError(error, 'Could not save the country.')
+    notifyError(error, t('country.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -88,17 +91,17 @@ async function save() {
 </script>
 
 <template>
-  <h1>{{ isNew ? 'New Country' : 'Country' }}</h1>
+  <h1>{{ isNew ? t('country.new') : t('country.singular') }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <form v-else @submit.prevent="save">
     <div class="panel panel__head">
       <button class="btn btn--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? t('action.saving') : t('action.save') }}
       </button>
       <button class="btn btn--ghost" type="button" @click="router.push({ name: 'countries' })">
-        Back
+        {{ t('action.back') }}
       </button>
     </div>
 
@@ -115,7 +118,7 @@ async function save() {
     </div>
 
     <p v-if="isNew" class="muted" style="font-size: 13px">
-      Creating a country also creates its SMS settings and grants your organization access to it.
+      {{ t('country.createHint') }}
     </p>
   </form>
 </template>

@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { Location, Vendor, VendorType } from '@/api/types'
 import { useSessionStore } from '@/stores/session'
 import { notifyError, notifySaved } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 const props = defineProps<{ id?: string }>()
 
@@ -53,7 +56,7 @@ onMounted(async () => {
     if (props.id) {
       const found = await api.vendor(Number(props.id))
       if (!found) {
-        notifyError(null, 'That vendor no longer exists.')
+        notifyError(null, t('vendor.gone'))
         await router.replace({ name: 'vendors' })
         return
       }
@@ -61,7 +64,7 @@ onMounted(async () => {
       model.value = { ...found }
     }
   } catch (error) {
-    notifyError(error, 'Could not load the vendor.')
+    notifyError(error, t('vendor.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -77,10 +80,10 @@ async function save() {
       { ...model.value, CountryId: session.country?.Id ?? 0 },
       original.value ?? undefined
     )
-    notifySaved('Vendor')
+    notifySaved(t('vendor.singular'))
     await router.push({ name: 'vendors' })
   } catch (error) {
-    notifyError(error, 'Could not save the vendor.')
+    notifyError(error, t('vendor.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -88,24 +91,24 @@ async function save() {
 </script>
 
 <template>
-  <h1>{{ isNew ? 'New Vendor' : 'Vendor' }}</h1>
+  <h1>{{ isNew ? t('vendor.new') : t('vendor.singular') }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <form v-else @submit.prevent="save">
     <div class="panel panel__head">
       <button v-if="!readOnly" class="btn btn--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? t('action.saving') : t('action.save') }}
       </button>
       <button class="btn btn--ghost" type="button" @click="router.push({ name: 'vendors' })">
-        Back
+        {{ t('action.back') }}
       </button>
     </div>
 
     <div class="panel">
       <div class="panel__body">
         <div class="field">
-          <label class="field__label" for="name">Entity Name <span class="field__required">*</span></label>
+          <label class="field__label" for="name">{{ t('vendor.entityName') }} <span class="field__required">*</span></label>
           <input
             id="name"
             v-model="model.Name"
@@ -113,22 +116,22 @@ async function save() {
             :class="{ 'field__control--invalid': required(model.Name) }"
             :disabled="readOnly"
           />
-          <p v-if="required(model.Name)" class="field__error">Entity name is required.</p>
+          <p v-if="required(model.Name)" class="field__error">{{ t('vendor.entityNameRequired') }}</p>
         </div>
 
         <div class="grid-2">
           <div class="field">
-            <label class="field__label" for="type">Vendor Type</label>
+            <label class="field__label" for="type">{{ t('vendor.type') }}</label>
             <select id="type" v-model.number="model.TypeId" class="field__control" :disabled="readOnly">
-              <option :value="null">—</option>
+              <option :value="null">{{ t('common.none') }}</option>
               <option v-for="type in types" :key="type.Id" :value="type.Id">{{ type.Name }}</option>
             </select>
           </div>
 
           <div class="field">
-            <label class="field__label" for="location">Location</label>
+            <label class="field__label" for="location">{{ t('beneficiary.location') }}</label>
             <select id="location" v-model.number="model.LocationId" class="field__control" :disabled="readOnly">
-              <option :value="null">—</option>
+              <option :value="null">{{ t('common.none') }}</option>
               <option v-for="location in locations" :key="location.Id" :value="location.Id">
                 {{ location.Name }}
               </option>
@@ -139,10 +142,10 @@ async function save() {
     </div>
 
     <div class="panel">
-      <div class="panel__head"><h2 style="margin: 0">Owner Information</h2></div>
+      <div class="panel__head"><h2 style="margin: 0">{{ t('vendor.ownerInformation') }}</h2></div>
       <div class="panel__body grid-2">
         <div class="field">
-          <label class="field__label" for="firstName">First Name <span class="field__required">*</span></label>
+          <label class="field__label" for="firstName">{{ t('beneficiary.firstName') }} <span class="field__required">*</span></label>
           <input
             id="firstName"
             v-model="model.FirstName"
@@ -153,7 +156,7 @@ async function save() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="lastName">Last Name <span class="field__required">*</span></label>
+          <label class="field__label" for="lastName">{{ t('beneficiary.lastName') }} <span class="field__required">*</span></label>
           <input
             id="lastName"
             v-model="model.LastName"
@@ -164,7 +167,7 @@ async function save() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="mobile">Mobile Number <span class="field__required">*</span></label>
+          <label class="field__label" for="mobile">{{ t('beneficiary.mobileNumber') }} <span class="field__required">*</span></label>
           <div class="field__prefix">
             <span class="field__prefix-label">{{ callingCode }}</span>
             <input
@@ -178,7 +181,7 @@ async function save() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="personalIdentifier">Personal Identifier <span class="field__required">*</span></label>
+          <label class="field__label" for="personalIdentifier">{{ t('beneficiary.personalIdentifier') }} <span class="field__required">*</span></label>
           <input
             id="personalIdentifier"
             v-model="model.PersonalIdentifier"

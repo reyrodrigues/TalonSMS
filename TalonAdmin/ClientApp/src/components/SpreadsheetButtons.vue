@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import { downloadBlob } from '@/api/http'
 import { useSessionStore } from '@/stores/session'
 import { notify, notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * Bulk import and export for the two lists that support it. The import returns a list of rows it
@@ -32,7 +35,7 @@ async function exportSheet() {
 
     downloadBlob(blob, `${props.kind}.xlsx`)
   } catch (error) {
-    notifyError(error, 'Could not export the spreadsheet.')
+    notifyError(error, t('spreadsheet.exportFailed'))
   } finally {
     busy.value = false
   }
@@ -56,12 +59,12 @@ async function importSheet(event: Event) {
 
     errors.value = (result.Errors ?? []).map(e => (typeof e === 'string' ? e : JSON.stringify(e)))
 
-    if (errors.value.length === 0) notify('success', 'Spreadsheet imported.')
-    else notify('info', `Imported with ${errors.value.length} rows skipped.`)
+    if (errors.value.length === 0) notify('success', t('spreadsheet.imported'))
+    else notify('info', t('spreadsheet.importedWithErrors', { count: errors.value.length }))
 
     emit('imported')
   } catch (error) {
-    notifyError(error, 'Could not import the spreadsheet.')
+    notifyError(error, t('spreadsheet.importFailed'))
   } finally {
     busy.value = false
   }
@@ -69,8 +72,8 @@ async function importSheet(event: Event) {
 </script>
 
 <template>
-  <button class="btn" :disabled="busy" @click="exportSheet">Export</button>
-  <button class="btn" :disabled="busy" @click="fileInput?.click()">Import</button>
+  <button class="btn" :disabled="busy" @click="exportSheet">{{ t('action.export') }}</button>
+  <button class="btn" :disabled="busy" @click="fileInput?.click()">{{ t('action.import') }}</button>
 
   <input
     ref="fileInput"
@@ -83,12 +86,12 @@ async function importSheet(event: Event) {
   <Teleport to="body">
     <div v-if="errors.length > 0" class="modal" @click.self="errors = []">
       <div class="modal__card" role="dialog" aria-modal="true" aria-label="Import problems">
-        <h2>Rows that could not be imported</h2>
+        <h2>{{ t('spreadsheet.problems') }}</h2>
         <ul>
           <li v-for="(problem, index) in errors" :key="index">{{ problem }}</li>
         </ul>
         <div class="modal__actions">
-          <button class="btn btn--primary" @click="errors = []">Close</button>
+          <button class="btn btn--primary" @click="errors = []">{{ t('action.close') }}</button>
         </div>
       </div>
     </div>

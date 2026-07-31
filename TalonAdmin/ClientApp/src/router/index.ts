@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import { t } from '@/i18n'
 import { RESOURCES } from '@/crud/definitions'
 import type { ResourceDef } from '@/crud/resource'
 import * as reports from '@/views/reports/spec'
@@ -24,7 +25,7 @@ function resourceRoutes(def: ResourceDef<never>): RouteRecordRaw[] {
       path: `${def.name}/new`,
       name: `${def.name}-create`,
       component: () => import('@/crud/ResourceEditView.vue'),
-      meta: { title: `New ${def.singular}`, resource: def }
+      meta: { title: def.singular, resource: def }
     },
     {
       path: `${def.name}/:id(\\d+)`,
@@ -49,14 +50,14 @@ function userRoutes(name: string, title: string, scope: 'Administrators' | 'Orga
       path: `${name}/new`,
       name: `${name}-create`,
       component: () => import('@/views/admin/UserEditView.vue'),
-      meta: { title: 'New User', userScope: scope }
+      meta: { title: 'user.new', userScope: scope }
     },
     {
       path: `${name}/:id`,
       name: `${name}-edit`,
       component: () => import('@/views/admin/UserEditView.vue'),
       props: true,
-      meta: { title: 'User', userScope: scope }
+      meta: { title: 'user.singular', userScope: scope }
     }
   ]
 }
@@ -79,7 +80,7 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
-    meta: { anonymous: true, title: 'Sign in' }
+    meta: { anonymous: true, title: 'login.title' }
   },
   {
     path: '/',
@@ -90,123 +91,123 @@ const routes: RouteRecordRaw[] = [
         path: 'dashboard',
         name: 'dashboard',
         component: () => import('@/views/DashboardView.vue'),
-        meta: { title: 'Dashboard' }
+        meta: { title: 'dashboard.title' }
       },
       {
         path: 'beneficiaries',
         name: 'beneficiaries',
         component: () => import('@/views/beneficiaries/BeneficiaryListView.vue'),
-        meta: { title: 'Beneficiaries' }
+        meta: { title: 'beneficiary.title' }
       },
       {
         path: 'beneficiaries/new',
         name: 'beneficiary-create',
         component: () => import('@/views/beneficiaries/BeneficiaryEditView.vue'),
-        meta: { title: 'New beneficiary' }
+        meta: { title: 'beneficiary.new' }
       },
       {
         path: 'beneficiaries/:id(\\d+)',
         name: 'beneficiary-edit',
         component: () => import('@/views/beneficiaries/BeneficiaryEditView.vue'),
         props: true,
-        meta: { title: 'Beneficiary' }
+        meta: { title: 'beneficiary.singular' }
       },
       {
         path: 'vendors',
         name: 'vendors',
         component: () => import('@/views/vendors/VendorListView.vue'),
-        meta: { title: 'Vendors' }
+        meta: { title: 'vendor.title' }
       },
       {
         path: 'vendors/new',
         name: 'vendor-create',
         component: () => import('@/views/vendors/VendorEditView.vue'),
-        meta: { title: 'New vendor' }
+        meta: { title: 'vendor.new' }
       },
       {
         path: 'vendors/:id(\\d+)',
         name: 'vendor-edit',
         component: () => import('@/views/vendors/VendorEditView.vue'),
         props: true,
-        meta: { title: 'Vendor' }
+        meta: { title: 'vendor.singular' }
       },
       {
         path: 'programs',
         name: 'programs',
         component: () => import('@/views/programs/ProgramListView.vue'),
-        meta: { title: 'Programs' }
+        meta: { title: 'program.title' }
       },
       {
         path: 'programs/new',
         name: 'program-create',
         component: () => import('@/views/programs/ProgramEditView.vue'),
-        meta: { title: 'New program' }
+        meta: { title: 'program.new' }
       },
       {
         path: 'programs/:id(\\d+)',
         name: 'program-edit',
         component: () => import('@/views/programs/ProgramEditView.vue'),
         props: true,
-        meta: { title: 'Program' }
+        meta: { title: 'program.singular' }
       },
       {
         path: 'distributions',
         name: 'distributions',
         component: () => import('@/views/DistributionListView.vue'),
-        meta: { title: 'Distributions' }
+        meta: { title: 'distribution.title' }
       },
       {
         path: 'distributions/:id(\\d+)',
         name: 'distribution-detail',
         component: () => import('@/views/distributions/DistributionDetailView.vue'),
         props: true,
-        meta: { title: 'Distribution' }
+        meta: { title: 'distribution.singular' }
       },
       ...reportRoutes,
       {
         path: 'report-history',
         name: 'report-history',
         component: () => import('@/views/reports/ReportHistoryView.vue'),
-        meta: { title: 'Report History' }
+        meta: { title: 'report.history.title' }
       },
       {
         path: 'vendor-receipt',
         name: 'vendor-receipt',
         component: () => import('@/views/reports/VendorReceiptView.vue'),
-        meta: { title: 'Vendor Receipt' }
+        meta: { title: 'report.receipt.title' }
       },
-      ...userRoutes('org-users', 'Organization Users', 'OrganizationUsers'),
-      ...userRoutes('sys-users', 'Administrators', 'Administrators'),
+      ...userRoutes('org-users', 'user.organizationUsers', 'OrganizationUsers'),
+      ...userRoutes('sys-users', 'user.administrators', 'Administrators'),
       {
         path: 'countries/new',
         name: 'countries-create',
         component: () => import('@/views/admin/CountryEditView.vue'),
-        meta: { title: 'New Country' }
+        meta: { title: 'country.new' }
       },
       {
         path: 'countries/:id(\\d+)',
         name: 'countries-edit',
         component: () => import('@/views/admin/CountryEditView.vue'),
         props: true,
-        meta: { title: 'Country' }
+        meta: { title: 'country.singular' }
       },
       {
         path: 'roles',
         name: 'roles',
         component: () => import('@/views/admin/RoleListView.vue'),
-        meta: { title: 'Roles' }
+        meta: { title: 'role.title' }
       },
       {
         path: 'country-settings',
         name: 'country-settings',
         component: () => import('@/views/admin/CountrySettingsView.vue'),
-        meta: { title: 'Country Settings' }
+        meta: { title: 'settings.title' }
       },
       {
         path: 'my-profile',
         name: 'my-profile',
         component: () => import('@/views/admin/MyProfileView.vue'),
-        meta: { title: 'My Profile' }
+        meta: { title: 'profile.title' }
       },
       ...RESOURCES.flatMap(resourceRoutes)
     ]
@@ -245,6 +246,8 @@ router.beforeEach(async to => {
 })
 
 router.afterEach(to => {
-  const title = to.meta.title as string | undefined
-  document.title = title ? `Talon | ${title}` : 'Talon'
+  // Route titles are catalogue keys. A key with no entry falls back to itself, so a hand-written
+  // title still renders as written.
+  const key = to.meta.title as string | undefined
+  document.title = key ? `${t('app.name')} | ${t(key)}` : t('app.name')
 })

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { ApplicationUser } from '@/api/types'
 import { notify, notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * Users live behind three different Breeze endpoints depending on who is asking: system admins see
@@ -20,9 +23,7 @@ const title = route.meta.title as string
  * given a matching role. Saying so avoids the "I just created them and they vanished" surprise.
  */
 const scopeNote =
-  scope === 'Administrators'
-    ? 'Only users holding the System Administrator or Organization Administrator role appear here.'
-    : 'Users in this organization, excluding system administrators.'
+  scope === 'Administrators' ? 'user.scopeAdministrators' : 'user.scopeOrganization'
 
 const users = ref<ApplicationUser[]>([])
 const search = ref('')
@@ -35,21 +36,21 @@ async function load() {
   try {
     users.value = await api.users(scope)
   } catch (error) {
-    notifyError(error, 'Could not load the users.')
+    notifyError(error, t('user.loadFailed'))
   } finally {
     loading.value = false
   }
 }
 
 async function remove(user: ApplicationUser) {
-  if (!window.confirm(`Delete ${user.UserName}?`)) return
+  if (!window.confirm(t('user.confirmDelete', { name: user.UserName }))) return
 
   try {
     await api.deleteUser(user.Id)
-    notify('success', 'User deleted.')
+    notify('success', t('toast.deleted', { what: t('user.singular') }))
     await load()
   } catch (error) {
-    notifyError(error, 'Could not delete the user.')
+    notifyError(error, t('user.deleteFailed'))
   }
 }
 
@@ -62,14 +63,14 @@ const matches = (user: ApplicationUser) => {
 </script>
 
 <template>
-  <h1>{{ title }}</h1>
-  <p class="muted" style="margin-top: -8px">{{ scopeNote }}</p>
+  <h1>{{ t(title) }}</h1>
+  <p class="muted" style="margin-top: -8px">{{ t(scopeNote) }}</p>
 
   <div class="panel panel__head">
-    <input v-model="search" class="input" placeholder="Search" style="max-width: 420px" />
+    <input v-model="search" class="input" :placeholder="t('action.search')" style="max-width: 420px" />
     <div class="panel__spacer" />
     <button class="btn btn--primary" @click="router.push({ name: `${String(route.name)}-create` })">
-      New
+      {{ t('action.new') }}
     </button>
   </div>
 
@@ -78,11 +79,11 @@ const matches = (user: ApplicationUser) => {
       <table class="table">
         <thead>
           <tr>
-            <th>User Name</th>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Organization</th>
-            <th class="table__actions">Actions</th>
+            <th>{{ t('login.userName') }}</th>
+            <th>{{ t('user.fullName') }}</th>
+            <th>{{ t('user.email') }}</th>
+            <th>{{ t('user.organization') }}</th>
+            <th class="table__actions">{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -96,16 +97,16 @@ const matches = (user: ApplicationUser) => {
                 class="btn btn--sm btn--info"
                 :to="{ name: `${String(route.name)}-edit`, params: { id: user.Id } }"
               >
-                Edit
+                {{ t('action.edit') }}
               </RouterLink>
-              <button class="btn btn--sm btn--danger" @click="remove(user)">Delete</button>
+              <button class="btn btn--sm btn--danger" @click="remove(user)">{{ t('action.delete') }}</button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
-      <p v-else-if="users.filter(matches).length === 0" class="empty">No users to show.</p>
+      <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
+      <p v-else-if="users.filter(matches).length === 0" class="empty">{{ t('user.empty') }}</p>
     </div>
   </div>
 </template>

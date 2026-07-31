@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type {
@@ -14,6 +15,8 @@ import type {
 import { useSessionStore } from '@/stores/session'
 import { useFormat } from '@/composables/useFormat'
 import { notify, notifyError, notifySaved } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * A programme carries its voucher categories, and it is where a distribution is started from.
@@ -88,7 +91,7 @@ onMounted(async () => {
       ])
 
       if (!found) {
-        notifyError(null, 'That programme no longer exists.')
+        notifyError(null, t('program.gone'))
         await router.replace({ name: 'programs' })
         return
       }
@@ -99,7 +102,7 @@ onMounted(async () => {
       distributions.value = distributionList
     }
   } catch (error) {
-    notifyError(error, 'Could not load the programme.')
+    notifyError(error, t('program.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -134,7 +137,7 @@ async function save() {
     const programId =
       model.value.Id ?? saved.KeyMappings[0]?.RealValue ?? saved.Entities[0]?.Id
 
-    if (!programId) throw new Error('The server did not return a key for the new programme.')
+    if (!programId) throw new Error(t('program.noKey'))
 
     const withProgram = categories.value.map(c => ({ ...c, ProgramId: programId, ...tenant }))
 
@@ -146,10 +149,10 @@ async function save() {
       )
     }
 
-    notifySaved('Programme')
+    notifySaved(t('program.singular'))
     await router.push({ name: 'programs' })
   } catch (error) {
-    notifyError(error, 'Could not save the programme.')
+    notifyError(error, t('program.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -167,10 +170,10 @@ async function distribute() {
     })
 
     showDistribute.value = false
-    notify('success', 'Vouchers distributed.')
+    notify('success', t('distribute.done'))
     distributions.value = await api.distributionsForProgram(Number(props.id))
   } catch (error) {
-    notifyError(error, 'Could not distribute vouchers.')
+    notifyError(error, t('distribute.failed'))
   } finally {
     distributing.value = false
   }
@@ -178,9 +181,9 @@ async function distribute() {
 </script>
 
 <template>
-  <h1>{{ isNew ? 'New Program' : 'Program' }}</h1>
+  <h1>{{ isNew ? t('program.new') : t('program.singular') }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <form v-else @submit.prevent="save">
     <div class="panel panel__head">
@@ -190,21 +193,21 @@ async function distribute() {
         type="button"
         @click="showDistribute = true"
       >
-        Distribute Vouchers
+        {{ t('distribute.action') }}
       </button>
       <div class="panel__spacer" />
       <button v-if="!readOnly" class="btn btn--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? t('action.saving') : t('action.save') }}
       </button>
       <button class="btn btn--ghost" type="button" @click="router.push({ name: 'programs' })">
-        Back
+        {{ t('action.back') }}
       </button>
     </div>
 
     <div class="panel">
       <div class="panel__body grid-2">
         <div class="field">
-          <label class="field__label" for="name">Name <span class="field__required">*</span></label>
+          <label class="field__label" for="name">{{ t('common.name') }} <span class="field__required">*</span></label>
           <input
             id="name"
             v-model="model.Name"
@@ -215,7 +218,7 @@ async function distribute() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="mechanism">Distribution Mechanism</label>
+          <label class="field__label" for="mechanism">{{ t('program.mechanism') }}</label>
           <select
             id="mechanism"
             v-model.number="model.DistributionMechanism"
@@ -227,7 +230,7 @@ async function distribute() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="fundCodes">Fund Codes <span class="field__required">*</span></label>
+          <label class="field__label" for="fundCodes">{{ t('program.fundCodes') }} <span class="field__required">*</span></label>
           <input
             id="fundCodes"
             v-model="model.FundCodes"
@@ -238,7 +241,7 @@ async function distribute() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="codeLength">Voucher Code Size</label>
+          <label class="field__label" for="codeLength">{{ t('program.codeLength') }}</label>
           <input
             id="codeLength"
             v-model.number="model.VoucherCodeLength"
@@ -251,7 +254,7 @@ async function distribute() {
         <div class="field">
           <label class="field__label">
             <input v-model="model.ShowInDashboard" type="checkbox" :disabled="readOnly" />
-            Show in Dashboard
+            {{ t('program.showInDashboard') }}
           </label>
         </div>
       </div>
@@ -259,19 +262,19 @@ async function distribute() {
 
     <div class="panel">
       <div class="panel__head">
-        <h2 style="margin: 0">Voucher categories</h2>
+        <h2 style="margin: 0">{{ t('program.categories') }}</h2>
         <div class="panel__spacer" />
-        <button v-if="!readOnly" class="btn btn--sm" type="button" @click="addCategory">Add</button>
+        <button v-if="!readOnly" class="btn btn--sm" type="button" @click="addCategory">{{ t('action.add') }}</button>
       </div>
 
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th style="width: 60px">#</th>
-              <th>Type of Voucher</th>
-              <th>Type of Vendor</th>
-              <th>Value</th>
+              <th style="width: 60px">{{ t('common.id') }}</th>
+              <th>{{ t('program.voucherType') }}</th>
+              <th>{{ t('program.vendorType') }}</th>
+              <th>{{ t('common.value') }}</th>
               <th v-if="!readOnly" class="table__actions" />
             </tr>
           </thead>
@@ -287,7 +290,7 @@ async function distribute() {
               </td>
               <td>
                 <select v-model.number="category.VendorTypeId" class="field__control" :disabled="readOnly">
-                  <option :value="null">—</option>
+                  <option :value="null">{{ t('common.none') }}</option>
                   <option v-for="type in vendorTypes" :key="type.Id" :value="type.Id">
                     {{ type.Name }}
                   </option>
@@ -307,29 +310,29 @@ async function distribute() {
               </td>
               <td v-if="!readOnly" class="table__actions">
                 <button class="btn btn--sm btn--danger" type="button" @click="removeCategory(index)">
-                  Remove
+                  {{ t('action.remove') }}
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
         <p v-if="categories.length === 0" class="empty">
-          Add at least one category before distributing.
+          {{ t('program.categoriesEmpty') }}
         </p>
       </div>
     </div>
 
     <div v-if="!isNew" class="panel">
-      <div class="panel__head"><h2 style="margin: 0">Distributions</h2></div>
+      <div class="panel__head"><h2 style="margin: 0">{{ t('program.distributions') }}</h2></div>
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th style="width: 60px">#</th>
-              <th>Title</th>
-              <th>Cycle</th>
-              <th>Location</th>
-              <th>Created On</th>
+              <th style="width: 60px">{{ t('common.id') }}</th>
+              <th>{{ t('distribution.heading') }}</th>
+              <th>{{ t('beneficiary.cycle') }}</th>
+              <th>{{ t('beneficiary.location') }}</th>
+              <th>{{ t('distribution.createdOn') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -346,27 +349,27 @@ async function distribute() {
             </tr>
           </tbody>
         </table>
-        <p v-if="distributions.length === 0" class="empty">Nothing distributed yet.</p>
+        <p v-if="distributions.length === 0" class="empty">{{ t('program.noDistributions') }}</p>
       </div>
     </div>
   </form>
 
   <div v-if="showDistribute" class="modal" @click.self="showDistribute = false">
     <div class="modal__card" role="dialog" aria-modal="true" aria-label="Distribute vouchers">
-      <h2>Distribute Vouchers</h2>
+      <h2>{{ t('distribute.action') }}</h2>
 
       <div class="field">
-        <label class="field__label" for="cycle">Cycle <span class="field__required">*</span></label>
+        <label class="field__label" for="cycle">{{ t('beneficiary.cycle') }} <span class="field__required">*</span></label>
         <select id="cycle" v-model.number="distributeForm.GroupId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="cycle in cycles" :key="cycle.Id" :value="cycle.Id">{{ cycle.Name }}</option>
         </select>
       </div>
 
       <div class="field">
-        <label class="field__label" for="place">Location</label>
+        <label class="field__label" for="place">{{ t('beneficiary.location') }}</label>
         <select id="place" v-model.number="distributeForm.LocationId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="location in locations" :key="location.Id" :value="location.Id">
             {{ location.Name }}
           </option>
@@ -374,7 +377,7 @@ async function distribute() {
       </div>
 
       <p class="muted" style="font-size: 13px">
-        One voucher per category is issued to every active household in the cycle.
+        {{ t('distribute.explain') }}
       </p>
 
       <div class="modal__actions">
@@ -383,9 +386,9 @@ async function distribute() {
           :disabled="!distributeForm.GroupId || !distributeForm.LocationId || distributing"
           @click="distribute"
         >
-          {{ distributing ? 'Distributing…' : 'Create Distribution' }}
+          {{ distributing ? t('distribute.distributing') : t('distribute.create') }}
         </button>
-        <button class="btn btn--ghost" @click="showDistribute = false">Cancel</button>
+        <button class="btn btn--ghost" @click="showDistribute = false">{{ t('action.cancel') }}</button>
       </div>
     </div>
   </div>

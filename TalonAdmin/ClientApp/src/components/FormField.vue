@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { FieldDef, SelectOption } from '@/crud/resource'
+import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
 
 const props = defineProps<{
@@ -13,7 +14,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: unknown): void }>()
 
+const { t } = useI18n()
 const session = useSessionStore()
+
+// Descriptors carry catalogue keys rather than text, so a label is resolved at render time and
+// follows the locale. A key that is not in the catalogue falls back to itself, which keeps a
+// hand-written label working.
+const label = computed(() => t(props.field.label))
+const help = computed(() => (props.field.help ? t(props.field.help) : null))
 
 const choices = computed(() => props.options ?? props.field.choices ?? [])
 
@@ -46,7 +54,7 @@ function update(event: Event) {
 <template>
   <div class="field" :style="field.full ? { gridColumn: '1 / -1' } : undefined">
     <label class="field__label" :for="id">
-      {{ field.label }}
+      {{ label }}
       <span v-if="field.required" class="field__required">*</span>
     </label>
 
@@ -69,7 +77,7 @@ function update(event: Event) {
       :disabled="disabled"
       @change="update"
     >
-      <option value="">—</option>
+      <option value="">{{ t('common.none') }}</option>
       <option v-for="option in choices" :key="String(option.value)" :value="String(option.value)">
         {{ option.label }}
       </option>
@@ -109,9 +117,7 @@ function update(event: Event) {
       @input="update"
     />
 
-    <p v-if="invalid" class="field__error">{{ field.label }} is required.</p>
-    <p v-else-if="field.help" class="muted" style="font-size: 12px; margin: 4px 0 0">
-      {{ field.help }}
-    </p>
+    <p v-if="invalid" class="field__error">{{ t('common.required', { field: label }) }}</p>
+    <p v-else-if="help" class="muted" style="font-size: 12px; margin: 4px 0 0">{{ help }}</p>
   </div>
 </template>

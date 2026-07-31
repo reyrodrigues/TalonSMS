@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { Vendor } from '@/api/types'
@@ -9,17 +10,19 @@ import { useDataSource } from '@/composables/useDataSource'
 import { useSessionStore } from '@/stores/session'
 import { notify, notifyError } from '@/composables/useToast'
 
+const { t } = useI18n()
+
 const session = useSessionStore()
 const router = useRouter()
 
 const source = useDataSource<Vendor>(api.vendorPage, { sort: 'Id' })
 
 const columns: Column<Vendor>[] = [
-  { key: 'Id', label: '#', width: '70px' },
-  { key: 'Name', label: 'Name' },
-  { key: 'Type.Name', label: 'Vendor Type', sortBy: null },
-  { key: 'Location.Name', label: 'Location', sortBy: null },
-  { key: 'MobileNumber', label: 'Mobile Number' }
+  { key: 'Id', label: t('common.id'), width: '70px' },
+  { key: 'Name', label: t('common.name') },
+  { key: 'Type.Name', label: t('vendor.type'), sortBy: null },
+  { key: 'Location.Name', label: t('beneficiary.location'), sortBy: null },
+  { key: 'MobileNumber', label: t('beneficiary.mobileNumber') }
 ]
 
 onMounted(source.refresh)
@@ -29,19 +32,19 @@ async function remove(row: Vendor) {
 
   try {
     await api.deleteVendor(row)
-    notify('success', 'Vendor deleted.')
+    notify('success', t('toast.deleted', { what: t('vendor.singular') }))
     await source.refresh()
   } catch (error) {
-    notifyError(error, 'Could not delete the vendor.')
+    notifyError(error, t('vendor.deleteFailed'))
   }
 }
 </script>
 
 <template>
-  <h1>Vendors</h1>
+  <h1>{{ t('vendor.title') }}</h1>
 
   <div class="panel panel__head">
-    <input v-model="source.search.value" class="input" placeholder="Search" style="max-width: 420px" />
+    <input v-model="source.search.value" class="input" :placeholder="t('action.search')" style="max-width: 420px" />
     <div class="panel__spacer" />
     <SpreadsheetButtons kind="vendors" @imported="source.refresh" />
     <button
@@ -49,7 +52,7 @@ async function remove(row: Vendor) {
       class="btn btn--primary"
       @click="router.push({ name: 'vendor-create' })"
     >
-      New
+      {{ t('action.new') }}
     </button>
   </div>
 
@@ -62,15 +65,15 @@ async function remove(row: Vendor) {
     :sort="source.sort.value"
     :descending="source.descending.value"
     :loading="source.loading.value"
-    empty-message="No vendors match this search."
+    :empty-message="t('vendor.empty')"
     @sort="source.toggleSort"
   >
     <template #actions="{ row }">
       <RouterLink class="btn btn--sm btn--info" :to="{ name: 'vendor-edit', params: { id: row.Id } }">
-        {{ session.can('Edit Vendors') ? 'Edit' : 'View' }}
+        {{ session.can('Edit Vendors') ? t('action.edit') : t('action.view') }}
       </RouterLink>
       <button v-if="session.can('Delete Vendors')" class="btn btn--sm btn--danger" @click="remove(row)">
-        Delete
+        {{ t('action.delete') }}
       </button>
     </template>
   </DataTable>

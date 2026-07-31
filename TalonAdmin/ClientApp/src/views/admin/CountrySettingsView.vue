@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import type { OrganizationCountry } from '@/api/types'
 import { notifyError, notifySaved } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * Per-country messaging configuration: which channels to send through and in what order, each
@@ -116,7 +119,7 @@ onMounted(async () => {
     rows.value = await api.organizationCountries()
     select(rows.value[0]?.Id ?? null)
   } catch (error) {
-    notifyError(error, 'Could not load the country settings.')
+    notifyError(error, t('settings.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -187,7 +190,7 @@ function move(index: number, by: number) {
 async function save() {
   const settings = selected.value?.Settings
   if (!settings) {
-    notifyError(null, 'This country has no settings record to update.')
+    notifyError(null, t('settings.noSettings'))
     return
   }
 
@@ -226,11 +229,11 @@ async function save() {
 
     await api.saveCountrySettings(settings, gateway, changed)
 
-    notifySaved('Country settings')
+    notifySaved(t('settings.saved'))
     rows.value = await api.organizationCountries()
     select(selectedId.value)
   } catch (error) {
-    notifyError(error, 'Could not save the country settings.')
+    notifyError(error, t('settings.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -238,18 +241,18 @@ async function save() {
 </script>
 
 <template>
-  <h1>Country Settings</h1>
+  <h1>{{ t('settings.title') }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <p v-else-if="rows.length === 0" class="empty">
-    This organization is not yet operating in any country.
+    {{ t('settings.noCountries') }}
   </p>
 
   <form v-else @submit.prevent="save">
     <div class="panel panel__head">
       <label class="row-gap">
-        Country
+        {{ t('country.singular') }}
         <select
           class="input"
           style="width: auto"
@@ -261,13 +264,13 @@ async function save() {
       </label>
       <div class="panel__spacer" />
       <button class="btn btn--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? t('action.saving') : t('action.save') }}
       </button>
     </div>
 
     <div class="panel">
       <div class="panel__head">
-        <h2 style="margin: 0">Delivery channels</h2>
+        <h2 style="margin: 0">{{ t('settings.channels') }}</h2>
         <div class="panel__spacer" />
         <select
           v-if="available.length > 0"
@@ -276,7 +279,7 @@ async function save() {
           value=""
           @change="add(($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value = ''"
         >
-          <option value="">Add a channel…</option>
+          <option value="">{{ t('settings.addChannel') }}</option>
           <option v-for="option in available" :key="option.key" :value="option.key">
             {{ option.label }}
           </option>
@@ -285,19 +288,18 @@ async function save() {
 
       <div class="panel__body">
         <p v-if="chain.length === 0" class="muted" style="margin: 0">
-          No channel is configured, so nothing will be sent. Add one above.
+          {{ t('settings.noChannels') }}
         </p>
 
         <p v-else class="muted" style="margin: 0 0 12px; font-size: 13px">
-          Tried in order. A channel that cannot reach someone — a number that never enrolled with
-          the bot, say — hands over to the next one rather than failing.
+          {{ t('settings.chainHint') }}
         </p>
 
         <div v-for="(key, index) in chain" :key="key" class="channel">
           <div class="channel__head">
             <span class="badge">{{ index + 1 }}</span>
             <strong>{{ definition(key).label }}</strong>
-            <span v-if="index === 0" class="muted" style="font-size: 12px">primary</span>
+            <span v-if="index === 0" class="muted" style="font-size: 12px">{{ t('settings.primary') }}</span>
             <div class="panel__spacer" />
             <button class="btn btn--sm" type="button" :disabled="index === 0" @click="move(index, -1)">
               ↑
@@ -311,7 +313,7 @@ async function save() {
               ↓
             </button>
             <button class="btn btn--sm btn--danger" type="button" @click="remove(index)">
-              Remove
+              {{ t('action.remove') }}
             </button>
           </div>
 
@@ -323,7 +325,7 @@ async function save() {
             </div>
 
             <div v-if="definition(key).needsUser" class="field">
-              <label class="field__label" :for="`user-${key}`">User name</label>
+              <label class="field__label" :for="`user-${key}`">{{ t('settings.userName') }}</label>
               <input
                 :id="`user-${key}`"
                 v-model="credentials[key].user"
@@ -361,7 +363,7 @@ async function save() {
     </div>
 
     <div class="panel">
-      <div class="panel__head"><h2 style="margin: 0">Message templates</h2></div>
+      <div class="panel__head"><h2 style="margin: 0">{{ t('settings.templates') }}</h2></div>
       <div class="panel__body">
         <div v-for="name in TEMPLATES" :key="name" class="field">
           <label class="field__label" :for="`tpl-${name}`">{{ TEMPLATE_LABELS[name] ?? name }}</label>

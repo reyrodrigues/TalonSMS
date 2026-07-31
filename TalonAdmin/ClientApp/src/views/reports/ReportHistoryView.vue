@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import { downloadBlob } from '@/api/http'
 import type { ExportedReport, Program } from '@/api/types'
 import { useFormat } from '@/composables/useFormat'
 import { notify, notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * Reports the server archived when they were generated. The PDF and spreadsheet ride on the row as
@@ -25,7 +28,7 @@ onMounted(async () => {
     programs.value = await api.programs()
     programId.value = programs.value[0]?.Id ?? null
   } catch (error) {
-    notifyError(error, 'Could not load the programmes.')
+    notifyError(error, t('report.optionsFailed'))
   }
 })
 
@@ -41,7 +44,7 @@ async function load() {
   try {
     reports.value = await api.exportedReports(programId.value, reportType.value)
   } catch (error) {
-    notifyError(error, 'Could not load the report history.')
+    notifyError(error, t('report.history.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -75,29 +78,29 @@ async function attachSignedReport(event: Event) {
     for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte)
 
     await api.attachSignedReport(report, btoa(binary))
-    notify('success', 'Signed report attached.')
+    notify('success', t('report.history.attached'))
     await load()
   } catch (error) {
-    notifyError(error, 'Could not attach the signed report.')
+    notifyError(error, t('report.history.attachFailed'))
   }
 }
 </script>
 
 <template>
-  <h1>Report History</h1>
+  <h1>{{ t('report.history.title') }}</h1>
 
   <div class="panel">
     <div class="panel__body grid-2">
       <div class="field">
-        <label class="field__label" for="program">Program</label>
+        <label class="field__label" for="program">{{ t('program.singular') }}</label>
         <select id="program" v-model.number="programId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="item in programs" :key="item.Id" :value="item.Id">{{ item.Name }}</option>
         </select>
       </div>
 
       <div class="field">
-        <label class="field__label" for="type">Report Type</label>
+        <label class="field__label" for="type">{{ t('report.history.type') }}</label>
         <select id="type" v-model.number="reportType" class="field__control">
           <option v-for="type in api.REPORT_TYPES" :key="type.Id" :value="type.Id">
             {{ type.Name }}
@@ -112,11 +115,11 @@ async function attachSignedReport(event: Event) {
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 70px">#</th>
-            <th>Description</th>
-            <th>Run On</th>
-            <th>Run By</th>
-            <th class="table__actions">Downloads</th>
+            <th style="width: 70px">{{ t('common.id') }}</th>
+            <th>{{ t('report.history.description') }}</th>
+            <th>{{ t('report.history.runOn') }}</th>
+            <th>{{ t('report.history.runBy') }}</th>
+            <th class="table__actions">{{ t('report.history.downloads') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -131,7 +134,7 @@ async function attachSignedReport(event: Event) {
                 :disabled="!report.OriginalReport"
                 @click="save(report.OriginalReport, `report-${report.Id}.pdf`, 'application/pdf')"
               >
-                PDF
+                {{ t('report.history.pdf') }}
               </button>
               <button
                 class="btn btn--sm"
@@ -144,26 +147,26 @@ async function attachSignedReport(event: Event) {
                   )
                 "
               >
-                Spreadsheet
+                {{ t('report.history.spreadsheet') }}
               </button>
               <button
                 v-if="report.SignedReport"
                 class="btn btn--sm btn--info"
                 @click="save(report.SignedReport, `signed-${report.Id}.pdf`, 'application/pdf')"
               >
-                Signed
+                {{ t('report.history.signed') }}
               </button>
               <button v-else class="btn btn--sm" @click="pickSignedReport(report)">
-                Attach signed
+                {{ t('report.history.attachSigned') }}
               </button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+      <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
       <p v-else-if="reports.length === 0" class="empty">
-        No reports of this kind have been archived for this programme.
+        {{ t('report.history.empty') }}
       </p>
     </div>
   </div>

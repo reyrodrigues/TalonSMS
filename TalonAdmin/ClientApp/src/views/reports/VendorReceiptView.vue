@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import { downloadBlob } from '@/api/http'
 import type { Program, Vendor, VoucherTransactionRecord } from '@/api/types'
 import { useSessionStore } from '@/stores/session'
 import { useFormat } from '@/composables/useFormat'
 import { notify, notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * Reconciliation: confirm which of a vendor's redemptions will be paid, then produce the payment
@@ -54,7 +57,7 @@ onMounted(async () => {
     vendors.value = vendorList.filter(v => !v.ParentRecordId)
     programs.value = programList
   } catch (error) {
-    notifyError(error, 'Could not load the vendors and programmes.')
+    notifyError(error, t('report.receipt.listFailed'))
   }
 })
 
@@ -66,7 +69,7 @@ async function load() {
   try {
     records.value = await api.reconcilableTransactions(vendorId.value!, programId.value!)
   } catch (error) {
-    notifyError(error, 'Could not load the transactions.')
+    notifyError(error, t('report.receipt.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -85,10 +88,10 @@ async function reconcileAll() {
   busy.value = true
   try {
     await api.reconcile(payable.value, session.user.UserName, new Date().toISOString())
-    notify('success', `${payable.value.length} transactions reconciled.`)
+    notify('success', t('report.receipt.done', { count: payable.value.length }))
     await load()
   } catch (error) {
-    notifyError(error, 'Could not reconcile the transactions.')
+    notifyError(error, t('report.receipt.failed'))
   } finally {
     busy.value = false
   }
@@ -111,7 +114,7 @@ async function paymentSchedule() {
 
     downloadBlob(blob, `payment-schedule-${vendorId.value}.xlsx`)
   } catch (error) {
-    notifyError(error, 'Could not generate the payment schedule.')
+    notifyError(error, t('report.receipt.scheduleFailed'))
   } finally {
     busy.value = false
   }
@@ -119,14 +122,14 @@ async function paymentSchedule() {
 </script>
 
 <template>
-  <h1>Vendor Receipt</h1>
+  <h1>{{ t('report.receipt.title') }}</h1>
 
   <div class="panel">
     <div class="panel__body grid-2">
       <div class="field">
-        <label class="field__label" for="vendor">Vendor <span class="field__required">*</span></label>
+        <label class="field__label" for="vendor">{{ t('vendor.singular') }} <span class="field__required">*</span></label>
         <select id="vendor" v-model.number="vendorId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="item in vendors" :key="item.Id" :value="item.Id">
             {{ item.Name || `${item.FirstName ?? ''} ${item.LastName ?? ''}`.trim() }}
           </option>
@@ -134,45 +137,45 @@ async function paymentSchedule() {
       </div>
 
       <div class="field">
-        <label class="field__label" for="program">Program <span class="field__required">*</span></label>
+        <label class="field__label" for="program">{{ t('program.singular') }} <span class="field__required">*</span></label>
         <select id="program" v-model.number="programId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="item in programs" :key="item.Id" :value="item.Id">{{ item.Name }}</option>
         </select>
       </div>
 
       <div class="field">
-        <label class="field__label" for="start">Period Start</label>
+        <label class="field__label" for="start">{{ t('report.receipt.periodStart') }}</label>
         <input id="start" v-model="period.start" type="date" class="field__control" />
       </div>
 
       <div class="field">
-        <label class="field__label" for="end">Period End</label>
+        <label class="field__label" for="end">{{ t('report.receipt.periodEnd') }}</label>
         <input id="end" v-model="period.end" type="date" class="field__control" />
       </div>
     </div>
 
     <div class="panel__head">
       <button class="btn btn--primary" :disabled="!ready || loading" @click="load">
-        Load Transactions
+        {{ t('report.receipt.load') }}
       </button>
       <div class="panel__spacer" />
       <p class="muted" style="margin: 0; font-size: 13px">
-        The payment schedule covers finalized transactions reconciled inside the period above.
+        {{ t('report.receipt.periodHint') }}
       </p>
       <button class="btn btn--info" :disabled="!canSchedule || busy" @click="paymentSchedule">
-        Payment Schedule
+        {{ t('report.receipt.paymentSchedule') }}
       </button>
     </div>
   </div>
 
   <div v-if="records.length > 0" class="panel panel__head">
-    <input v-model="filter" class="input" placeholder="Filter by voucher or confirmation code"
+    <input v-model="filter" class="input" :placeholder="t('report.receipt.filter')"
            style="max-width: 420px" />
     <div class="panel__spacer" />
-    <strong>{{ payable.length }} to pay — {{ money(total) }}</strong>
+    <strong>{{ t('report.receipt.toPay', { count: payable.length, total: money(total) }) }}</strong>
     <button class="btn btn--primary" :disabled="payable.length === 0 || busy" @click="reconcileAll">
-      {{ busy ? 'Reconciling…' : 'Reconcile All' }}
+      {{ busy ? t('report.receipt.reconciling') : t('report.receipt.reconcileAll') }}
     </button>
   </div>
 
@@ -181,13 +184,13 @@ async function paymentSchedule() {
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 70px">#</th>
-            <th>Beneficiary</th>
-            <th>Voucher Code</th>
-            <th>Confirmation</th>
-            <th>Redeemed On</th>
-            <th class="table__numeric">Value</th>
-            <th class="table__actions">Status</th>
+            <th style="width: 70px">{{ t('common.id') }}</th>
+            <th>{{ t('beneficiary.singular') }}</th>
+            <th>{{ t('distribution.voucherCode') }}</th>
+            <th>{{ t('report.receipt.confirmation') }}</th>
+            <th>{{ t('report.receipt.redeemedOn') }}</th>
+            <th class="table__numeric">{{ t('common.value') }}</th>
+            <th class="table__actions">{{ t('common.status') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -202,18 +205,18 @@ async function paymentSchedule() {
             <td>{{ dateTime(record.CreatedOn) }}</td>
             <td class="table__numeric">{{ money(record.Value) }}</td>
             <td class="table__actions">
-              <span v-if="record.ReconciledOn" class="badge badge--success">Reconciled</span>
+              <span v-if="record.ReconciledOn" class="badge badge--success">{{ t('report.receipt.reconciled') }}</span>
               <button v-else class="btn btn--sm" @click="toggle(record)">
-                {{ excluded.has(record.Id) ? 'Include' : 'Hold back' }}
+                {{ excluded.has(record.Id) ? t('report.receipt.include') : t('report.receipt.holdBack') }}
               </button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+      <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
       <p v-else-if="records.length === 0" class="empty">
-        Pick a vendor and a programme, then load their outstanding transactions.
+        {{ t('report.receipt.empty') }}
       </p>
     </div>
   </div>

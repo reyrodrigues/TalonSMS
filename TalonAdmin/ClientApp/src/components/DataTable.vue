@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="T extends object">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 /**
  * Server-paged table. Replaces angular-datatables and ui-grid, which between them pulled in
@@ -30,8 +31,10 @@ const props = withDefaults(
     rowKey?: (row: T) => string | number
     emptyMessage?: string
   }>(),
-  { loading: false, emptyMessage: 'No records to show.' }
+  { loading: false }
 )
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'update:page', page: number): void
@@ -91,7 +94,7 @@ function cell(row: T, column: Column<T>): unknown {
                 {{ descending ? '▾' : '▴' }}
               </span>
             </th>
-            <th v-if="$slots.actions" class="table__actions">Actions</th>
+            <th v-if="$slots.actions" class="table__actions">{{ t('common.actions') }}</th>
           </tr>
         </thead>
 
@@ -111,13 +114,13 @@ function cell(row: T, column: Column<T>): unknown {
         </tbody>
       </table>
 
-      <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
-      <p v-else-if="rows.length === 0" class="empty">{{ emptyMessage }}</p>
+      <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
+      <p v-else-if="rows.length === 0" class="empty">{{ emptyMessage ?? t('common.noRecords') }}</p>
     </div>
 
     <div class="table-foot">
       <label class="row-gap">
-        Show
+        {{ t('table.show') }}
         <select
           class="input"
           style="width: auto"
@@ -126,23 +129,23 @@ function cell(row: T, column: Column<T>): unknown {
         >
           <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
         </select>
-        entries
+        {{ t('table.entries') }}
       </label>
 
-      <span v-if="total > 0">Showing {{ firstRow }} to {{ lastRow }} of {{ total }}</span>
+      <span v-if="total > 0">{{ t('table.showing', { first: firstRow, last: lastRow, total }) }}</span>
 
       <div class="table-foot__spacer" />
 
       <button class="btn btn--sm" :disabled="page === 0" @click="emit('update:page', page - 1)">
-        Previous
+        {{ t('table.previous') }}
       </button>
-      <span>Page {{ page + 1 }} of {{ pageCount }}</span>
+      <span>{{ t('table.page', { page: page + 1, count: pageCount }) }}</span>
       <button
         class="btn btn--sm"
         :disabled="page + 1 >= pageCount"
         @click="emit('update:page', page + 1)"
       >
-        Next
+        {{ t('table.next') }}
       </button>
     </div>
   </div>

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
-import { routeForState } from '@/router/stateMap'
+import { labelKeyForName, labelKeyForState, routeForState } from '@/router/stateMap'
 import type { MenuCategory, MenuLink } from '@/api/types'
+
+const { t } = useI18n()
 
 /**
  * The menu is data held on the server (MenuCategory -> MenuItem -> child link), and each child
@@ -34,6 +37,15 @@ const availableChildren = (group: MenuLink) =>
 const groupsWithLinks = (category: MenuCategory) =>
   (category.Items ?? []).filter(group => availableChildren(group).length > 0)
 
+/**
+ * The catalogue's wording for a seeded menu row, or the server's own text when it is not one of
+ * them — a deployment that renamed a menu item keeps its name.
+ */
+const label = (name: string | null | undefined, state?: string | null) => {
+  const key = labelKeyForState(state) ?? labelKeyForName(name)
+  return key ? t(key) : (name ?? '')
+}
+
 const visibleCategories = computed(() =>
   categories.value.filter(category => groupsWithLinks(category).length > 0)
 )
@@ -41,14 +53,14 @@ const visibleCategories = computed(() =>
 
 <template>
   <nav class="sidebar" aria-label="Main">
-    <RouterLink :to="{ name: 'dashboard' }" class="sidebar__brand">Talon</RouterLink>
+    <RouterLink :to="{ name: 'dashboard' }" class="sidebar__brand">{{ t('app.name') }}</RouterLink>
 
     <RouterLink :to="{ name: 'dashboard' }" class="sidebar__link" style="padding-left: 16px">
-      Dashboard
+      {{ t('dashboard.title') }}
     </RouterLink>
 
     <template v-for="category in visibleCategories" :key="category.Id">
-      <div class="sidebar__section">{{ category.Name }}</div>
+      <div class="sidebar__section">{{ label(category.Name) }}</div>
 
       <div v-for="group in groupsWithLinks(category)" :key="group.Id" class="sidebar__group">
         <button
@@ -56,7 +68,7 @@ const visibleCategories = computed(() =>
           :aria-expanded="expanded.has(group.Id)"
           @click="toggle(group)"
         >
-          <span>{{ group.Title }}</span>
+          <span>{{ label(group.Title) }}</span>
           <span class="sidebar__chevron" :class="{ 'sidebar__chevron--open': expanded.has(group.Id) }">
             ›
           </span>
@@ -69,7 +81,7 @@ const visibleCategories = computed(() =>
             :to="routeForState(child.State!)!"
             class="sidebar__link"
           >
-            {{ child.Title }}
+            {{ label(child.Title, child.State) }}
           </RouterLink>
         </div>
       </div>

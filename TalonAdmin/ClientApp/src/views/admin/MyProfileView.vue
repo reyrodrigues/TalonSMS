@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import { useSessionStore } from '@/stores/session'
 import { notifyError, notifySaved } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /** The signed-in user's own details. Organization and roles are not editable from here. */
 const session = useSessionStore()
@@ -20,14 +23,14 @@ const submitted = ref(false)
 
 const problems = computed(() => {
   const found: string[] = []
-  if (!model.value.UserName.trim()) found.push('A user name is required.')
-  if (!model.value.Email.trim()) found.push('An email address is required.')
-  if (!model.value.FullName.trim()) found.push('A full name is required.')
+  if (!model.value.UserName.trim()) found.push(t('user.problems.userName'))
+  if (!model.value.Email.trim()) found.push(t('user.problems.email'))
+  if (!model.value.FullName.trim()) found.push(t('user.problems.fullName'))
   if (model.value.Password && model.value.Password.length < 6) {
-    found.push('The new password must be at least 6 characters.')
+    found.push(t('profile.newPasswordLength'))
   }
   if (model.value.Password !== model.value.ConfirmPassword) {
-    found.push('The passwords do not match.')
+    found.push(t('user.problems.passwordMismatch'))
   }
   return found
 })
@@ -58,9 +61,9 @@ async function save() {
 
     // The header shows the name, so the cached user has to catch up.
     await session.loadSession()
-    notifySaved('Profile')
+    notifySaved(t('profile.title'))
   } catch (error) {
-    notifyError(error, 'Could not save your profile.')
+    notifyError(error, t('profile.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -68,12 +71,12 @@ async function save() {
 </script>
 
 <template>
-  <h1>My Profile</h1>
+  <h1>{{ t('profile.title') }}</h1>
 
   <form @submit.prevent="save">
     <div class="panel panel__head">
       <button class="btn btn--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save' }}
+        {{ saving ? t('action.saving') : t('action.save') }}
       </button>
     </div>
 
@@ -84,27 +87,27 @@ async function save() {
     <div class="panel">
       <div class="panel__body grid-2">
         <div class="field">
-          <label class="field__label" for="userName">User Name <span class="field__required">*</span></label>
+          <label class="field__label" for="userName">{{ t('login.userName') }} <span class="field__required">*</span></label>
           <input id="userName" v-model="model.UserName" class="field__control" autocomplete="username" />
         </div>
 
         <div class="field">
-          <label class="field__label" for="fullName">Full Name <span class="field__required">*</span></label>
+          <label class="field__label" for="fullName">{{ t('user.fullName') }} <span class="field__required">*</span></label>
           <input id="fullName" v-model="model.FullName" class="field__control" />
         </div>
 
         <div class="field">
-          <label class="field__label" for="email">Email <span class="field__required">*</span></label>
+          <label class="field__label" for="email">{{ t('user.email') }} <span class="field__required">*</span></label>
           <input id="email" v-model="model.Email" type="email" class="field__control" />
         </div>
 
         <div class="field">
-          <label class="field__label">Organization</label>
+          <label class="field__label">{{ t('user.organization') }}</label>
           <input class="field__control" :value="session.user?.Organization?.Name ?? ''" disabled />
         </div>
 
         <div class="field">
-          <label class="field__label" for="password">New Password</label>
+          <label class="field__label" for="password">{{ t('user.newPassword') }}</label>
           <input
             id="password"
             v-model="model.Password"
@@ -113,12 +116,12 @@ async function save() {
             autocomplete="new-password"
           />
           <p class="muted" style="font-size: 12px; margin: 4px 0 0">
-            Leave blank to keep your current password.
+            {{ t('profile.keepPassword') }}
           </p>
         </div>
 
         <div class="field">
-          <label class="field__label" for="confirm">Confirm New Password</label>
+          <label class="field__label" for="confirm">{{ t('user.confirmPassword') }}</label>
           <input
             id="confirm"
             v-model="model.ConfirmPassword"

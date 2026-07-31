@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import type { DashboardProgram } from '@/api/types'
 import LineChart from '@/components/LineChart.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useDashboardHub } from '@/composables/useDashboardHub'
 import { notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 const { money, number } = useFormat()
 
@@ -17,7 +20,7 @@ async function load(showSpinner = true) {
   try {
     programmes.value = await api.dashboard()
   } catch (error) {
-    notifyError(error, 'Could not load the dashboard.')
+    notifyError(error, t('dashboard.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -34,12 +37,12 @@ const chartFor = (programme: DashboardProgram) => ({
   labels: programme.UsedVsIssued.map(point => new Date(point[0]).toLocaleDateString()),
   series: [
     {
-      label: 'Distributed vouchers',
+      label: t('dashboard.distributedVouchers'),
       data: programme.UsedVsIssued.map(point => point[1]),
       color: '#23b7e5'
     },
     {
-      label: 'Used vouchers',
+      label: t('dashboard.usedVouchers'),
       data: programme.UsedVsIssued.map(point => point[3]),
       color: '#27c24c'
     }
@@ -48,16 +51,16 @@ const chartFor = (programme: DashboardProgram) => ({
 </script>
 
 <template>
-  <h1>Dashboard</h1>
+  <h1>{{ t('dashboard.title') }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <p v-else-if="programmes.length === 0" class="panel empty">
-    No programme has been distributed in this country yet.
+    {{ t('dashboard.nothingDistributed') }}
   </p>
 
   <section v-for="programme in programmes" :key="programme.Program.Id" class="panel">
-    <header class="programme__head">Program: {{ programme.Program.Name }}</header>
+    <header class="programme__head">{{ t('dashboard.program', { name: programme.Program.Name }) }}</header>
 
     <div class="panel__body">
       <LineChart v-bind="chartFor(programme)" />
@@ -65,27 +68,27 @@ const chartFor = (programme: DashboardProgram) => ({
       <div class="tiles" style="margin-top: 18px">
         <div class="tile">
           <div class="tile__value">{{ number(programme.Beneficiaries) }}</div>
-          <div class="tile__label">Total Beneficiaries</div>
+          <div class="tile__label">{{ t('dashboard.totalBeneficiaries') }}</div>
         </div>
         <div class="tile">
           <div class="tile__value">{{ number(programme.TotalVouchers) }}</div>
-          <div class="tile__label">Vouchers Issued</div>
+          <div class="tile__label">{{ t('dashboard.vouchersIssued') }}</div>
         </div>
         <div class="tile tile--dark">
           <div class="tile__value">{{ money(programme.IssuedAmount) }}</div>
-          <div class="tile__label">Issued</div>
+          <div class="tile__label">{{ t('dashboard.issued') }}</div>
         </div>
         <div class="tile">
           <div class="tile__value">{{ number(programme.UniqueBeneficiaries) }}</div>
-          <div class="tile__label">Beneficiaries Reached</div>
+          <div class="tile__label">{{ t('dashboard.beneficiariesReached') }}</div>
         </div>
         <div class="tile">
           <div class="tile__value">{{ number(programme.VouchersUsed) }}</div>
-          <div class="tile__label">Vouchers Used</div>
+          <div class="tile__label">{{ t('dashboard.vouchersUsed') }}</div>
         </div>
         <div class="tile tile--dark">
           <div class="tile__value">{{ money(programme.ClaimedAmount) }}</div>
-          <div class="tile__label">Claimed</div>
+          <div class="tile__label">{{ t('dashboard.claimed') }}</div>
         </div>
       </div>
 
@@ -93,13 +96,13 @@ const chartFor = (programme: DashboardProgram) => ({
         <table class="table">
           <thead>
             <tr>
-              <th>Distribution</th>
-              <th>Location</th>
-              <th class="table__numeric">Beneficiaries</th>
-              <th class="table__numeric">Vouchers Issued</th>
-              <th class="table__numeric">Vouchers Used</th>
-              <th class="table__numeric">Vendors</th>
-              <th class="table__numeric">Total Claimed</th>
+              <th>{{ t('dashboard.distribution') }}</th>
+              <th>{{ t('dashboard.location') }}</th>
+              <th class="table__numeric">{{ t('dashboard.beneficiaries') }}</th>
+              <th class="table__numeric">{{ t('dashboard.vouchersIssued') }}</th>
+              <th class="table__numeric">{{ t('dashboard.vouchersUsed') }}</th>
+              <th class="table__numeric">{{ t('dashboard.vendors') }}</th>
+              <th class="table__numeric">{{ t('dashboard.totalClaimed') }}</th>
             </tr>
           </thead>
           <tbody>

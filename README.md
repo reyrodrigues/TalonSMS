@@ -19,6 +19,10 @@ it for real.
 > client, which has been removed — see [migration/VUE-PORT.md](migration/VUE-PORT.md) for how the
 > client is built and what it still lacks.
 >
+> [docs/TRANSLATION.md](docs/TRANSLATION.md) covers the interface languages — English, Arabic,
+> French and Spanish — right-to-left layout, and how to add or correct one. **The non-English
+> catalogues have not been reviewed by a native speaker; read that page before deploying in one.**
+>
 > [docs/MESSAGING.md](docs/MESSAGING.md) covers how voucher codes reach beneficiaries and how
 > redemptions come back — the outbound queue, the per-country channel chain, the delivery log, and
 > the three channels: Clickatell, a phone acting as an SMS gateway, and a Telegram bot.

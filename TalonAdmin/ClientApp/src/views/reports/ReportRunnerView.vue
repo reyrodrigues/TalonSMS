@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import * as api from '@/api/talon'
 import { downloadBlob } from '@/api/http'
 import type { ReportSpec } from './spec'
 import { useSessionStore } from '@/stores/session'
 import { notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /** Renders whichever report spec the route carries in `meta.report`. */
 const route = useRoute()
@@ -53,7 +56,7 @@ onMounted(async () => {
       .filter(v => !v.ParentRecordId)
       .map(v => ({ Id: v.Id, Name: v.Name ?? `${v.FirstName ?? ''} ${v.LastName ?? ''}`.trim() }))
   } catch (error) {
-    notifyError(error, 'Could not load the report options.')
+    notifyError(error, t('report.optionsFailed'))
   } finally {
     loading.value = false
   }
@@ -76,7 +79,7 @@ async function run() {
 
     downloadBlob(blob, `${spec.fileName}.pdf`)
   } catch (error) {
-    notifyError(error, 'The report could not be generated.')
+    notifyError(error, t('report.failed'))
   } finally {
     running.value = false
   }
@@ -84,56 +87,56 @@ async function run() {
 </script>
 
 <template>
-  <h1>{{ spec.title }}</h1>
+  <h1>{{ t(spec.title) }}</h1>
 
-  <p v-if="loading" class="empty"><span class="spinner" aria-label="Loading" /></p>
+  <p v-if="loading" class="empty"><span class="spinner" :aria-label="t('common.loading')" /></p>
 
   <form v-else class="panel" @submit.prevent="run">
     <div class="panel__body grid-2">
       <div v-if="spec.selectors.includes('program')" class="field">
         <label class="field__label" for="program">
-          Program <span v-if="required === 'program'" class="field__required">*</span>
+          {{ t('program.singular') }} <span v-if="required === 'program'" class="field__required">*</span>
         </label>
         <select id="program" v-model.number="selection.ProgramId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="item in programs" :key="item.Id" :value="item.Id">{{ item.Name }}</option>
         </select>
       </div>
 
       <div v-if="spec.selectors.includes('distribution')" class="field">
         <label class="field__label" for="distribution">
-          Distribution <span v-if="required === 'distribution'" class="field__required">*</span>
+          {{ t('distribution.singular') }} <span v-if="required === 'distribution'" class="field__required">*</span>
         </label>
         <select id="distribution" v-model.number="selection.DistributionId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="item in distributions" :key="item.Id" :value="item.Id">{{ item.Label }}</option>
         </select>
       </div>
 
       <div v-if="spec.selectors.includes('vendor')" class="field">
         <label class="field__label" for="vendor">
-          Vendor <span v-if="required === 'vendor'" class="field__required">*</span>
+          {{ t('vendor.singular') }} <span v-if="required === 'vendor'" class="field__required">*</span>
         </label>
         <select id="vendor" v-model.number="selection.VendorId" class="field__control">
-          <option :value="null">—</option>
+          <option :value="null">{{ t('common.none') }}</option>
           <option v-for="item in vendors" :key="item.Id" :value="item.Id">{{ item.Name }}</option>
         </select>
       </div>
 
       <div class="field">
-        <label class="field__label" for="paper">Paper Size</label>
+        <label class="field__label" for="paper">{{ t('report.paperSize') }}</label>
         <select id="paper" v-model="paperSize" class="field__control">
           <option value="A4">A4</option>
-          <option value="Letter">Letter</option>
+          <option value="Letter">{{ t('report.letter') }}</option>
         </select>
       </div>
     </div>
 
     <div class="panel__head">
-      <p class="muted" style="margin: 0; font-size: 13px">{{ spec.description }}</p>
+      <p class="muted" style="margin: 0; font-size: 13px">{{ t(spec.description) }}</p>
       <div class="panel__spacer" />
       <button class="btn btn--primary" type="submit" :disabled="!ready || running">
-        {{ running ? 'Generating…' : 'Download PDF' }}
+        {{ running ? t('report.generating') : t('report.downloadPdf') }}
       </button>
     </div>
   </form>

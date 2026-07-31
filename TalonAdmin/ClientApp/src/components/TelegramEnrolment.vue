@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as api from '@/api/talon'
 import { notify, notifyError } from '@/composables/useToast'
+
+const { t } = useI18n()
 
 /**
  * A Telegram bot cannot message anyone who has not written to it first, so every recipient has to
@@ -41,28 +44,28 @@ async function copy() {
 
   try {
     await navigator.clipboard.writeText(link.value)
-    notify('success', 'Enrolment link copied.')
+    notify('success', t('telegram.copied'))
   } catch (error) {
-    notifyError(error, 'Could not copy the link.')
+    notifyError(error, t('telegram.copyFailed'))
   }
 }
 </script>
 
 <template>
   <div v-if="link" class="field" style="grid-column: 1 / -1">
-    <label class="field__label">Telegram enrolment</label>
+    <label class="field__label">{{ t('telegram.enrolment') }}</label>
 
     <p v-if="enrolled" class="muted" style="margin: 0 0 6px; font-size: 13px">
-      <span class="badge badge--success">Enrolled</span>
-      This household already receives voucher codes on Telegram.
+      <span class="badge badge--success">{{ t('telegram.enrolled') }}</span>
+      {{ t('telegram.enrolledHint') }}
     </p>
     <p v-else class="muted" style="margin: 0 0 6px; font-size: 13px">
-      Not enrolled yet — until they open this link and tap Start, the bot cannot message them.
+      {{ t('telegram.notEnrolledHint') }}
     </p>
 
     <div class="field__prefix">
       <input class="field__control" :value="link" readonly @focus="($event.target as HTMLInputElement).select()" />
-      <button class="btn" type="button" :disabled="loading" @click="copy">Copy</button>
+      <button class="btn" type="button" :disabled="loading" @click="copy">{{ t('action.copy') }}</button>
     </div>
   </div>
 </template>

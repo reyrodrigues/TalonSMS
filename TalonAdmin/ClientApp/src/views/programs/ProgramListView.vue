@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import * as breeze from '@/api/breeze'
 import type { Program } from '@/api/types'
 import DataTable, { type Column } from '@/components/DataTable.vue'
 import { useDataSource } from '@/composables/useDataSource'
 import { useSessionStore } from '@/stores/session'
+
+const { t } = useI18n()
 
 const session = useSessionStore()
 const router = useRouter()
@@ -24,27 +27,27 @@ const source = useDataSource<Program>(
 )
 
 const columns: Column<Program>[] = [
-  { key: 'Id', label: '#', width: '80px' },
-  { key: 'Name', label: 'Name' },
-  { key: 'FundCodes', label: 'Fund Codes' },
-  { key: 'DistributionMechanism', label: 'Mechanism' }
+  { key: 'Id', label: t('common.id'), width: '80px' },
+  { key: 'Name', label: t('common.name') },
+  { key: 'FundCodes', label: t('program.fundCodes') },
+  { key: 'DistributionMechanism', label: t('program.mechanism') }
 ]
 
 onMounted(source.refresh)
 </script>
 
 <template>
-  <h1>Programs</h1>
+  <h1>{{ t('program.title') }}</h1>
 
   <div class="panel panel__head">
-    <input v-model="source.search.value" class="input" placeholder="Search" style="max-width: 420px" />
+    <input v-model="source.search.value" class="input" :placeholder="t('action.search')" style="max-width: 420px" />
     <div class="panel__spacer" />
     <button
       v-if="session.can('Create Programs')"
       class="btn btn--primary"
       @click="router.push({ name: 'program-create' })"
     >
-      New
+      {{ t('action.new') }}
     </button>
   </div>
 
@@ -57,7 +60,7 @@ onMounted(source.refresh)
     :sort="source.sort.value"
     :descending="source.descending.value"
     :loading="source.loading.value"
-    empty-message="No programmes have been defined for this country."
+    :empty-message="t('program.empty')"
     @sort="source.toggleSort"
   >
     <template #[`cell:DistributionMechanism`]="{ row }">
@@ -66,7 +69,7 @@ onMounted(source.refresh)
 
     <template #actions="{ row }">
       <RouterLink class="btn btn--sm btn--info" :to="{ name: 'program-edit', params: { id: row.Id } }">
-        Open
+        {{ t('action.open') }}
       </RouterLink>
     </template>
   </DataTable>

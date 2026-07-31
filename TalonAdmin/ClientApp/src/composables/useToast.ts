@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { t } from '@/i18n'
 
 /** Replaces angularjs-toaster. Module-level state so any module can raise a notification. */
 
@@ -27,9 +28,10 @@ export const dismiss = (id: number) => {
   toasts.value = toasts.value.filter(t => t.id !== id)
 }
 
-export const notifySaved = (what: string) => notify('success', `${what} saved.`)
+export const notifySaved = (what: string) => notify('success', t('toast.saved', { what }))
 
-export function notifyError(error: unknown, fallback = 'Something went wrong.') {
-  const message = error instanceof Error ? error.message : String(error ?? fallback)
-  notify('error', message.slice(0, 300) || fallback, 8000)
+export function notifyError(error: unknown, fallback?: string) {
+  const fallbackText = fallback ?? t('toast.somethingWentWrong')
+  const message = error instanceof Error ? error.message : String(error ?? fallbackText)
+  notify('error', message.slice(0, 300) || fallbackText, 8000)
 }
