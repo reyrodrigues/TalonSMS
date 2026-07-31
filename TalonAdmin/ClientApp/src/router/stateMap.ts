@@ -29,6 +29,7 @@ const ROUTE_BY_STATE: Record<string, RouteLocationRaw> = {
   'country-admin.transaction.transaction-log': { name: 'transaction-log' },
   'country-admin.transaction.quarantine': { name: 'quarantine' },
   'country-admin.transaction.card-load-log': { name: 'card-loads' },
+  'country-admin.transaction.message-log': { name: 'message-log' },
   'country-admin.locations.list': { name: 'locations' },
   'country-admin.voucher-types.list': { name: 'voucher-types' },
   'country-admin.users.my-profile': { name: 'my-profile' },

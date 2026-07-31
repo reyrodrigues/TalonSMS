@@ -59,19 +59,22 @@ namespace TalonAdmin.Controllers.Api
         private readonly IHubContext<DashboardHub> dashboardHub;
         private readonly IWebHostEnvironment environment;
         private readonly IConfiguration configuration;
+        private readonly Messaging.IOutboundMessageQueue outboundMessages;
 
         public VoucherWorkflowController(
             Models.Vouchers.Context ctx,
             Models.Admin.AdminContext adminContext,
             IHubContext<DashboardHub> dashboardHub,
             IWebHostEnvironment environment,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            Messaging.IOutboundMessageQueue outboundMessages)
         {
             this.ctx = ctx;
             this.adminContext = adminContext;
             this.dashboardHub = dashboardHub;
             this.environment = environment;
             this.configuration = configuration;
+            this.outboundMessages = outboundMessages;
         }
 
         [HttpPost("AssignVoucherBook")]
@@ -793,100 +796,27 @@ namespace TalonAdmin.Controllers.Api
             });
         }
 
+        /// <summary>
+        /// Hands a message to the outbound queue.
+        /// </summary>
+        /// <remarks>
+        /// This used to be a hundred-line if/else over three gateways, run inside a
+        /// <c>Task.Factory.StartNew</c> that nothing awaited, with every failure caught and
+        /// discarded. A beneficiary who never received their voucher code left no trace. The
+        /// channel is chosen per country by <see cref="Messaging.MessageChannelRegistry"/> now, and
+        /// the queue persists the message before anything is attempted, so a restart resumes it and
+        /// a failure is a row staff can see rather than silence.
+        /// </remarks>
         private void SendAsyncMessage(string to, string name, string message, int countryId, int? organizationId = null)
         {
-            string senderName = "Talon";
-            Models.Admin.Country country = null;
-
-            try
-            {
-
-                if (organizationId != null)
-                {
-                    senderName = adminContext.Organizations.Where(o => o.Id == organizationId.Value).First().Abbreviation;
-                }
-
-                country = adminContext.Countries.Include("Settings")
-                    .Include("Settings.PropertyCollection")
-                    .Where(c => c.Id == countryId).FirstOrDefault();
-            }
-            catch
-            {
-            }
-
-            if (country == null)
-                return;
-
-            try
-            {
-                if (country.Settings.SmsBackendType == 0)
-                {
-                    // Sending through RSMS
-                    var baseUrl = country.Settings.ServiceUrl;
-                    var user = country.Settings.ServiceUser;
-                    var password = country.Settings.ServicePassword;
-
-                    if (String.IsNullOrEmpty(baseUrl) || String.IsNullOrEmpty(user) || String.IsNullOrEmpty(password))
-                    {
-                        // NOTE: RescueSMSClient no longer has a parameterless constructor that falls back to
-                        // ConfigurationManager.AppSettings, so the same fallback is read from configuration here.
-                        baseUrl = configuration["RescueSMS:URL"];
-                        user = configuration["RescueSMS:User"];
-                        password = configuration["RescueSMS:Password"];
-                    }
-
-#pragma warning disable 4014
-                    Task.Factory.StartNew(() =>
-                    {
-                        try
-                        {
-                            var client = new Utils.RescueSMSClient(baseUrl, user, password);
-
-                            client.CreateContactAndSendMessageAsync(
-                                name,
-                                to,
-                                message,
-                                ""
-                             ).ConfigureAwait(false);
-                        }
-                        catch { }
-                    }).ConfigureAwait(false);
-#pragma warning restore 4014
-                }
-                else if (country.Settings.SmsBackendType == 1)
-                {
-                    // Sending through TurboSMS
-                    var service = new Soap.TurboSMS.Service();
-                    var cookieJar = new CookieContainer();
-                    service.CookieContainer = cookieJar;
-
-                    var signature = country.Settings.PropertyCollection.Where(s => s.Name == "TurboSMS Signature").Select(s => s.Value).FirstOrDefault() ?? "Talon";
-
-                    var authResponse = service.Auth(country.Settings.ServiceUser, country.Settings.ServicePassword);
-                    var result = service.SendSMS(signature, to, message, "");
-                }
-                else if (country.Settings.SmsBackendType == 2)
-                {
-                    // Clickatell
-                    var isUnicode = message.Any(c => c > 255);
-
-                    if (isUnicode)
-                    {
-                        var bytes = System.Text.Encoding.GetEncoding("UTF-16BE").GetBytes(message);
-                        message = string.Concat(bytes.Select(b => b.ToString("X2")));
-                    }
-
-                    var urlCall = String.Format(country.Settings.ServiceUrl + (isUnicode ? "&unicode=1" : ""), to, message);
-                    HttpClient client = new HttpClient();
-
-                    var result = client.GetAsync(urlCall).Result;
-                }
-
-            }
-            catch
-            {
-            }
+            // Enqueuing is a database write on the request's own context, so this stays synchronous
+            // to match its callers; the send itself happens on the dispatcher.
+            outboundMessages
+                .EnqueueAsync(to, name, message, countryId, organizationId ?? 0)
+                .GetAwaiter()
+                .GetResult();
         }
+
         #endregion
     }
 }

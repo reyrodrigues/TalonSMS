@@ -132,10 +132,19 @@ namespace TalonAdmin.Models.Admin
         public CountrySettings Settings { get; set; }
     }
 
+    /// <summary>
+    /// Which messaging channel a country sends through. The value is stored on
+    /// <see cref="CountrySettings.SmsBackendType"/> and resolved by
+    /// <c>MessageChannelRegistry.KeyFor</c>.
+    /// </summary>
+    /// <remarks>
+    /// The RescueSMS and TurboSMS gateways were removed; only Clickatell is carried forward.
+    /// Clickatell takes the value 2 it had in the old dispatch, so a country already pointed at it
+    /// keeps working. Countries left on a removed backend resolve to no channel at all, which
+    /// surfaces in the delivery log as a message staff can act on rather than as silence.
+    /// </remarks>
     public enum SmsBackendType
     {
-        RescueSMS = 1,
-        Twilio = 2,
-        CustomRest = 3
+        Clickatell = 2
     }
 }

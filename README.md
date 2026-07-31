@@ -13,6 +13,9 @@ vendor client, and generates spreadsheet and PDF reports.
 > client, which has been removed — see [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the client is
 > built and what it still lacks.
 >
+> [docs/MESSAGING.md](docs/MESSAGING.md) covers how voucher codes reach beneficiaries: the outbound
+> queue, retries, the delivery log, and how to add a channel.
+>
 > [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
 > country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
 >
@@ -91,9 +94,8 @@ it is slow to start; the SQLite path above is the faster loop for day-to-day wor
 | `external-services` | WireMock standing in for every outbound integration | `localhost:8081` |
 | `app` | The application (only with `--profile app`) | `localhost:5080` |
 
-`external-services` mocks the SMS gateways (RescueSMS, TurboSMS, Clickatell) and the staff
-directory used for fallback authentication, so a local run never sends a real message or reaches a
-real provider. Stubs live in `docker/wiremock/mappings/`; inspect traffic at
+`external-services` mocks the Clickatell SMS gateway and the staff directory used for fallback
+authentication, so a local run never sends a real message or reaches a real provider. Stubs live in `docker/wiremock/mappings/`; inspect traffic at
 <http://localhost:8081/__admin/requests>.
 
 ## Tests
@@ -115,7 +117,8 @@ rather than on opaque PDF bytes.
 | `BreezeContractTests` | The Breeze 7 wire contract the client speaks: property casing, `$type` discriminators, `take`/`skip`, `inlineCount`, `where`, `expand`, and save round-trips |
 | `AuthenticationTests` | `/Token`'s OAuth shape, the `Token`/`Bearer`/`Basic` schemes, 401-not-302, vendor sign-in, and the deserialization type binder |
 | `ReportingAndExportTests` | Every report type, the QR test sheet, Excel export/import, and the EPPlus empty-table case |
-| `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links) and the action grants the UI gates buttons on |
+| `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links), the action grants the UI gates buttons on, and the four-row bundle that creating a country writes |
+| `OutboundMessagingTests` | The messaging queue: a message is persisted before it is attempted, transient failures retry with backoff, rejections do not, and an unconfigured country fails visibly |
 
 Most of these are regression guards for specific defects this migration hit — each one was verified
 to fail when its fix is reverted, so they are not just documentation. `MIGRATION.md` explains why
@@ -136,7 +139,9 @@ variables (`__` separates nested keys, e.g. `Database__Provider`).
 | `Database:SeedAdminPassword` | Password for the seeded `admin` account |
 | `Jwt:SigningKey` | **Required outside development.** HMAC key for access tokens |
 | `Jwt:AccessTokenLifetimeDays` | Token lifetime (default 14) |
-| `RescueSMS:URL` / `:User` / `:Password` | Fallback SMS gateway credentials |
+| `Messaging:PollIntervalSeconds` | How often the outbound queue is drained (default 5) |
+| `Messaging:BatchSize` | Messages dispatched per pass (default 25) |
+| `Messaging:MaxAttempts` | Attempts before a message is marked failed (default 5) |
 | `ActiveDirectory:Enabled` | Enable directory fallback for sign-in |
 | `Epplus:LicenseKey` | Commercial EPPlus key, if applicable (see below) |
 

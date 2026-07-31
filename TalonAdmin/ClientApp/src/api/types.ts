@@ -234,6 +234,23 @@ export interface ApplicationUser {
   Organization: Organization | null
 }
 
+/** 0 pending, 1 sent, 2 failed — see OutboundMessageState on the server. */
+export interface OutboundMessage extends Entity {
+  To: string | null
+  RecipientName: string | null
+  Body: string | null
+  ChannelKey: string | null
+  State: number
+  Attempts: number
+  CreatedOn: string
+  NextAttemptOn: string
+  SentOn: string | null
+  LastError: string | null
+  ProviderMessageId: string | null
+  CountryId: number
+  OrganizationId: number
+}
+
 export interface CountrySettingsProperty {
   SettingsId: number
   Name: string

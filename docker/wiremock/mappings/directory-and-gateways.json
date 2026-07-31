@@ -8,8 +8,12 @@
       },
       "response": {
         "status": 200,
-        "headers": { "Content-Type": "application/json" },
-        "jsonBody": { "result": false }
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "result": false
+        }
       }
     },
     {
@@ -20,50 +24,10 @@
       },
       "response": {
         "status": 200,
-        "headers": { "Content-Type": "text/plain" },
-        "body": "ID: 00000000000000000000000000000000"
-      }
-    },
-    {
-      "name": "TurboSMS - Auth",
-      "request": {
-        "method": "POST",
-        "urlPath": "/turbosms/soap.html",
-        "headers": { "SOAPAction": { "contains": "/Auth" } }
-      },
-      "response": {
-        "status": 200,
         "headers": {
-          "Content-Type": "text/xml; charset=utf-8",
-          "Set-Cookie": "TurboSMSSession=local-development"
+          "Content-Type": "text/plain"
         },
-        "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><AuthResponse xmlns=\"http://turbosms.in.ua/api/Turbo\"><AuthResult>Успешно</AuthResult></AuthResponse></soap:Body></soap:Envelope>"
-      }
-    },
-    {
-      "name": "TurboSMS - SendSMS",
-      "request": {
-        "method": "POST",
-        "urlPath": "/turbosms/soap.html",
-        "headers": { "SOAPAction": { "contains": "/SendSMS" } }
-      },
-      "response": {
-        "status": 200,
-        "headers": { "Content-Type": "text/xml; charset=utf-8" },
-        "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><SendSMSResponse xmlns=\"http://turbosms.in.ua/api/Turbo\"><SendSMSResult><string>Сообщения успешно отправлены</string><string>00000000-0000-0000-0000-000000000000</string></SendSMSResult></SendSMSResponse></soap:Body></soap:Envelope>"
-      }
-    },
-    {
-      "name": "TurboSMS - GetCreditBalance",
-      "request": {
-        "method": "POST",
-        "urlPath": "/turbosms/soap.html",
-        "headers": { "SOAPAction": { "contains": "/GetCreditBalance" } }
-      },
-      "response": {
-        "status": 200,
-        "headers": { "Content-Type": "text/xml; charset=utf-8" },
-        "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><GetCreditBalanceResponse xmlns=\"http://turbosms.in.ua/api/Turbo\"><GetCreditBalanceResult>1000</GetCreditBalanceResult></GetCreditBalanceResponse></soap:Body></soap:Envelope>"
+        "body": "ID: 00000000000000000000000000000000"
       }
     }
   ]

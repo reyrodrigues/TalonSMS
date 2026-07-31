@@ -4,6 +4,7 @@ import type { ResourceDef, SelectOption } from './resource'
 import type {
   BeneficiaryGroup,
   CardLoad,
+  OutboundMessage,
   Country,
   Location,
   MenuCategory,
@@ -245,6 +246,39 @@ export const quarantine: ResourceDef<TransactionLogItem> = {
   emptyMessage: 'Nothing is in quarantine.'
 }
 
+/** Mirrors OutboundMessageState on the server. */
+const MESSAGE_STATE: Record<number, string> = { 0: 'Pending', 1: 'Sent', 2: 'Failed' }
+
+const localTime = (value: string | null | undefined) =>
+  value ? new Date(value).toLocaleString() : ''
+
+/**
+ * The delivery log. Messages used to be sent from an unawaited task with every failure discarded,
+ * so a beneficiary who never got their voucher code left no trace; this is where that now shows up.
+ */
+export const outboundMessages: ResourceDef<OutboundMessage> = {
+  name: 'message-log',
+  title: 'Message Delivery Log',
+  singular: 'Message',
+  context: 'EVM',
+  typeName: 'OutboundMessage',
+  resource: 'OutboundMessages',
+  columns: [
+    { key: 'Id', label: '#', width: '70px' },
+    { key: 'CreatedOn', label: 'Queued', value: row => localTime(row.CreatedOn) },
+    { key: 'To', label: 'Recipient' },
+    { key: 'RecipientName', label: 'Name' },
+    { key: 'State', label: 'Status', value: row => MESSAGE_STATE[row.State] ?? row.State },
+    { key: 'Attempts', label: 'Attempts', numeric: true },
+    { key: 'LastError', label: 'Last Error' }
+  ],
+  fields: [],
+  defaultSort: 'Id',
+  readOnly: true,
+  searchFields: ['To', 'RecipientName', 'Body', 'LastError'],
+  emptyMessage: 'No messages have been sent from this country yet.'
+}
+
 export const cardLoads: ResourceDef<CardLoad> = {
   name: 'card-loads',
   title: 'Card Load Log',
@@ -279,7 +313,8 @@ export const RESOURCES: ResourceDef<never>[] = [
   menuItems,
   transactionLog,
   quarantine,
-  cardLoads
+  cardLoads,
+  outboundMessages
 ] as unknown as ResourceDef<never>[]
 
 export { locationOptions, vendorTypeOptions, voucherTypeOptions, organizationOptions, breeze }

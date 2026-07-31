@@ -7,12 +7,14 @@ import { notifyError, notifySaved } from '@/composables/useToast'
 /**
  * Per-country SMS configuration: which gateway to use, its credentials, and the message templates
  * the voucher workflow sends. Every country the organization operates in is edited from here.
+ *
+ * `SMS_BACKENDS` is the contract with `SmsBackendType` on the server. The list used to be wrong in
+ * both directions: it offered gateways that were never implemented, and its numbering disagreed
+ * with the dispatch, so picking "RescueSMS" actually configured TurboSMS. RescueSMS and TurboSMS
+ * have since been removed; Clickatell keeps the value it already had.
  */
-const SMS_BACKENDS = [
-  { value: 1, label: 'RescueSMS' },
-  { value: 2, label: 'Twilio' },
-  { value: 3, label: 'Custom REST' }
-]
+const SMS_BACKENDS = [{ value: 2, label: 'Clickatell' }]
+const DEFAULT_BACKEND = SMS_BACKENDS[0].value
 
 /** The template names the server looks up when it builds an outbound message. */
 const TEMPLATES = [
@@ -31,7 +33,7 @@ const TEMPLATES = [
 
 const rows = ref<OrganizationCountry[]>([])
 const selectedId = ref<number | null>(null)
-const gateway = ref({ SmsBackendType: 1, ServiceUrl: '', ServiceUser: '', ServicePassword: '' })
+const gateway = ref({ SmsBackendType: DEFAULT_BACKEND, ServiceUrl: '', ServiceUser: '', ServicePassword: '' })
 const templates = ref<Record<string, string>>({})
 const present = ref(new Set<string>())
 
@@ -56,7 +58,7 @@ function select(id: number | null) {
   const settings = rows.value.find(r => r.Id === id)?.Settings
 
   gateway.value = {
-    SmsBackendType: settings?.SmsBackendType ?? 1,
+    SmsBackendType: settings?.SmsBackendType ?? DEFAULT_BACKEND,
     ServiceUrl: settings?.ServiceUrl ?? '',
     ServiceUser: settings?.ServiceUser ?? '',
     ServicePassword: settings?.ServicePassword ?? ''
@@ -141,6 +143,10 @@ async function save() {
         <div class="field">
           <label class="field__label" for="url">SMS Service URL</label>
           <input id="url" v-model="gateway.ServiceUrl" class="field__control" />
+          <p class="muted" style="font-size: 12px; margin: 4px 0 0">
+            A URL template: <code>{0}</code> is the recipient, <code>{1}</code> the message.
+            Nothing is sent until this is set.
+          </p>
         </div>
 
         <div class="field">

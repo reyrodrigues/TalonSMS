@@ -18,6 +18,8 @@ using Newtonsoft.Json.Serialization;
 using TalonAdmin.Auth;
 using TalonAdmin.Data;
 using TalonAdmin.Hubs;
+using TalonAdmin.Messaging;
+using TalonAdmin.Messaging.Channels;
 using TalonAdmin.Models.Admin;
 using TalonAdmin.Reporting;
 
@@ -112,6 +114,17 @@ builder.Services.AddScoped<JwtTokenIssuer>();
 builder.Services.AddScoped<RazorViewRenderer>();
 builder.Services.AddSingleton<IPdfRenderer, ChromiumPdfRenderer>();
 builder.Services.AddScoped<DatabaseInitializer>();
+
+// Messaging. Every channel registers as an IMessageChannel and the registry picks between them per
+// country, so adding one does not mean touching the workflow that sends. The dispatcher runs the
+// queue in the background; enqueuing is only a database write, so nothing user-facing waits on a
+// gateway or fails because one is down.
+builder.Services.AddHttpClient<ClickatellChannel>()
+    .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<IMessageChannel>(sp => sp.GetRequiredService<ClickatellChannel>());
+builder.Services.AddScoped<MessageChannelRegistry>();
+builder.Services.AddScoped<IOutboundMessageQueue, OutboundMessageQueue>();
+builder.Services.AddHostedService<OutboundMessageDispatcher>();
 
 builder.Services
     // AddIdentity above points DefaultAuthenticateScheme/DefaultChallengeScheme at its cookie

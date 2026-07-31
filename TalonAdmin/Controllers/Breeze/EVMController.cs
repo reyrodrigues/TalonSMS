@@ -112,6 +112,18 @@ namespace TalonAdmin.Controllers.Breeze
             return Db.MessageLogs;
         }
 
+        /// <summary>
+        /// The outbound delivery log. This is the screen that makes a failed voucher message
+        /// visible; before the messaging rewrite a send that failed left no trace at all.
+        /// </summary>
+        [HttpGet]
+        public IQueryable<Models.Vouchers.OutboundMessage> OutboundMessages()
+        {
+            return Db.OutboundMessages
+                .FilterCountry(this)
+                .FilterOrganization(this);
+        }
+
         [HttpGet]
         public IQueryable<Models.Vouchers.AuditLogItem> AuditLogItems()
         {

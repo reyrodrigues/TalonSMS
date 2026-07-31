@@ -117,7 +117,7 @@ namespace TalonAdmin.Data
 
             var settings = new CountrySettings
             {
-                SmsBackendType = (int)Models.Admin.SmsBackendType.RescueSMS
+                SmsBackendType = (int)Models.Admin.SmsBackendType.Clickatell
             };
             _adminContext.CountrySettings.Add(settings);
             await _adminContext.SaveChangesAsync();
@@ -483,7 +483,8 @@ namespace TalonAdmin.Data
                     {
                         new MenuLinkSeed("Transaction Log", "country-admin.transaction.transaction-log"),
                         new MenuLinkSeed("Quarantine", "country-admin.transaction.quarantine"),
-                        new MenuLinkSeed("Card Load Log", "country-admin.transaction.card-load-log")
+                        new MenuLinkSeed("Card Load Log", "country-admin.transaction.card-load-log"),
+                        new MenuLinkSeed("Message Delivery Log", "country-admin.transaction.message-log")
                     }),
                     new MenuGroupSeed("Reference Data", "fa fa-map-marker", new[]
                     {
