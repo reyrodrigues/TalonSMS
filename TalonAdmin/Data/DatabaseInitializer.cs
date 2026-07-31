@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TalonAdmin.Models.Admin;
@@ -53,8 +55,8 @@ namespace TalonAdmin.Data
                 return;
             }
 
-            await _adminContext.Database.EnsureCreatedAsync();
-            await _voucherContext.Database.EnsureCreatedAsync();
+            await EnsureSchemaAsync(_adminContext);
+            await EnsureSchemaAsync(_voucherContext);
 
             await SeedRolesAsync();
             var organization = await SeedOrganizationAsync();
@@ -69,6 +71,68 @@ namespace TalonAdmin.Data
             }
 
             _logger.LogInformation("Local database ready.");
+        }
+
+        /// <summary>
+        /// Creates the database if it is absent, then this context's tables if they are absent.
+        /// </summary>
+        /// <remarks>
+        /// This replaces EnsureCreatedAsync because that method reasons about the *database* rather
+        /// than the context: it creates the schema only when the database did not already exist. The
+        /// two contexts are conventionally given separate databases, but a managed Postgres free
+        /// tier hands out exactly one, and pointing both at it made the second call a no-op — the
+        /// admin schema was created and the voucher schema silently was not, so the first query for
+        /// a Program failed with 'relation "Programs" does not exist'. Asking per context instead
+        /// makes one shared database and two separate databases behave the same way.
+        /// </remarks>
+        private static async Task EnsureSchemaAsync(DbContext context)
+        {
+            var creator = context.Database.GetService<IRelationalDatabaseCreator>();
+
+            if (!await creator.ExistsAsync())
+            {
+                await creator.CreateAsync();
+            }
+
+            if (!await TablesExistAsync(context))
+            {
+                await creator.CreateTablesAsync();
+            }
+        }
+
+        /// <summary>
+        /// Reports whether this context's own tables are present, which is the question
+        /// IRelationalDatabaseCreator.HasTablesAsync does not answer — it reports whether the
+        /// database holds any tables at all, so a database shared with the other context would
+        /// always look populated.
+        /// </summary>
+        /// <remarks>
+        /// This reads the catalogue rather than probing the table with a SELECT that fails when it is
+        /// absent. Both approaches work, but a failed statement is logged at error level by EF's
+        /// command logger, and the case that triggers it is the ordinary one: Neon and Supabase hand
+        /// out a database that already exists and is empty, so a first boot against either would
+        /// otherwise open with what looks like a stack of database errors.
+        /// </remarks>
+        private static async Task<bool> TablesExistAsync(DbContext context)
+        {
+            var entityType = context.Model.GetEntityTypes()
+                .FirstOrDefault(t => !string.IsNullOrEmpty(t.GetTableName()));
+
+            if (entityType == null)
+            {
+                return true;
+            }
+
+            // EF's scalar SqlQuery requires the projected column to be aliased "Value".
+            var sql = context.Database.IsSqlite()
+                ? @"SELECT name AS ""Value"" FROM sqlite_master WHERE type = 'table' AND name = {0}"
+                : @"SELECT table_name AS ""Value"" FROM information_schema.tables WHERE table_name = {0}";
+
+            var matches = await context.Database
+                .SqlQueryRaw<string>(sql, entityType.GetTableName())
+                .ToListAsync();
+
+            return matches.Count > 0;
         }
 
         private async Task SeedRolesAsync()

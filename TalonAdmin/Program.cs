@@ -3,9 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,25 +44,117 @@ else
     OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization(
         configuration["Epplus:Organization"] ?? "International Rescue Committee");
 }
-var provider = configuration["Database:Provider"] ?? "SqlServer";
+// Managed Postgres providers (Neon, Supabase, and the platforms' own add-ons) hand out a single
+// connection URL and conventionally expose it as DATABASE_URL. Honouring that variable directly is
+// what lets a cloud deploy configure storage with one setting instead of three: its presence
+// selects Postgres and points *both* contexts at the same database. Sharing one database is safe
+// because the two models share no table names — AdminContext owns Identity, organisations,
+// countries and menus; the voucher context owns everything else.
+var databaseUrl = configuration["DATABASE_URL"];
+var hasDatabaseUrl = !string.IsNullOrWhiteSpace(databaseUrl);
+
+var provider = hasDatabaseUrl
+    ? "Postgres"
+    : configuration["Database:Provider"] ?? "SqlServer";
+
+var isPostgres = string.Equals(provider, "Postgres", StringComparison.OrdinalIgnoreCase)
+    || string.Equals(provider, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
+    || string.Equals(provider, "Npgsql", StringComparison.OrdinalIgnoreCase);
 
 void ConfigureProvider(DbContextOptionsBuilder options, string connectionStringName)
 {
-    var connectionString = configuration.GetConnectionString(connectionStringName);
+    var connectionString = hasDatabaseUrl
+        ? databaseUrl
+        : configuration.GetConnectionString(connectionStringName);
+
     if (string.IsNullOrWhiteSpace(connectionString))
     {
         throw new InvalidOperationException(
-            $"Connection string '{connectionStringName}' is not configured.");
+            $"Connection string '{connectionStringName}' is not configured. Set it under " +
+            "ConnectionStrings, or set DATABASE_URL to a Postgres URL to configure both contexts " +
+            "at once.");
     }
 
     if (string.Equals(provider, "Sqlite", StringComparison.OrdinalIgnoreCase))
     {
         options.UseSqlite(ResolveSqlitePath(connectionString, builder.Environment.ContentRootPath));
     }
+    else if (isPostgres)
+    {
+        options.UseNpgsql(NormalizePostgresConnectionString(connectionString));
+    }
     else
     {
         options.UseSqlServer(connectionString);
     }
+}
+
+// Npgsql does not accept the postgresql:// URL form that every managed provider prints on its
+// dashboard, so translate it into the keyword form it does accept. A value that is not a URL is
+// returned untouched, which leaves an operator free to supply a full Npgsql connection string.
+static string NormalizePostgresConnectionString(string connectionString)
+{
+    connectionString = connectionString.Trim();
+
+    var isUrl = connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
+        || connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase);
+
+    var connectionStringBuilder = isUrl
+        ? BuildFromPostgresUrl(connectionString)
+        : new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+
+    // Npgsql defaults MaxPoolSize to 100, and the app opens two contexts — enough to exhaust the
+    // connection allowance of every free Postgres tier under light load. A field deployment serves
+    // a handful of concurrent staff, so cap it well below those limits unless told otherwise.
+    // NpgsqlConnectionStringBuilder pre-populates every keyword, so ContainsKey cannot distinguish
+    // "unset" from "set to the default" — the input text is what actually carries that intent.
+    var compactedInput = connectionString.Replace(" ", string.Empty);
+    var specifiesPoolSize =
+        compactedInput.Contains("MaxPoolSize", StringComparison.OrdinalIgnoreCase)
+        || compactedInput.Contains("MaximumPoolSize", StringComparison.OrdinalIgnoreCase);
+
+    if (!specifiesPoolSize)
+    {
+        connectionStringBuilder.MaxPoolSize = 10;
+    }
+
+    return connectionStringBuilder.ToString();
+}
+
+static Npgsql.NpgsqlConnectionStringBuilder BuildFromPostgresUrl(string url)
+{
+    var uri = new Uri(url);
+    var userInfo = uri.UserInfo.Split(':', 2);
+
+    var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.IsDefaultPort ? 5432 : uri.Port,
+        Database = Uri.UnescapeDataString(uri.AbsolutePath).TrimStart('/'),
+        Username = Uri.UnescapeDataString(userInfo[0]),
+        Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : null,
+    };
+
+    // Carry the query string across, which is how the URL form conveys sslmode — Neon and Supabase
+    // both require TLS and both express it that way.
+    foreach (var parameter in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+    {
+        var parts = parameter.Split('=', 2);
+        var key = Uri.UnescapeDataString(parts[0]);
+        var value = parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : string.Empty;
+
+        try
+        {
+            connectionStringBuilder[key] = value;
+        }
+        catch (ArgumentException)
+        {
+            // Providers append parameters that belong to libpq rather than Npgsql — Neon's
+            // channel_binding is the common one. Ignoring them beats refusing to start.
+        }
+    }
+
+    return connectionStringBuilder;
 }
 
 // SQLite resolves a relative Data Source against the process working directory, which is not the
@@ -230,6 +325,56 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddSignalR();
 
+// Nothing in the original guarded against repeated guessing, which matters here because the values
+// being guessed are short: a voucher code is six digits by default, so the whole space is a million
+// candidates, and the endpoint that redeems one is reachable without authentication. Limits are
+// applied per policy below and partitioned by caller IP.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Sign-in endpoints. There is no legitimate reason for one address to attempt many passwords in
+    // quick succession, so this is deliberately tight; Identity has no lockout configured, and this
+    // is what stands in for it.
+    options.AddPolicy(RateLimitPolicies.Credentials, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ResolveClientAddress(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0
+            }));
+
+    // The inbound SMS webhook, which is where a voucher code is exchanged for value. A real
+    // distribution produces a burst of redemptions that all arrive from the gateway's address, so
+    // this ceiling has to clear legitimate traffic — it is a flood guard, not the primary control.
+    // The primary control is SystemSecret; see the warning logged at startup when it is unset.
+    options.AddPolicy(RateLimitPolicies.SmsRedemption, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ResolveClientAddress(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
+// Behind Render's and Railway's proxies the socket address is the load balancer, so every caller
+// would share one partition. X-Forwarded-For's first entry is the originating client.
+static string ResolveClientAddress(HttpContext context)
+{
+    var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
+
+    if (!string.IsNullOrWhiteSpace(forwardedFor))
+    {
+        return forwardedFor.Split(',')[0].Trim();
+    }
+
+    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+}
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -260,6 +405,10 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRouting();
 app.UseCors();
 
+// After UseRouting, so the endpoint's own [EnableRateLimiting] policy has been resolved, and before
+// authentication, so rejected callers are turned away without a database round trip.
+app.UseRateLimiter();
+
 app.UseMiddleware<TenantFormMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -286,6 +435,18 @@ app.MapFallbackToFile("/app/{*path:nonfile}", "app/index.html");
 using (var scope = app.Services.CreateScope())
 {
     await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().InitializeAsync();
+}
+
+// ValidateTransactionSMS is the endpoint an SMS gateway posts a redemption to, and it is necessarily
+// anonymous — a gateway cannot hold a user's credentials. SystemSecret is the shared secret that
+// distinguishes the real gateway from anyone else who has found the URL, and the endpoint skips the
+// check entirely when it is blank. The rate limiter caps how fast codes can be tried, but only this
+// secret stops them being tried at all, so an unset value is worth saying out loud.
+if (!app.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(app.Configuration["SystemSecret"]))
+{
+    app.Logger.LogWarning(
+        "SystemSecret is not set, so the inbound SMS endpoint accepts redemptions from any caller. "
+        + "Set it to a random value and append it to the gateway's callback URL as ?secret=<value>.");
 }
 
 app.Run();

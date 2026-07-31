@@ -6,8 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
+using TalonAdmin.Auth;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -24,6 +26,7 @@ namespace TalonAdmin.Controllers.Api
         }
 
         [HttpPost("Login")]
+        [EnableRateLimiting(RateLimitPolicies.Credentials)]
         public async Task<IActionResult> Login([FromBody] JObject request)
         {
             string userName = request["UserName"].ToString().ToLower();

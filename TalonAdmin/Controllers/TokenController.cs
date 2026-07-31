@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TalonAdmin.Auth;
 
 namespace TalonAdmin.Controllers
@@ -12,6 +13,7 @@ namespace TalonAdmin.Controllers
     /// </summary>
     [AllowAnonymous]
     [Route("Token")]
+    [EnableRateLimiting(RateLimitPolicies.Credentials)]
     public class TokenController : Controller
     {
         private readonly TalonUserAuthenticator _authenticator;

@@ -23,6 +23,9 @@
     <!-- EF Core 10.0.10 pulls SQLitePCLRaw 2.1.11, which carries advisory GHSA-2m69-gcr7-jv3q -->
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+    <!-- Postgres is what the managed free tiers offer (Neon, Supabase), so it is the provider the
+         cloud deployment guide targets -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
 
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
