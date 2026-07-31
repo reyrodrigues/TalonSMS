@@ -341,6 +341,11 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddSignalR();
 
+// The dashboard summary is expensive to build and is held for a few minutes between requests.
+// Singleton so every request in the process shares one, and so a redemption can clear it.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<TalonAdmin.Hubs.DashboardCache>();
+
 // Nothing in the original guarded against repeated guessing, which matters here because the values
 // being guessed are short: a voucher code is six digits by default, so the whole space is a million
 // candidates, and the endpoint that redeems one is reachable without authentication. Limits are

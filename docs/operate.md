@@ -220,8 +220,10 @@ three steps that have to happen in this order:
 ## Reporting
 
 The dashboard shows issued against redeemed value, broken out by location and vendor, and updates live
-over SignalR. It is regenerated at most every ten minutes and cached on disk between times, so a
-figure can lag a redemption by that much.
+over SignalR. Building it is expensive, so each instance holds the result in memory; a redemption
+drops it immediately, and it is rebuilt at least every ten minutes regardless. A change that arrives
+by some other route — a distribution created through the data screens — can therefore take up to ten
+minutes to show.
 
 Reports render Razor templates to PDF through headless Chromium:
 

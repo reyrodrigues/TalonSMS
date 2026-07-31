@@ -196,7 +196,6 @@ TalonAdmin/web.config
 TalonAdmin/App_Data/*.db
 TalonAdmin/App_Data/*.db-shm
 TalonAdmin/App_Data/*.db-wal
-TalonAdmin/Dashboards/
 
 # Client build output (rebuild with: cd TalonAdmin/ClientApp && npm ci && npm run build)
 TalonAdmin/wwwroot/app/

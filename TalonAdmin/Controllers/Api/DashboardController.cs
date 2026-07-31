@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -21,174 +19,159 @@ namespace TalonAdmin.Controllers.Api
         // materialised JToken rather than an IQueryable, so the attribute never had any effect;
         // it is dropped rather than pulling in Microsoft.AspNetCore.OData for a no-op.
         private readonly Models.Vouchers.Context ctx;
-        private readonly IWebHostEnvironment _environment;
+        private readonly Hubs.DashboardCache _cache;
 
-        public DashboardController(Models.Vouchers.Context context, IWebHostEnvironment environment)
+        public DashboardController(Models.Vouchers.Context context, Hubs.DashboardCache cache)
         {
             ctx = context;
-            _environment = environment;
+            _cache = cache;
         }
 
         [HttpGet("DashboardSummary")]
         public async Task<IActionResult> DashboardSummary()
         {
-            string dirName = Path.Combine(_environment.ContentRootPath, "Dashboards");
-            string fileName = Path.Combine(dirName, String.Format("{0}-{1}.json", this.GetOrganizationId(), this.GetCountryId()));
+            var summary = await _cache.GetOrCreateAsync(
+                this.GetOrganizationId(),
+                this.GetCountryId(),
+                BuildSummaryAsync);
 
-            if (!Directory.Exists(dirName))
-            {
-                Directory.CreateDirectory(dirName);
-            }
+            return Ok(summary);
+        }
 
-            var recreateDashboard = !System.IO.File.Exists(fileName);
+        private async Task<JToken> BuildSummaryAsync()
+        {
+            var programs = await ctx.Programs
+            .AsNoTracking()
+            .Include(p => p.Distributions)
+            .FilterCountry(this)
+            .FilterOrganization(this)
+            .Where(p => p.Distributions.Any(d => d.Vouchers.Any(v => v.Status == 2 || v.Status == 3)) && p.ShowInDashboard == true)
+            .ToArrayAsync();
 
-            if (System.IO.File.Exists(fileName))
-            {
-                var timeSinceLastGeneration = DateTime.Now - System.IO.File.GetLastWriteTime(fileName);
-                if (timeSinceLastGeneration.TotalMinutes > 10)
-                {
-                    recreateDashboard = true;
-                }
-            }
+            var programIds = programs.Select(p => p.Id);
 
-            if (recreateDashboard)
-            {
-                var programs = await ctx.Programs
+            var vouchers = ctx.Vouchers
                 .AsNoTracking()
-                .Include(p => p.Distributions)
                 .FilterCountry(this)
                 .FilterOrganization(this)
-                .Where(p => p.Distributions.Any(d => d.Vouchers.Any(v => v.Status == 2 || v.Status == 3)) && p.ShowInDashboard == true)
-                .ToArrayAsync();
+                .Where(v => v.Distribution.ProgramId != null && programIds.Contains(v.Distribution.ProgramId.Value));
 
-                var programIds = programs.Select(p => p.Id);
+            var locations = ctx.Locations
+                .AsNoTracking()
+                .FilterCountry(this);
 
-                var vouchers = ctx.Vouchers
-                    .AsNoTracking()
-                    .FilterCountry(this)
-                    .FilterOrganization(this)
-                    .Where(v => v.Distribution.ProgramId != null && programIds.Contains(v.Distribution.ProgramId.Value));
-
-                var locations = ctx.Locations
-                    .AsNoTracking()
-                    .FilterCountry(this);
-
-                var distributionSummary = programs.Select(p => p.Distributions.Select(d => new
-                {
-                    ProgramId = p.Id,
-                    DistributionId = d.Id,
-                    LocationId = d.LocationId,
-                    TotalVouchers =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id).Count(),
-                    VouchersUsed =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id).Where(v => v.Status == 2 || v.Status == 3).Count(),
-                    UniqueBeneficiaries =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id)
-                        .Where(v => v.Status == 3 || v.Status == 2)
-                        .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
-                        .SelectMany(r => r)
-                        .Distinct()
-                        .Count(),
-                    Beneficiaries =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id)
-                        .Select(v => v.TransactionRecords.Where(t => t.Type == 1).Select(t => t.BeneficiaryId))
-                        .SelectMany(r => r)
-                        .Distinct()
-                        .Count(),
-                    BeneficiaryIds =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id)
-                        .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
-                        .SelectMany(r => r)
-                        .Distinct()
-                        .ToArray(),
-                    ClaimedAmount =
-                        vouchers
-                        .Where(v => v.Status == 2 || v.Status == 3)
-                        .Where(v => v.DistributionId == d.Id && v.TransactionRecords.Where(t => t.Type == 2).Any())
-                        .Select(v => v.TransactionRecords.Where(t => t.Type == 2 && t.Value != null).Select(t => t.Value).Sum())
-                    .Sum(),
-                    IssuedAmount =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id)
-                        .Where(v => v.Value != null && v.TransactionRecords.Any())
-                        .Select(v => v.Value)
-                    .Sum(),
-                    TotalVendors =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id)
-                        .Where(v => v.Status == 2 || v.Status == 3)
-                        .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
-                        .SelectMany(r => r)
-                        .Distinct()
-                    .Sum(),
-                    VendorIds =
-                        vouchers
-                        .Where(v => v.DistributionId == d.Id)
-                        .Where(v => v.Status == 2 || v.Status == 3)
-                        .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
-                        .SelectMany(r => r)
-                        .Distinct()
-                        .ToArray(),
-                }).ToArray()).ToArray();
-
-                var dashboardQuery = distributionSummary
-                    .SelectMany(r => r.Select(d => new
-                    {
-                        Program = programs.Where(p => p.Id == d.ProgramId).FirstOrDefault(),
-                        Distribution = ctx.Distributions.AsNoTracking().Where(p => p.Id == d.DistributionId).FirstOrDefault(),
-                        Location = locations.Where(p => p.Id == d.LocationId).FirstOrDefault(),
-                        d.TotalVouchers,
-                        d.VouchersUsed,
-                        d.UniqueBeneficiaries,
-                        d.Beneficiaries,
-                        d.BeneficiaryIds,
-                        d.ClaimedAmount,
-                        d.IssuedAmount,
-                        d.TotalVendors,
-                        d.VendorIds,
-                    })).ToArray().GroupBy(k => k.Program).Select(g => new
-                    {
-                        Program = new
-                        {
-                            g.Key.Id,
-                            g.Key.Name,
-                            g.Key.FundCodes
-                        },
-                        TotalVouchers = g.Select(d => d.TotalVouchers).Sum(),
-                        VouchersUsed = g.Select(d => d.VouchersUsed).Sum(),
-                        UniqueBeneficiaries = g.Select(d => d.UniqueBeneficiaries).Sum(),
-                        Beneficiaries = g.Select(d => d.BeneficiaryIds).SelectMany(r => r).Distinct().Count(),
-                        ClaimedAmount = g.Select(d => d.ClaimedAmount).Sum(),
-                        IssuedAmount = g.Select(d => d.IssuedAmount).Sum(),
-                        TotalVendors = g.Select(d => d.VendorIds).SelectMany(r => r).Distinct().Count(),
-                        Distributions = g.ToArray(),
-                        UsedVsIssued = GenerateUsedVsIssuedReport(g.Key),
-                        Vendor = GenerateVendorReport(g.Key)
-                    }).ToArray();
-
-                var dashboardArray = dashboardQuery.ToArray();
-                var jsonString = JsonConvert.SerializeObject(dashboardArray,
-                    Formatting.Indented,
-                    new JsonSerializerSettings
-                    {
-                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-
-                    });
-
-                await System.IO.File.WriteAllTextAsync(fileName, jsonString);
-            }
-
-            using (var stream = System.IO.File.OpenRead(fileName))
-            using (var reader = new StreamReader(stream))
-            using (var jsonReader = new JsonTextReader(reader))
+            var distributionSummary = programs.Select(p => p.Distributions.Select(d => new
             {
-                return Ok(JToken.Load(jsonReader));
-            }
+                ProgramId = p.Id,
+                DistributionId = d.Id,
+                LocationId = d.LocationId,
+                TotalVouchers =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id).Count(),
+                VouchersUsed =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id).Where(v => v.Status == 2 || v.Status == 3).Count(),
+                UniqueBeneficiaries =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Status == 3 || v.Status == 2)
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .Count(),
+                Beneficiaries =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Select(v => v.TransactionRecords.Where(t => t.Type == 1).Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .Count(),
+                BeneficiaryIds =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Select(v => v.TransactionRecords.Select(t => t.BeneficiaryId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .ToArray(),
+                ClaimedAmount =
+                    vouchers
+                    .Where(v => v.Status == 2 || v.Status == 3)
+                    .Where(v => v.DistributionId == d.Id && v.TransactionRecords.Where(t => t.Type == 2).Any())
+                    .Select(v => v.TransactionRecords.Where(t => t.Type == 2 && t.Value != null).Select(t => t.Value).Sum())
+                .Sum(),
+                IssuedAmount =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Value != null && v.TransactionRecords.Any())
+                    .Select(v => v.Value)
+                .Sum(),
+                TotalVendors =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Status == 2 || v.Status == 3)
+                    .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                .Sum(),
+                VendorIds =
+                    vouchers
+                    .Where(v => v.DistributionId == d.Id)
+                    .Where(v => v.Status == 2 || v.Status == 3)
+                    .Select(v => v.TransactionRecords.Where(t => t.VendorId != null).Select(t => t.VendorId))
+                    .SelectMany(r => r)
+                    .Distinct()
+                    .ToArray(),
+            }).ToArray()).ToArray();
+
+            var dashboardQuery = distributionSummary
+                .SelectMany(r => r.Select(d => new
+                {
+                    Program = programs.Where(p => p.Id == d.ProgramId).FirstOrDefault(),
+                    Distribution = ctx.Distributions.AsNoTracking().Where(p => p.Id == d.DistributionId).FirstOrDefault(),
+                    Location = locations.Where(p => p.Id == d.LocationId).FirstOrDefault(),
+                    d.TotalVouchers,
+                    d.VouchersUsed,
+                    d.UniqueBeneficiaries,
+                    d.Beneficiaries,
+                    d.BeneficiaryIds,
+                    d.ClaimedAmount,
+                    d.IssuedAmount,
+                    d.TotalVendors,
+                    d.VendorIds,
+                })).ToArray().GroupBy(k => k.Program).Select(g => new
+                {
+                    Program = new
+                    {
+                        g.Key.Id,
+                        g.Key.Name,
+                        g.Key.FundCodes
+                    },
+                    TotalVouchers = g.Select(d => d.TotalVouchers).Sum(),
+                    VouchersUsed = g.Select(d => d.VouchersUsed).Sum(),
+                    UniqueBeneficiaries = g.Select(d => d.UniqueBeneficiaries).Sum(),
+                    Beneficiaries = g.Select(d => d.BeneficiaryIds).SelectMany(r => r).Distinct().Count(),
+                    ClaimedAmount = g.Select(d => d.ClaimedAmount).Sum(),
+                    IssuedAmount = g.Select(d => d.IssuedAmount).Sum(),
+                    TotalVendors = g.Select(d => d.VendorIds).SelectMany(r => r).Distinct().Count(),
+                    Distributions = g.ToArray(),
+                    UsedVsIssued = GenerateUsedVsIssuedReport(g.Key),
+                    Vendor = GenerateVendorReport(g.Key)
+                }).ToArray();
+
+            var dashboardArray = dashboardQuery.ToArray();
+
+            // Serialised rather than handed back as objects because the projection is full of
+            // anonymous types with navigations hanging off them; the loop handling below is
+            // what keeps that from recursing.
+            var jsonString = JsonConvert.SerializeObject(dashboardArray,
+                Formatting.Indented,
+                new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+
+                });
+
+            return JToken.Parse(jsonString);
         }
 
         #region Intenal Reporting Funcs

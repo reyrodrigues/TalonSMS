@@ -126,8 +126,6 @@ namespace TalonAdmin.Controllers.Api
 
         private readonly Models.Vouchers.Context ctx;
         private readonly Models.Admin.AdminContext adminContext;
-        private readonly IHubContext<DashboardHub> dashboardHub;
-        private readonly IWebHostEnvironment environment;
         private readonly IConfiguration configuration;
         private readonly Messaging.VoucherNotifications notifications;
         private readonly Messaging.InboundMessageProcessor inboundMessages;
@@ -135,16 +133,12 @@ namespace TalonAdmin.Controllers.Api
         public VoucherWorkflowController(
             Models.Vouchers.Context ctx,
             Models.Admin.AdminContext adminContext,
-            IHubContext<DashboardHub> dashboardHub,
-            IWebHostEnvironment environment,
             IConfiguration configuration,
             Messaging.VoucherNotifications notifications,
             Messaging.InboundMessageProcessor inboundMessages)
         {
             this.ctx = ctx;
             this.adminContext = adminContext;
-            this.dashboardHub = dashboardHub;
-            this.environment = environment;
             this.configuration = configuration;
             this.notifications = notifications;
             this.inboundMessages = inboundMessages;
@@ -517,14 +511,6 @@ namespace TalonAdmin.Controllers.Api
 
 
         #region Private Functions and Methods
-
-        private Task NotifyClients()
-        {
-            // Still delegates to MobileClientController's helper as it always did; that helper now
-            // takes the hub context and hosting environment because ASP.NET Core SignalR has no
-            // GlobalHost equivalent to reach for.
-            return MobileClientController.NotifyClients(dashboardHub, environment);
-        }
 
         private DateTime? CalculateOffset(DateTime date, int? offsetType, int? offset)
         {

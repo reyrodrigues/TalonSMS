@@ -35,20 +35,20 @@ namespace TalonAdmin.Messaging
         private readonly Context _context;
         private readonly VoucherNotifications _notifications;
         private readonly IHubContext<DashboardHub> _dashboardHub;
-        private readonly IWebHostEnvironment _environment;
+        private readonly DashboardCache _dashboardCache;
         private readonly ILogger<InboundMessageProcessor> _logger;
 
         public InboundMessageProcessor(
             Context context,
             VoucherNotifications notifications,
             IHubContext<DashboardHub> dashboardHub,
-            IWebHostEnvironment environment,
+            DashboardCache dashboardCache,
             ILogger<InboundMessageProcessor> logger)
         {
             _context = context;
             _notifications = notifications;
             _dashboardHub = dashboardHub;
-            _environment = environment;
+            _dashboardCache = dashboardCache;
             _logger = logger;
         }
 
@@ -168,7 +168,7 @@ namespace TalonAdmin.Messaging
             await _context.SaveChangesAsync();
 
             // Fire-and-forget, as it always was: a dashboard refresh must not block the redemption.
-            _ = MobileClientController.NotifyClients(_dashboardHub, _environment);
+            _ = MobileClientController.NotifyClients(_dashboardHub, _dashboardCache);
 
             await _notifications.TransactionConfirmedAsync(voucher);
 

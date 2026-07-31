@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
@@ -78,6 +79,14 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
         // The seeded personal identifier; the field no longer holds a document number.
         Assert.Contains("1000000001", html);
 
+        // Columns name the field underneath them. These two did not: "Id Number" sat over the
+        // personal identifier and "Device Identifier" over a mobile number, on a document that
+        // gets printed and signed.
+        Assert.Contains("Personal Identifier", html);
+        Assert.Contains("Mobile Number", html);
+        Assert.DoesNotContain("Id Number", html);
+        Assert.DoesNotContain("Device Identifier", html);
+
         // Five vouchers at 25 each were seeded.
         Assert.Contains("125", html);
     }
@@ -92,6 +101,50 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
         Assert.True(response.IsSuccessStatusCode);
         Assert.Equal(SpreadsheetContentType, response.Content.Headers.ContentType?.MediaType);
         AssertIsWorkbook(await response.Content.ReadAsByteArrayAsync());
+    }
+
+    /// <summary>
+    /// The dashboard summary is cached, and it used to be cached to
+    /// <c>{ContentRoot}/Dashboards/{organization}-{country}.json</c> — keyed by tenant, but not by
+    /// database. Anything sharing the content root wrote the same files, so this test suite left
+    /// its own figures where a developer's running instance would serve them for a completely
+    /// different database. Nothing on disk should be able to answer for the data any more.
+    /// </summary>
+    [Fact]
+    public async Task The_dashboard_ignores_a_summary_left_in_the_content_root()
+    {
+        await AuthenticateAsync();
+
+        var contentRoot = _factory.Services
+            .GetRequiredService<IWebHostEnvironment>()
+            .ContentRootPath;
+
+        var planted = Path.Combine(contentRoot, "Dashboards");
+        var plantedTheDirectory = !Directory.Exists(planted);
+        Directory.CreateDirectory(planted);
+
+        var file = Path.Combine(planted, "1-1.json");
+        await File.WriteAllTextAsync(
+            file,
+            """[{"Program":{"Id":99,"Name":"Figures from another database"},"TotalVouchers":4}]""");
+
+        try
+        {
+            var dashboard = await _api.GetJsonAsync("/api/Dashboard/DashboardSummary");
+            var json = dashboard.ToString();
+
+            Assert.DoesNotContain("Figures from another database", json);
+
+            // And it is answering from the database rather than simply returning nothing.
+            Assert.Contains("Demo Cash Programme", json);
+        }
+        finally
+        {
+            // Leaving it behind would put the very directory this test exists to condemn back in
+            // the working tree after every run.
+            File.Delete(file);
+            if (plantedTheDirectory) Directory.Delete(planted);
+        }
     }
 
     /// <summary>

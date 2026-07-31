@@ -32,17 +32,20 @@ namespace TalonAdmin.Controllers.Api
         private readonly Models.Admin.AdminContext adminCtx;
         private readonly IWebHostEnvironment environment;
         private readonly IHubContext<Hubs.DashboardHub> hubContext;
+        private readonly Hubs.DashboardCache dashboardCache;
 
         public MobileClientController(
             Models.Vouchers.Context ctx,
             Models.Admin.AdminContext adminCtx,
             IWebHostEnvironment environment,
-            IHubContext<Hubs.DashboardHub> hubContext)
+            IHubContext<Hubs.DashboardHub> hubContext,
+            Hubs.DashboardCache dashboardCache)
         {
             this.ctx = ctx;
             this.adminCtx = adminCtx;
             this.environment = environment;
             this.hubContext = hubContext;
+            this.dashboardCache = dashboardCache;
 
             keyContainer = Path.Combine(environment.ContentRootPath, "Keys");
         }
@@ -391,7 +394,7 @@ namespace TalonAdmin.Controllers.Api
         [AuthorizeVendor]
         public async Task<IActionResult> ProcessNFCTransaction([FromBody]dynamic request)
         {
-            await NotifyClients(hubContext, environment);
+            await NotifyClients(hubContext, dashboardCache);
 
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
@@ -510,7 +513,7 @@ namespace TalonAdmin.Controllers.Api
         [AuthorizeVendor]
         public async Task<IActionResult> ProcessQRTransaction([FromBody]dynamic request)
         {
-            await NotifyClients(hubContext, environment);
+            await NotifyClients(hubContext, dashboardCache);
 
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
@@ -628,11 +631,11 @@ namespace TalonAdmin.Controllers.Api
         #region Private Methods
         // NOTE: this used to be a parameterless static that reached for the SignalR GlobalHost and
         // the hosting environment. Both are DI services now, so callers pass them in.
-        internal static async Task NotifyClients(IHubContext<Hubs.DashboardHub> hubContext, IWebHostEnvironment environment)
+        internal static async Task NotifyClients(IHubContext<Hubs.DashboardHub> hubContext, Hubs.DashboardCache cache)
         {
-            string dirName = Path.Combine(environment.ContentRootPath, "Dashboards");
-
-            if (System.IO.Directory.Exists(dirName)) System.IO.Directory.Delete(dirName, true);
+            // Drop the stale summary before telling anyone to refetch, or the refetch races the
+            // invalidation and the client redraws the figures it already had.
+            cache.Invalidate();
 
             await hubContext.Clients.All.SendAsync("updateDashboard");
         }
