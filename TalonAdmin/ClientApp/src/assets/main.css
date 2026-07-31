@@ -358,3 +358,55 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 
 .muted { color: var(--muted); }
 .row-gap { display: flex; align-items: center; gap: 8px; }
+
+/* Tabbed detail screens (distribution detail, reconciliation). */
+.tabs { display: flex; gap: 4px; margin-bottom: -1px; }
+
+.tabs__tab {
+  border: 1px solid var(--line);
+  border-bottom-color: transparent;
+  background: var(--canvas);
+  color: var(--muted);
+  padding: 8px 14px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+
+.tabs__tab--active { background: var(--surface); color: var(--ink); font-weight: 600; }
+
+/* Read-only key/value header on a detail screen. */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+  padding: 16px;
+}
+
+.summary dt { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.summary dd { margin: 0; }
+
+/* Modal shell shared by the dialogs that replaced angular-dialog-service. */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  z-index: 50;
+}
+
+.modal__card {
+  width: 480px;
+  max-width: calc(100% - 32px);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modal__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }

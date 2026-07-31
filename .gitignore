@@ -208,3 +208,6 @@ TalonAdmin/Keys/
 
 # Vue client build output (rebuild with: cd TalonAdmin/ClientApp && npm ci && npm run build)
 TalonAdmin/wwwroot/next/
+
+# Playwright MCP session artifacts (snapshots, console logs) from browser-driven verification.
+.playwright-mcp/

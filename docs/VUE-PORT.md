@@ -1,12 +1,11 @@
 # Porting the client to Vue 3
 
-The AngularJS 1.4 client is being replaced by a Vue 3 client under `TalonAdmin/ClientApp`. Both run
-side by side against the same API: AngularJS at `/app/`, Vue at `/next/`. Nothing on the server
-changed to accommodate the new client.
+The AngularJS 1.4 client has been replaced by a Vue 3 client under `TalonAdmin/ClientApp`. Both
+still run side by side against the same API: AngularJS at `/app/`, Vue at `/next/`. Nothing on the
+server changed to accommodate the new client, apart from one seed fix noted below.
 
-**This is a foundation plus a vertical slice, not a finished replacement.** Four screens are
-ported. The architecture, the data layer and the shared components are done, and the remaining
-screens follow the pattern established by the two CRUD screens below.
+**Every screen the navigation menu offers is ported.** All 27 seeded menu links resolve to a Vue
+screen; none are hidden any more.
 
 ## Running it
 
@@ -22,17 +21,39 @@ Then browse to <http://localhost:5080/next/>.
 
 ## What is ported
 
-| Screen | Route | Notes |
-| --- | --- | --- |
-| Login | `/next/login` | `/Token` password grant, redirect back to the requested page |
-| Dashboard | `/next/dashboard` | Chart, stat tiles and the per-distribution table |
-| Beneficiaries | `/next/beneficiaries` | List with server paging, sorting, search; create/edit/delete |
-| Vendors | `/next/vendors` | Same pattern, second entity |
-| Distributions | `/next/distributions` | Read-only list |
+| Section | Screens |
+| --- | --- |
+| Session | Login, country switcher, my profile |
+| Programme | Beneficiaries, Cycles, Programs, Distributions, Vendors, Vendor Types |
+| Reporting | Distribution Report, Program Closure Report, Vendor Financial Report, Report History, Vendor Receipt |
+| Country administration | Transaction Log, Quarantine, Card Load Log, Locations, Voucher Types |
+| Organization administration | Users, Country Settings |
+| System administration | Users, Roles, Actions, Organizations, Countries, Menu Categories, Menu Items |
 
-Infrastructure that is done and shared: session and tenant handling, the country switcher, the
-server-driven sidebar, permission-gated buttons, toasts, the paged `DataTable`, and the typed API
-layer.
+Plus the dashboard, the programme editor (voucher categories and *Distribute Vouchers*), the
+distribution detail screen (unused/used vouchers, beneficiaries, cancel and re-send), Excel
+import/export on the beneficiary and vendor lists, and the SignalR dashboard subscription.
+
+## How the screens are built
+
+Three shapes cover everything.
+
+**Descriptor-driven CRUD.** Twelve screens are a paged list plus a form of plain fields, so they
+are described rather than written: `src/crud/definitions.ts` holds one `ResourceDef` each, naming
+the columns, the fields, the Breeze resource and type, the tenant keys to stamp on save, and the
+permission prefix that gates the buttons. `ResourceListView.vue` and `ResourceEditView.vue` render
+any of them, and `src/router/index.ts` generates the three routes per descriptor. Adding a
+reference list is one object.
+
+**Hand-written screens** where the behaviour is not CRUD: the dashboard, the programme editor, the
+distribution detail, the reports, reconciliation, users and country settings.
+
+**One shared runner for the three PDF reports** (`ReportRunnerView.vue`), since they differ only in
+which selectors they show and which endpoint they post to. Each report is a `ReportSpec` in
+`src/views/reports/spec.ts`, carried on the route.
+
+Because several routes share one component, `AppLayout` keys the `RouterView` on the path so
+switching between them remounts instead of leaving the previous screen's state behind.
 
 ## What replaced what
 
@@ -45,11 +66,12 @@ layer.
 | angular-datatables + ui-grid (+ jQuery, DataTables) | one `DataTable.vue`, ~150 lines |
 | flot + 4 plugins (+ jQuery) | chart.js |
 | angularjs-toaster | `useToast` composable |
-| angular-dialog-service | native dialogs for now |
-| Bootstrap 3 + a licensed admin theme | ~350 lines of CSS |
+| angular-dialog-service | plain markup with a shared `.modal` class |
+| ~30 near-identical controller/template pairs | 12 `ResourceDef` descriptors |
+| Bootstrap 3 + a licensed admin theme | ~400 lines of CSS |
 
-The compiled AngularJS bundle is 3.1 MB. The Vue shell is about 106 KB (≈42 KB gzipped), plus
-172 KB for the dashboard chunk, which is chart.js and only loads on that route.
+The compiled AngularJS bundle is 3.1 MB. The Vue shell is about 106 KB (≈42 KB gzipped), plus a
+228 KB dashboard chunk that carries chart.js and SignalR and only loads on that route.
 
 ### Dropping the Breeze client
 
@@ -67,38 +89,45 @@ their changed fields explicitly instead of being inferred.
 values on a modified row, and the stripping of expanded navigations and `$type` from a row that is
 being sent back.
 
+Three details of that format only surfaced when testing against the running server:
+
+- **Endpoint arguments** (`DistributionBeneficiaries(int distributionId)`) ride *after* the JSON
+  blob as ordinary query-string pairs, which is where model binding looks for them. `BreezeQuery`
+  has a `parameters` field for this.
+- **Client-keyed rows** need a real property name in `autoGeneratedKey`.
+  `CountrySettingsProperty` is keyed on `(SettingsId, Name)`, and sending an empty `propertyName`
+  makes EF throw. `clientKey()` and `addedWithKey()` cover it.
+- **`Beneficiary.Name` is a computed getter with no column behind it**, so it can be displayed but
+  never sorted on. Ordering uses `LastName, FirstName`.
+
 ## How the sidebar works during the transition
 
 The menu is data on the server, and each link stores an AngularJS ui-router state name. Rather
 than migrate that data — the AngularJS client still reads it — `src/router/stateMap.ts` maps state
-names to Vue routes. **A state that is not in that map is hidden from the Vue sidebar**, so the
-menu only ever offers screens that exist. Porting a screen means adding one line there.
+names to Vue routes. A state that is not in that map is hidden from the Vue sidebar. All 27 seeded
+states are now mapped, so nothing is hidden.
 
-## Porting the next screen
+## Server change
 
-The two CRUD screens are the template. For a list:
-
-1. Add the entity to `src/api/types.ts`.
-2. Add a `…Page` query and a `save…`/`delete…` pair to `src/api/talon.ts`.
-3. Copy `BeneficiaryListView.vue`: declare `columns`, call `useDataSource`, gate the buttons with
-   `session.can(...)`.
-4. Add the routes and the `stateMap` entry.
-
-`useDataSource` already handles paging, sorting, debounced search and out-of-range pages.
+`DatabaseInitializer` now seeds a `ProgramVoucherCategory` for the demo programme. Distributing
+vouchers copies the programme's categories onto the new distribution, so without one the demo
+programme's *Distribute Vouchers* succeeded but handed out nothing.
 
 ## Not done
 
-- 34 of the 38 screens, including all of the administration sections, reporting and reconciliation.
-- Excel import/export buttons on the list screens.
-- SignalR — `@microsoft/signalr` is a dependency but the dashboard does not yet subscribe to
-  `updateDashboard`.
 - Translation. The AngularJS client used angular-gettext with `.po` files under `Angular/po`;
   the Vue client has no i18n layer yet.
-- Component tests. Only the wire format is covered; the screens are verified by hand.
+- Component tests. Only the wire format is covered by unit tests; the screens were verified by
+  driving the running app in a browser.
+- Sub-vendors and vendor sales people. The vendor form edits the vendor itself; the AngularJS
+  screen also managed child records.
+- Copying voucher categories with a date offset (the AngularJS "copy category" dialog).
+- The five mobile point-of-sale endpoints, which need encrypted device payloads and have no web UI
+  in either client.
 
 ## Cutting over
 
-When enough screens are ported, change `base` and `outDir` in `vite.config.ts` from `next` to
-`app`, drop the `MapFallbackToFile` line for `/next`, and delete `Angular/`. Until then both
+When you are ready to retire AngularJS, change `base` and `outDir` in `vite.config.ts` from `next`
+to `app`, drop the `MapFallbackToFile` line for `/next`, and delete `Angular/`. Until then both
 clients work and share a session — they read the same token from local storage under different
 keys, so signing in to one does not sign you in to the other.

@@ -95,6 +95,33 @@ export async function postForm(url: string, form: Record<string, string>): Promi
   })
 }
 
+/** PUT/DELETE and anything else that is not a plain GET or POST. */
+export async function sendJson<T>(
+  method: 'PUT' | 'DELETE' | 'PATCH',
+  url: string,
+  body?: unknown
+): Promise<T> {
+  const response = await send(url, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  })
+
+  const text = await response.text()
+  return (text ? JSON.parse(text) : null) as T
+}
+
+export async function postMultipart<T>(url: string, file: File): Promise<T> {
+  const form = new FormData()
+  form.append('file', file, file.name)
+
+  // Content-Type is left unset so the browser adds the multipart boundary.
+  const response = await send(url, { method: 'POST', body: form })
+
+  const text = await response.text()
+  return (text ? JSON.parse(text) : null) as T
+}
+
 export async function postBlob(url: string, body: unknown): Promise<Blob> {
   const response = await send(url, {
     method: 'POST',

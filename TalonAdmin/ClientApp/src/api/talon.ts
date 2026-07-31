@@ -1,17 +1,27 @@
-import { getJson, postForm, postJson, postBlob } from './http'
+import { getJson, postForm, postJson, postBlob, postMultipart, sendJson } from './http'
 import * as breeze from './breeze'
 import type {
+  ApplicationRole,
+  ApplicationUser,
   Beneficiary,
   BeneficiaryGroup,
   Country,
+  CountrySettings,
   CurrentUser,
   DashboardProgram,
   Distribution,
+  ExportedReport,
   Location,
   MenuCategory,
+  MenuLink,
+  Organization,
+  OrganizationCountry,
   Program,
+  ProgramVoucherCategory,
   Vendor,
-  VendorType
+  VendorType,
+  VoucherTransactionRecord,
+  VoucherType
 } from './types'
 
 /** The endpoints the client actually uses, typed. */
@@ -47,6 +57,11 @@ export const beneficiaryGroups = () =>
   breeze.query<BeneficiaryGroup>('EVM', 'BeneficiaryGroups', { orderBy: ['Name'] })
 export const programs = () => breeze.query<Program>('EVM', 'Programs', { orderBy: ['Name'] })
 export const countries = () => breeze.query<Country>('Admin', 'Countries', { orderBy: ['Name'] })
+export const voucherTypes = () => breeze.query<VoucherType>('EVM', 'VoucherTypes', { orderBy: ['Name'] })
+export const organizations = () => breeze.query<Organization>('Admin', 'Organizations', { orderBy: ['Name'] })
+export const menuCategories = () => breeze.query<MenuCategory>('Admin', 'MenuCategories', { orderBy: ['Name'] })
+export const menuItems = () => breeze.query<MenuLink>('Admin', 'MenuItems', { orderBy: ['Title'] })
+export const roles = () => breeze.query<ApplicationRole>('Admin', 'Roles', { orderBy: ['Name'] })
 
 // ---- beneficiaries ----------------------------------------------------------------
 
@@ -142,6 +157,30 @@ export const distributeVouchers = (body: {
   LocationId: number
 }) => postJson<void>('/api/VoucherWorkflow/DistributeVouchers', body)
 
+export const cancelVoucher = (voucherId: number) =>
+  postJson<void>('/api/VoucherWorkflow/CancelVoucher', { VoucherId: voucherId })
+
+export const resendVoucherSms = (beneficiaryId: number, voucherId: number) =>
+  postJson<void>('/api/VoucherWorkflow/ResendSMS', {
+    BeneficiaryId: beneficiaryId,
+    VoucherId: voucherId
+  })
+
+/** Voucher status: 1 issued, 2 used, 3 partially used, 4 cancelled. */
+export const distributionTransactions = (distributionId: number, used: boolean) =>
+  breeze.query<VoucherTransactionRecord>('EVM', 'VoucherTransactionRecords', {
+    where: {
+      and: [
+        { 'Voucher.DistributionId': distributionId },
+        used
+          ? { Type: 2 }
+          : { and: [{ Type: 1 }, { 'Voucher.Status': 1 }] }
+      ]
+    },
+    expand: ['Beneficiary', 'Voucher'],
+    orderBy: ['Id']
+  })
+
 // ---- reports --------------------------------------------------------------------------
 
 export interface ReportRequest {
@@ -152,6 +191,9 @@ export interface ReportRequest {
   OrganizationId: number
   PaperSize?: string
   TimezoneOffset?: number
+  /** ISO dates. Only the payment schedule uses these, and it requires both. */
+  PeriodStart?: string
+  PeriodEnd?: string
 }
 
 export const distributionReport = (request: ReportRequest) =>
@@ -175,3 +217,242 @@ function changedFields<T extends object>(next: Partial<T>, original: T): Record<
 
   return changed
 }
+
+// ---- programmes -----------------------------------------------------------------------
+
+/**
+ * Voucher categories have no Breeze resource of their own — they are reached through the
+ * programme's `Categories` navigation, which is how the AngularJS client loaded them too.
+ */
+export const program = (id: number) =>
+  breeze.first<Program>('EVM', 'Programs', { where: { Id: id }, expand: ['Categories'] })
+
+export function saveProgram(entity: Partial<Program>, original?: Program) {
+  const record =
+    original && entity.Id
+      ? breeze.modified('EVM', 'Program', 'Programs', entity as Record<string, unknown>, {})
+      : breeze.added('EVM', 'Program', 'Programs', entity as Record<string, unknown>)
+
+  return breeze.saveChanges<Program>('EVM', [record])
+}
+
+export const saveProgramCategories = (
+  added: Array<Partial<ProgramVoucherCategory>>,
+  updated: Array<Partial<ProgramVoucherCategory>>,
+  removed: ProgramVoucherCategory[]
+) =>
+  breeze.saveChanges('EVM', [
+    ...added.map(c =>
+      breeze.added('EVM', 'ProgramVoucherCategory', 'ProgramVoucherCategories', c as Record<string, unknown>)
+    ),
+    ...updated.map(c =>
+      breeze.modified('EVM', 'ProgramVoucherCategory', 'ProgramVoucherCategories', c as Record<string, unknown>, {})
+    ),
+    ...removed.map(c =>
+      breeze.deleted('EVM', 'ProgramVoucherCategory', 'ProgramVoucherCategories', c as unknown as Record<string, unknown>)
+    )
+  ])
+
+export const distribution = (id: number) =>
+  breeze.first<Distribution>('EVM', 'Distributions', {
+    where: { Id: id },
+    expand: ['Program', 'Group', 'Location']
+  })
+
+export const distributionsForProgram = (programId: number) =>
+  breeze.query<Distribution>('EVM', 'Distributions', {
+    where: { ProgramId: programId },
+    expand: ['Group', 'Location'],
+    orderBy: ['Id']
+  })
+
+// ---- administration -------------------------------------------------------------------
+
+export const organizationCountries = () =>
+  breeze.query<OrganizationCountry>('Admin', 'OrganizationCountries', {
+    expand: ['Country', 'Settings', 'Settings.PropertyCollection']
+  })
+
+/**
+ * The SMS gateway credentials are columns on CountrySettings; the message templates are rows in
+ * its property collection, keyed by (SettingsId, Name). Both go up in one bundle.
+ */
+export function saveCountrySettings(
+  settings: CountrySettings,
+  changes: Record<string, unknown>,
+  templates: Array<{ Name: string; Value: string; existed: boolean }>
+) {
+  const bundle = [
+    breeze.modified(
+      'Admin',
+      'CountrySettings',
+      'CountrySettings',
+      { ...(settings as unknown as Record<string, unknown>), ...changes },
+      Object.fromEntries(
+        Object.keys(changes).map(k => [k, (settings as unknown as Record<string, unknown>)[k] ?? null])
+      )
+    ),
+    ...templates.map(t => {
+      const row = { SettingsId: settings.Id, Name: t.Name, Value: t.Value }
+
+      return t.existed
+        ? breeze.modified(
+            'Admin',
+            'CountrySettingsProperty',
+            'CountrySettings',
+            row,
+            {},
+            breeze.clientKey('SettingsId')
+          )
+        : breeze.addedWithKey('Admin', 'CountrySettingsProperty', 'CountrySettings', row, 'SettingsId')
+    })
+  ]
+
+  return breeze.saveChanges('Admin', bundle)
+}
+
+/** Users and roles have string keys and their own REST endpoints rather than Breeze saves. */
+export const users = (scope: 'Users' | 'OrganizationUsers' | 'Administrators' = 'Users') =>
+  breeze.query<ApplicationUser>('Admin', scope, { expand: ['Organization'] })
+
+export const createUser = (body: Record<string, unknown>) =>
+  postJson<ApplicationUser>('/api/ApplicationUser', body)
+
+export const updateUser = (id: string, body: Record<string, unknown>) =>
+  sendJson<ApplicationUser>('PUT', `/api/ApplicationUser/${id}`, body)
+
+export const deleteUser = (id: string) => sendJson<void>('DELETE', `/api/ApplicationUser/${id}`)
+
+export const addUserToRole = (id: string, roleId: string) =>
+  postJson<void>(`/api/ApplicationUser/${id}/AddUserToRole`, { roleId })
+
+export const removeUserFromRole = (id: string, roleId: string) =>
+  postJson<void>(`/api/ApplicationUser/${id}/RemoveUserFromRole`, { roleId })
+
+export const createRole = (name: string) => postJson<ApplicationRole>('/api/ApplicationRole', { Name: name })
+
+export const updateRole = (id: string, name: string) =>
+  sendJson<ApplicationRole>('PUT', `/api/ApplicationRole/${id}`, { Name: name })
+
+export const deleteRole = (id: string) => sendJson<void>('DELETE', `/api/ApplicationRole/${id}`)
+
+export const userRoles = () =>
+  breeze.query<{ UserId: string; RoleId: string }>('Admin', 'UserRoles', {})
+
+// ---- reporting -------------------------------------------------------------------------
+
+export const vendorFinancialReport = (request: ReportRequest) =>
+  postBlob('/api/Reports/VendorProgramFinancialReport', request)
+
+/** Unlike the other reports this one answers with a spreadsheet, and both period bounds are required. */
+export const paymentScheduleReport = (request: ReportRequest & { PeriodStart: string; PeriodEnd: string }) =>
+  postBlob('/api/Reports/PaymentScheduleReport', request)
+
+export const testSheet = (distributionId: number) =>
+  postBlob(`/api/Reports/GenerateTestSheet?distributionId=${distributionId}`, {})
+
+/** The report kinds the server stamps onto an ExportedReport row. */
+export const REPORT_TYPES = [
+  { Id: 1, Name: 'Program Closure Report' },
+  { Id: 2, Name: 'Vendor Financial Report' },
+  { Id: 3, Name: 'Distribution Report' },
+  { Id: 4, Name: 'Payment Schedule' }
+]
+
+export const exportedReports = (programId: number, reportType: number) =>
+  breeze.query<ExportedReport>('EVM', 'ExportedReports', {
+    where: { and: [{ ProgramId: programId }, { ReportType: reportType }] },
+    expand: ['Program'],
+    orderBy: ['Id desc']
+  })
+
+/** Attaches a counter-signed PDF, stored on the row as base64 like the report itself. */
+export const attachSignedReport = (report: ExportedReport, base64: string) =>
+  breeze.saveChanges('EVM', [
+    breeze.modified(
+      'EVM',
+      'ExportedReport',
+      'ExportedReports',
+      { ...(report as unknown as Record<string, unknown>), SignedReport: base64 },
+      { SignedReport: report.SignedReport ?? null }
+    )
+  ])
+
+// ---- vendor reconciliation ----------------------------------------------------------------
+
+/**
+ * Transactions awaiting reconciliation for one vendor on one programme. Sub-vendors roll up to
+ * their parent, and only debits (2) and cancellations (3) are reconciled.
+ */
+export const reconcilableTransactions = (vendorId: number, programId: number) =>
+  breeze.query<VoucherTransactionRecord>('EVM', 'VoucherTransactionRecords', {
+    where: {
+      and: [
+        { or: [{ VendorId: vendorId }, { 'Vendor.ParentRecordId': vendorId }] },
+        { 'Voucher.Distribution.ProgramId': programId },
+        { IsFinalized: null },
+        { or: [{ Type: 2 }, { Type: 3 }] }
+      ]
+    },
+    expand: ['Voucher', 'Beneficiary', 'Vendor'],
+    orderBy: ['CreatedOn']
+  })
+
+export const reconcile = (records: VoucherTransactionRecord[], by: string, at: string) =>
+  breeze.saveChanges(
+    'EVM',
+    records.map(record =>
+      breeze.modified(
+        'EVM',
+        'VoucherTransactionRecord',
+        'VoucherTransactionRecords',
+        { ...(record as unknown as Record<string, unknown>), ReconciledOn: at, ReconciledBy: by },
+        { ReconciledOn: record.ReconciledOn ?? null, ReconciledBy: record.ReconciledBy ?? null }
+      )
+    )
+  )
+
+// ---- country settings ---------------------------------------------------------------------
+
+export const vendors = () => breeze.query<Vendor>('EVM', 'Vendors', { orderBy: ['Name'] })
+
+export const distributions = () =>
+  breeze.query<Distribution>('EVM', 'Distributions', { expand: ['Program'], orderBy: ['Id'] })
+
+// Beneficiary.Name is a computed getter with no column behind it, so sorting uses its parts.
+export const distributionBeneficiaries = (distributionId: number) =>
+  breeze.query<Beneficiary>('EVM', 'DistributionBeneficiaries', {
+    expand: ['Location'],
+    orderBy: ['LastName', 'FirstName'],
+    parameters: { distributionId }
+  })
+
+export const distributionVendors = (distributionId: number) =>
+  breeze.query<Vendor>('EVM', 'DistributionVendors', {
+    expand: ['Location', 'Type'],
+    orderBy: ['Name'],
+    parameters: { distributionId }
+  })
+
+// ---- spreadsheets -----------------------------------------------------------------------
+
+const tenantQuery = (countryId: number, organizationId: number) =>
+  `organizationId=${organizationId}&countryId=${countryId}`
+
+export const exportBeneficiaries = (countryId: number, organizationId: number) =>
+  postBlob(`/api/Excel/ExportBeneficiaries?${tenantQuery(countryId, organizationId)}`, {})
+
+export const exportVendors = (countryId: number, organizationId: number) =>
+  postBlob(`/api/Excel/ExportVendors?${tenantQuery(countryId, organizationId)}`, {})
+
+export const importBeneficiaries = (file: File, countryId: number, organizationId: number) =>
+  postMultipart<{ Errors: unknown[] }>(
+    `/api/Excel/ImportBeneficiaries?${tenantQuery(countryId, organizationId)}`,
+    file
+  )
+
+export const importVendors = (file: File, countryId: number, organizationId: number) =>
+  postMultipart<{ Errors: unknown[] }>(
+    `/api/Excel/ImportVendors?${tenantQuery(countryId, organizationId)}`,
+    file
+  )

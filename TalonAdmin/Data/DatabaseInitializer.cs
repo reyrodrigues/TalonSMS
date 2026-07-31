@@ -274,6 +274,20 @@ namespace TalonAdmin.Data
             _voucherContext.Programs.Add(program);
             await _voucherContext.SaveChangesAsync();
 
+            // Distributing vouchers copies the programme's categories onto the new distribution, so
+            // without one here "Distribute Vouchers" would succeed but hand out nothing.
+            _voucherContext.ProgramVoucherCategories.Add(new Models.Vouchers.ProgramVoucherCategory
+            {
+                ProgramId = program.Id,
+                TypeId = voucherType.Id,
+                VendorTypeId = vendorType.Id,
+                NumberOfVouchers = beneficiaries.Length,
+                Value = 25m,
+                CountryId = tenant.CountryId,
+                OrganizationId = tenant.OrganizationId
+            });
+            await _voucherContext.SaveChangesAsync();
+
             var distribution = new Models.Vouchers.Distribution
             {
                 Number = 1,

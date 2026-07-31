@@ -4,6 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { Vendor } from '@/api/types'
 import DataTable, { type Column } from '@/components/DataTable.vue'
+import SpreadsheetButtons from '@/components/SpreadsheetButtons.vue'
 import { useDataSource } from '@/composables/useDataSource'
 import { useSessionStore } from '@/stores/session'
 import { notify, notifyError } from '@/composables/useToast'
@@ -42,6 +43,7 @@ async function remove(row: Vendor) {
   <div class="panel panel__head">
     <input v-model="source.search.value" class="input" placeholder="Search" style="max-width: 420px" />
     <div class="panel__spacer" />
+    <SpreadsheetButtons kind="vendors" @imported="source.refresh" />
     <button
       v-if="session.can('Create Vendors')"
       class="btn btn--primary"

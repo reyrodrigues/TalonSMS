@@ -121,6 +121,8 @@ export interface Program extends Entity {
   ShowInDashboard: boolean | null
   CountryId: number
   OrganizationId: number
+  /** Populated when the programme is loaded with `expand: ['Categories']`. */
+  Categories?: ProgramVoucherCategory[] | null
 }
 
 export interface Distribution extends Entity {
@@ -165,4 +167,134 @@ export interface DashboardProgram {
   UsedVsIssued: Array<[string, number, number, number]>
   /** [vendorName, transactionCount] tuples. */
   Vendor: Array<[string, number]>
+}
+
+export interface ReferenceName extends Entity {
+  Name: string
+}
+
+export interface TransactionLogItem extends Entity {
+  BeneficiaryId: number
+  VendorId: number
+  Type: number
+  AmountCredited: number
+  AmountRemaining: number
+  Date: string
+  TransactionCode: string | null
+  ConfirmationCode: string | null
+  VoucherCode: string | null
+  Quarantine: boolean
+  Processed: boolean
+  ProcessedOn: string | null
+  ProcessedBy: string | null
+  Beneficiary: Beneficiary | null
+  Vendor: Vendor | null
+  CountryId: number
+  OrganizationId: number
+}
+
+export interface CardLoad extends Entity {
+  BeneficiaryId: number
+  VendorId: number
+  Amount: number
+  Date: string
+  DistributionDate: string
+  Beneficiary: Beneficiary | null
+  Vendor: Vendor | null
+  CountryId: number
+  OrganizationId: number
+}
+
+export interface ProgramVoucherCategory extends Entity {
+  ProgramId: number
+  TypeId: number
+  VendorTypeId: number | null
+  NumberOfVouchers: number
+  IssuedVouchers: number
+  Value: number | null
+  ValidAfterOffset: number | null
+  ValidAfterOffsetType: number | null
+  Type: VoucherType | null
+  VendorType: VendorType | null
+  CountryId: number
+  OrganizationId: number
+}
+
+export interface ApplicationRole {
+  Id: string
+  Name: string
+}
+
+export interface ApplicationUser {
+  Id: string
+  UserName: string
+  FullName: string | null
+  Email: string | null
+  OrganizationId: number
+  Organization: Organization | null
+}
+
+export interface CountrySettingsProperty {
+  SettingsId: number
+  Name: string
+  Value: string | null
+}
+
+export interface CountrySettings extends Entity {
+  SmsBackendType: number
+  ServiceUrl: string | null
+  ServiceUser: string | null
+  ServicePassword: string | null
+  /** The SMS message templates, one row per name. */
+  PropertyCollection: CountrySettingsProperty[] | null
+}
+
+export interface OrganizationCountry extends Entity {
+  OrganizationId: number
+  CountryId: number
+  SettingsId: number | null
+  Country: Country | null
+  Settings: CountrySettings | null
+}
+
+export interface ExportedReport extends Entity {
+  ProgramId: number
+  ReportType: number
+  Description: string | null
+  ReportRunOn: string | null
+  ReportRunBy: string | null
+  Program: Program | null
+  /** PDF and spreadsheet payloads, stored on the row as base64. */
+  OriginalReport: string | null
+  Spreadsheet: string | null
+  SignedReport: string | null
+}
+
+export interface Voucher extends Entity {
+  VoucherCode: string | null
+  SequentialCode: string | null
+  CategoryId: number | null
+  DistributionId: number | null
+  BeneficiaryId: number | null
+  /** 1 issued, 2 used, 3 partially used, 4 cancelled. */
+  Status: number
+}
+
+export interface VoucherTransactionRecord extends Entity {
+  BeneficiaryId: number
+  VoucherId: number | null
+  VendorId: number | null
+  CreatedOn: string
+  ConfirmationCode: string | null
+  /** 1 credit, 2 debit, 3 cancellation. */
+  Type: number
+  Value: number | null
+  ReconciledBy: string | null
+  ReconciledOn: string | null
+  IsFinalized: boolean | null
+  Beneficiary: Beneficiary | null
+  Vendor: Vendor | null
+  Voucher: Voucher | null
+  CountryId: number
+  OrganizationId: number
 }

@@ -4,6 +4,7 @@ import * as api from '@/api/talon'
 import type { DashboardProgram } from '@/api/types'
 import LineChart from '@/components/LineChart.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useDashboardHub } from '@/composables/useDashboardHub'
 import { notifyError } from '@/composables/useToast'
 
 const { money, number } = useFormat()
@@ -11,7 +12,8 @@ const { money, number } = useFormat()
 const programmes = ref<DashboardProgram[]>([])
 const loading = ref(true)
 
-onMounted(async () => {
+async function load(showSpinner = true) {
+  if (showSpinner) loading.value = true
   try {
     programmes.value = await api.dashboard()
   } catch (error) {
@@ -19,7 +21,13 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(load)
+
+// A redemption anywhere in the country moves these figures, so the server pushes a nudge to reload.
+// Refreshing in place rather than showing the spinner again keeps the page from flickering.
+useDashboardHub(() => void load(false))
 
 /** The server sends [date, issued, unused, used] tuples. */
 const chartFor = (programme: DashboardProgram) => ({
