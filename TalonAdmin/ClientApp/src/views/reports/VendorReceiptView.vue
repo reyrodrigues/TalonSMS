@@ -11,8 +11,17 @@ import { notify, notifyError } from '@/composables/useToast'
 const { t } = useI18n()
 
 /**
- * Reconciliation: confirm which of a vendor's redemptions will be paid, then produce the payment
- * schedule they sign. Anything excluded here simply stays unreconciled for a later run.
+ * Reconciliation runs in three steps, and they have to happen in this order:
+ *
+ *   1. Reconcile — stamps who agreed to pay which redemptions, and when.
+ *   2. Issue the receipt — the document the vendor signs. Producing it is also what *finalises*
+ *      those transactions, which is what moves them out of this queue and into the accounts.
+ *   3. Payment schedule — the spreadsheet finance works from, over a date range.
+ *
+ * Step 2 is load-bearing and easy to miss: the payment schedule only ever reports finalised
+ * transactions, so reconciling alone leaves the money agreed but never scheduled.
+ *
+ * Anything held back here simply stays unreconciled for a later run.
  */
 const session = useSessionStore()
 const { dateTime, money } = useFormat()
@@ -51,6 +60,16 @@ const payable = computed(() =>
 
 const total = computed(() => payable.value.reduce((sum, r) => sum + (r.Value ?? 0), 0))
 
+/**
+ * Already reconciled and still waiting on a receipt. The query only returns unfinalised records,
+ * so a reconciliation date is the whole test.
+ */
+const awaitingReceipt = computed(() => records.value.filter(r => r.ReconciledOn))
+
+const awaitingTotal = computed(() =>
+  awaitingReceipt.value.reduce((sum, r) => sum + (r.Value ?? 0), 0)
+)
+
 onMounted(async () => {
   try {
     const [vendorList, programList] = await Promise.all([api.vendors(), api.programs()])
@@ -61,11 +80,16 @@ onMounted(async () => {
   }
 })
 
-async function load() {
+/**
+ * `keepExclusions` is set when the reload follows an action of our own. Clearing the held-back set
+ * there would quietly put a disputed redemption back among the payable ones, where the next
+ * Reconcile All would sweep it up — the opposite of what holding it back meant.
+ */
+async function load({ keepExclusions = false } = {}) {
   if (!ready.value) return
 
   loading.value = true
-  excluded.value = new Set()
+  if (!keepExclusions) excluded.value = new Set()
   try {
     records.value = await api.reconcilableTransactions(vendorId.value!, programId.value!)
   } catch (error) {
@@ -87,11 +111,41 @@ async function reconcileAll() {
 
   busy.value = true
   try {
+    const count = payable.value.length
     await api.reconcile(payable.value, session.user.UserName, new Date().toISOString())
-    notify('success', t('report.receipt.done', { count: payable.value.length }))
-    await load()
+    notify('success', t('report.receipt.done', { count }))
+    await load({ keepExclusions: true })
   } catch (error) {
     notifyError(error, t('report.receipt.failed'))
+  } finally {
+    busy.value = false
+  }
+}
+
+/**
+ * The vendor's signed receipt, and the step that finalises what it covers. The server decides the
+ * contents — everything reconciled and not yet finalised for this vendor and programme — so the
+ * rows it takes leave the list on the reload afterwards.
+ */
+async function issueReceipt() {
+  if (!ready.value || !session.tenant || awaitingReceipt.value.length === 0) return
+
+  busy.value = true
+  try {
+    const blob = await api.vendorFinancialReport({
+      VendorId: vendorId.value!,
+      ProgramId: programId.value!,
+      CountryId: session.tenant.countryId,
+      OrganizationId: session.tenant.organizationId,
+      PaperSize: 'A4',
+      TimezoneOffset: -new Date().getTimezoneOffset() / 60
+    })
+
+    downloadBlob(blob, `vendor-receipt-${vendorId.value}.pdf`)
+    notify('success', t('report.receipt.receiptDone'))
+    await load({ keepExclusions: true })
+  } catch (error) {
+    notifyError(error, t('report.receipt.receiptFailed'))
   } finally {
     busy.value = false
   }
@@ -156,7 +210,7 @@ async function paymentSchedule() {
     </div>
 
     <div class="panel__head">
-      <button class="btn btn--primary" :disabled="!ready || loading" @click="load">
+      <button class="btn btn--primary" :disabled="!ready || loading" @click="load()">
         {{ t('report.receipt.load') }}
       </button>
       <div class="panel__spacer" />
@@ -169,14 +223,34 @@ async function paymentSchedule() {
     </div>
   </div>
 
-  <div v-if="records.length > 0" class="panel panel__head">
-    <input v-model="filter" class="input" :placeholder="t('report.receipt.filter')"
-           style="max-width: 420px" />
-    <div class="panel__spacer" />
-    <strong>{{ t('report.receipt.toPay', { count: payable.length, total: money(total) }) }}</strong>
-    <button class="btn btn--primary" :disabled="payable.length === 0 || busy" @click="reconcileAll">
-      {{ busy ? t('report.receipt.reconciling') : t('report.receipt.reconcileAll') }}
-    </button>
+  <div v-if="records.length > 0" class="panel">
+    <div class="panel__head">
+      <input v-model="filter" class="input" :placeholder="t('report.receipt.filter')"
+             style="max-width: 420px" />
+      <div class="panel__spacer" />
+      <strong>{{ t('report.receipt.toPay', { count: payable.length, total: money(total) }) }}</strong>
+      <button class="btn btn--primary" :disabled="payable.length === 0 || busy" @click="reconcileAll">
+        {{ busy ? t('report.receipt.reconciling') : t('report.receipt.reconcileAll') }}
+      </button>
+    </div>
+
+    <!--
+      The second step. It is its own row because it is a different act from reconciling: this is
+      what the vendor signs, and issuing it is what finalises the payment.
+    -->
+    <div v-if="awaitingReceipt.length > 0" class="panel__head">
+      <p class="muted" style="margin: 0; font-size: 13px">{{ t('report.receipt.receiptHint') }}</p>
+      <div class="panel__spacer" />
+      <strong>
+        {{ t('report.receipt.awaitingReceipt', {
+          count: awaitingReceipt.length,
+          total: money(awaitingTotal)
+        }) }}
+      </strong>
+      <button class="btn btn--info" :disabled="busy" @click="issueReceipt">
+        {{ t('report.receipt.issueReceipt') }}
+      </button>
+    </div>
   </div>
 
   <div class="panel">

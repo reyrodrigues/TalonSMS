@@ -201,17 +201,35 @@ treat the offline client as an optimisation for well-equipped vendors, not the p
 
 ---
 
-## Reconciling and reporting
+## Paying vendors
+
+Redemption records a debt; it does not settle it. Settlement runs on the Reconciliation screen, in
+three steps that have to happen in this order:
+
+1. **Reconcile** — load what a vendor has redeemed and not been paid for, hold back anything
+   disputed, and record who agreed to pay the rest. Held-back transactions stay outstanding for a
+   later run.
+2. **Issue the receipt** — the PDF the vendor signs. Issuing it is also what *finalizes* those
+   transactions, and it is archived under Report History.
+3. **Payment schedule** — the spreadsheet finance works from, over a date range.
+
+{: .caution }
+> Step 2 is load-bearing. The payment schedule only reports finalized transactions, so reconciling
+> and skipping straight to the schedule produces a spreadsheet with nothing on it.
+
+## Reporting
 
 The dashboard shows issued against redeemed value, broken out by location and vendor, and updates live
-over SignalR.
+over SignalR. It is regenerated at most every ten minutes and cached on disk between times, so a
+figure can lag a redemption by that much.
 
 Reports render Razor templates to PDF through headless Chromium:
 
 - **Distribution report** — every household with each voucher and its status, with redemption claim
-  codes and totals in the country's currency. This is the document that reconciles a distribution.
+  codes and totals in the country's currency. This is the document that accounts for a distribution.
 - **Programme closure report** — the end-of-programme position.
-- **Receipts** — per-transaction records for vendor settlement.
+- **Vendor financial report** — what one vendor is owed, and the receipt they sign. Running it
+  finalizes the reconciled transactions it covers.
 
 Beneficiary and vendor lists export to Excel, and the same format imports, which is how bulk edits are
 usually made.

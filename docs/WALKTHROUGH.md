@@ -166,14 +166,37 @@ vendor count. It updates live over SignalR.
 
 ---
 
-## 10. Reconcile
+## 10. Pay the vendor
 
-![Reports](screenshots/18-report-screen.png)
+Redeeming a voucher tells you a vendor is owed money. Paying them is a separate act, and it happens
+here. Pick the vendor and the programme, and Talon lists what they have redeemed and not yet been
+paid for — five vouchers, JD 375.
 
-The distribution report is the document that reconciles a distribution. Every household appears with
-both vouchers; the five redemptions carry their claim codes; totals are in the country's currency.
+![What the vendor is owed](screenshots/18-reconciliation.png)
 
-![Distribution report](screenshots/19-distribution-report.png)
+Anything disputed can be held back: it drops out of the total and simply stays outstanding for a
+later run. **Reconcile All** then records who agreed to pay the rest, and when.
+
+That is an agreement, not a payment, so it is deliberately not the last step. Issuing the receipt is
+what finalizes those transactions — it produces the document the vendor signs, and only finalized
+transactions appear on the payment schedule that finance works from.
+
+![Reconciled, awaiting a receipt](screenshots/19-reconciliation-receipt.png)
+
+The order matters and the screen now states it, because reconciling and then going straight to the
+payment schedule produces a spreadsheet with nothing on it.
+
+---
+
+## 11. Account for the distribution
+
+![Reports](screenshots/20-report-screen.png)
+
+The distribution report is the document that accounts for a distribution. Every household appears
+with both vouchers; the five redemptions carry their claim codes; totals are in the country's
+currency.
+
+![Distribution report](screenshots/21-distribution-report.png)
 
 Reports render a Razor template to HTML and convert it with headless Chromium, which is the one part
 of Talon that wants real memory — see [Sizing](deploy.html#sizing).

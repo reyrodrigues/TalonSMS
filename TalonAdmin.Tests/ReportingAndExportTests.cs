@@ -1,8 +1,11 @@
 using System.Data;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml;
 using TalonAdmin.Extensions;
+using TalonAdmin.Models.Vouchers;
 using TalonAdmin.Tests.Infrastructure;
 
 namespace TalonAdmin.Tests;
@@ -89,6 +92,62 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
         Assert.True(response.IsSuccessStatusCode);
         Assert.Equal(SpreadsheetContentType, response.Content.Headers.ContentType?.MediaType);
         AssertIsWorkbook(await response.Content.ReadAsByteArrayAsync());
+    }
+
+    /// <summary>
+    /// The ordering the reconciliation screen has to respect. Reconciling records who agreed to
+    /// pay; it deliberately does not finalise. Only the vendor receipt finalises, and the payment
+    /// schedule reports nothing but finalised transactions — so a screen that offers reconciling
+    /// and the payment schedule, but no way to issue the receipt, produces an empty schedule and
+    /// no explanation. That is exactly what it used to do.
+    /// </summary>
+    [Fact]
+    public async Task Only_the_vendor_receipt_finalises_what_reconciliation_agreed_to_pay()
+    {
+        await AuthenticateAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<Context>();
+
+            var redemptions = await context.VoucherTransactionRecords
+                .Where(v => v.Type == 2 && v.VendorId == 1)
+                .ToListAsync();
+
+            Assert.NotEmpty(redemptions);
+
+            foreach (var redemption in redemptions)
+            {
+                redemption.ReconciledOn = DateTime.UtcNow;
+                redemption.ReconciledBy = TalonAppFactory.AdminUserName;
+                redemption.IsFinalized = null;
+            }
+
+            await context.SaveChangesAsync();
+
+            // Agreeing to pay is not the same as having paid: the schedule still ignores these.
+            Assert.All(redemptions, r => Assert.NotEqual(true, r.IsFinalized));
+        }
+
+        await _api.PostForBytesAsync("/api/Reports/VendorProgramFinancialReport", ReportRequest());
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<Context>();
+
+            var reconciled = await context.VoucherTransactionRecords
+                .Where(v => v.Type == 2 && v.VendorId == 1 && v.ReconciledOn != null)
+                .ToListAsync();
+
+            Assert.All(reconciled, r => Assert.True(r.IsFinalized));
+
+            // Nothing that was never reconciled gets swept along with it.
+            var untouched = await context.VoucherTransactionRecords
+                .Where(v => v.ReconciledOn == null)
+                .ToListAsync();
+
+            Assert.All(untouched, r => Assert.NotEqual(true, r.IsFinalized));
+        }
     }
 
     [Fact]
