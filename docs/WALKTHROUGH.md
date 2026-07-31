@@ -148,10 +148,16 @@ the Telegram bot go through the same rules. How messages travel is a per-country
 country holds an ordered chain rather than a single channel, so it can reach enrolled recipients on a
 free channel and text everyone else.
 
-![Delivery channels](screenshots/16-country-settings.png)
+The same screen holds the wording of every message Talon sends. **Talon ships no default wording**,
+so this has to be filled in before the first distribution — vouchers issued against empty templates
+are still valid, but nobody is told their code. Writing them is covered in
+[Messaging](MESSAGING.html#message-templates).
 
-Five households redeemed their food voucher at Al Salam Supermarket. Every message in and out is
-logged, which is what makes a disputed redemption possible to investigate.
+![Delivery channels and message templates](screenshots/16-country-settings.png)
+
+Every message Talon sends is recorded with its recipient, its state and the number of attempts it
+took — here, the 24 voucher codes going out to the twelve households. That record is what makes a
+disputed redemption possible to investigate, and a delivery that never arrived possible to notice.
 
 ![Message log](screenshots/17-message-log.png)
 

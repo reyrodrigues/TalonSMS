@@ -234,6 +234,121 @@ curl "https://api.telegram.org/bot<TOKEN>/setWebhook" \
 Telegram only calls HTTPS URLs, and it retries an update until it gets a 200, which is why the
 endpoint answers 200 even for updates it ignores.
 
+## Message templates
+
+Talon ships **no default wording**. Every message it sends is a template you write, stored per
+country under **Organization Administration → Country Settings**. Until you write them, a
+distribution enqueues one message per household and fails every one with *"The message body is
+empty"* — the codes are issued and valid, but nobody is told what they are.
+
+Write the templates before the first distribution, not after.
+
+### The substitution syntax
+
+A template is plain text with `@Model.Something.Field` placeholders, which are replaced with values
+from the record the message is about. `@(Model.Something.Field)` works too, and is the form to use
+when the placeholder is followed by a letter or a dot that would otherwise be read as part of the
+name.
+
+```
+Your voucher code is @Model.Voucher.VoucherCode for @Model.Voucher.Value JOD.
+```
+
+This is a deliberately small substitution, not Razor. There are no conditionals, no loops, no
+formatting specifiers and no method calls — only field lookups. Anything else is left in the message
+exactly as you typed it.
+
+{: .caution }
+> **A placeholder that names a field which does not exist renders as nothing, and the message still
+> sends.** `@Model.Voucher.Code` is not a field — the field is `VoucherCode` — so that template
+> delivers "Your voucher code is ." to every household, and the delivery log records it as sent.
+> Nothing warns you. Send yourself a test message and read it before you run a distribution.
+
+### What you can put in each message
+
+| Template | Sent to | When |
+| --- | --- | --- |
+| `Beneficiary Voucher Message` | Beneficiary | A voucher is issued. **This is the one that carries the code** — if you write only one, write this. |
+| `Beneficiary Confirmed Message` | Beneficiary | Their voucher was redeemed |
+| `Vendor Confirmed Message` | Vendor | They redeemed a voucher, and on a repeat of the same code inside the grace window |
+| `Beneficiary Cancelled Voucher Message` | Beneficiary | Their voucher was cancelled |
+| `Vendor Cancelled Message` | Vendor | A voucher they held was cancelled |
+| `Beneficiary Already Used Message` | Beneficiary | A code already redeemed was presented again |
+| `Vendor Already Used Message` | Vendor | As above |
+| `Beneficiary Cannot Accept Message` | Beneficiary | The vendor is not of a type this voucher category allows |
+| `Vendor Cannot Accept Message` | Vendor | As above |
+| `Wrong National Id Message` | Vendor | The identifier given with the code did not match. The interface labels this one **Wrong Personal Identifier Message** — the stored name is older than the rename, and countries have already filled it in under the old one |
+| `Invalid Voucher Message` | Vendor | The code is not a voucher at all |
+
+The fields available are the ones on the records themselves. The useful ones:
+
+| Placeholder | Value |
+| --- | --- |
+| `@Model.Voucher.VoucherCode` | The redemption code |
+| `@Model.Voucher.Value` | The voucher's value, unformatted |
+| `@Model.Beneficiary.Name` | First and last name together |
+| `@Model.Beneficiary.FirstName` | Given name alone — usually the better choice in a text |
+| `@Model.Beneficiary.MobileNumber` | Their number |
+| `@Model.Vendor.Name` | The vendor's trading name |
+| `@Model.Vendor.MobileNumber` | The vendor's number |
+
+Stick to fields on the three records themselves. Following a relationship out of them — the
+distribution a voucher belongs to, the location a beneficiary lives in — reaches for something the
+workflow did not load, and an unloaded relationship renders as nothing in exactly the same silent
+way a misspelling does.
+
+Not every message carries every record, either. `Invalid Voucher Message` and
+`Wrong National Id Message` fire before a beneficiary is known, so `@Model.Beneficiary.…` is empty
+in both, and a template that opens by greeting them produces a message that starts with a blank.
+`Invalid Voucher Message` has no voucher either — by definition, the code matched nothing — so the
+code the vendor actually typed is at `@Model.VoucherCode`, not `@Model.Voucher.VoucherCode`.
+
+### A worked set
+
+Short, unambiguous, and useful to someone holding an old handset:
+
+```
+Beneficiary Voucher Message
+  @Model.Beneficiary.FirstName: your voucher code is @Model.Voucher.VoucherCode,
+  worth @Model.Voucher.Value. Show this code at a participating shop.
+
+Beneficiary Confirmed Message
+  Your voucher @Model.Voucher.VoucherCode was used at @Model.Vendor.Name. Thank you.
+
+Vendor Confirmed Message
+  Accepted: @Model.Voucher.VoucherCode for @Model.Voucher.Value.
+
+Beneficiary Already Used Message
+  Voucher @Model.Voucher.VoucherCode has already been used. Contact the programme office.
+
+Invalid Voucher Message
+  That code was not recognised. Please check it and try again.
+```
+
+### Things worth getting right
+
+**Keep it inside one SMS.** A GSM-7 message is 160 characters; a message containing any Arabic
+character is UCS-2 and drops to **70**. Longer messages are split, and every gateway charges per
+part. Since the placeholder expands at send time, a template that looks short can cross the boundary
+once a long name is substituted — check with your longest name, not your shortest.
+
+**Say who is writing.** A code arriving from an unknown number is indistinguishable from a scam.
+Name the programme or organisation in the message that carries the code.
+
+**Put in only what the message needs.** These arrive on shared and borrowed handsets, and a text
+message sits in the inbox afterwards. The code and the amount are needed; a personal identifier, a
+full name, a location or a household size generally is not. Never place `@Model.Beneficiary.PIN` or
+`@Model.Vendor.Password` in a template — they are on the record, so they will render.
+
+**Write them in the language people read.** Templates are per country and are stored as you type
+them, so they can be written in any script — this is separate from the interface language, which
+only affects staff screens. Right-to-left text is stored and delivered unchanged.
+
+**An organisation can override a country's wording.** If the same country is run by more than one
+organisation, a template set on the organisation's own country record wins over the country-wide
+one; blank there falls back. That is the mechanism to use when two programmes in one country need to
+identify themselves differently.
+
 ## Inbound
 
 Redeeming a voucher is a message going the other way, and it works from any channel.

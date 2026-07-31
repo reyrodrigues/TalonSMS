@@ -138,7 +138,7 @@ the first entry of `X-Forwarded-For` when that header is present.
 ## Messaging
 
 How the outbound queue behaves. Channel credentials are **not** here — they are per-country data,
-set in the interface under **Country Administration → Country Settings**, because a deployment can
+set in the interface under **Organization Administration → Country Settings**, because a deployment can
 run several countries on different gateways. See [Messaging](MESSAGING.html).
 
 | Setting | Default | Effect |
