@@ -5,10 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using TalonAdmin.Auth;
 using TalonAdmin.Extensions;
 using TalonAdmin.Messaging;
 using TalonAdmin.Models.Vouchers;
@@ -115,8 +117,11 @@ namespace TalonAdmin.Controllers.Api
             });
         }
 
+        // Redemption is reachable from here as well as from the SMS webhook, so it carries the same
+        // flood guard. Without it this route would be the unlimited way in to guessing voucher codes.
         [HttpPost("{countryCode}")]
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitPolicies.SmsRedemption)]
         public async Task<IActionResult> Update(
             [FromBody] JObject update,
             string countryCode,
