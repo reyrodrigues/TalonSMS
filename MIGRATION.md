@@ -46,10 +46,13 @@ project — but see *Schema* below before running against an existing database.
 | Templating | RazorEngine 3.7 | Built-in Razor view engine (`RazorViewRenderer`) |
 | PDF | TuesPechkin + Win64 wkhtmltopdf | Headless Chromium via PuppeteerSharp (`IPdfRenderer`) |
 | Spreadsheets | EPPlus 4.0.3 | EPPlus 8.6.3 |
-| Barcodes | ZXing.Net + `System.Drawing` | ZXing.Net + SkiaSharp |
 | Bundling | `System.Web.Optimization` | Static files under `wwwroot/` |
-| SOAP (TurboSMS) | `wsdl.exe` / `SoapHttpClientProtocol` | Hand-written SOAP 1.1 client over `HttpClient` |
 | Bulk insert | `EntityFramework.BulkInsert-ef6` | `AddRange` + `SaveChangesAsync` |
+
+Two rows have since been dropped from the table entirely rather than migrated a second time. The
+barcode stack (ZXing.Net, first over `System.Drawing` and then SkiaSharp) went with the paper QR
+voucher path, which was never used in the field. The TurboSMS SOAP client went when the messaging
+layer was rebuilt around [channels](docs/MESSAGING.html); only Clickatell was carried forward.
 
 ### Authentication
 

@@ -100,7 +100,7 @@ captures each report's HTML so tests can assert on report content rather than op
 | `VoucherCodeGenerationTests` | That voucher codes are uniformly distributed, reach their whole space, and never throw at a supported length |
 | `BreezeContractTests` | The wire contract between breeze-client and Breeze 7 — property casing, `$type` discriminators, paging, `expand`, save round-trips |
 | `AuthenticationTests` | `/Token`'s OAuth shape, the three auth schemes, 401-not-302, vendor sign-in |
-| `ReportingAndExportTests` | Every report type, the QR test sheet, Excel import and export |
+| `ReportingAndExportTests` | Every report type, Excel import and export |
 | `NavigationAndPermissionTests` | The seeded sidebar and the action grants the UI gates buttons on |
 
 Most of these are regression guards for specific defects the migration hit, and each was verified to

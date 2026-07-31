@@ -25,10 +25,10 @@ const session = useSessionStore()
 const router = useRouter()
 const { date } = useFormat()
 
+/** The paper QR-code mechanism was removed; it was never used in the field. */
 const MECHANISMS = [
   { value: 1, label: 'SMS' },
-  { value: 2, label: 'NFC' },
-  { value: 3, label: 'QR-Code' }
+  { value: 2, label: 'NFC' }
 ]
 
 const model = ref<Partial<Program>>({

@@ -10,7 +10,7 @@ import { useSessionStore } from '@/stores/session'
 const session = useSessionStore()
 const router = useRouter()
 
-const MECHANISM = ['', 'SMS', 'NFC', 'QR-Code']
+const MECHANISM = ['', 'SMS', 'NFC']
 
 const source = useDataSource<Program>(
   options =>

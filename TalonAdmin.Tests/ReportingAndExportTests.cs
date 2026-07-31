@@ -79,24 +79,6 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
     }
 
     [Fact]
-    public async Task The_test_sheet_embeds_a_qr_code_per_voucher()
-    {
-        await AuthenticateAsync();
-        _factory.PdfRenderer.Clear();
-
-        var pdf = await _api.PostForBytesAsync("/api/Reports/GenerateTestSheet?distributionId=1", new { });
-
-        Assert.StartsWith("%PDF", Encoding.ASCII.GetString(pdf[..4]));
-
-        // ZXing renders through SkiaSharp now that System.Drawing is unavailable; the codes are
-        // inlined as base64 PNGs.
-        var html = _factory.PdfRenderer.LastHtml;
-        var images = html.Split("data:image/png;base64,").Length - 1;
-
-        Assert.Equal(5, images);
-    }
-
-    [Fact]
     public async Task The_payment_schedule_is_a_spreadsheet()
     {
         await AuthenticateAsync();

@@ -434,9 +434,6 @@ export const vendorFinancialReport = (request: ReportRequest) =>
 export const paymentScheduleReport = (request: ReportRequest & { PeriodStart: string; PeriodEnd: string }) =>
   postBlob('/api/Reports/PaymentScheduleReport', request)
 
-export const testSheet = (distributionId: number) =>
-  postBlob(`/api/Reports/GenerateTestSheet?distributionId=${distributionId}`, {})
-
 /** The report kinds the server stamps onto an ExportedReport row. */
 export const REPORT_TYPES = [
   { Id: 1, Name: 'Program Closure Report' },

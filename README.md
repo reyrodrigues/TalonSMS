@@ -191,7 +191,7 @@ rather than on opaque PDF bytes.
 | `VoucherDistributionScenarioTests` | The end-to-end business workflow: stand up a country, register a vendor and beneficiaries, define a programme, distribute vouchers to a cycle, redeem one by SMS, then check the dashboard and the distribution report agree |
 | `BreezeContractTests` | The Breeze 7 wire contract the client speaks: property casing, `$type` discriminators, `take`/`skip`, `inlineCount`, `where`, `expand`, and save round-trips |
 | `AuthenticationTests` | `/Token`'s OAuth shape, the `Token`/`Bearer`/`Basic` schemes, 401-not-302, vendor sign-in, and the deserialization type binder |
-| `ReportingAndExportTests` | Every report type, the QR test sheet, Excel export/import, and the EPPlus empty-table case |
+| `ReportingAndExportTests` | Every report type, Excel export/import, and the EPPlus empty-table case |
 | `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links), the action grants the UI gates buttons on, and the four-row bundle that creating a country writes |
 | `OutboundMessagingTests` | The messaging queue: a message is persisted before it is attempted, transient failures retry with backoff, rejections do not, and an unconfigured country fails visibly |
 | `MessageChannelTests` | The Clickatell, Android-gateway and Telegram adapters: the wire format each produces, which failures are worth retrying, that a Telegram enrolment payload cannot be forged, and how a country's channel chain resolves |
@@ -277,7 +277,7 @@ TalonAdmin/
   Reporting/            Razor-to-string renderer, PDF renderer, report view-models
   Views/Reports/        Report templates
   Data/                 Schema creation and seeding
-  Soap/TurboSMS/        SOAP client for the TurboSMS gateway
+  Messaging/            Outbound queue, delivery channels, inbound redemption
   ClientApp/            Vue 3 client (see below)
 docker/                 WireMock stubs for the external services
 ```

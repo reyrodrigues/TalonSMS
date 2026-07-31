@@ -94,25 +94,22 @@ async function resend(record: VoucherTransactionRecord) {
   }
 }
 
-async function download(kind: 'report' | 'testSheet') {
+async function downloadReport() {
   if (!session.tenant) return
 
   busy.value = true
   try {
-    const blob =
-      kind === 'testSheet'
-        ? await api.testSheet(id.value)
-        : await api.distributionReport({
-            DistributionId: id.value,
-            CountryId: session.tenant.countryId,
-            OrganizationId: session.tenant.organizationId,
-            PaperSize: 'A4',
-            TimezoneOffset: -new Date().getTimezoneOffset() / 60
-          })
+    const blob = await api.distributionReport({
+      DistributionId: id.value,
+      CountryId: session.tenant.countryId,
+      OrganizationId: session.tenant.organizationId,
+      PaperSize: 'A4',
+      TimezoneOffset: -new Date().getTimezoneOffset() / 60
+    })
 
-    downloadBlob(blob, kind === 'testSheet' ? `test-sheet-${id.value}.pdf` : `distribution-${id.value}.pdf`)
+    downloadBlob(blob, `distribution-${id.value}.pdf`)
   } catch (error) {
-    notifyError(error, 'Could not generate the document.')
+    notifyError(error, 'Could not generate the report.')
   } finally {
     busy.value = false
   }
@@ -126,10 +123,9 @@ async function download(kind: 'report' | 'testSheet') {
 
   <template v-else-if="distribution">
     <div class="panel panel__head">
-      <button class="btn btn--info" :disabled="busy" @click="download('report')">
+      <button class="btn btn--info" :disabled="busy" @click="downloadReport">
         Distribution Report
       </button>
-      <button class="btn" :disabled="busy" @click="download('testSheet')">QR Test Sheet</button>
       <div class="panel__spacer" />
       <button class="btn btn--ghost" @click="router.push({ name: 'distributions' })">Back</button>
     </div>

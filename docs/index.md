@@ -65,7 +65,7 @@ redeems once.
 **Reconciliation.** Every redemption is a ledger entry against a vendor, a household, a category and
 a distribution — which is what makes the reports at the end of a programme add up.
 
-Vendors with smartphones can use a point-of-sale client that scans QR codes and works offline,
+Vendors with smartphones can use a point-of-sale client that works offline,
 syncing when it next has a connection. That path is optional; SMS is the one that works everywhere.
 
 ---

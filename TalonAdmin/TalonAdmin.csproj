@@ -34,11 +34,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 
     <PackageReference Include="EPPlus" Version="8.6.3" />
-    <PackageReference Include="ZXing.Net" Version="0.16.11" />
-    <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.22" />
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
-    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.1" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.1" />
 
     <!-- Headless Chromium replaces the Windows-only wkhtmltopdf/TuesPechkin stack -->
     <PackageReference Include="PuppeteerSharp" Version="25.4.0" />

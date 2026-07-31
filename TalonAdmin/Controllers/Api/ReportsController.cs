@@ -12,13 +12,11 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml;
-using SkiaSharp;
 using TalonAdmin.Attributes;
 using TalonAdmin.Controllers.BindingModels;
 using TalonAdmin.Extensions;
 using TalonAdmin.Models.Vouchers;
 using TalonAdmin.Reporting;
-using ZXing;
 
 namespace TalonAdmin.Controllers.Api
 {
@@ -43,49 +41,6 @@ namespace TalonAdmin.Controllers.Api
             this._userManager = userManager;
             this._viewRenderer = viewRenderer;
             this._pdfRenderer = pdfRenderer;
-        }
-
-        [HttpPost("GenerateTestSheet")]
-        public async Task<IActionResult> GenerateTestSheet([FromQuery]int distributionId)
-        {
-            var distribution = await ctx.Distributions.AsNoTracking().Where(d => d.Id == distributionId).FirstAsync();
-            var vouchers = await ctx.Vouchers.AsNoTracking()
-                .Include(v => v.Category)
-                .Include(v => v.TransactionRecords).ThenInclude(t => t.Beneficiary)
-                .Where(v => v.DistributionId == distribution.Id).ToListAsync();
-            var codeWriter = new ZXing.QrCode.QRCodeWriter();
-            var writer = new ZXing.SkiaSharp.BarcodeWriter();
-
-            var qrCodes = vouchers.Select(v =>
-            {
-                var code = String.IsNullOrEmpty(v.SequentialCode) ? v.VoucherCode : v.SequentialCode;
-                var barcode = codeWriter.encode(code, BarcodeFormat.QR_CODE, 200, 200);
-
-                // NOTE: System.Drawing's Bitmap/ImageFormat.Png is Windows-only, so the ZXing
-                // SkiaSharp binding renders the matrix and SkiaSharp encodes the PNG.
-                using (var bitmap = writer.Write(barcode))
-                using (var image = SKImage.FromBitmap(bitmap))
-                using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-                {
-                    return new TestSheetCode
-                    {
-                        QR = "data:image/png;base64," + Convert.ToBase64String(data.ToArray()),
-                        Beneficiary = v.IssuingTransactionRecord.Beneficiary.Name,
-                        Value = v.Value,
-                        ValidAfter = v.Category.ValidAfter,
-                    };
-                }
-            }).OrderBy(d => d.Beneficiary).ThenBy(d => d.ValidAfter);
-
-
-            var model = new TestSheetModel
-            {
-                Codes = qrCodes.ToArray()
-            };
-
-            var reportData = await GenerateReport("TestSheet.cshtml", "Test Sheet", model, "Letter");
-
-            return File(reportData, "application/pdf");
         }
 
         [HttpPost("ProgramClosureReport")]

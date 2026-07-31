@@ -108,12 +108,6 @@ both vouchers, the five redemptions carry their claim codes, and the totals are 
 
 ![Distribution report](screenshots/15-distribution-report-pdf.png)
 
-The voucher sheet prints one QR code per voucher — 24 across four pages — labelled with the
-household, value and valid-from date. These are rendered by ZXing through SkiaSharp, which
-replaced the Windows-only `System.Drawing` path.
-
-![Voucher QR sheet](screenshots/16-voucher-qr-sheet.png)
-
 ## Reproducing this
 
 The walkthrough was driven through the UI, with bulk records (the extra vendors, the twelve

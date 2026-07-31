@@ -225,14 +225,6 @@ namespace TalonAdmin.Controllers.Api
             JToken result = await GenerateCardLoadsInternal();
             return Ok(result);
         }
-
-        [HttpGet("GenerateQRCodes")]
-        public async Task<IActionResult> GenerateQRCodes()
-        {
-            JToken result = await GenerateQRCodesInternal();
-            return Ok(result);
-        }
-
         #endregion
 
         #region Offline Load
@@ -253,10 +245,6 @@ namespace TalonAdmin.Controllers.Api
             JToken beneficiaryKeysJson = await DownloadBeneficiaryKeysInternal();
             string beneficiaryKeys = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
 
-            // NOTE: pre-existing behaviour: the QR codes entry is filled with the beneficiary keys
-            // payload, not with qrCodesJson. Kept as is.
-            JToken qrCodesJson = await DownloadBeneficiaryKeysInternal();
-            string qrCodes = EncryptUsingRSA(beneficiaryKeysJson, "VendorPublic.json");
             using (var memoryStream = new MemoryStream())
             {
                 using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
@@ -277,13 +265,6 @@ namespace TalonAdmin.Controllers.Api
                         streamWriter.Write(beneficiaryKeys);
                     }
 
-                    var qrCodesEntry = archive.CreateEntry("QRCodes.b64");
-
-                    using (var entryStream = qrCodesEntry.Open())
-                    using (var streamWriter = new StreamWriter(entryStream))
-                    {
-                        streamWriter.Write(qrCodes);
-                    }
                 }
 
                 using (var outputStream = new MemoryStream())
@@ -517,6 +498,14 @@ namespace TalonAdmin.Controllers.Api
             });
         }
 
+        /// <summary>
+        /// Redeems a voucher code presented at the point of sale.
+        /// </summary>
+        /// <remarks>
+        /// The route keeps its name because deployed vendor apps call it, but this is not the paper
+        /// QR path that was removed — it is how the point-of-sale client redeems any voucher code,
+        /// and it is shared with the offline transaction sync.
+        /// </remarks>
         [HttpPost("ProcessQRTransaction")]
         [AuthorizeVendor]
         public async Task<IActionResult> ProcessQRTransaction([FromBody]dynamic request)
@@ -526,15 +515,15 @@ namespace TalonAdmin.Controllers.Api
             var vendor = await VendorFromRequest();
             dynamic result = new JObject();
             string voucherCode = request.voucherCode;
-            return Ok(await ProcessQRTransactionInternal(vendor, voucherCode));
+            return Ok(await RedeemVoucherCodeInternal(vendor, voucherCode));
         }
 
-        private async Task<JToken> ProcessQRTransactionInternal(Vendor vendor, string voucherCode)
+        private async Task<JToken> RedeemVoucherCodeInternal(Vendor vendor, string voucherCode)
         {
-            return await ProcessQRTransactionInternal(vendor, voucherCode, DateTime.UtcNow);
+            return await RedeemVoucherCodeInternal(vendor, voucherCode, DateTime.UtcNow);
         }
 
-        private async Task<JToken> ProcessQRTransactionInternal(Vendor vendor, string voucherCode, DateTime transactionDate)
+        private async Task<JToken> RedeemVoucherCodeInternal(Vendor vendor, string voucherCode, DateTime transactionDate)
         {
             // NOTE: TransactionRecords is included because IssuingTransactionRecord walks it and
             // lazy loading is no longer available.
@@ -562,7 +551,7 @@ namespace TalonAdmin.Controllers.Api
                 ConfirmationCode = confirmationCode,
                 LastModifiedOn = transactionDate,
                 CreatedOn = transactionDate,
-                Value = voucher.Value, // QR claims full price,
+                Value = voucher.Value, // a code redemption claims the full value
                 CountryId = voucher.CountryId,
                 OrganizationId = voucher.OrganizationId
             };
@@ -601,8 +590,7 @@ namespace TalonAdmin.Controllers.Api
             }
             else
             {
-                // QR And SMS should be the same?
-                result = await ProcessQRTransactionInternal(transaction.Vendor, transaction.VoucherCode, transaction.Date);
+                result = await RedeemVoucherCodeInternal(transaction.Vendor, transaction.VoucherCode, transaction.Date);
             }
             var me = await this.WhoAmI(adminCtx);
 
@@ -803,46 +791,6 @@ namespace TalonAdmin.Controllers.Api
             var result = JToken.FromObject(loadDictionary);
             return result;
         }
-
-        /// <summary>
-        /// Does the meat of generating the data needed to process QR Codes
-        /// QR Code loads have the beneficiary id not encrypted and the voucher code is in the client and in the physical voucher
-        /// </summary>
-        /// <returns></returns>
-        private async Task<JToken> GenerateQRCodesInternal()
-        {
-            var loadDictionary = (await ctx.VoucherTransactionRecords
-                .AsNoTracking()
-                .FilterCountry(this)
-                .Where(t =>
-                t.Voucher.Distribution.Program.DistributionMechanism == 3
-                && t.Voucher.Status == 1
-                && t.Type == 1
-                && t.Beneficiary.CardKey != null
-                && t.Beneficiary.PIN != null
-                && t.Beneficiary.PIN != ""
-            ).Select(t => new
-            {
-                BeneficiaryId = t.Beneficiary.Id,
-                VoucherCode = t.Voucher.SequentialCode == null ? t.Voucher.VoucherCode : t.Voucher.SequentialCode,
-                Value = t.Value,
-                ValidAfter = t.Voucher.Category.ValidAfter,
-            })
-            .ToArrayAsync())
-            .Select(l => new
-            {
-                _id = l.VoucherCode,
-                VoucherCode = l.VoucherCode,
-                BeneficiaryId = l.BeneficiaryId,
-                Payload = EncodeQRLoad(l.BeneficiaryId, l.Value, l.ValidAfter, l.VoucherCode)
-            })
-            .ToArray();
-
-            var result = JToken.FromObject(loadDictionary);
-            return result;
-        }
-
-
         #endregion
 
         #region Helper Methods
@@ -989,14 +937,6 @@ namespace TalonAdmin.Controllers.Api
             return payload.Encrypt(KeyForBeneficiary(beneficiaryId));
         }
 
-
-        private string EncodeQRLoad(int beneficiaryId, decimal? value, DateTime? validAfter, string voucherCode)
-        {
-            int unixTime = validAfter != null ? (int)(validAfter.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds : 0;
-            var payload = String.Format("1933|{0}|{1:X}|{2}", value, unixTime, voucherCode);
-
-            return payload.Encrypt(KeyForBeneficiary(beneficiaryId));
-        }
 
         private Aes KeyForBeneficiary(int beneficiaryId)
         {

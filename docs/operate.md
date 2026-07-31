@@ -106,8 +106,7 @@ household receives two vouchers.
 Twelve households and two categories produces twenty-four vouchers. The arithmetic is closed from this
 point: every voucher belongs to a distribution, and every redemption is a ledger entry against one.
 
-Codes reach recipients either by message, or printed as a QR sheet — one code per voucher, labelled
-with the household, value and valid-from date — for vendors using the point-of-sale client.
+Codes reach recipients by message.
 
 How a message is delivered is a per-country setting: a Clickatell account, an Android handset with a
 local SIM acting as the gateway, or a Telegram bot. Which one is right depends on what the caseload
@@ -176,7 +175,7 @@ is still visible to whoever is investigating.
 ## Offline redemption
 
 Vendors with a smartphone can use the point-of-sale client instead of SMS. It downloads the vouchers
-for its distribution, scans QR codes offline, records transactions locally, and syncs when it next has
+for its distribution, records transactions locally, and syncs when it next has
 a connection. Transactions it cannot reconcile are quarantined for a human to resolve rather than being
 silently dropped.
 
@@ -196,7 +195,6 @@ Reports render Razor templates to PDF through headless Chromium:
   codes and totals in the country's currency. This is the document that reconciles a distribution.
 - **Programme closure report** — the end-of-programme position.
 - **Receipts** — per-transaction records for vendor settlement.
-- **QR voucher sheets** — printable codes for offline redemption.
 
 Beneficiary and vendor lists export to Excel, and the same format imports, which is how bulk edits are
 usually made.
