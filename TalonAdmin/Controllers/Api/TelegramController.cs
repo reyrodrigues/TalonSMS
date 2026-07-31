@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -127,10 +128,17 @@ namespace TalonAdmin.Controllers.Api
             string countryCode,
             [FromQuery] string secret = "")
         {
-            var systemSecret = _configuration["SystemSecret"] ?? "";
-            if (systemSecret != secret && !string.IsNullOrEmpty(systemSecret))
+            switch (InboundWebhookSecret.Check(_configuration, secret))
             {
-                return BadRequest("Secret is invalid.");
+                // Deliberately not logged per request: a gateway that keeps posting would fill the
+                // log with the same line. The unmissable version is the error written at startup.
+                case InboundWebhookSecret.Result.NotConfigured:
+                    return StatusCode(
+                        StatusCodes.Status503ServiceUnavailable,
+                        InboundWebhookSecret.NotConfiguredMessage);
+
+                case InboundWebhookSecret.Result.Invalid:
+                    return BadRequest(InboundWebhookSecret.InvalidMessage);
             }
 
             var country = await _adminContext.Countries

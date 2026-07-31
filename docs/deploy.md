@@ -105,8 +105,8 @@ Railway, Fly and Cloud Run all follow.
 
 ## 3. Set the variables
 
-Only `DATABASE_URL` and `Jwt__SigningKey` are strictly required. The rest matter for a real
-deployment.
+`DATABASE_URL` and `Jwt__SigningKey` are required to start. `SystemSecret` is required to redeem —
+without it the inbound webhooks refuse everything. The rest matter for a real deployment.
 
 | Variable | Value | Why |
 | --- | --- | --- |
@@ -115,7 +115,7 @@ deployment.
 | `Database__CreateAndSeedOnStartup` | `true` | Creates the schema and reference data on first boot. Safe to leave on — it does not touch a database that is already populated. |
 | `Database__SeedDemoData` | `false` | Leave off for anything real, or demo households and vouchers will sit alongside actual ones. |
 | `Database__SeedAdminPassword` | something long | Password for the seeded `admin` account. Defaults to `Talon!23`, which is public. |
-| `SystemSecret` | `openssl rand -hex 24` | Shared secret the SMS gateway must present. **Without it the redemption endpoint accepts posts from anyone.** See [Security](security.html). |
+| `SystemSecret` | `openssl rand -hex 24` | Shared secret the inbound webhooks require. **Without it they refuse every redemption**, so a deployment that skips this cannot redeem at all. See [Security](security.html). |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | Turns off the developer exception page. |
 
 Nested keys use a double underscore: `Jwt__SigningKey` sets `Jwt:SigningKey`.
@@ -178,8 +178,9 @@ redemption, so both matter.
 
 {: .warning }
 > Append `?secret=` with your `SystemSecret` to **both**. That query parameter is the only thing
-> distinguishing your gateway from anyone else who finds the URL, and when `SystemSecret` is unset the
-> check is skipped entirely. The application logs a warning at startup if you have not set it.
+> distinguishing your gateway from anyone else who finds the URL. If `SystemSecret` is unset, both
+> endpoints answer `503` and refuse every redemption — so a working gateway that suddenly returns
+> 503 means the secret went missing, not that the gateway broke.
 
 ---
 

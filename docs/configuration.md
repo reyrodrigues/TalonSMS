@@ -109,7 +109,7 @@ Take a backup before an upgrade. There is no down-migration.
 | `Jwt:AccessTokenLifetimeDays` | `14` | How long a sign-in lasts. There is no refresh token and no revocation list, so this is also how long a stolen token stays useful. Shorten it if that matters more than the re-authentication it costs. |
 | `Jwt:Issuer` | `TalonAdmin` | Written into and validated on every token. Only needs changing if something else validates these tokens. |
 | `Jwt:Audience` | `TalonAdmin` | As above. |
-| `SystemSecret` | unset | The shared secret an SMS gateway must present to post an inbound redemption. **Without it that endpoint accepts a redemption from anyone who can reach it.** The application logs a warning at startup outside Development when it is unset. Generate with `openssl rand -hex 24`. |
+| `SystemSecret` | unset | The shared secret both inbound webhooks require, presented as `?secret=`. **Unset, they refuse everything with `503`** — redemption stops rather than opening to anyone. An error is logged at startup. Generate with `openssl rand -hex 24`. |
 | `AllowedHosts` | `*` | Standard ASP.NET Core host filtering. Narrow it to your hostname if the instance is reachable directly. |
 
 {: .warning }
@@ -236,10 +236,15 @@ as a delivery failure and redelivers.
 Both webhooks take the secret as a **query parameter**, `?secret=...`, and both compare it against
 `SystemSecret`. They share one secret; there is no separate Telegram credential.
 
-{: .warning }
-> The comparison is skipped entirely when `SystemSecret` is empty — an unset secret means *no* check,
-> not a failed one. That is why it must be set. A wrong secret is rejected with `400`; a missing
-> configuration is not.
+They fail closed. A wrong secret is rejected with `400`; **no secret configured is rejected with
+`503`**, not waved through. The comparison itself is constant-time, so a caller cannot recover the
+secret a character at a time by measuring how long a rejection takes.
+
+{: .note }
+> This changed. It used to read "reject if the presented secret differs *and* a secret is
+> configured", which made an unconfigured deployment accept a redemption from anyone who found the
+> URL. If you are upgrading and redemptions start returning `503`, you were relying on that: set
+> `SystemSecret` and append it to the gateway's callback URL.
 
 ---
 

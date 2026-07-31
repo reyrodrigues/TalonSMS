@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -485,7 +486,19 @@ namespace TalonAdmin.Controllers.Api
             string countryCode,
             [FromQuery] string secret = "")
         {
-            var systemSecret = configuration["SystemSecret"] ?? "";
+            // Checked before the country is looked up. The other order let an unauthenticated caller
+            // discover which countries a deployment runs by watching which codes came back
+            // "Not a valid country" and which got as far as asking for a secret.
+            switch (InboundWebhookSecret.Check(configuration, secret))
+            {
+                case InboundWebhookSecret.Result.NotConfigured:
+                    return StatusCode(
+                        StatusCodes.Status503ServiceUnavailable,
+                        InboundWebhookSecret.NotConfiguredMessage);
+
+                case InboundWebhookSecret.Result.Invalid:
+                    return BadRequest(InboundWebhookSecret.InvalidMessage);
+            }
 
             var countryId = adminContext.Countries.AsNoTracking()
                 .Where(o => o.IsoAlpha2.ToLower() == countryCode.ToLower().Trim())
@@ -495,11 +508,6 @@ namespace TalonAdmin.Controllers.Api
             if (countryId == 0)
             {
                 return Ok("Not a valid country");
-            }
-
-            if (systemSecret != secret && !String.IsNullOrEmpty(systemSecret))
-            {
-                return BadRequest("Secret is invalid.");
             }
 
             var result = await inboundMessages.ProcessAsync(request.From, request.Message, countryId);

@@ -24,10 +24,22 @@ public class TalonAppFactory : WebApplicationFactory<Program>
     public const string AdminPassword = "Talon!23";
 
     /// <summary>
+    /// The inbound webhooks refuse everything unless this is configured, so an application built
+    /// for tests has to carry one exactly as a real deployment does.
+    /// </summary>
+    public const string SystemSecret = "integration-test-system-secret";
+
+    /// <summary>
     /// Scenario tests build their own data and turn this off; contract tests want the sample
     /// programme so there is something to query.
     /// </summary>
     protected virtual bool SeedDemoData => false;
+
+    /// <summary>
+    /// Overridden to boot an application with no <c>SystemSecret</c>, which is the misconfiguration
+    /// the inbound webhooks have to refuse.
+    /// </summary>
+    protected virtual string? ConfiguredSystemSecret => SystemSecret;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -48,6 +60,7 @@ public class TalonAppFactory : WebApplicationFactory<Program>
                 ["Database:SeedAdminPassword"] = AdminPassword,
 
                 ["Jwt:SigningKey"] = "integration-test-signing-key-integration-test-signing-key",
+                ["SystemSecret"] = ConfiguredSystemSecret,
                 ["ActiveDirectory:Enabled"] = "false"
             });
         });

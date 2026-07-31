@@ -458,16 +458,17 @@ using (var scope = app.Services.CreateScope())
     await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().InitializeAsync();
 }
 
-// ValidateTransactionSMS is the endpoint an SMS gateway posts a redemption to, and it is necessarily
-// anonymous — a gateway cannot hold a user's credentials. SystemSecret is the shared secret that
-// distinguishes the real gateway from anyone else who has found the URL, and the endpoint skips the
-// check entirely when it is blank. The rate limiter caps how fast codes can be tried, but only this
-// secret stops them being tried at all, so an unset value is worth saying out loud.
-if (!app.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(app.Configuration["SystemSecret"]))
+// The two inbound webhooks — the SMS gateway callback and the Telegram update endpoint — are
+// necessarily anonymous, because a gateway cannot hold a user's credentials. SystemSecret is what
+// distinguishes the real gateway from anyone else who has found the URL, and both endpoints now
+// refuse everything without it. That is a deliberate trade: an unconfigured deployment cannot
+// redeem at all, rather than redeeming for anyone. Said at startup because the alternative is
+// discovering it when a vendor's first redemption comes back 503.
+if (string.IsNullOrWhiteSpace(app.Configuration["SystemSecret"]))
 {
-    app.Logger.LogWarning(
-        "SystemSecret is not set, so the inbound SMS endpoint accepts redemptions from any caller. "
-        + "Set it to a random value and append it to the gateway's callback URL as ?secret=<value>.");
+    app.Logger.LogError(
+        "SystemSecret is not set, so inbound redemptions are refused. Set it to a random value and "
+        + "append it to the gateway's callback URL as ?secret=<value>.");
 }
 
 app.Run();

@@ -287,9 +287,10 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
     private async Task<string> RedeemBySmsAsync(string isoAlpha2, string vendorMobile, string voucherCode, string personalIdentifier)
     {
         // The gateway posts the vendor's number as the sender and "<voucherCode> <personalIdentifier>" as
-        // the body; the endpoint is anonymous and keyed by the country's ISO code.
+        // the body; the endpoint is anonymous, keyed by the country's ISO code, and authenticated by
+        // the shared secret alone.
         using var response = await _factory.CreateClient().PostAsync(
-            $"/api/VoucherWorkflow/ValidateTransactionSMS/{isoAlpha2}",
+            $"/api/VoucherWorkflow/ValidateTransactionSMS/{isoAlpha2}?secret={TalonAppFactory.SystemSecret}",
             new StringContent(
                 new JObject
                 {

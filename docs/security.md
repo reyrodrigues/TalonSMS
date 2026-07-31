@@ -35,9 +35,10 @@ A short list, in order of how much damage skipping them does.
 2. **Change the seeded admin password.** It defaults to `Talon!23`, which is published on this site.
    Set `Database__SeedAdminPassword` before first boot, then change it again after signing in.
 
-3. **Set `SystemSecret`** and append it to your gateway's callback URL as `?secret=<value>`. Without
-   it, the redemption endpoint accepts posts from anyone who finds the address. Talon logs a warning at
-   startup when it is unset.
+3. **Set `SystemSecret`** and append it to your gateway's callback URL as `?secret=<value>`. It is the
+   only thing separating your gateway from anyone else who finds the address. Without it the inbound
+   webhooks refuse every redemption and log an error at startup — deliberately, so that a deployment
+   which skips this step cannot redeem rather than redeeming for anyone.
 
 4. **Turn off demo data** — `Database__SeedDemoData=false` — so fictional households and vouchers do
    not end up in the same ledger as real ones.

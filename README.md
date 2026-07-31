@@ -218,7 +218,7 @@ variables (`__` separates nested keys, e.g. `Database__Provider`).
 | `Database:Provider` | `Sqlite`, `Postgres` or `SqlServer` |
 | `ConnectionStrings:AdminContext` | Identity, organisations, countries, menus |
 | `ConnectionStrings:VoucherContext` | Programmes, distributions, vouchers, transactions |
-| `SystemSecret` | Shared secret the inbound SMS webhook must present. **Unset, that endpoint accepts redemptions from anyone** |
+| `SystemSecret` | Shared secret the inbound webhooks require. **Unset, they refuse every redemption with 503** |
 | `Database:CreateAndSeedOnStartup` | Create the schema and seed reference data at startup |
 | `Database:SeedDemoData` | Also seed a demo programme with vouchers |
 | `Database:SeedAdminPassword` | Password for the seeded `admin` account |
