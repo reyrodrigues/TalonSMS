@@ -85,6 +85,9 @@ public class TalonApiClient
         return await _http.SendAsync(request);
     }
 
+    /// <summary>A raw GET, for tests that assert on a status rather than a body.</summary>
+    public Task<HttpResponseMessage> GetAsync(string url) => SendAsync(HttpMethod.Get, url);
+
     public async Task<JToken> GetJsonAsync(string url)
     {
         using var response = await SendAsync(HttpMethod.Get, url);

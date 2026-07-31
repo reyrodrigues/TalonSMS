@@ -72,8 +72,17 @@ distribute to as a unit, like "Winterization 2026 — Cohort A".
 In real use these arrive through the Excel import on this screen rather than one at a time. Export
 first to get the column layout, fill it in, and import.
 
-Each household needs the ID number that will be quoted at redemption, and a mobile number if codes are
-to be texted to the household directly.
+Each household needs a **personal identifier** — the number quoted back at redemption to confirm the
+right person is being served — and a mobile number if codes are to be texted to them directly.
+
+The field was called "national ID" and was expected to hold a government document number. That suits
+neither the caseload nor the risk: many of the people a cash programme reaches have no such document,
+and writing a real one into a voucher database that a vendor reads out loud creates a protection
+problem for no benefit. **Generate** on the beneficiary form issues a random 8–10 digit number
+instead, unique within the country, which the household is told once and keeps.
+
+Recording a real document number still works if a programme requires it — nothing validates the
+format — but it should be a deliberate choice rather than the default.
 
 ### 5. Programme
 
@@ -126,7 +135,7 @@ messages show up.
 A vendor texts, from their registered number:
 
 ```
-<voucher code> <recipient ID number>
+<voucher code> <personal identifier>
 ```
 
 Talon reads the **last two whitespace-separated tokens** of the message, so a human prefix like
@@ -137,7 +146,8 @@ Talon reads the **last two whitespace-separated tokens** of the message, so a hu
 2. Matches the sender's number to a registered vendor.
 3. Finds the voucher by code within that country.
 4. Checks the vendor's type against the category's restriction.
-5. Records the redemption and texts back a six-digit confirmation code.
+5. Compares the identifier against the one on the household's record, ignoring any punctuation.
+6. Records the redemption and texts back a six-digit confirmation code.
 
 What comes back when it does not work:
 

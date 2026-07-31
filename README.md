@@ -37,8 +37,9 @@ voucher code generator was replaced because its output was measurably biased, an
 added to the sign-in and redemption endpoints because there was none — but that is not the same as
 being audited.
 
-It holds names, national ID numbers, phone numbers and locations for people who are often vulnerable
-precisely because of who and where they are. If you deploy it, that responsibility is yours — see
+It holds names, personal identifiers, phone numbers and locations for people who are often
+vulnerable precisely because of who and where they are. Talon can now issue those identifiers
+itself, so a national ID number does not have to be recorded at all. If you deploy it, that responsibility is yours — see
 [Disclaimer and responsible use](https://reyrodrigues.github.io/TalonSMS/disclaimer.html).
 
 Before running this with real beneficiary data, at minimum: set `Jwt:SigningKey`, set `SystemSecret`,
@@ -196,6 +197,7 @@ rather than on opaque PDF bytes.
 | `OutboundMessagingTests` | The messaging queue: a message is persisted before it is attempted, transient failures retry with backoff, rejections do not, and an unconfigured country fails visibly |
 | `MessageChannelTests` | The Clickatell, Android-gateway and Telegram adapters: the wire format each produces, which failures are worth retrying, that a Telegram enrolment payload cannot be forged, and how a country's channel chain resolves |
 | `InboundRedemptionTests` | Redemption through the extracted processor, which is the path a Telegram reply takes as well as an inbound SMS |
+| `PersonalIdentifierTests` | Identifier generation — length, uniqueness, and that the renamed property still maps to the column it always did |
 
 Most of these are regression guards for specific defects this migration hit — each one was verified
 to fail when its fix is reverted, so they are not just documentation. `MIGRATION.md` explains why
@@ -242,7 +244,8 @@ dotnet user-secrets --project TalonAdmin set "Jwt:SigningKey" "$(openssl rand -b
 | `GET /api/ApplicationUser/Me` | Current user, roles and permitted actions |
 | `GET /api/Dashboard/DashboardSummary` | Cached programme dashboard |
 | `POST /api/VoucherWorkflow/*` | Voucher generation, assignment, redemption, SMS |
-| `POST /api/Telegram/{countryIso}` | Telegram bot webhook (enrolment) |
+| `GET /api/PersonalIdentifier/Generate` | A unique 8–10 digit identifier for a beneficiary |
+| `POST /api/Telegram/{countryIso}` | Telegram bot webhook (enrolment and redemption) |
 | `POST /api/App/VendorProfile/Login` | Mobile vendor sign-in |
 | `POST /api/App/MobileClient/*` | Offline payload sync for the vendor client |
 | `POST /api/Excel/*` | Beneficiary and vendor import/export |

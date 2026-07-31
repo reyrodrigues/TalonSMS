@@ -140,10 +140,10 @@ namespace TalonAdmin.Messaging
             }
 
             var issuedTo = voucher.IssuingTransactionRecord?.Beneficiary;
-            if (NonDigits.Replace(issuedTo?.NationalId ?? "", "") != NonDigits.Replace(personalIdentifier, ""))
+            if (NonDigits.Replace(issuedTo?.PersonalIdentifier ?? "", "") != NonDigits.Replace(personalIdentifier, ""))
             {
                 await _notifications.WrongPersonalIdentifierAsync(voucher, vendor);
-                return InboundResult.Ignored("Wrong National Id Canceled");
+                return InboundResult.Ignored("Wrong Personal Identifier");
             }
 
             var transactionRecord = new VoucherTransactionRecord

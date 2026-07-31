@@ -67,6 +67,14 @@ const CHANNELS: ChannelDefinition[] = [
 /** Matches MessageChannelRegistry.ChainPropertyName on the server. */
 const CHAIN_PROPERTY = 'Message Channels'
 
+/**
+ * Stored template names, which are data: renaming one would orphan every country that has already
+ * filled it in. `TEMPLATE_LABELS` relabels the ones whose stored name has aged badly.
+ */
+const TEMPLATE_LABELS: Record<string, string> = {
+  'Wrong National Id Message': 'Wrong Personal Identifier Message'
+}
+
 const TEMPLATES = [
   'Beneficiary Voucher Message',
   'Beneficiary Confirmed Message',
@@ -356,7 +364,7 @@ async function save() {
       <div class="panel__head"><h2 style="margin: 0">Message templates</h2></div>
       <div class="panel__body">
         <div v-for="name in TEMPLATES" :key="name" class="field">
-          <label class="field__label" :for="`tpl-${name}`">{{ name }}</label>
+          <label class="field__label" :for="`tpl-${name}`">{{ TEMPLATE_LABELS[name] ?? name }}</label>
           <input :id="`tpl-${name}`" v-model="templates[name]" class="field__control" />
         </div>
       </div>

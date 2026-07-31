@@ -82,7 +82,7 @@ export interface Beneficiary extends Entity {
   FirstName: string | null
   LastName: string | null
   Name: string | null
-  NationalId: string | null
+  PersonalIdentifier: string | null
   IRCId: string | null
   MobileNumber: string | null
   BirthYear: string | null
@@ -102,7 +102,7 @@ export interface Vendor extends Entity {
   FirstName: string | null
   LastName: string | null
   MobileNumber: string | null
-  NationalId: string | null
+  PersonalIdentifier: string | null
   UserName: string | null
   LocationId: number | null
   TypeId: number | null

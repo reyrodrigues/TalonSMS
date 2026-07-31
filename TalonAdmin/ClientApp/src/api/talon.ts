@@ -65,7 +65,7 @@ export const roles = () => breeze.query<ApplicationRole>('Admin', 'Roles', { ord
 
 // ---- beneficiaries ----------------------------------------------------------------
 
-const BENEFICIARY_SEARCH = ['FirstName', 'LastName', 'MobileNumber', 'NationalId']
+const BENEFICIARY_SEARCH = ['FirstName', 'LastName', 'MobileNumber', 'PersonalIdentifier']
 
 export function beneficiaryPage(options: {
   skip: number
@@ -106,7 +106,7 @@ export const deleteBeneficiary = (entity: Beneficiary) =>
 
 // ---- vendors ------------------------------------------------------------------------
 
-const VENDOR_SEARCH = ['Name', 'FirstName', 'LastName', 'MobileNumber', 'NationalId']
+const VENDOR_SEARCH = ['Name', 'FirstName', 'LastName', 'MobileNumber', 'PersonalIdentifier']
 
 export function vendorPage(options: {
   skip: number
@@ -180,6 +180,13 @@ export const distributionTransactions = (distributionId: number, used: boolean) 
     expand: ['Beneficiary', 'Voucher'],
     orderBy: ['Id']
   })
+
+/**
+ * A fresh identifier for a beneficiary to give a vendor at redemption. Generated on the server,
+ * where the entropy source and the country-wide uniqueness check are.
+ */
+export const generatePersonalIdentifier = (length = 10) =>
+  getJson<{ Identifier: string }>(`/api/PersonalIdentifier/Generate?length=${length}`)
 
 // ---- telegram -------------------------------------------------------------------------
 

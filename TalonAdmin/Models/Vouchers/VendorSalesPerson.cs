@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,9 @@ namespace TalonAdmin.Models.Vouchers
         public virtual string FirstName { get; set; }    
         public virtual string LastName { get; set; }
         public virtual string MobileNumber { get; set; }
-        public virtual string NationalId { get; set; }
+        /// <summary>See <see cref="Beneficiary.PersonalIdentifier"/>.</summary>
+        [Column("NationalId")]
+        public virtual string PersonalIdentifier { get; set; }
 
         public virtual Vendor Vendor { get; set; }
     }

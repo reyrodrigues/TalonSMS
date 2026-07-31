@@ -16,7 +16,7 @@ const model = ref<Partial<Vendor>>({
   FirstName: '',
   LastName: '',
   MobileNumber: '',
-  NationalId: '',
+  PersonalIdentifier: '',
   TypeId: null,
   LocationId: null
 })
@@ -39,7 +39,7 @@ const callingCode = computed(() =>
 const required = (value: unknown) => submitted.value && !String(value ?? '').trim()
 
 const invalid = computed(() =>
-  ['Name', 'FirstName', 'LastName', 'MobileNumber', 'NationalId'].some(
+  ['Name', 'FirstName', 'LastName', 'MobileNumber', 'PersonalIdentifier'].some(
     field => !String(model.value[field as keyof Vendor] ?? '').trim()
   )
 )
@@ -178,12 +178,12 @@ async function save() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="nationalId">National Id <span class="field__required">*</span></label>
+          <label class="field__label" for="personalIdentifier">Personal Identifier <span class="field__required">*</span></label>
           <input
-            id="nationalId"
-            v-model="model.NationalId"
+            id="personalIdentifier"
+            v-model="model.PersonalIdentifier"
             class="field__control"
-            :class="{ 'field__control--invalid': required(model.NationalId) }"
+            :class="{ 'field__control--invalid': required(model.PersonalIdentifier) }"
             :disabled="readOnly"
           />
         </div>

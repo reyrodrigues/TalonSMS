@@ -72,7 +72,8 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
 
         Assert.Contains("Distribution Report", html);
         Assert.Contains("Beneficiary 01", html);
-        Assert.Contains("NID000001", html);
+        // The seeded personal identifier; the field no longer holds a document number.
+        Assert.Contains("1000000001", html);
 
         // Five vouchers at 25 each were seeded.
         Assert.Contains("125", html);

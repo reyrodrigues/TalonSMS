@@ -51,7 +51,7 @@ published a security page as a substitute for that.
 
 ## Using it responsibly
 
-Talon holds names, national ID numbers, phone numbers and locations for people who are frequently
+Talon holds names, personal identifiers, phone numbers and locations for people who are frequently
 vulnerable precisely because of who they are and where they are. In a conflict or displacement
 setting, a beneficiary list is a targeting list in the wrong hands. That is the real risk here, and
 it is larger than the risk of someone stealing a voucher.

@@ -18,6 +18,7 @@ const groups = ref<BeneficiaryGroup[]>([])
 const locations = ref<Location[]>([])
 const loading = ref(true)
 const saving = ref(false)
+const generating = ref(false)
 const submitted = ref(false)
 
 const isNew = computed(() => !props.id)
@@ -33,7 +34,7 @@ function blank(): Partial<Beneficiary> {
   return {
     FirstName: '',
     LastName: '',
-    NationalId: '',
+    PersonalIdentifier: '',
     MobileNumber: '',
     BirthYear: '',
     Sex: 1,
@@ -75,6 +76,27 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+/**
+ * Draws a fresh identifier. Deliberately does not overwrite one already on file without asking —
+ * the household has been told the old one, and a silent change strands them at the vendor.
+ */
+async function generateIdentifier() {
+  if (model.value.PersonalIdentifier?.trim()
+    && !window.confirm('Replace the existing identifier? The household will need to be told the new one.')) {
+    return
+  }
+
+  generating.value = true
+  try {
+    const result = await api.generatePersonalIdentifier()
+    model.value.PersonalIdentifier = result.Identifier
+  } catch (error) {
+    notifyError(error, 'Could not generate an identifier.')
+  } finally {
+    generating.value = false
+  }
+}
 
 async function save() {
   submitted.value = true
@@ -141,8 +163,28 @@ async function save() {
         </div>
 
         <div class="field">
-          <label class="field__label" for="nationalId">National Id</label>
-          <input id="nationalId" v-model="model.NationalId" class="field__control" :disabled="readOnly" />
+          <label class="field__label" for="personalIdentifier">Personal Identifier</label>
+          <div class="field__prefix">
+            <input
+              id="personalIdentifier"
+              v-model="model.PersonalIdentifier"
+              class="field__control"
+              :disabled="readOnly"
+            />
+            <button
+              v-if="!readOnly"
+              class="btn"
+              type="button"
+              :disabled="generating"
+              @click="generateIdentifier"
+            >
+              {{ generating ? 'Generating…' : 'Generate' }}
+            </button>
+          </div>
+          <p class="muted" style="font-size: 12px; margin: 4px 0 0">
+            What the household gives a vendor to redeem. Generate one rather than recording a
+            national ID document, which many people do not have and which does not need to be here.
+          </p>
         </div>
 
         <div class="field">

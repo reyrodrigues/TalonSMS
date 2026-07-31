@@ -309,7 +309,7 @@ namespace TalonAdmin.Data
             {
                 FirstName = "Beneficiary",
                 LastName = i.ToString("D2"),
-                NationalId = string.Format("NID{0:D6}", i),
+                PersonalIdentifier = string.Format("10000000{0:D2}", i),
                 MobileNumber = string.Format("+1555000{0:D4}", i),
                 BirthYear = (1980 + i).ToString(),
                 Sex = i % 2 == 0 ? 1 : 2,

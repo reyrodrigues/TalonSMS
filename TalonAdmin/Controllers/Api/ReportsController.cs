@@ -230,7 +230,7 @@ namespace TalonAdmin.Controllers.Api
                                  {
                                      Name = v.Beneficiary.FirstName + " " + v.Beneficiary.LastName,
                                      MobileNumber = v.Beneficiary.MobileNumber,
-                                     NationalId = v.Beneficiary.NationalId,
+                                     PersonalIdentifier = v.Beneficiary.PersonalIdentifier,
                                      FinalizedOn = v.LastModifiedOn,
                                      VoucherCode = v.Voucher.VoucherCode,
                                      ConfirmationCode = v.ConfirmationCode,
@@ -363,7 +363,7 @@ namespace TalonAdmin.Controllers.Api
                                 {
                                     Name = v.Beneficiary.FirstName + " " + v.Beneficiary.LastName,
                                     Sex = v.Beneficiary.Sex == 0 ? "Male" : "Female",
-                                    NationalId = v.Beneficiary.NationalId,
+                                    PersonalIdentifier = v.Beneficiary.PersonalIdentifier,
                                     MobileNumber = v.Beneficiary.MobileNumber,
                                     Location = v.Beneficiary.Location != null ? v.Beneficiary.Location.Name : "",
                                     VoucherCode = v.Voucher.VoucherCode,

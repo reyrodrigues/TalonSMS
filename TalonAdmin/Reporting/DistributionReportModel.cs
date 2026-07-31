@@ -37,7 +37,7 @@ namespace TalonAdmin.Reporting
     {
         public string Name { get; set; }
         public string Sex { get; set; }
-        public string NationalId { get; set; }
+        public string PersonalIdentifier { get; set; }
         public string MobileNumber { get; set; }
         public string Location { get; set; }
         public string VoucherCode { get; set; }

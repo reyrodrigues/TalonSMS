@@ -73,7 +73,7 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
         var redeemedCode = redeemed.Value<string>("VoucherCode");
 
         var smsReply = await RedeemBySmsAsync(
-            tenant.IsoAlpha2, reference.VendorMobileNumber, redeemedCode!, cycle.NationalIds[0]);
+            tenant.IsoAlpha2, reference.VendorMobileNumber, redeemedCode!, cycle.PersonalIdentifiers[0]);
 
         Assert.DoesNotContain("Invalid", smsReply);
         Assert.DoesNotContain("Unauthorized", smsReply);
@@ -190,7 +190,7 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
                 FirstName = "Vera",
                 LastName = "Vendor",
                 MobileNumber = vendorMobile,
-                NationalId = "V-0001",
+                PersonalIdentifier = "V-0001",
                 UserName = "testvendor",
                 LocationId = locationId,
                 TypeId = vendorTypeId,
@@ -201,7 +201,7 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
         return (locationId, vendorTypeId, voucherTypeId, vendorSave.RealId(-1), vendorMobile);
     }
 
-    private async Task<(int GroupId, int[] BeneficiaryIds, string[] NationalIds, string[] BeneficiaryNames)>
+    private async Task<(int GroupId, int[] BeneficiaryIds, string[] PersonalIdentifiers, string[] BeneficiaryNames)>
         RegisterBeneficiariesAsync()
     {
         var tenant = new { CountryId = _api.CountryId, OrganizationId = _api.OrganizationId };
@@ -218,7 +218,7 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
 
         var groupId = groupSave.RealId(-1);
 
-        var nationalIds = Enumerable.Range(1, BeneficiaryCount)
+        var personalIdentifiers = Enumerable.Range(1, BeneficiaryCount)
             .Select(i => $"NID{i:D5}").ToArray();
 
         var beneficiaries = Enumerable.Range(1, BeneficiaryCount).Select(i =>
@@ -226,7 +226,7 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
             {
                 FirstName = "Test",
                 LastName = $"Beneficiary {i:D2}",
-                NationalId = nationalIds[i - 1],
+                PersonalIdentifier = personalIdentifiers[i - 1],
                 MobileNumber = $"+995551{i:D4}",
                 BirthYear = (1980 + i).ToString(),
                 Sex = i % 2 == 0 ? 1 : 2,
@@ -240,7 +240,7 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
         var ids = Enumerable.Range(1, BeneficiaryCount).Select(i => save.RealId(-i)).ToArray();
         var names = Enumerable.Range(1, BeneficiaryCount).Select(i => $"Test Beneficiary {i:D2}").ToArray();
 
-        return (groupId, ids, nationalIds, names);
+        return (groupId, ids, personalIdentifiers, names);
     }
 
     private async Task<int> DefineProgrammeAsync(
@@ -284,9 +284,9 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
         return programId;
     }
 
-    private async Task<string> RedeemBySmsAsync(string isoAlpha2, string vendorMobile, string voucherCode, string nationalId)
+    private async Task<string> RedeemBySmsAsync(string isoAlpha2, string vendorMobile, string voucherCode, string personalIdentifier)
     {
-        // The gateway posts the vendor's number as the sender and "<voucherCode> <nationalId>" as
+        // The gateway posts the vendor's number as the sender and "<voucherCode> <personalIdentifier>" as
         // the body; the endpoint is anonymous and keyed by the country's ISO code.
         using var response = await _factory.CreateClient().PostAsync(
             $"/api/VoucherWorkflow/ValidateTransactionSMS/{isoAlpha2}",
@@ -295,7 +295,7 @@ public class VoucherDistributionScenarioTests : IClassFixture<TalonAppFactory>
                 {
                     ["to"] = vendorMobile,
                     ["from"] = vendorMobile,
-                    ["message"] = $"{voucherCode} {nationalId}"
+                    ["message"] = $"{voucherCode} {personalIdentifier}"
                 }.ToString(),
                 System.Text.Encoding.UTF8,
                 "application/json"));

@@ -58,7 +58,7 @@
                         <tr>
                             <td>@(((reportPage.Page - 1) * Model.PageSize) + i + 1)</td>
                             <td>@item.Vendor.Name</td>
-                            <td>@(String.IsNullOrEmpty(item.Vendor.NationalId) ? "Not Recorded" : item.Vendor.NationalId)</td>
+                            <td>@(String.IsNullOrEmpty(item.Vendor.PersonalIdentifier) ? "Not Recorded" : item.Vendor.PersonalIdentifier)</td>
                             <td>@item.Vendor.MobileNumber</td>
                             <td>@(item.Vendor.Location != null ? item.Vendor.Location.Name : "")</td>
                             <td class="text-right">@item.NumberOfVouchers</td>

@@ -14,7 +14,9 @@ namespace TalonAdmin.Models.Vouchers
         public virtual string FirstName { get; set; }
         public virtual string LastName { get; set; }
         public virtual string MobileNumber { get; set; }
-        public virtual string NationalId { get; set; }
+        /// <summary>See <see cref="Beneficiary.PersonalIdentifier"/>.</summary>
+        [Column("NationalId")]
+        public virtual string PersonalIdentifier { get; set; }
 
         public virtual string UserName { get; set; }
         public virtual string Password { get; set; }

@@ -42,7 +42,7 @@ public class InboundRedemptionTests : IClassFixture<SeededTalonAppFactory>
         // Exactly what the Telegram webhook does once it has resolved the chat to a number.
         var result = await processor.ProcessAsync(
             vendor.MobileNumber,
-            $"{voucher.VoucherCode} {beneficiary.NationalId}",
+            $"{voucher.VoucherCode} {beneficiary.PersonalIdentifier}",
             vendor.CountryId);
 
         Assert.True(result.WasRedeemed, result.Reason);

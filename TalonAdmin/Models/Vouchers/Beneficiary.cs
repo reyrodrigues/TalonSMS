@@ -25,7 +25,22 @@ namespace TalonAdmin.Models.Vouchers
         public virtual string FirstName { get; set; }
         public virtual string LastName { get; set; }
 
-        public virtual string NationalId { get; set; }
+        /// <summary>
+        /// The identifier a vendor is asked for when redeeming a voucher, to confirm they are
+        /// serving the right person.
+        /// </summary>
+        /// <remarks>
+        /// It was called NationalId, which described one particular way of filling it in and a poor
+        /// one: many of the people a cash programme reaches have no national identity document, and
+        /// recording a real one where it is not needed creates a protection risk. It can be a
+        /// programme-issued number instead — Talon can generate one — so the name no longer implies
+        /// a government document.
+        ///
+        /// The column keeps its old name because this application has no migration framework, so a
+        /// rename would break every existing database on the next query.
+        /// </remarks>
+        [Column("NationalId")]
+        public virtual string PersonalIdentifier { get; set; }
 
         public virtual string IRCId { get; set; }
 

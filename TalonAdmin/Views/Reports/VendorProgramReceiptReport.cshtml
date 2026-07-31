@@ -59,7 +59,7 @@
                         <tr>
                             <td>@(((reportPage.Page - 1) * Model.PageSize) + i + 1)</td>
                             <td>@item.Name</td>
-                            <td>@(String.IsNullOrEmpty(item.NationalId) ? "Not Recorded" : item.NationalId)</td>
+                            <td>@(String.IsNullOrEmpty(item.PersonalIdentifier) ? "Not Recorded" : item.PersonalIdentifier)</td>
                             <td>@Model.DateToOffsetString((DateTime?)item.FinalizedOn, (int)Model.TimezoneOffset)</td>
                             <td>@item.DistributionNumber</td>
                             <td>@item.VoucherCode</td>

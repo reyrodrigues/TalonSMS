@@ -130,6 +130,8 @@ namespace TalonAdmin.Messaging
         {
             var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = new { } };
 
+            // The stored template name is data — countries have already filled it in — so it keeps
+            // the old wording even though the field it refers to has been renamed.
             return SendAsync("Wrong National Id Message", vendor, voucher, model);
         }
 
