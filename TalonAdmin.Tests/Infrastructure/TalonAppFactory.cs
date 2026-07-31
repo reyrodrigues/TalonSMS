@@ -60,8 +60,7 @@ public class TalonAppFactory : WebApplicationFactory<Program>
                 ["Database:SeedAdminPassword"] = AdminPassword,
 
                 ["Jwt:SigningKey"] = "integration-test-signing-key-integration-test-signing-key",
-                ["SystemSecret"] = ConfiguredSystemSecret,
-                ["ActiveDirectory:Enabled"] = "false"
+                ["SystemSecret"] = ConfiguredSystemSecret
             });
         });
 

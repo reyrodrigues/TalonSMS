@@ -227,11 +227,9 @@ variables (`__` separates nested keys, e.g. `Database__Provider`).
 | `Messaging:PollIntervalSeconds` | How often the outbound queue is drained (default 5) |
 | `Messaging:BatchSize` | Messages dispatched per pass (default 25) |
 | `Messaging:MaxAttempts` | Attempts before a message is marked failed (default 5) |
-| `ActiveDirectory:Enabled` | Enable directory fallback for sign-in |
 
 [docs/configuration.md](docs/configuration.md) is the complete reference — every key with its
-default and its effect, plus provider choice, backups, spreadsheet licensing and what happens behind
-a proxy.
+default and its effect, plus provider choice, backups and what happens behind a proxy.
 
 Never reuse the development signing key. Set a real one per environment:
 

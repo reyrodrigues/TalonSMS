@@ -133,19 +133,6 @@ the first entry of `X-Forwarded-For` when that header is present.
 > limit bucket per request, which defeats the sign-in and redemption limits. Put it behind a proxy,
 > or restrict access to one at the network level.
 
-### Active Directory
-
-An optional second credential check, from the original deployment, where staff already had accounts
-in the organisation's directory.
-
-| Setting | Default | Effect |
-| --- | --- | --- |
-| `ActiveDirectory:Enabled` | `false` | Turns the check on. |
-| `ActiveDirectory:AuthenticationUrl` | the IRC's endpoint | A REST endpoint that accepts a user name and password. |
-| `ActiveDirectory:EmailDomain` | `theirc.org` | Appended to the user name before the directory is asked. |
-
-Leave it off unless you are running the specific service it was written against.
-
 ---
 
 ## Messaging

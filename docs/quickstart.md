@@ -187,7 +187,6 @@ variables. Nested keys use a double underscore: `Database__Provider`.
 | `Jwt:SigningKey` | **Required outside development.** HMAC key for access tokens |
 | `Jwt:AccessTokenLifetimeDays` | Token lifetime, 14 by default |
 | `SystemSecret` | Shared secret the inbound SMS webhook must present. See [Security](security.html) |
-| `ActiveDirectory:Enabled` | Enable directory fallback for sign-in |
 
 Never reuse the development signing key. Set a real one per environment:
 
