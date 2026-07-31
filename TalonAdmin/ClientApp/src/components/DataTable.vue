@@ -87,12 +87,24 @@ function cell(row: T, column: Column<T>): unknown {
               :style="column.width ? { width: column.width } : undefined"
               :class="{ table__numeric: column.numeric }"
               :aria-sort="ariaSort(column)"
-              @click="toggleSort(column)"
             >
-              {{ column.label }}
-              <span v-if="sort === sortField(column)" aria-hidden="true">
-                {{ descending ? '▾' : '▴' }}
-              </span>
+              <!--
+                A sortable heading is a button, not a clickable cell: it was previously reachable
+                only with a mouse, which left keyboard users unable to sort at all.
+              -->
+              <button
+                v-if="sortField(column)"
+                type="button"
+                class="table__sort"
+                :class="{ 'table__sort--active': sort === sortField(column) }"
+                @click="toggleSort(column)"
+              >
+                {{ column.label }}
+                <span class="table__sort-icon" aria-hidden="true">
+                  {{ sort === sortField(column) && descending ? '▼' : '▲' }}
+                </span>
+              </button>
+              <template v-else>{{ column.label }}</template>
             </th>
             <th v-if="$slots.actions" class="table__actions">{{ t('common.actions') }}</th>
           </tr>

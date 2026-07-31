@@ -3,7 +3,9 @@
     "name": "تالون",
     "signOut": "تسجيل الخروج",
     "language": "اللغة",
-    "followCountry": "حسب إعدادات الدولة"
+    "followCountry": "حسب إعدادات الدولة",
+    "menu": "القائمة",
+    "closeMenu": "إغلاق القائمة"
   },
   "action": {
     "save": "حفظ",

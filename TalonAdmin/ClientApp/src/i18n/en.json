@@ -3,7 +3,9 @@
     "name": "Talon",
     "signOut": "Sign out",
     "language": "Language",
-    "followCountry": "Follow the country"
+    "followCountry": "Follow the country",
+    "menu": "Menu",
+    "closeMenu": "Close menu"
   },
   "action": {
     "save": "Save",

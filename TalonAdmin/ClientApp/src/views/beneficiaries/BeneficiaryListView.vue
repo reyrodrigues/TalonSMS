@@ -30,7 +30,8 @@ const columns: Column<Beneficiary>[] = [
 onMounted(source.refresh)
 
 async function remove(row: Beneficiary) {
-  if (!window.confirm(`Delete ${row.FirstName ?? ''} ${row.LastName ?? ''}?`)) return
+  const what = [row.FirstName, row.LastName].filter(Boolean).join(' ') || t('beneficiary.singular')
+  if (!window.confirm(t('common.confirmDelete', { what }))) return
 
   try {
     await api.deleteBeneficiary(row)

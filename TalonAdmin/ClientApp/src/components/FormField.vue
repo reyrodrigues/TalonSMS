@@ -53,12 +53,11 @@ function update(event: Event) {
 
 <template>
   <div class="field" :style="field.full ? { gridColumn: '1 / -1' } : undefined">
-    <label class="field__label" :for="id">
-      {{ label }}
-      <span v-if="field.required" class="field__required">*</span>
-    </label>
-
-    <label v-if="field.type === 'checkbox'" class="row-gap">
+    <!--
+      A checkbox reads as `[x] Label` rather than a label stranded above an unlabelled box, and the
+      whole pair is one click target instead of a 17px square.
+    -->
+    <label v-if="field.type === 'checkbox'" class="field__check" :for="id">
       <input
         :id="id"
         type="checkbox"
@@ -66,10 +65,19 @@ function update(event: Event) {
         :disabled="disabled"
         @change="update"
       />
+      <span>
+        {{ label }}
+        <span v-if="field.required" class="field__required">*</span>
+      </span>
+    </label>
+
+    <label v-else class="field__label" :for="id">
+      {{ label }}
+      <span v-if="field.required" class="field__required">*</span>
     </label>
 
     <select
-      v-else-if="field.type === 'select'"
+      v-if="field.type === 'select'"
       :id="id"
       class="field__control"
       :class="{ 'field__control--invalid': invalid }"
@@ -106,7 +114,7 @@ function update(event: Event) {
     </div>
 
     <input
-      v-else
+      v-else-if="field.type !== 'checkbox'"
       :id="id"
       class="field__control"
       :class="{ 'field__control--invalid': invalid }"
@@ -118,6 +126,6 @@ function update(event: Event) {
     />
 
     <p v-if="invalid" class="field__error">{{ t('common.required', { field: label }) }}</p>
-    <p v-else-if="help" class="muted" style="font-size: 12px; margin: 4px 0 0">{{ help }}</p>
+    <p v-else-if="help" class="field__hint">{{ help }}</p>
   </div>
 </template>

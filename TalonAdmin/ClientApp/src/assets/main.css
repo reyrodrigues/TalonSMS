@@ -3,19 +3,29 @@
 
 :root {
   --sidebar: #1c2b36;
-  --sidebar-muted: #7b8a97;
+  --sidebar-muted: #93a2b0;
   --accent: #fad733;
+  --accent-strong: #ecc514;
   --accent-ink: #3a3f51;
   --ink: #3a3f51;
-  --muted: #8a94a6;
+  /* Passes AA on white (4.7:1). Column headings, help text and timestamps are all set in it, and
+     none of them are decorative — a hint nobody can read is worse than no hint. */
+  --muted: #69748a;
   --line: #e4e8ee;
+  --line-strong: #ccd3dd;
   --surface: #ffffff;
   --canvas: #f0f3f4;
-  --danger: #f05050;
-  --success: #27c24c;
-  --info: #23b7e5;
+  /* The old #f05050 / #23b7e5 pair carried white text at ~3:1, which is below AA. These are the
+     same hues taken dark enough to read, both as button fills and as text on white. */
+  --danger: #c62828;
+  --danger-strong: #a51f1f;
+  --success: #1f8f39;
+  --info: #10769b;
+  --info-strong: #0c5d7c;
+  --focus: #1f8fc4;
   --radius: 3px;
   --sidebar-width: 200px;
+  --shell-gutter: 20px;
 }
 
 * { box-sizing: border-box; }
@@ -26,14 +36,29 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--ink);
-  font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* The screens are dense and mostly text; unsmoothed 15px on a retina panel reads heavy. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a { color: var(--info); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-h1 { font-size: 22px; font-weight: 300; margin: 0; }
+h1 { font-size: 21px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
 h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
+
+/*
+ * One visible focus ring for everything reachable by keyboard. `:focus-visible` keeps it off
+ * mouse clicks, so it costs nothing visually and makes the app traversable without a pointer.
+ */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* On the dark sidebar the blue ring disappears, so the accent stands in. */
+.sidebar :focus-visible { outline-color: var(--accent); }
 
 /* ---- layout ---- */
 
@@ -47,12 +72,12 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   margin-inline-start: var(--sidebar-width);
 }
 
-.shell__body { flex: 1; padding: 20px; }
+.shell__body { flex: 1; padding: var(--shell-gutter); }
 
 .page-head {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
-  padding: 18px 20px;
+  padding: 18px var(--shell-gutter);
 }
 
 /* ---- sidebar ---- */
@@ -65,6 +90,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   background: var(--sidebar);
   color: #b8c7d4;
   overflow-y: auto;
+  z-index: 40;
 }
 
 .sidebar__brand {
@@ -78,11 +104,14 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.sidebar__brand:hover { text-decoration: none; }
+
 .sidebar__section {
-  padding: 14px 16px 6px;
+  padding: 16px 16px 6px;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  font-weight: 600;
   color: var(--sidebar-muted);
 }
 
@@ -94,6 +123,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-height: 40px;
   padding: 10px 16px;
   background: none;
   border: 0;
@@ -103,25 +133,38 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   cursor: pointer;
 }
 
-.sidebar__group-toggle:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
+.sidebar__group-toggle:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 
 .sidebar__chevron { transition: transform 0.15s ease; color: var(--sidebar-muted); }
 .sidebar__chevron--open { transform: rotate(90deg); }
 
 .sidebar__link {
   display: block;
-  padding: 8px 16px 8px 32px;
+  min-height: 36px;
+  padding: 8px 16px;
+  padding-inline-start: 32px;
   color: #9fb0bf;
-  font-size: 13px;
+  font-size: 14px;
 }
 
-.sidebar__link:hover { background: rgba(255, 255, 255, 0.04); color: #fff; text-decoration: none; }
+.sidebar__link--flush { padding-inline-start: 16px; }
+
+.sidebar__link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; text-decoration: none; }
 
 .sidebar__link.router-link-active {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
   box-shadow: inset 3px 0 0 var(--accent);
 }
+
+/*
+ * Below the breakpoint the sidebar becomes a drawer over the content instead of a block above it.
+ * Stacking it pushed every screen a full menu's height down the page, which on a tablet meant
+ * scrolling past the whole navigation to reach the thing you opened.
+ */
+.sidebar__close { display: none; }
+
+.shell__scrim { display: none; }
 
 /* ---- header ---- */
 
@@ -129,34 +172,58 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 18px;
-  height: 50px;
-  padding: 0 20px;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 var(--shell-gutter);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 
 .topbar__spacer { margin-inline-end: auto; }
 
+.topbar__menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-inline-end: 4px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.topbar__menu:hover { background: var(--canvas); border-color: var(--line-strong); }
+
 .dropdown { position: relative; }
 
 .dropdown__toggle {
   background: none;
-  border: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
   font: inherit;
   color: var(--ink);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 4px;
+  min-height: 36px;
+  padding: 6px 10px;
 }
+
+.dropdown__toggle:hover { background: var(--canvas); }
+.dropdown__toggle[aria-expanded='true'] { background: var(--canvas); border-color: var(--line); }
 
 .dropdown__menu {
   position: absolute;
-  right: 0;
-  top: 100%;
-  min-width: 180px;
+  inset-inline-end: 0;
+  top: calc(100% + 4px);
+  min-width: 190px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -168,6 +235,7 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 .dropdown__item {
   display: block;
   width: 100%;
+  min-height: 36px;
   padding: 8px 14px;
   background: none;
   border: 0;
@@ -192,41 +260,65 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 .panel__head {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--line);
 }
 
-.panel__body { padding: 16px; }
+.panel__body { padding: 18px 16px; }
 .panel__spacer { margin-inline-start: auto; }
 
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid transparent;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  background: var(--canvas);
+  background: var(--surface);
   color: var(--ink);
   font: inherit;
+  font-weight: 500;
+  line-height: 1.2;
   cursor: pointer;
   white-space: nowrap;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
-.btn:hover { filter: brightness(0.96); }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.btn--primary { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.btn--info { background: var(--info); color: #fff; }
-.btn--danger { background: var(--danger); color: #fff; }
-.btn--ghost { background: transparent; border-color: var(--line); }
-.btn--sm { padding: 4px 9px; font-size: 12px; }
+.btn:hover { background: var(--canvas); border-color: var(--muted); }
+.btn:active { background: #e6ebee; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--surface); border-color: var(--line-strong); }
 
-.field { margin-bottom: 14px; }
+.btn--primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn--primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn--primary:disabled:hover { background: var(--accent); border-color: var(--accent); }
+
+.btn--info { background: var(--info); border-color: var(--info); color: #fff; }
+.btn--info:hover { background: var(--info-strong); border-color: var(--info-strong); color: #fff; }
+.btn--info:disabled:hover { background: var(--info); border-color: var(--info); }
+
+/*
+ * Destructive actions are outlined rather than filled. Every one of them sits in a table row, so
+ * filling them painted a column of solid red down the page — which drowns out the primary action
+ * and, next to Edit, makes the more dangerous button the more eye-catching one.
+ */
+.btn--danger { background: var(--surface); border-color: rgba(198, 40, 40, 0.45); color: var(--danger); }
+.btn--danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn--danger:active { background: var(--danger-strong); border-color: var(--danger-strong); }
+.btn--danger:disabled:hover { background: var(--surface); border-color: rgba(198, 40, 40, 0.45); color: var(--danger); }
+
+.btn--ghost { background: transparent; border-color: var(--line); }
+.btn--sm { min-height: 30px; padding: 4px 10px; font-size: 13px; }
+
+.field { margin-bottom: 18px; }
 
 .field__label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   font-weight: 600;
   font-size: 13px;
 }
@@ -236,41 +328,69 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 .field__control,
 .input {
   width: 100%;
+  min-height: 38px;
   padding: 8px 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface);
   font: inherit;
   color: var(--ink);
 }
 
+.field__control::placeholder,
+.input::placeholder { color: var(--muted); }
+
+/* Inputs show focus on click too, not only from the keyboard — the caret alone is easy to lose. */
 .field__control:focus,
-.input:focus { outline: 2px solid rgba(35, 183, 229, 0.4); outline-offset: -1px; }
+.input:focus {
+  border-color: var(--focus);
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
 .field__control--invalid { border-color: var(--danger); }
 
-.field__error { margin-top: 4px; color: var(--danger); font-size: 12px; }
+/* Both render as <p>, whose default block margins would otherwise open a gap under every field. */
+.field__error { margin: 5px 0 0; color: var(--danger); font-size: 13px; }
+.field__hint { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
 .field__prefix { display: flex; }
 
 .field__prefix-label {
   display: inline-flex;
   align-items: center;
   padding: 0 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-inline-end: 0;
   border-radius: var(--radius) 0 0 var(--radius);
   background: var(--canvas);
-  color: var(--muted);
+  color: var(--ink);
+  white-space: nowrap;
 }
 
 .field__prefix .field__control { border-radius: 0 var(--radius) var(--radius) 0; }
 
-.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+input[type='checkbox'],
+input[type='radio'] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--info);
+  cursor: pointer;
+}
 
-@media (max-width: 800px) {
-  .grid-2 { grid-template-columns: 1fr; }
-  .shell__main { margin-inline-start: 0; }
-  .sidebar { position: static; width: 100%; }
-  .shell { flex-direction: column; }
+/* Give a checkbox and its label one comfortable target rather than a 17px square. */
+.field__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  cursor: pointer;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  max-width: 1120px;
 }
 
 /* ---- table ---- */
@@ -279,34 +399,82 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 
 .table { width: 100%; border-collapse: collapse; }
 
+/*
+ * Cells size to their content and the wrapper scrolls, rather than the table squeezing itself into
+ * whatever width is going. Squeezing is what a narrow screen used to do: a location broke across
+ * four lines and the row's buttons were compressed out of sight. Every column here holds a short
+ * value — a name, a code, a number, a place — so scrolling sideways costs less than the wrapping.
+ */
 .table th,
 .table td {
-  padding: 9px 12px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--line);
   text-align: start;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
-.table th { font-size: 13px; color: var(--muted); font-weight: 600; }
-.table th[aria-sort] { cursor: pointer; user-select: none; }
-.table th[aria-sort]:hover { color: var(--ink); }
-.table tbody tr:hover { background: #fafbfc; }
+.table th {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+  border-bottom-color: var(--line-strong);
+}
+
+/*
+ * Codes, phone numbers, money and dates all get read down the column rather than across, so the
+ * digits line up. Proportional figures make a mistyped voucher code much harder to spot.
+ */
+.table td { font-variant-numeric: tabular-nums; }
+
+/* A sortable heading is a real button: reachable by Tab, operable by Enter and Space. */
+.table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+}
+
+.table__sort:hover { color: var(--ink); }
+
+/* The marker is always in the DOM so the heading does not shift when it becomes the sort column. */
+.table__sort-icon { font-size: 10px; opacity: 0; transition: opacity 0.12s ease; }
+.table__sort:hover .table__sort-icon { opacity: 0.5; }
+.table__sort--active { color: var(--ink); }
+.table__sort--active .table__sort-icon { opacity: 1; }
+
+.table tbody tr:hover { background: #f6f9fa; }
 .table__numeric { text-align: end; }
 .table__actions { width: 1%; white-space: nowrap; }
+
+/*
+ * Vue strips the newline between two sibling buttons, so row actions rendered edge to edge — Edit
+ * flush against Delete. In a list of a hundred households that is one stray pixel between opening
+ * a record and destroying it.
+ */
+.table__actions > * + * { margin-inline-start: 8px; }
 
 .table-foot {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .table-foot__spacer { margin-inline-start: auto; }
 
-.empty { padding: 28px 16px; text-align: center; color: var(--muted); }
+.empty { padding: 32px 16px; text-align: center; color: var(--muted); }
 
 /* ---- stat tiles ---- */
 
@@ -320,33 +488,35 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 }
 
 .tile--dark { background: var(--accent-ink); color: var(--accent); }
-.tile__value { font-size: 30px; font-weight: 300; line-height: 1.1; }
-.tile__label { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+.tile__value { font-size: 30px; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile__label { font-size: 13px; opacity: 0.9; margin-top: 4px; }
 
 /* ---- misc ---- */
 
 .badge {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 10px;
   font-size: 12px;
+  font-weight: 500;
   background: var(--canvas);
   color: var(--muted);
 }
 
-.badge--success { background: rgba(39, 194, 76, 0.15); color: #1f8f39; }
+.badge--success { background: rgba(31, 143, 57, 0.12); color: var(--success); }
 .badge--muted { background: var(--canvas); color: var(--muted); }
 
 .alert {
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-radius: var(--radius);
   border: 1px solid transparent;
   margin-bottom: 14px;
 }
 
-.alert--danger { background: rgba(240, 80, 80, 0.1); border-color: rgba(240, 80, 80, 0.3); color: #a12a2a; }
+.alert--danger { background: rgba(198, 40, 40, 0.08); border-color: rgba(198, 40, 40, 0.3); color: #8f1f1f; }
 
 .spinner {
+  display: inline-block;
   width: 18px;
   height: 18px;
   border: 2px solid var(--line);
@@ -361,33 +531,35 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
 .row-gap { display: flex; align-items: center; gap: 8px; }
 
 /* Tabbed detail screens (distribution detail, reconciliation). */
-.tabs { display: flex; gap: 4px; margin-bottom: -1px; }
+.tabs { display: flex; gap: 4px; margin-bottom: -1px; flex-wrap: wrap; }
 
 .tabs__tab {
   border: 1px solid var(--line);
   border-bottom-color: transparent;
   background: var(--canvas);
   color: var(--muted);
-  padding: 8px 14px;
+  min-height: 36px;
+  padding: 8px 16px;
   border-radius: var(--radius) var(--radius) 0 0;
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
 }
 
+.tabs__tab:hover { color: var(--ink); }
 .tabs__tab--active { background: var(--surface); color: var(--ink); font-weight: 600; }
 
 /* Read-only key/value header on a detail screen. */
 .summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px 20px;
+  gap: 16px 24px;
   margin: 0;
   padding: 16px;
 }
 
-.summary dt { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
-.summary dd { margin: 0; }
+.summary dt { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+.summary dd { margin: 0; font-variant-numeric: tabular-nums; }
 
 /* Modal shell shared by the dialogs that replaced angular-dialog-service. */
 .modal {
@@ -397,20 +569,97 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 10vh;
+  padding: 10vh 16px 16px;
   z-index: 50;
 }
 
 .modal__card {
   width: 480px;
-  max-width: calc(100% - 32px);
+  max-width: 100%;
   background: var(--surface);
   border-radius: var(--radius);
   padding: 20px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
 }
 
-.modal__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+/* ---- narrow viewports ---- */
+
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .shell__main { margin-inline-start: 0; }
+
+  .topbar__menu { display: inline-flex; }
+
+  /*
+   * Off-canvas until asked for. `transform` rather than `display` keeps the drawer focusable in
+   * source order and lets it animate; `visibility` takes it out of the tab ring while closed.
+   */
+  .sidebar {
+    width: min(280px, 82vw);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.18s ease, visibility 0.18s;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  }
+
+  [dir='rtl'] .sidebar { transform: translateX(100%); }
+
+  .sidebar--open { transform: translateX(0); visibility: visible; }
+  [dir='rtl'] .sidebar--open { transform: translateX(0); }
+
+  .sidebar__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset-block-start: 12px;
+    inset-inline-end: 12px;
+    width: 34px;
+    height: 34px;
+    background: none;
+    border: 0;
+    border-radius: var(--radius);
+    color: #b8c7d4;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .sidebar__close:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+  .shell__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 35;
+  }
+}
+
+@media (max-width: 560px) {
+  :root { --shell-gutter: 12px; }
+  .panel__head { gap: 8px; }
+  .table th, .table td { padding: 9px 10px; }
+}
+
+/*
+ * A 30px row button is fine under a mouse and mean under a thumb, and these lists are worked on
+ * tablets in the field. Keyed off the pointer rather than the width so a touch laptop gets it too.
+ */
+@media (pointer: coarse) {
+  .btn--sm { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+  .dropdown__item { min-height: 44px; }
+  .sidebar__link { min-height: 44px; padding-block: 11px; }
+  .sidebar__group-toggle { min-height: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ---- right to left ---- */
 
 /* The active-link marker sits on the reading edge; box-shadow has no logical form. */
 [dir='rtl'] .sidebar__link.router-link-active {

@@ -8,6 +8,9 @@ import type { MenuCategory, MenuLink } from '@/api/types'
 
 const { t } = useI18n()
 
+defineProps<{ open?: boolean }>()
+defineEmits<{ (e: 'close'): void }>()
+
 /**
  * The menu is data held on the server (MenuCategory -> MenuItem -> child link), and each child
  * carries the name of an AngularJS ui-router state. `routeForState` maps those to Vue routes so
@@ -52,10 +55,12 @@ const visibleCategories = computed(() =>
 </script>
 
 <template>
-  <nav class="sidebar" aria-label="Main">
+  <nav class="sidebar" :class="{ 'sidebar--open': open }" aria-label="Main">
     <RouterLink :to="{ name: 'dashboard' }" class="sidebar__brand">{{ t('app.name') }}</RouterLink>
 
-    <RouterLink :to="{ name: 'dashboard' }" class="sidebar__link" style="padding-left: 16px">
+    <button class="sidebar__close" :aria-label="t('app.closeMenu')" @click="$emit('close')">×</button>
+
+    <RouterLink :to="{ name: 'dashboard' }" class="sidebar__link sidebar__link--flush">
       {{ t('dashboard.title') }}
     </RouterLink>
 

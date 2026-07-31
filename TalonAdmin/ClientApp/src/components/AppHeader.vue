@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
@@ -9,13 +9,41 @@ const session = useSessionStore()
 const router = useRouter()
 const { t, locale } = useI18n()
 
-const countryOpen = ref(false)
-const userOpen = ref(false)
-const languageOpen = ref(false)
+defineProps<{ menuOpen?: boolean }>()
+defineEmits<{ (e: 'toggleMenu'): void }>()
+
+/**
+ * One name at a time rather than a flag per dropdown: opening one closes the others, which is what
+ * a menu bar is expected to do, and leaves a single thing to clear on Escape or an outside click.
+ */
+type Menu = 'country' | 'language' | 'user'
+const open = ref<Menu | null>(null)
+const bar = ref<HTMLElement | null>(null)
+
+const toggle = (menu: Menu) => (open.value = open.value === menu ? null : menu)
+
+function onDocumentPointerDown(event: PointerEvent) {
+  if (!bar.value?.contains(event.target as Node)) open.value = null
+}
+
+function onDocumentKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') open.value = null
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', onDocumentPointerDown)
+  document.addEventListener('keydown', onDocumentKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onDocumentPointerDown)
+  document.removeEventListener('keydown', onDocumentKeydown)
+})
+
 const override = ref(storedOverride())
 
 async function chooseCountry(id: number) {
-  countryOpen.value = false
+  open.value = null
   if (id === session.country?.Id) return
 
   session.selectCountry(id)
@@ -29,7 +57,7 @@ async function chooseCountry(id: number) {
  * want; an explicit one is for the handful of staff who administer several countries at once.
  */
 function chooseLanguage(code: LocaleCode | null) {
-  languageOpen.value = false
+  open.value = null
   override.value = code
 
   setOverride(code)
@@ -37,22 +65,31 @@ function chooseLanguage(code: LocaleCode | null) {
 }
 
 function signOut() {
-  userOpen.value = false
+  open.value = null
   session.logOut()
   void router.push({ name: 'login' })
 }
 </script>
 
 <template>
-  <header class="topbar">
+  <header ref="bar" class="topbar">
+    <button
+      class="topbar__menu"
+      :aria-label="t('app.menu')"
+      :aria-expanded="menuOpen"
+      @click="$emit('toggleMenu')"
+    >
+      <span aria-hidden="true">☰</span>
+    </button>
+
     <div class="topbar__spacer" />
 
     <div v-if="session.countries.length > 1" class="dropdown">
-      <button class="dropdown__toggle" :aria-expanded="countryOpen" @click="countryOpen = !countryOpen">
+      <button class="dropdown__toggle" :aria-expanded="open === 'country'" @click="toggle('country')">
         {{ session.country?.Name ?? t('common.none') }}
         <span aria-hidden="true">▾</span>
       </button>
-      <div v-if="countryOpen" class="dropdown__menu">
+      <div v-if="open === 'country'" class="dropdown__menu">
         <button
           v-for="country in session.countries"
           :key="country.Id"
@@ -70,13 +107,13 @@ function signOut() {
       <button
         class="dropdown__toggle"
         :aria-label="t('app.language')"
-        :aria-expanded="languageOpen"
-        @click="languageOpen = !languageOpen"
+        :aria-expanded="open === 'language'"
+        @click="toggle('language')"
       >
         {{ LOCALES.find(l => l.code === locale)?.label }}
         <span aria-hidden="true">▾</span>
       </button>
-      <div v-if="languageOpen" class="dropdown__menu">
+      <div v-if="open === 'language'" class="dropdown__menu">
         <button class="dropdown__item" :aria-current="override === null" @click="chooseLanguage(null)">
           {{ t('app.followCountry') }}
         </button>
@@ -94,11 +131,11 @@ function signOut() {
     </div>
 
     <div class="dropdown">
-      <button class="dropdown__toggle" :aria-expanded="userOpen" @click="userOpen = !userOpen">
+      <button class="dropdown__toggle" :aria-expanded="open === 'user'" @click="toggle('user')">
         {{ session.user?.FullName || session.user?.UserName }}
         <span aria-hidden="true">▾</span>
       </button>
-      <div v-if="userOpen" class="dropdown__menu">
+      <div v-if="open === 'user'" class="dropdown__menu">
         <button class="dropdown__item" @click="signOut">{{ t('app.signOut') }}</button>
       </div>
     </div>

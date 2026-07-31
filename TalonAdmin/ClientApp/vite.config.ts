@@ -17,11 +17,16 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // `npm run dev` talks to the API on the .NET dev port.
+    // `npm run dev` talks to the API on the .NET dev port. Set TALON_API to point at another
+    // instance — a second copy on a spare port, or a shared dev server.
     proxy: Object.fromEntries(
       ['/Token', '/api', '/breeze', '/Home', '/signalr'].map(path => [
         path,
-        { target: 'http://localhost:5080', changeOrigin: true, ws: path === '/signalr' }
+        {
+          target: process.env.TALON_API ?? 'http://localhost:5080',
+          changeOrigin: true,
+          ws: path === '/signalr'
+        }
       ])
     )
   }
