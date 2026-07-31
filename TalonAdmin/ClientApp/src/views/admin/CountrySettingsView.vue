@@ -5,35 +5,67 @@ import type { OrganizationCountry } from '@/api/types'
 import { notifyError, notifySaved } from '@/composables/useToast'
 
 /**
- * Per-country SMS configuration: which gateway to use, its credentials, and the message templates
- * the voucher workflow sends. Every country the organization operates in is edited from here.
+ * Per-country messaging configuration: which channels to send through and in what order, each
+ * channel's credentials, and the message templates the voucher workflow uses.
  *
- * `SMS_BACKENDS` is the contract with `SmsBackendType` on the server. The list used to be wrong in
- * both directions: it offered gateways that were never implemented, and its numbering disagreed
- * with the dispatch, so picking "RescueSMS" actually configured TurboSMS. RescueSMS and TurboSMS
- * have since been removed; Clickatell keeps the value it already had.
+ * A country used to pick exactly one gateway. That is fine for SMS, where everyone is reachable,
+ * but not for Telegram: a bot can only message people who have enrolled. So this edits an ordered
+ * chain — Telegram first, say, with SMS behind it for everyone else — and each channel carries its
+ * own credentials, because a bot token and a gateway URL cannot share one field.
  */
-const SMS_BACKENDS = [
-  { value: 2, label: 'Clickatell', hint: 'A URL template: {0} is the recipient, {1} the message.' },
+interface ChannelDefinition {
+  key: string
+  label: string
+  /** The SmsBackendType value, kept in step so anything reading it still resolves. */
+  backend: number
+  urlLabel: string
+  urlHint: string
+  needsUser: boolean
+  passwordLabel: string
+  /** Extra country properties this channel needs beyond the credential triple. */
+  properties?: Array<{ name: string; label: string; hint: string; placeholder?: string }>
+}
+
+const CHANNELS: ChannelDefinition[] = [
   {
-    value: 4,
-    label: 'Android SMS Gateway',
-    hint: 'The gateway app\u2019s API root — the phone on the office LAN, or the relay it connects out to.'
+    key: 'sms.clickatell',
+    label: 'Clickatell',
+    backend: 2,
+    urlLabel: 'Service URL',
+    urlHint: 'A URL template: {0} is the recipient, {1} the message.',
+    needsUser: true,
+    passwordLabel: 'Password'
   },
   {
-    value: 5,
+    key: 'sms.android',
+    label: 'Android SMS Gateway',
+    backend: 4,
+    urlLabel: 'Gateway API root',
+    urlHint: 'The phone on the office LAN, or the relay it connects out to.',
+    needsUser: true,
+    passwordLabel: 'Gateway password'
+  },
+  {
+    key: 'telegram',
     label: 'Telegram bot',
-    hint: 'Leave blank for api.telegram.org. Put the bot token in the password field below.'
+    backend: 5,
+    urlLabel: 'API base',
+    urlHint: 'Leave blank for api.telegram.org.',
+    needsUser: false,
+    passwordLabel: 'Bot token',
+    properties: [
+      {
+        name: 'Telegram Bot Username',
+        label: 'Bot username',
+        hint: 'Used to build the enrolment links staff send to beneficiaries.',
+        placeholder: 'TalonJordanBot'
+      }
+    ]
   }
 ]
-const DEFAULT_BACKEND = SMS_BACKENDS[0].value
 
-/** The template names the server looks up when it builds an outbound message. */
-/**
- * Stored as country setting properties alongside the message templates. The bot username is not a
- * template, but it lives in the same collection and so saves through the same path.
- */
-const TELEGRAM_PROPERTIES = ['Telegram Bot Username']
+/** Matches MessageChannelRegistry.ChainPropertyName on the server. */
+const CHAIN_PROPERTY = 'Message Channels'
 
 const TEMPLATES = [
   'Beneficiary Voucher Message',
@@ -51,7 +83,11 @@ const TEMPLATES = [
 
 const rows = ref<OrganizationCountry[]>([])
 const selectedId = ref<number | null>(null)
-const gateway = ref({ SmsBackendType: DEFAULT_BACKEND, ServiceUrl: '', ServiceUser: '', ServicePassword: '' })
+
+/** Ordered channel keys the country will try. */
+const chain = ref<string[]>([])
+const credentials = ref<Record<string, { url: string; user: string; password: string }>>({})
+const properties = ref<Record<string, string>>({})
 const templates = ref<Record<string, string>>({})
 const present = ref(new Set<string>())
 
@@ -60,12 +96,12 @@ const saving = ref(false)
 
 const selected = computed(() => rows.value.find(r => r.Id === selectedId.value) ?? null)
 
-const backend = computed(() =>
-  SMS_BACKENDS.find(b => b.value === gateway.value.SmsBackendType) ?? SMS_BACKENDS[0]
-)
+const definition = (key: string) => CHANNELS.find(c => c.key === key)!
 
-/** Telegram needs a bot username so staff can hand out enrolment links. */
-const isTelegram = computed(() => gateway.value.SmsBackendType === 5)
+/** Channels not yet in the chain, offered for adding. */
+const available = computed(() => CHANNELS.filter(c => !chain.value.includes(c.key)))
+
+const propertyNames = computed(() => CHANNELS.flatMap(c => c.properties?.map(p => p.name) ?? []))
 
 onMounted(async () => {
   try {
@@ -80,23 +116,64 @@ onMounted(async () => {
 
 function select(id: number | null) {
   selectedId.value = id
+
   const settings = rows.value.find(r => r.Id === id)?.Settings
-
-  gateway.value = {
-    SmsBackendType: settings?.SmsBackendType ?? DEFAULT_BACKEND,
-    ServiceUrl: settings?.ServiceUrl ?? '',
-    ServiceUser: settings?.ServiceUser ?? '',
-    ServicePassword: settings?.ServicePassword ?? ''
-  }
-
   const stored = settings?.PropertyCollection ?? []
+  const value = (name: string) => stored.find(p => p.Name === name)?.Value ?? ''
+
   present.value = new Set(stored.map(p => p.Name))
-  templates.value = Object.fromEntries(
-    [...TEMPLATES, ...TELEGRAM_PROPERTIES].map(name => [
-      name,
-      stored.find(p => p.Name === name)?.Value ?? ''
-    ])
+
+  // The chain property wins; without it the country is on the single backend it always was.
+  const configured = value(CHAIN_PROPERTY)
+    .split(',')
+    .map(k => k.trim())
+    .filter(k => CHANNELS.some(c => c.key === k))
+
+  const fromBackend = CHANNELS.find(c => c.backend === settings?.SmsBackendType)
+  chain.value = configured.length > 0 ? configured : fromBackend ? [fromBackend.key] : []
+
+  credentials.value = Object.fromEntries(
+    CHANNELS.map(c => {
+      const scoped = {
+        url: value(`Channel ${c.key} Url`),
+        user: value(`Channel ${c.key} User`),
+        password: value(`Channel ${c.key} Password`)
+      }
+
+      // A channel with no overrides of its own uses the country's original three fields, which is
+      // how every single-channel country was configured before chains existed.
+      const hasOwn = scoped.url || scoped.user || scoped.password
+      return [
+        c.key,
+        hasOwn
+          ? scoped
+          : {
+              url: settings?.ServiceUrl ?? '',
+              user: settings?.ServiceUser ?? '',
+              password: settings?.ServicePassword ?? ''
+            }
+      ]
+    })
   )
+
+  properties.value = Object.fromEntries(propertyNames.value.map(name => [name, value(name)]))
+  templates.value = Object.fromEntries(TEMPLATES.map(name => [name, value(name)]))
+}
+
+function add(key: string) {
+  if (key && !chain.value.includes(key)) chain.value.push(key)
+}
+
+function remove(index: number) {
+  chain.value.splice(index, 1)
+}
+
+function move(index: number, by: number) {
+  const target = index + by
+  if (target < 0 || target >= chain.value.length) return
+
+  const [moved] = chain.value.splice(index, 1)
+  chain.value.splice(target, 0, moved)
 }
 
 async function save() {
@@ -108,16 +185,38 @@ async function save() {
 
   saving.value = true
   try {
-    // Only templates that were given a value are written; blank ones are left as they were.
-    const changed = [...TEMPLATES, ...TELEGRAM_PROPERTIES]
-      .filter(name => templates.value[name].trim())
-      .map(name => ({
-        Name: name,
-        Value: templates.value[name],
-        existed: present.value.has(name)
-      }))
+    const primary = chain.value[0]
 
-    await api.saveCountrySettings(settings, { ...gateway.value }, changed)
+    // The first channel's credentials also go in the country's own fields, so anything still
+    // reading those — and the server's fallback when the chain property is absent — stays coherent.
+    const head = primary ? credentials.value[primary] : { url: '', user: '', password: '' }
+
+    const gateway = {
+      SmsBackendType: primary ? definition(primary).backend : settings.SmsBackendType,
+      ServiceUrl: head.url,
+      ServiceUser: head.user,
+      ServicePassword: head.password
+    }
+
+    const changed: Array<{ Name: string; Value: string; existed: boolean }> = []
+    const write = (name: string, value: string) => {
+      if (value?.trim()) changed.push({ Name: name, Value: value, existed: present.value.has(name) })
+    }
+
+    write(CHAIN_PROPERTY, chain.value.join(','))
+
+    // Every channel after the first needs its own credentials; the first reads the country fields.
+    for (const key of chain.value.slice(1)) {
+      const c = credentials.value[key]
+      write(`Channel ${key} Url`, c.url)
+      write(`Channel ${key} User`, c.user)
+      write(`Channel ${key} Password`, c.password)
+    }
+
+    for (const name of propertyNames.value) write(name, properties.value[name])
+    for (const name of TEMPLATES) write(name, templates.value[name])
+
+    await api.saveCountrySettings(settings, gateway, changed)
 
     notifySaved('Country settings')
     rows.value = await api.organizationCountries()
@@ -159,50 +258,96 @@ async function save() {
     </div>
 
     <div class="panel">
-      <div class="panel__head"><h2 style="margin: 0">SMS gateway</h2></div>
-      <div class="panel__body grid-2">
-        <div class="field">
-          <label class="field__label" for="backend">SMS Service Type</label>
-          <select id="backend" v-model.number="gateway.SmsBackendType" class="field__control">
-            <option v-for="option in SMS_BACKENDS" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
+      <div class="panel__head">
+        <h2 style="margin: 0">Delivery channels</h2>
+        <div class="panel__spacer" />
+        <select
+          v-if="available.length > 0"
+          class="input"
+          style="width: auto"
+          value=""
+          @change="add(($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value = ''"
+        >
+          <option value="">Add a channel…</option>
+          <option v-for="option in available" :key="option.key" :value="option.key">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
 
-        <div class="field">
-          <label class="field__label" for="url">SMS Service URL</label>
-          <input id="url" v-model="gateway.ServiceUrl" class="field__control" />
-          <p class="muted" style="font-size: 12px; margin: 4px 0 0">{{ backend.hint }}</p>
-        </div>
+      <div class="panel__body">
+        <p v-if="chain.length === 0" class="muted" style="margin: 0">
+          No channel is configured, so nothing will be sent. Add one above.
+        </p>
 
-        <div v-if="isTelegram" class="field">
-          <label class="field__label" for="botUserName">Telegram Bot Username</label>
-          <input
-            id="botUserName"
-            v-model="templates['Telegram Bot Username']"
-            class="field__control"
-            placeholder="TalonJordanBot"
-          />
-          <p class="muted" style="font-size: 12px; margin: 4px 0 0">
-            Used to build the enrolment links staff send to beneficiaries.
-          </p>
-        </div>
+        <p v-else class="muted" style="margin: 0 0 12px; font-size: 13px">
+          Tried in order. A channel that cannot reach someone — a number that never enrolled with
+          the bot, say — hands over to the next one rather than failing.
+        </p>
 
-        <div class="field">
-          <label class="field__label" for="user">SMS Service User Name</label>
-          <input id="user" v-model="gateway.ServiceUser" class="field__control" autocomplete="off" />
-        </div>
+        <div v-for="(key, index) in chain" :key="key" class="channel">
+          <div class="channel__head">
+            <span class="badge">{{ index + 1 }}</span>
+            <strong>{{ definition(key).label }}</strong>
+            <span v-if="index === 0" class="muted" style="font-size: 12px">primary</span>
+            <div class="panel__spacer" />
+            <button class="btn btn--sm" type="button" :disabled="index === 0" @click="move(index, -1)">
+              ↑
+            </button>
+            <button
+              class="btn btn--sm"
+              type="button"
+              :disabled="index === chain.length - 1"
+              @click="move(index, 1)"
+            >
+              ↓
+            </button>
+            <button class="btn btn--sm btn--danger" type="button" @click="remove(index)">
+              Remove
+            </button>
+          </div>
 
-        <div class="field">
-          <label class="field__label" for="password">SMS Service Password</label>
-          <input
-            id="password"
-            v-model="gateway.ServicePassword"
-            type="password"
-            class="field__control"
-            autocomplete="new-password"
-          />
+          <div class="grid-2">
+            <div class="field">
+              <label class="field__label" :for="`url-${key}`">{{ definition(key).urlLabel }}</label>
+              <input :id="`url-${key}`" v-model="credentials[key].url" class="field__control" />
+              <p class="muted" style="font-size: 12px; margin: 4px 0 0">{{ definition(key).urlHint }}</p>
+            </div>
+
+            <div v-if="definition(key).needsUser" class="field">
+              <label class="field__label" :for="`user-${key}`">User name</label>
+              <input
+                :id="`user-${key}`"
+                v-model="credentials[key].user"
+                class="field__control"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field__label" :for="`password-${key}`">
+                {{ definition(key).passwordLabel }}
+              </label>
+              <input
+                :id="`password-${key}`"
+                v-model="credentials[key].password"
+                type="password"
+                class="field__control"
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div v-for="property in definition(key).properties ?? []" :key="property.name" class="field">
+              <label class="field__label" :for="`prop-${property.name}`">{{ property.label }}</label>
+              <input
+                :id="`prop-${property.name}`"
+                v-model="properties[property.name]"
+                class="field__control"
+                :placeholder="property.placeholder"
+              />
+              <p class="muted" style="font-size: 12px; margin: 4px 0 0">{{ property.hint }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -218,3 +363,19 @@ async function save() {
     </div>
   </form>
 </template>
+
+<style scoped>
+.channel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px 0;
+  margin-bottom: 14px;
+}
+
+.channel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+</style>

@@ -230,6 +230,11 @@ builder.Services.AddScoped<IMessageChannel>(sp => sp.GetRequiredService<Telegram
 builder.Services.AddSingleton<TelegramEnrolment>();
 builder.Services.AddScoped<MessageChannelRegistry>();
 builder.Services.AddScoped<IOutboundMessageQueue, OutboundMessageQueue>();
+
+// Redemption used to live inside the inbound-SMS controller action, which meant only an SMS
+// gateway could reach it. These two make it reachable from any channel.
+builder.Services.AddScoped<VoucherNotifications>();
+builder.Services.AddScoped<InboundMessageProcessor>();
 builder.Services.AddHostedService<OutboundMessageDispatcher>();
 
 builder.Services

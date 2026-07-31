@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
-using TalonAdmin.Models.Admin;
 using TalonAdmin.Models.Vouchers;
 
 namespace TalonAdmin.Messaging.Channels
@@ -25,8 +24,9 @@ namespace TalonAdmin.Messaging.Channels
     /// <para>
     /// The structural constraint is that <b>a bot cannot message someone first</b>. Every recipient
     /// has to have tapped an enrolment link, which is what fills <see cref="TelegramContact"/>. A
-    /// message to someone not enrolled is rejected rather than retried — waiting will not enrol
-    /// them, and the delivery log is where staff find out they need to.
+    /// message to someone not enrolled is reported as <c>Unroutable</c>, so a country that lists an
+    /// SMS channel behind this one reaches them there instead. With nothing behind it, the delivery
+    /// log is where staff find out they need to enrol.
     /// </para>
     /// </remarks>
     public class TelegramChannel : IMessageChannel
@@ -48,12 +48,12 @@ namespace TalonAdmin.Messaging.Channels
         public string Key => ChannelKey;
 
         /// <summary>The bot token lives in ServicePassword, alongside every other channel's secret.</summary>
-        public bool CanServe(CountrySettings settings) =>
+        public bool CanServe(ChannelSettings settings) =>
             !string.IsNullOrWhiteSpace(settings?.ServicePassword);
 
         public async Task<DeliveryResult> SendAsync(
             OutboundMessage message,
-            CountrySettings settings,
+            ChannelSettings settings,
             CancellationToken cancellationToken)
         {
             var number = TelegramEnrolment.Normalize(message.To);
@@ -65,9 +65,11 @@ namespace TalonAdmin.Messaging.Channels
 
             if (contact == null)
             {
-                return DeliveryResult.Rejected(
-                    $"{message.To} has not enrolled with the Telegram bot. Send them their " +
-                    "enrolment link, or switch this country to an SMS channel.");
+                // Unroutable rather than Rejected: nothing is wrong with the message, this channel
+                // simply cannot see this person. If the country has an SMS channel behind Telegram
+                // in its chain, that is where they will be reached.
+                return DeliveryResult.Unroutable(
+                    $"{message.To} has not enrolled with the Telegram bot.");
             }
 
             var payload = new JObject

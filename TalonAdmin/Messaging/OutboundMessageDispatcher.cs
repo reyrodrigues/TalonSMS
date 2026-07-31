@@ -103,6 +103,7 @@ namespace TalonAdmin.Messaging
             var settingsByCountry = await adminContext.Countries
                 .AsNoTracking()
                 .Include(c => c.Settings)
+                .ThenInclude(s => s.PropertyCollection)
                 .Where(c => countryIds.Contains(c.Id))
                 .ToDictionaryAsync(c => c.Id, c => c.Settings, cancellationToken);
 
@@ -117,6 +118,13 @@ namespace TalonAdmin.Messaging
             return due.Count;
         }
 
+        /// <summary>
+        /// One pass down a country's channel chain. A channel that cannot reach this particular
+        /// recipient hands straight over to the next one — that is what makes "Telegram, then SMS"
+        /// work for a caseload where only some people have enrolled. A transient failure stops the
+        /// pass and retries the same channel later, because falling through on a timeout would send
+        /// the message twice as soon as the first channel recovered.
+        /// </summary>
         private async Task AttemptAsync(
             OutboundMessage message,
             IReadOnlyDictionary<int, Models.Admin.CountrySettings> settingsByCountry,
@@ -125,52 +133,91 @@ namespace TalonAdmin.Messaging
         {
             settingsByCountry.TryGetValue(message.CountryId, out var settings);
 
-            if (!registry.TryResolve(settings, out var channel, out var problem))
+            // The chain is re-read every attempt rather than pinned when the message was queued:
+            // the country's configuration can change underneath a queued message, and a recipient
+            // who enrols with the bot after their first message failed should be reachable on the
+            // retry.
+            var chain = registry.ResolveChain(settings, out var problems);
+
+            if (chain.Count == 0)
             {
-                Fail(message, problem);
+                Fail(message, string.Join(" ", problems));
                 return;
             }
 
-            // The channel a message was queued for can be reconfigured underneath it. Honour the
-            // country's current choice, and record it, so the log says how it actually went out.
-            message.ChannelKey = channel.Key;
             message.Attempts++;
 
-            DeliveryResult result;
-            try
+            var skipped = new List<string>();
+
+            foreach (var channel in chain)
             {
-                result = await channel.SendAsync(message, settings, cancellationToken);
-            }
-            catch (Exception exception)
-            {
-                result = DeliveryResult.FromException(exception);
+                message.ChannelKey = channel.Key;
+
+                DeliveryResult result;
+                try
+                {
+                    result = await channel.SendAsync(
+                        message, ChannelSettings.For(settings, channel.Key), cancellationToken);
+                }
+                catch (Exception exception)
+                {
+                    result = DeliveryResult.FromException(exception);
+                }
+
+                switch (result.Outcome)
+                {
+                    case DeliveryOutcome.Sent:
+                        message.State = OutboundMessageState.Sent;
+                        message.SentOn = DateTime.UtcNow;
+                        message.LastError = null;
+                        message.ProviderMessageId = result.ProviderMessageId;
+                        return;
+
+                    case DeliveryOutcome.Unroutable:
+                        skipped.Add($"{channel.Key}: {result.Error}");
+                        continue;
+
+                    case DeliveryOutcome.Rejected:
+                        Fail(message, Describe(skipped, $"{channel.Key}: {result.Error}"));
+                        return;
+
+                    default:
+                        if (message.Attempts >= _maxAttempts)
+                        {
+                            Fail(message, Describe(skipped,
+                                $"{channel.Key}: {result.Error} (gave up after {message.Attempts} attempts)"));
+                            return;
+                        }
+
+                        Retry(message, Describe(skipped, $"{channel.Key}: {result.Error}"));
+                        return;
+                }
             }
 
-            if (result.Succeeded)
-            {
-                message.State = OutboundMessageState.Sent;
-                message.SentOn = DateTime.UtcNow;
-                message.LastError = null;
-                message.ProviderMessageId = result.ProviderMessageId;
-                return;
-            }
+            // Every channel declined this recipient. Retrying will not change that until somebody
+            // acts — enrols them, or corrects the number — so this is a failure, not a wait.
+            Fail(message, Describe(skipped, "No channel could reach this recipient."));
+        }
 
-            if (!result.Retryable || message.Attempts >= _maxAttempts)
-            {
-                var suffix = result.Retryable ? $" (gave up after {message.Attempts} attempts)" : "";
-                Fail(message, result.Error + suffix);
-                return;
-            }
-
+        private void Retry(OutboundMessage message, string error)
+        {
             // Exponential backoff, so a gateway outage is not hammered: 1, 2, 4, 8 minutes.
             var delay = TimeSpan.FromMinutes(Math.Pow(2, message.Attempts - 1));
+
             message.NextAttemptOn = DateTime.UtcNow.Add(delay);
-            message.LastError = result.Error;
+            message.LastError = error;
 
             _logger.LogWarning(
                 "Message {MessageId} to {Recipient} failed (attempt {Attempt}/{Max}); retrying at {NextAttempt}. {Error}",
-                message.Id, message.To, message.Attempts, _maxAttempts, message.NextAttemptOn, result.Error);
+                message.Id, message.To, message.Attempts, _maxAttempts, message.NextAttemptOn, error);
         }
+
+        /// <summary>
+        /// Keeps the channels that were tried and passed over in the recorded reason, so the
+        /// delivery log explains the whole route rather than only its last hop.
+        /// </summary>
+        private static string Describe(IReadOnlyCollection<string> skipped, string outcome) =>
+            skipped.Count == 0 ? outcome : string.Join(" ", skipped.Append(outcome));
 
         private void Fail(OutboundMessage message, string error)
         {

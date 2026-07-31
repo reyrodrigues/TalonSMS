@@ -62,8 +62,13 @@ namespace TalonAdmin.Messaging
 
             // The channel is resolved now rather than at send time so that a misconfigured country
             // shows up in the delivery log immediately, next to the message it stopped.
+            // The channel chain and each channel's credentials are property-collection rows, so
+            // they have to be loaded; projecting Settings alone leaves the collection empty and
+            // every country looks single-channel and unconfigured.
             var settings = await _adminContext.Countries
                 .AsNoTracking()
+                .Include(c => c.Settings)
+                .ThenInclude(s => s.PropertyCollection)
                 .Where(c => c.Id == countryId)
                 .Select(c => c.Settings)
                 .FirstOrDefaultAsync(cancellationToken);

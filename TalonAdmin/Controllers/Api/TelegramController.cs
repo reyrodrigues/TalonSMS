@@ -37,6 +37,7 @@ namespace TalonAdmin.Controllers.Api
         private readonly Context _context;
         private readonly Models.Admin.AdminContext _adminContext;
         private readonly TelegramEnrolment _enrolment;
+        private readonly InboundMessageProcessor _inboundMessages;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
         private readonly ILogger<TelegramController> _logger;
@@ -45,6 +46,7 @@ namespace TalonAdmin.Controllers.Api
             Context context,
             Models.Admin.AdminContext adminContext,
             TelegramEnrolment enrolment,
+            InboundMessageProcessor inboundMessages,
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
             ILogger<TelegramController> logger)
@@ -52,6 +54,7 @@ namespace TalonAdmin.Controllers.Api
             _context = context;
             _adminContext = adminContext;
             _enrolment = enrolment;
+            _inboundMessages = inboundMessages;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _logger = logger;
@@ -159,20 +162,35 @@ namespace TalonAdmin.Controllers.Api
                 return Ok();
             }
 
-            // Everything else is logged so a conversation is not lost, and acknowledged so the
-            // person knows the bot is alive. Redeeming a voucher over Telegram would mean routing
-            // this into the inbound SMS pipeline, which is not wired up yet.
-            _context.MessageLogs.Add(new MessageLog
-            {
-                MobileNumber = $"telegram:{chatId}",
-                Message = text,
-                DateTime = DateTime.UtcNow,
-                CountryId = country.Id
-            });
-            await _context.SaveChangesAsync();
+            // Anything else is a redemption attempt, and goes through exactly the same rules as an
+            // inbound SMS. The processor identifies the vendor by phone number, so the chat has to
+            // be resolved back to one first — which is only possible for someone who enrolled.
+            var contact = await _context.TelegramContacts
+                .AsNoTracking()
+                .Where(c => c.CountryId == country.Id && c.ChatId == chatId)
+                .FirstOrDefaultAsync();
 
-            await ReplyAsync(country.ServiceUrl, country.ServicePassword, chatId,
-                "Thanks — this bot delivers your voucher codes. To redeem, present your code to a vendor.");
+            if (contact == null)
+            {
+                await ReplyAsync(country.ServiceUrl, country.ServicePassword, chatId,
+                    "This chat is not linked to a registered number. Ask your programme staff for "
+                    + "an enrolment link.");
+
+                return Ok();
+            }
+
+            var result = await _inboundMessages.ProcessAsync(
+                contact.MobileNumber, text, country.Id);
+
+            // A successful redemption already queues the country's own "Vendor Confirmed" template,
+            // which comes back through this same chat. Replying here as well would say it twice, in
+            // two different sets of words.
+            if (!result.WasRedeemed)
+            {
+                await ReplyAsync(country.ServiceUrl, country.ServicePassword, chatId,
+                    "That did not look like a voucher redemption. Send the voucher code followed by "
+                    + "the beneficiary's identifier.");
+            }
 
             return Ok();
         }

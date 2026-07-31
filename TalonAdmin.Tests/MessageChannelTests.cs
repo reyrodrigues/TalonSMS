@@ -45,8 +45,7 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
 
         var result = await channel.SendAsync(
             new OutboundMessage { To = "+962790000001", Body = "Voucher 123456" },
-            new CountrySettings
-            {
+            new ChannelSettings {
                 ServiceUrl = "http://192.168.1.50:8080",
                 ServiceUser = "sms",
                 ServicePassword = "device-secret"
@@ -70,10 +69,9 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
     {
         var channel = new AndroidGatewayChannel(new HttpClient());
 
-        Assert.False(channel.CanServe(new CountrySettings { ServiceUrl = "http://phone:8080" }));
-        Assert.False(channel.CanServe(new CountrySettings { ServicePassword = "secret" }));
-        Assert.True(channel.CanServe(new CountrySettings
-        {
+        Assert.False(channel.CanServe(new ChannelSettings { ServiceUrl = "http://phone:8080" }));
+        Assert.False(channel.CanServe(new ChannelSettings { ServicePassword = "secret" }));
+        Assert.True(channel.CanServe(new ChannelSettings {
             ServiceUrl = "http://phone:8080",
             ServicePassword = "secret"
         }));
@@ -92,7 +90,7 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
 
         var result = await channel.SendAsync(
             new OutboundMessage { To = "+962790000001", Body = "Voucher" },
-            new CountrySettings { ServiceUrl = "http://phone:8080", ServicePassword = "secret" },
+            new ChannelSettings { ServiceUrl = "http://phone:8080", ServicePassword = "secret" },
             CancellationToken.None);
 
         Assert.False(result.Succeeded);
@@ -153,7 +151,7 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
     // ---- Telegram delivery -------------------------------------------------------------------
 
     [Fact]
-    public async Task Telegram_refuses_a_recipient_who_has_never_started_the_bot()
+    public async Task Telegram_reports_an_unenrolled_recipient_as_unroutable_so_the_next_channel_tries()
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<Context>();
@@ -162,12 +160,14 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
 
         var result = await channel.SendAsync(
             new OutboundMessage { To = "+962790009999", Body = "Voucher", CountryId = 1 },
-            new CountrySettings { ServicePassword = "bot-token" },
+            new ChannelSettings { ServicePassword = "bot-token" },
             CancellationToken.None);
 
         Assert.False(result.Succeeded);
-        // Waiting will not enrol them, so this must not sit in the queue retrying.
+        // Waiting will not enrol them, so this must not sit in the queue retrying — but an SMS
+        // channel behind Telegram in the chain still can reach them, so it is not a rejection.
         Assert.False(result.Retryable);
+        Assert.Equal(DeliveryOutcome.Unroutable, result.Outcome);
         Assert.Contains("has not enrolled", result.Error);
     }
 
@@ -193,7 +193,7 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
 
         var result = await channel.SendAsync(
             new OutboundMessage { To = "+962 790 001 234", Body = "Voucher 654321", CountryId = 1 },
-            new CountrySettings { ServicePassword = "bot-token", ServiceUrl = "https://telegram.test" },
+            new ChannelSettings { ServicePassword = "bot-token", ServiceUrl = "https://telegram.test" },
             CancellationToken.None);
 
         Assert.True(result.Succeeded);
@@ -222,7 +222,7 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
         await context.SaveChangesAsync();
 
         var message = new OutboundMessage { To = "+962790005678", Body = "Voucher", CountryId = 1 };
-        var settings = new CountrySettings { ServicePassword = "bot-token" };
+        var settings = new ChannelSettings { ServicePassword = "bot-token" };
 
         var blocked = await new TelegramChannel(
                 new HttpClient(new RecordingHandler(System.Net.HttpStatusCode.Forbidden,
@@ -240,6 +240,86 @@ public class MessageChannelTests : IClassFixture<TalonAppFactory>
             .SendAsync(message, settings, CancellationToken.None);
 
         Assert.True(throttled.Retryable);
+    }
+
+    // ---- the chain -----------------------------------------------------------------------------
+
+    [Fact]
+    public void A_country_without_a_chain_property_still_uses_its_single_backend()
+    {
+        // Every country configured before chains existed has to keep working untouched.
+        var keys = MessageChannelRegistry.KeysFor(new CountrySettings
+        {
+            SmsBackendType = (int)SmsBackendType.Clickatell
+        });
+
+        Assert.Equal(new[] { ClickatellChannel.ChannelKey }, keys);
+    }
+
+    [Fact]
+    public void A_chain_property_overrides_the_single_backend_and_keeps_its_order()
+    {
+        var settings = new CountrySettings { SmsBackendType = (int)SmsBackendType.Clickatell };
+        settings.PropertyCollection.Add(new CountrySettingsProperty
+        {
+            Name = MessageChannelRegistry.ChainPropertyName,
+            Value = "telegram, sms.android, telegram"
+        });
+
+        // Order is the whole point, and a key repeated by hand must not double-send.
+        Assert.Equal(
+            new[] { TelegramChannel.ChannelKey, AndroidGatewayChannel.ChannelKey },
+            MessageChannelRegistry.KeysFor(settings));
+    }
+
+    [Fact]
+    public void A_channel_falls_back_to_the_country_credentials_only_when_it_has_none_of_its_own()
+    {
+        var country = new CountrySettings
+        {
+            ServiceUrl = "https://primary.test",
+            ServiceUser = "primary",
+            ServicePassword = "primary-secret"
+        };
+        country.PropertyCollection.Add(new CountrySettingsProperty
+        {
+            Name = "Channel telegram Password",
+            Value = "bot-token"
+        });
+
+        // Telegram brought its own, so it must not inherit the SMS gateway's URL as its API base.
+        var telegram = ChannelSettings.For(country, TelegramChannel.ChannelKey);
+        Assert.Equal("bot-token", telegram.ServicePassword);
+        Assert.Null(telegram.ServiceUrl);
+
+        // Clickatell brought none, so it uses the country's own three fields.
+        var clickatell = ChannelSettings.For(country, ClickatellChannel.ChannelKey);
+        Assert.Equal("https://primary.test", clickatell.ServiceUrl);
+        Assert.Equal("primary-secret", clickatell.ServicePassword);
+    }
+
+    [Fact]
+    public void A_chain_drops_channels_that_cannot_serve_and_says_why()
+    {
+        var registry = new MessageChannelRegistry(new IMessageChannel[]
+        {
+            new TelegramChannel(new HttpClient(), null),
+            new ClickatellChannel(new HttpClient())
+        });
+
+        var country = new CountrySettings { ServiceUrl = "https://gateway.test/{0}/{1}" };
+        country.PropertyCollection.Add(new CountrySettingsProperty
+        {
+            Name = MessageChannelRegistry.ChainPropertyName,
+            Value = "telegram,sms.clickatell"
+        });
+
+        // Telegram is listed but has no bot token, so it is dropped rather than being tried and
+        // failing every message on the way past.
+        var chain = registry.ResolveChain(country, out var problems);
+
+        Assert.Equal(new[] { ClickatellChannel.ChannelKey }, chain.Select(c => c.Key));
+        Assert.Contains(problems, p => p.Contains("telegram") && p.Contains("incomplete"));
     }
 
     // ---- registry ------------------------------------------------------------------------------

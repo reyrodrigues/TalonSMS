@@ -31,20 +31,62 @@ public class OutboundMessagingTests : IClassFixture<TalonAppFactory>
     }
 
     /// <summary>
-    /// The seed deliberately leaves ServiceUrl empty — a fresh install has no gateway account, and
-    /// the queue is expected to say so rather than pretend. Tests that need a working channel
-    /// configure one.
+    /// Writes the country's whole messaging configuration.
     /// </summary>
-    private async Task ConfigureGatewayAsync()
+    /// <remarks>
+    /// The seed deliberately leaves ServiceUrl empty — a fresh install has no gateway account, and
+    /// the queue is expected to say so rather than pretend — so tests that need a working channel
+    /// configure one. The class shares one fixture, so this sets every field it touches rather than
+    /// only the ones it cares about; leaving a chain behind would change what the next test sees.
+    /// </remarks>
+    private async Task ConfigureAsync(
+        SmsBackendType backend = SmsBackendType.Clickatell,
+        string serviceUrl = GatewayTemplate,
+        string password = null,
+        string chain = null)
     {
         using var scope = _factory.Services.CreateScope();
         var admin = scope.ServiceProvider.GetRequiredService<AdminContext>();
 
-        var settings = await admin.CountrySettings.FirstAsync();
-        settings.SmsBackendType = (int)SmsBackendType.Clickatell;
-        settings.ServiceUrl = GatewayTemplate;
+        var settings = await admin.CountrySettings.Include(s => s.PropertyCollection).FirstAsync();
+
+        settings.SmsBackendType = (int)backend;
+        settings.ServiceUrl = serviceUrl;
+        settings.ServicePassword = password;
+
+        void Set(string name, string value)
+        {
+            var existing = settings.PropertyCollection.FirstOrDefault(p => p.Name == name);
+
+            if (value == null)
+            {
+                if (existing != null) settings.PropertyCollection.Remove(existing);
+                return;
+            }
+
+            if (existing == null)
+            {
+                settings.PropertyCollection.Add(new CountrySettingsProperty
+                {
+                    SettingsId = settings.Id,
+                    Name = name,
+                    Value = value
+                });
+            }
+            else
+            {
+                existing.Value = value;
+            }
+        }
+
+        Set(MessageChannelRegistry.ChainPropertyName, chain);
+        // Clickatell needs its own URL whenever the country fields hold another channel's secret.
+        Set($"Channel {ClickatellChannel.ChannelKey} Url", chain == null ? null : GatewayTemplate);
+
         await admin.SaveChangesAsync();
     }
+
+    private Task ConfigureGatewayAsync() => ConfigureAsync();
 
     // ---- the URL template, which is what a deployed country actually has configured ----------
 
@@ -83,7 +125,7 @@ public class OutboundMessagingTests : IClassFixture<TalonAppFactory>
     [Fact]
     public async Task A_gateway_outage_is_retried_but_a_rejection_is_not()
     {
-        var settings = new CountrySettings { ServiceUrl = "https://gateway.test/send?to={0}&content={1}" };
+        var settings = new ChannelSettings { ServiceUrl = "https://gateway.test/send?to={0}&content={1}" };
 
         var outage = await SendThroughStubbedGatewayAsync(settings, System.Net.HttpStatusCode.ServiceUnavailable);
         Assert.False(outage.Succeeded);
@@ -99,8 +141,8 @@ public class OutboundMessagingTests : IClassFixture<TalonAppFactory>
     {
         var channel = new ClickatellChannel(new HttpClient());
 
-        Assert.False(channel.CanServe(new CountrySettings()));
-        Assert.True(channel.CanServe(new CountrySettings { ServiceUrl = "https://gateway.test/{0}/{1}" }));
+        Assert.False(channel.CanServe(new ChannelSettings()));
+        Assert.True(channel.CanServe(new ChannelSettings { ServiceUrl = "https://gateway.test/{0}/{1}" }));
 
         await Task.CompletedTask;
     }
@@ -132,6 +174,8 @@ public class OutboundMessagingTests : IClassFixture<TalonAppFactory>
     [Fact]
     public async Task A_country_whose_gateway_is_not_configured_yet_fails_visibly()
     {
+        await ConfigureAsync();
+
         using var scope = _factory.Services.CreateScope();
         var admin = scope.ServiceProvider.GetRequiredService<AdminContext>();
         var context = scope.ServiceProvider.GetRequiredService<Context>();
@@ -162,6 +206,8 @@ public class OutboundMessagingTests : IClassFixture<TalonAppFactory>
     [Fact]
     public async Task A_country_with_no_usable_channel_fails_visibly_instead_of_silently()
     {
+        await ConfigureAsync();
+
         using var scope = _factory.Services.CreateScope();
         var admin = scope.ServiceProvider.GetRequiredService<AdminContext>();
         var context = scope.ServiceProvider.GetRequiredService<Context>();
@@ -253,10 +299,100 @@ public class OutboundMessagingTests : IClassFixture<TalonAppFactory>
         }
     }
 
+    // ---- the channel chain ---------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_recipient_the_first_channel_cannot_reach_is_carried_by_the_next_one()
+    {
+        // This is the case the chain exists for: a country on Telegram where most of the caseload
+        // has never enrolled. Before the chain those messages simply failed.
+        await ConfigureChainAsync("telegram,sms.clickatell");
+
+        var gateway = new StubHandler(System.Net.HttpStatusCode.OK, "ID: fallback-1");
+        var dispatcher = BuildChainDispatcher(gateway);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var queue = scope.ServiceProvider.GetRequiredService<IOutboundMessageQueue>();
+            await queue.EnqueueAsync("+962790777001", "Never Enrolled", "Voucher 111", 1, 1);
+        }
+
+        await dispatcher.DispatchBatchAsync(CancellationToken.None);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<Context>();
+            var message = await context.OutboundMessages
+                .Where(m => m.To == "+962790777001")
+                .OrderByDescending(m => m.Id)
+                .FirstAsync();
+
+            Assert.Equal(OutboundMessageState.Sent, message.State);
+            // The log has to say which channel actually carried it, not which was tried first.
+            Assert.Equal(ClickatellChannel.ChannelKey, message.ChannelKey);
+            Assert.Equal("fallback-1", message.ProviderMessageId);
+            // One pass down the chain is one attempt, not one per channel.
+            Assert.Equal(1, message.Attempts);
+        }
+    }
+
+    [Fact]
+    public async Task A_message_no_channel_can_carry_fails_with_every_reason_it_was_turned_away()
+    {
+        await ConfigureChainAsync("telegram");
+
+        var dispatcher = BuildChainDispatcher(new StubHandler(System.Net.HttpStatusCode.OK, ""));
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var queue = scope.ServiceProvider.GetRequiredService<IOutboundMessageQueue>();
+            await queue.EnqueueAsync("+962790777002", "Never Enrolled", "Voucher 222", 1, 1);
+        }
+
+        await dispatcher.DispatchBatchAsync(CancellationToken.None);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<Context>();
+            var message = await context.OutboundMessages
+                .Where(m => m.To == "+962790777002")
+                .OrderByDescending(m => m.Id)
+                .FirstAsync();
+
+            // Nothing behind Telegram, so this is a dead end — and retrying will not change it
+            // until somebody enrols them.
+            Assert.Equal(OutboundMessageState.Failed, message.State);
+            Assert.Contains("has not enrolled", message.LastError);
+            Assert.Contains("No channel could reach this recipient", message.LastError);
+        }
+    }
+
+    /// <summary>Points the seeded country at an ordered chain, with a bot token for Telegram.</summary>
+    private Task ConfigureChainAsync(string chain) =>
+        ConfigureAsync(SmsBackendType.Telegram, GatewayTemplate, "bot-token", chain);
+
+    /// <summary>A dispatcher with both channels registered and their HTTP calls stubbed.</summary>
+    private OutboundMessageDispatcher BuildChainDispatcher(StubHandler gateway)
+    {
+        var services = new ServiceCollection();
+
+        services.AddScoped(_ => _factory.Services.CreateScope().ServiceProvider.GetRequiredService<Context>());
+        services.AddScoped(_ => _factory.Services.CreateScope().ServiceProvider.GetRequiredService<AdminContext>());
+        services.AddScoped<IMessageChannel>(sp =>
+            new TelegramChannel(new HttpClient(gateway), sp.GetRequiredService<Context>()));
+        services.AddScoped<IMessageChannel>(_ => new ClickatellChannel(new HttpClient(gateway)));
+        services.AddScoped<MessageChannelRegistry>();
+
+        return new OutboundMessageDispatcher(
+            services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>(),
+            new ConfigurationBuilder().Build(),
+            NullLogger<OutboundMessageDispatcher>.Instance);
+    }
+
     // ---- helpers -----------------------------------------------------------------------------
 
     private static async Task<DeliveryResult> SendThroughStubbedGatewayAsync(
-        CountrySettings settings,
+        ChannelSettings settings,
         System.Net.HttpStatusCode status)
     {
         var channel = new ClickatellChannel(new HttpClient(new StubHandler(status, "")));

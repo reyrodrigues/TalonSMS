@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TalonAdmin.Models.Admin;
 using TalonAdmin.Models.Vouchers;
 
 namespace TalonAdmin.Messaging.Channels
@@ -33,12 +32,12 @@ namespace TalonAdmin.Messaging.Channels
 
         public string Key => ChannelKey;
 
-        public bool CanServe(CountrySettings settings) =>
+        public bool CanServe(ChannelSettings settings) =>
             !string.IsNullOrWhiteSpace(settings?.ServiceUrl);
 
         public async Task<DeliveryResult> SendAsync(
             OutboundMessage message,
-            CountrySettings settings,
+            ChannelSettings settings,
             CancellationToken cancellationToken)
         {
             string url;

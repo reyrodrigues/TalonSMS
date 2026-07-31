@@ -124,18 +124,13 @@ namespace TalonAdmin.Controllers.Api
     {
         private static object syncObj = new Object();
 
-        /// <summary>
-        /// Matches the "@Model.A.B" / "@(Model.A.B)" expressions the stored SMS templates use.
-        /// </summary>
-        private static readonly Regex modelExpression =
-            new Regex(@"@\(?Model((?:\.[A-Za-z_][A-Za-z0-9_]*)+)\)?", RegexOptions.Compiled);
-
         private readonly Models.Vouchers.Context ctx;
         private readonly Models.Admin.AdminContext adminContext;
         private readonly IHubContext<DashboardHub> dashboardHub;
         private readonly IWebHostEnvironment environment;
         private readonly IConfiguration configuration;
-        private readonly Messaging.IOutboundMessageQueue outboundMessages;
+        private readonly Messaging.VoucherNotifications notifications;
+        private readonly Messaging.InboundMessageProcessor inboundMessages;
 
         public VoucherWorkflowController(
             Models.Vouchers.Context ctx,
@@ -143,14 +138,16 @@ namespace TalonAdmin.Controllers.Api
             IHubContext<DashboardHub> dashboardHub,
             IWebHostEnvironment environment,
             IConfiguration configuration,
-            Messaging.IOutboundMessageQueue outboundMessages)
+            Messaging.VoucherNotifications notifications,
+            Messaging.InboundMessageProcessor inboundMessages)
         {
             this.ctx = ctx;
             this.adminContext = adminContext;
             this.dashboardHub = dashboardHub;
             this.environment = environment;
             this.configuration = configuration;
-            this.outboundMessages = outboundMessages;
+            this.notifications = notifications;
+            this.inboundMessages = inboundMessages;
         }
 
         [HttpPost("AssignVoucherBook")]
@@ -495,9 +492,11 @@ namespace TalonAdmin.Controllers.Api
             [FromQuery] string secret = "")
         {
             var systemSecret = configuration["SystemSecret"] ?? "";
-            int countryId = 0;
 
-            countryId = adminContext.Countries.AsNoTracking().Where(o => o.IsoAlpha2.ToLower() == countryCode.ToLower().Trim()).Select(o => o.Id).FirstOrDefault();
+            var countryId = adminContext.Countries.AsNoTracking()
+                .Where(o => o.IsoAlpha2.ToLower() == countryCode.ToLower().Trim())
+                .Select(o => o.Id)
+                .FirstOrDefault();
 
             if (countryId == 0)
             {
@@ -509,149 +508,11 @@ namespace TalonAdmin.Controllers.Api
                 return BadRequest("Secret is invalid.");
             }
 
-            try
-            {
-                // NOTE: the message log used to be written through its own DbContext, so a failure here
-                // could not affect the rest of the request. The context is request scoped now, which
-                // means a failed SaveChanges leaves the log entry pending on the shared context.
-                ctx.MessageLogs.Add(new MessageLog
-                {
-                    MobileNumber = request.From,
-                    Message = request.Message,
-                    DateTime = DateTime.UtcNow,
-                    CountryId = countryId
-                });
+            var result = await inboundMessages.ProcessAsync(request.From, request.Message, countryId);
 
-                ctx.SaveChanges();
-            }
-            catch
-            {
-            }
-
-            var onlyNumbers = new Regex("[^\\d]");
-            string numericalMessage = onlyNumbers.Replace(request.Message, "");
-
-            string[] codes = request.Message.ToString().Split(' ').Where(s => !String.IsNullOrEmpty(s)).ToArray();
-            string from = request.From;
-            string voucherCode = "";
-            var nationalId = "";
-
-            if (codes.Length >= 2)
-            {
-                voucherCode = onlyNumbers.Replace(codes[codes.Length - 2], "");
-                nationalId = codes[codes.Length - 1];
-            }
-
-            var phoneNumber = "+" + Regex.Replace(from, "[^\\d]", "").Trim();
-
-            var db = ctx;
-
-            var vendorQuery = from v in db.Vendors
-                              where (v.MobileNumber == phoneNumber && v.CountryId == countryId) ||
-                              v.SalesPersons.Where(s => s.MobileNumber == phoneNumber && s.CountryId == countryId).Any()
-                              select v;
-
-            // Lazy loading is off: the checks below walk Category, the issuing transaction record's
-            // beneficiary and the latest credit transaction record's vendor.
-            var voucherQuery = from vc in db.Vouchers
-                                    .Include(v => v.Category).ThenInclude(c => c.Type)
-                                    .Include(v => v.TransactionRecords).ThenInclude(t => t.Beneficiary)
-                                    .Include(v => v.TransactionRecords).ThenInclude(t => t.Vendor)
-                               where vc.VoucherCode == voucherCode && vc.CountryId == countryId
-                               && vc.TransactionRecords.Any()
-                               select vc;
-
-            var vendor = await vendorQuery.FirstOrDefaultAsync();
-            var voucher = await voucherQuery.FirstOrDefaultAsync();
-
-            if (vendor == null && voucher != null)
-            {
-                // valid voucher invalid vendor
-                UnauthorizedPhone(phoneNumber);
-
-                return Ok("Unauthorized Vendor");
-            }
-
-            if (vendor != null && voucher == null)
-            {
-                // Valid Vendor invalid Voucher
-                VoucherIsInvalid(vendor, voucherCode.ToString());
-
-                return Ok("Invalid Voucher Code");
-            }
-
-            if (vendor == null && voucher == null)
-            {
-                return Ok("Not a talon message");
-            }
-
-
-
-            if (voucher.Category.VendorTypeId != null &&
-                voucher.Category.VendorTypeId != vendor.TypeId)
-            {
-                // Voucher limited to another category that doesn't match vendor
-                VendorCannotUseVoucher(voucher, vendor);
-
-                return Ok("Wrong Vendor Type");
-            }
-            else if (voucher.Status == 3 && (DateTime.UtcNow - voucher.LatestCreditTransactionRecords.LastModifiedOn.Value).TotalMinutes > 30)
-            {
-                // Voucher used already
-                VoucherAlreadyUsed(voucher, vendor);
-
-                return Ok("Voucher Already Used");
-            }
-            else if (voucher.Status == 3 && (DateTime.UtcNow - voucher.LatestCreditTransactionRecords.LastModifiedOn.Value).TotalMinutes < 30)
-            {
-                // Voucher used already
-                ResendConfirmationCode(voucher, vendor);
-
-                return Ok("Confirmation code resent");
-            }
-            else if (voucher.Status == 4)
-            {
-                // Voucher canceled
-                VoucherCancelled(voucher, vendor);
-
-                return Ok("Voucher Canceled");
-            }
-            else if (onlyNumbers.Replace(voucher.IssuingTransactionRecord.Beneficiary.NationalId, "") != onlyNumbers.Replace(nationalId, ""))
-            {
-                // Wrong national id
-                WrongNationalId(voucher, vendor);
-
-                return Ok("Wrong National Id Canceled");
-            }
-            else
-            {
-                var transactionRecord = new VoucherTransactionRecord()
-                {
-                    VoucherId = voucher.Id,
-                    BeneficiaryId = voucher.IssuingTransactionRecord.BeneficiaryId,
-                    VendorId = vendor.Id,
-                    Type = 2,
-                    ConfirmationCode = RandomNumber.RandomLong(6).ToString("D6"),
-                    LastModifiedOn = DateTime.UtcNow,
-                    CreatedOn = DateTime.UtcNow,
-                    Value = voucher.Value, // SMS claims full price,
-                    CountryId = voucher.CountryId,
-                    OrganizationId = voucher.OrganizationId
-                };
-
-                db.VoucherTransactionRecords.Add(transactionRecord);
-                voucher.Status = 3;
-
-                db.SaveChanges();
-
-                ConfirmTransaction(voucher);
-
-                // NOTE: pre-existing bug, the result of this call is discarded and the method falls
-                // through to the Ok() below.
-                Ok("Confirmed");
-            }
-
-            return Ok();
+            // Every outcome is a 200: an SMS gateway treats a non-200 as a delivery failure and
+            // redelivers, which would replay the redemption.
+            return Ok(result.Reason);
         }
 
 
@@ -685,214 +546,27 @@ namespace TalonAdmin.Controllers.Api
             return await this.WhoAmI(adminContext);
         }
 
-        private void ResendConfirmationCode(Voucher voucher, Vendor vendor)
-        {
-            var transactionRecord = voucher.LatestCreditTransactionRecords;
-            var model = new
-            {
-                Voucher = voucher,
-                Vendor = transactionRecord.Vendor,
-                Beneficiary = transactionRecord.Beneficiary,
-                TransactionRecord = transactionRecord
-            };
-
-            var vendorMessage = CompileMessage("Vendor Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
-        }
-
+        /// <summary>
+        /// Composes and queues a beneficiary's voucher code. The template lookup, substitution and
+        /// queueing all live in <see cref="Messaging.VoucherNotifications"/> now, so the same
+        /// wording is used no matter which path issued the voucher.
+        /// </summary>
         private void SendVoucherSms(int beneficiaryId, int voucherId)
         {
-            var beneficiary = ctx.Beneficiaries.Include("Group").Where(b => b.Id == beneficiaryId).First();
-            // The issuing transaction record and its beneficiary/vendor are walked below, so they are
-            // included explicitly now that lazy loading is off.
             var voucher = ctx.Vouchers
                 .Include(v => v.Category).ThenInclude(c => c.Type)
                 .Include(v => v.TransactionRecords).ThenInclude(t => t.Beneficiary)
                 .Include(v => v.TransactionRecords).ThenInclude(t => t.Vendor)
-                .Where(b => b.Id == voucherId).First();
+                .First(v => v.Id == voucherId);
 
-            var transactionRecord = voucher.IssuingTransactionRecord;
-            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
-
-            var beneficiaryMessage = CompileMessage("Beneficiary Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
+            notifications.VoucherIssuedAsync(voucher).GetAwaiter().GetResult();
         }
 
         private void SendCancelledVoucher(Models.Vouchers.Voucher voucher)
         {
-            var transactionRecord = voucher.IssuingTransactionRecord;
-            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
-
-            var message = CompileMessage("Beneficiary Cancelled Voucher Message", voucher.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, message, transactionRecord.CountryId, transactionRecord.OrganizationId);
+            notifications.VoucherCancelledForBeneficiaryAsync(voucher).GetAwaiter().GetResult();
         }
 
-        private void VoucherCancelled(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
-        {
-            var transactionRecord = voucher.LatestCreditTransactionRecords;
-            var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = transactionRecord.Beneficiary };
-
-            var vendorMessage = CompileMessage("Vendor Cancelled Message", voucher.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage, vendor.CountryId, voucher.OrganizationId);
-        }
-
-        private void VoucherAlreadyUsed(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
-        {
-            var transactionRecord = voucher.LatestCreditTransactionRecords;
-            var model = new { Voucher = voucher, Vendor = transactionRecord.Vendor, Beneficiary = transactionRecord.Beneficiary };
-
-            var vendorMessage = CompileMessage("Vendor Already Used Message", voucher.CountryId, voucher.OrganizationId, model);
-            var beneficiaryMessage = CompileMessage("Beneficiary Already Used Message", voucher.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
-        }
-
-        private void VendorCannotUseVoucher(Models.Vouchers.Voucher voucher, Models.Vouchers.Vendor vendor)
-        {
-            var transactionRecord = voucher.IssuingTransactionRecord;
-            var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = transactionRecord.Beneficiary };
-
-            var vendorMessage = CompileMessage("Vendor Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
-            var beneficiaryMessage = CompileMessage("Beneficiary Cannot Accept Message", voucher.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
-        }
-
-        private void UnauthorizedPhone(string from)
-        {
-        }
-
-        private void WrongNationalId(Voucher voucher, Vendor vendor)
-        {
-            var model = new { Voucher = voucher, Vendor = vendor, Beneficiary = new { } };
-
-            var message = CompileMessage("Wrong National Id Message", vendor.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message, vendor.CountryId, voucher.OrganizationId);
-        }
-
-        private void VoucherIsInvalid(Models.Vouchers.Vendor vendor, string voucherCode)
-        {
-            var model = new { Voucher = new { }, Vendor = vendor, Beneficiary = new { }, VoucherCode = voucherCode };
-
-            var message = CompileMessage("Invalid Voucher Message", vendor.CountryId, null, model);
-
-            SendAsyncMessage(vendor.MobileNumber, vendor.Name, message, vendor.CountryId);
-        }
-
-        private void ConfirmTransaction(Models.Vouchers.Voucher voucher)
-        {
-            // Fire-and-forget, as the EF6 version was: a dashboard refresh must not block the caller.
-            _ = NotifyClients();
-
-            var transactionRecord = voucher.TransactionRecords.Where(t => t.Type == 2).OrderByDescending(o => o.LastModifiedOn).FirstOrDefault();
-            var model = new
-            {
-                Voucher = voucher,
-                Vendor = transactionRecord.Vendor,
-                Beneficiary = transactionRecord.Beneficiary,
-                TransactionRecord = transactionRecord
-            };
-
-            var beneficiaryMessage = CompileMessage("Beneficiary Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
-            var vendorMessage = CompileMessage("Vendor Confirmed Message", voucher.CountryId, voucher.OrganizationId, model);
-
-            SendAsyncMessage(transactionRecord.Vendor.MobileNumber, transactionRecord.Vendor.Name, vendorMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
-            SendAsyncMessage(transactionRecord.Beneficiary.MobileNumber, transactionRecord.Beneficiary.Name, beneficiaryMessage, transactionRecord.CountryId, transactionRecord.OrganizationId);
-        }
-
-        private string CompileMessage(string key, int countryId, int? organizationId, object model)
-        {
-            // Settings/PropertyCollection are read below, so both have to be included explicitly.
-            var country = adminContext.Countries.AsNoTracking()
-                .Include("Settings")
-                .Include("Settings.PropertyCollection")
-                .Where(c => c.Id == countryId).FirstOrDefault();
-            string organizationMessage = "";
-            string countryMessage = "";
-
-            if (organizationId != null)
-            {
-                var organization = adminContext.OrganizationCountries.AsNoTracking()
-                    .Include("Settings")
-                    .Include("Settings.PropertyCollection")
-                    .Where(o => o.OrganizationId == organizationId && o.CountryId == countryId).FirstOrDefault();
-                if (organization != null)
-                    organizationMessage = organization.Settings.PropertyCollection.Where(p => p.Name == key).Select(p => p.Value).FirstOrDefault();
-            }
-
-            countryMessage = country.Settings.PropertyCollection.Where(p => p.Name == key).Select(p => p.Value).FirstOrDefault();
-            try
-            {
-
-                var message = String.IsNullOrEmpty(organizationMessage) ? countryMessage : organizationMessage;
-
-                // NOTE: RazorEngine has no build for current .NET, so the stored templates are no longer
-                // compiled as Razor. The substitution below covers the "@Model.A.B" expressions these
-                // one-line SMS templates use; anything relying on Razor control flow will not render.
-                return RenderTemplate(message, model);
-            }
-            catch
-            {
-                return "";
-            }
-        }
-
-        /// <summary>
-        /// Minimal stand-in for RazorEngine: replaces "@Model.A.B" / "@(Model.A.B)" with the value
-        /// read off the model by reflection.
-        /// </summary>
-        private static string RenderTemplate(string template, object model)
-        {
-            if (String.IsNullOrEmpty(template))
-                return template;
-
-            return modelExpression.Replace(template, match =>
-            {
-                object current = model;
-
-                foreach (var member in match.Groups[1].Value.Split('.').Where(m => !String.IsNullOrEmpty(m)))
-                {
-                    if (current == null)
-                        return "";
-
-                    PropertyInfo property = current.GetType().GetProperty(member);
-                    if (property == null)
-                        return "";
-
-                    current = property.GetValue(current);
-                }
-
-                return current == null ? "" : Convert.ToString(current, CultureInfo.CurrentCulture);
-            });
-        }
-
-        /// <summary>
-        /// Hands a message to the outbound queue.
-        /// </summary>
-        /// <remarks>
-        /// This used to be a hundred-line if/else over three gateways, run inside a
-        /// <c>Task.Factory.StartNew</c> that nothing awaited, with every failure caught and
-        /// discarded. A beneficiary who never received their voucher code left no trace. The
-        /// channel is chosen per country by <see cref="Messaging.MessageChannelRegistry"/> now, and
-        /// the queue persists the message before anything is attempted, so a restart resumes it and
-        /// a failure is a row staff can see rather than silence.
-        /// </remarks>
-        private void SendAsyncMessage(string to, string name, string message, int countryId, int? organizationId = null)
-        {
-            // Enqueuing is a database write on the request's own context, so this stays synchronous
-            // to match its callers; the send itself happens on the dispatcher.
-            outboundMessages
-                .EnqueueAsync(to, name, message, countryId, organizationId ?? 0)
-                .GetAwaiter()
-                .GetResult();
-        }
 
         #endregion
     }

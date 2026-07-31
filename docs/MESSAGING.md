@@ -79,19 +79,64 @@ A channel may depend on more than an `HttpClient` — `TelegramChannel` takes th
 to resolve a chat id — so register it with `AddHttpClient<T>()` and let DI supply the rest.
 
 `CanServe` is the reason a half-configured country fails with a clear message instead of a null
-reference at send time — check the settings your channel actually needs.
+reference at send time — check the settings your channel actually needs. It is asked about a
+`ChannelSettings`, which is your channel's own slice of the country's configuration, not the whole
+country.
+
+Return `DeliveryResult.Unroutable` rather than `Rejected` when the failure is about *this recipient*
+rather than this message — the dispatcher then hands straight over to the next channel in the chain
+instead of giving up.
 
 ## Channels
 
-A country selects one, under Organization Administration → Country Settings. Which one is right
-depends less on the technology than on what the caseload actually carries: a feature phone with no
-data rules out everything but SMS.
+A country configures an **ordered chain** under Organization Administration → Country Settings, not
+a single channel. Which channels are right depends less on the technology than on what the caseload
+actually carries: a feature phone with no data rules out everything but SMS.
 
 | | Reaches | Cost | Needs |
 | --- | --- | --- | --- |
 | Clickatell | Any phone | Per message, international A2P rates | A Clickatell account |
 | Android gateway | Any phone | Domestic SMS rates on a local SIM | A handset, a SIM, and power |
 | Telegram | Smartphones with data | Free | The recipient to enrol first |
+
+A common shape is `telegram, sms.android`: free for everyone who has enrolled, domestic-rate SMS for
+everyone who has not.
+
+### The chain
+
+Each message walks the chain in order until one channel takes it:
+
+```
+Telegram ──enrolled?──▶ sent, logged as `telegram`
+    │
+    └─ not enrolled ──▶ Android gateway ──▶ sent, logged as `sms.android`
+                             │
+                             └─ refused ──▶ Failed, with every reason it was turned away
+```
+
+This is what makes Telegram usable for a real caseload. On its own it reaches only the people who
+have enrolled and silently fails for everyone else; behind it, an SMS channel catches the rest. A
+distribution to twelve households where two have enrolled sends two Telegram messages and ten texts,
+and the delivery log says which is which.
+
+The distinction that drives it is the channel's own answer:
+
+| A channel reports | The dispatcher |
+| --- | --- |
+| **Sent** | records which channel carried it |
+| **Unroutable** — "I cannot reach *this person*" | tries the next channel immediately |
+| **Transient** — a timeout, a 5xx | keeps the same channel and backs off |
+| **Rejected** — bad credentials, barred number | fails the message; no other channel will do better |
+
+A whole pass down the chain counts as one attempt. The chain is re-read on every attempt rather than
+pinned when the message was queued, so a recipient who enrols after their first message failed is
+reachable on the retry.
+
+**Each channel carries its own credentials.** A bot token and a gateway URL cannot share one field,
+so channels after the first store theirs as country properties — `Channel <key> Url`, `… User`,
+`… Password`. A channel with none of its own falls back to the country's original three fields,
+which is what keeps every single-channel country working untouched. The chain itself is the
+`Message Channels` property; without it, the country is on whatever single backend it always was.
 
 ### Clickatell (`sms.clickatell`)
 
@@ -179,8 +224,9 @@ to be unforgeable: anyone who could mint one could point another person's vouche
 own Telegram account. It is also kept under 64 characters and restricted to `A-Z a-z 0-9 _ -`,
 which is what Telegram's `start` parameter allows.
 
-A message to someone who has not enrolled is **rejected, not retried** — waiting will not enrol
-them — and the delivery log says exactly that, naming the number.
+A message to someone who has not enrolled is reported **Unroutable**, so a country with an SMS
+channel behind Telegram reaches them there instead. With nothing behind it, the message fails and
+the delivery log names the number.
 
 Register the webhook once per country:
 
@@ -194,15 +240,32 @@ endpoint answers 200 even for updates it ignores.
 
 ## Inbound
 
-Inbound is already channel-agnostic and did not change:
+Redeeming a voucher is a message going the other way, and it works from any channel.
+
+The rules — is this a registered vendor, is the code real, is it the right vendor type, has it been
+used, does the identifier match — used to live inside
+`VoucherWorkflowController.ValidateTransactionSMS`. That meant an SMS gateway posting to that one
+action was the only way to redeem anything; a vendor replying to the bot had nowhere to go. They now
+live in `InboundMessageProcessor`, and the transport is an argument:
 
 ```
-POST /api/VoucherWorkflow/ValidateTransactionSMS/{countryIsoAlpha2}?secret=…
-{ "to": "...", "from": "...", "message": "..." }
+SMS gateway ──▶ POST /api/VoucherWorkflow/ValidateTransactionSMS/{iso}?secret=…
+                     { "to": …, "from": …, "message": "482913 9876543210" }
+                                     │
+Telegram    ──▶ POST /api/Telegram/{iso}?secret=…                              │
+                     chat id ──▶ TelegramContact ──▶ the vendor's number ──────┤
+                                                                               ▼
+                                                        InboundMessageProcessor
+                                                                               │
+                                                     ledger entry + confirmations
 ```
 
-Any gateway, phone acting as a modem, or chat bot can post to it. That is the seam a new inbound
-integration plugs into.
+A Telegram redemption resolves the chat back to a phone number first, because the processor
+identifies the vendor by number; only an enrolled chat can redeem. Confirmations go back out through
+the queue and the country's channel chain, which for an enrolled vendor means the same chat.
+
+Every outcome is an HTTP 200. An SMS gateway treats a non-200 as a delivery failure and redelivers,
+which would replay the redemption.
 
 ## Configuration
 
@@ -218,14 +281,6 @@ install queues messages and fails them with exactly that reason.
 
 ## Still to do
 
-- **One channel per country.** A country on Telegram cannot fall back to SMS for the people who
-  have not enrolled — their messages simply fail. A per-recipient fallback chain is the obvious
-  next step, and the registry is already keyed the right way for it; what it needs is an ordered
-  list per country and a record of which channel actually carried each message.
-- **Telegram is outbound only.** Redeeming a voucher by replying to the bot would mean routing the
-  webhook into the inbound pipeline, which currently lives inside a 166-line method on
-  `VoucherWorkflowController` along with the rest of the redemption logic. Extracting it is worth
-  doing on its own rather than as a side effect of adding a channel.
 - **No delivery receipts.** A message marked Sent means the gateway accepted it, not that it
   arrived. Clickatell and the Android gateway can both call back with a status; nothing consumes
   that yet.

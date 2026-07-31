@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using TalonAdmin.Models.Admin;
 using TalonAdmin.Models.Vouchers;
 
 namespace TalonAdmin.Messaging.Channels
@@ -60,13 +59,13 @@ namespace TalonAdmin.Messaging.Channels
         /// The gateway always requires a password: its API is a send-anything endpoint on a phone
         /// with a real SIM, so an unauthenticated one would be an open relay.
         /// </summary>
-        public bool CanServe(CountrySettings settings) =>
+        public bool CanServe(ChannelSettings settings) =>
             !string.IsNullOrWhiteSpace(settings?.ServiceUrl)
             && !string.IsNullOrWhiteSpace(settings?.ServicePassword);
 
         public async Task<DeliveryResult> SendAsync(
             OutboundMessage message,
-            CountrySettings settings,
+            ChannelSettings settings,
             CancellationToken cancellationToken)
         {
             var payload = new JObject
