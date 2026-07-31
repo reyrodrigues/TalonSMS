@@ -255,7 +255,6 @@ Database__CreateAndSeedOnStartup=true
 Database__SeedDemoData=false
 Database__SeedAdminPassword=<something long>
 ASPNETCORE_ENVIRONMENT=Production
-Epplus__Organization=Your Organisation
 ```
 
 Everything else takes its default. After the first boot, turn `CreateAndSeedOnStartup` off if you

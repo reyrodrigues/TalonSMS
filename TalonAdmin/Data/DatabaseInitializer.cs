@@ -160,10 +160,15 @@ namespace TalonAdmin.Data
                 return organization;
             }
 
+            // Deliberately generic, like the "Local Development" country below. This record is
+            // created on every deployment, not just seeded demos, and it is the organisation the
+            // interface shows and the data hangs off — so it must not name a real organisation that
+            // has nothing to do with whoever is running this. Talon's origin is credited in LICENSE,
+            // README and the documentation footer, which is where attribution belongs.
             organization = new Organization
             {
-                Name = "International Rescue Committee",
-                Abbreviation = "IRC"
+                Name = "Example Organisation",
+                Abbreviation = "ORG"
             };
 
             _adminContext.Organizations.Add(organization);
