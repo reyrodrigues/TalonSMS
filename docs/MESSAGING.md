@@ -236,12 +236,24 @@ endpoint answers 200 even for updates it ignores.
 
 ## Message templates
 
-Talon ships **no default wording**. Every message it sends is a template you write, stored per
-country under **Organization Administration → Country Settings**. Until you write them, a
-distribution enqueues one message per household and fails every one with *"The message body is
-empty"* — the codes are issued and valid, but nobody is told what they are.
+Every message Talon sends is a template, stored per country under **Organization Administration →
+Country Settings**.
 
-Write the templates before the first distribution, not after.
+A new country starts with plain English wording for all eleven, so a first distribution reaches
+people without anyone configuring anything. **Treat those defaults as a starting point, not as
+finished copy** — they are deliberately anonymous, because only your deployment knows which
+organisation is writing, and a voucher code arriving from an unknown number is indistinguishable
+from a scam. Read them before the first real distribution and put your programme's name in them.
+
+{: .note }
+> The defaults are applied when a country's settings are first created, and never to settings that
+> already exist. Upgrading will not reinstate a template your staff cleared on purpose, and will not
+> overwrite wording you have already written. A country created before this shipped keeps its blank
+> templates — fill them in, or delete the country's settings row and let it be recreated.
+
+An empty template is still meaningful: it fails that message with *"The message body is empty"*
+rather than sending a blank text. That is the mechanism for switching a message off, and it is why
+the defaults never overwrite one.
 
 ### The substitution syntax
 
@@ -387,8 +399,9 @@ which would replay the redemption.
 | `Messaging:MaxAttempts` | Attempts before a message is marked failed (default 5) |
 
 Per-country settings live under Organization Administration → Country Settings: the gateway, its
-credentials, and the message templates. **Nothing is sent until a service URL is set** — a fresh
-install queues messages and fails them with exactly that reason.
+credentials, and the message templates. The wording comes with usable defaults; the gateway does
+not. **Nothing is sent until a service URL is set** — a fresh install queues messages and fails them
+with exactly that reason.
 
 ## Still to do
 

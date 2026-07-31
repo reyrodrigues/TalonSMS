@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Breeze.AspNetCore;
@@ -171,10 +172,59 @@ namespace TalonAdmin.Controllers.Breeze
             return Db.ApplicationUserCountries;
         }
 
+        /// <summary>
+        /// Saves the bundle, then gives a brand-new country its starting message wording.
+        /// </summary>
+        /// <remarks>
+        /// Creating a country from the interface writes a <c>CountrySettings</c> row through this
+        /// generic endpoint rather than through anything country-specific, so this is where a new
+        /// one can be caught. Without it only the seeded country would get the defaults and every
+        /// country added afterwards would be back to failing its first distribution with an empty
+        /// body.
+        ///
+        /// Only rows created by *this* save are touched — a settings row that already existed is
+        /// left exactly as its staff left it, including any template they cleared on purpose.
+        /// </remarks>
         [HttpPost]
         public SaveResult SaveChanges([FromBody] JObject saveBundle)
         {
-            return _persistenceManager.SaveChanges(saveBundle);
+            var result = _persistenceManager.SaveChanges(saveBundle);
+
+            ApplyDefaultTemplatesToNewSettings(result);
+
+            return result;
+        }
+
+        private void ApplyDefaultTemplatesToNewSettings(SaveResult result)
+        {
+            // A key mapping is Breeze reporting a temporary id replaced by a real one, which only
+            // happens for an insert — so this distinguishes a created settings row from an edited
+            // one without having to re-read the bundle.
+            var createdIds = (result?.KeyMappings ?? new List<KeyMapping>())
+                .Where(m => m.EntityTypeName != null
+                    && m.EntityTypeName.EndsWith(nameof(Models.Admin.CountrySettings)))
+                .Select(m => System.Convert.ToInt32(m.RealValue))
+                .ToArray();
+
+            if (createdIds.Length == 0)
+            {
+                return;
+            }
+
+            var settings = Db.CountrySettings
+                .Include(s => s.PropertyCollection)
+                .Where(s => createdIds.Contains(s.Id))
+                .ToList();
+
+            var added = settings.SelectMany(Messaging.MessageTemplateDefaults.ApplyTo).ToList();
+
+            if (added.Count == 0)
+            {
+                return;
+            }
+
+            Db.Set<Models.Admin.CountrySettingsProperty>().AddRange(added);
+            Db.SaveChanges();
         }
     }
 }

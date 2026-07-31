@@ -223,7 +223,9 @@ Per-country configuration, and the screen a deployment spends real time in:
   order. See [Messaging](MESSAGING.html).
 - **Message templates** — the text sent to households and vendors, with placeholders for the code
   and the value. **These are the strings beneficiaries actually read**, and they are data, not
-  translations: write them in the language your recipients speak.
+  translations: write them in the language your recipients speak. A new country starts with English
+  defaults that work but name no organisation; see
+  [Messaging](MESSAGING.html#message-templates) for what to change before a real distribution.
 - Currency, calling code and the country's own language.
 
 ---

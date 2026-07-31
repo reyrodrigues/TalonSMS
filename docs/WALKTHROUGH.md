@@ -148,10 +148,11 @@ the Telegram bot go through the same rules. How messages travel is a per-country
 country holds an ordered chain rather than a single channel, so it can reach enrolled recipients on a
 free channel and text everyone else.
 
-The same screen holds the wording of every message Talon sends. **Talon ships no default wording**,
-so this has to be filled in before the first distribution — vouchers issued against empty templates
-are still valid, but nobody is told their code. Writing them is covered in
-[Messaging](MESSAGING.html#message-templates).
+The same screen holds the wording of every message Talon sends. A new country starts with usable
+English defaults, so a first distribution reaches people before anyone has configured anything — but
+they are deliberately anonymous, and a voucher code arriving from an unknown number is
+indistinguishable from a scam. Put your programme's name in them before a real distribution.
+Writing them is covered in [Messaging](MESSAGING.html#message-templates).
 
 ![Delivery channels and message templates](screenshots/16-country-settings.png)
 

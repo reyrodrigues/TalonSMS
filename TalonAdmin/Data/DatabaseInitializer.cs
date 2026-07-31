@@ -191,6 +191,12 @@ namespace TalonAdmin.Data
             _adminContext.CountrySettings.Add(settings);
             await _adminContext.SaveChangesAsync();
 
+            // Starting wording, so a first distribution notifies people instead of failing every
+            // message with an empty body.
+            _adminContext.Set<CountrySettingsProperty>()
+                .AddRange(Messaging.MessageTemplateDefaults.ApplyTo(settings));
+            await _adminContext.SaveChangesAsync();
+
             var country = new Country
             {
                 Name = "Local Development",
