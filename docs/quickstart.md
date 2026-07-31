@@ -188,18 +188,12 @@ variables. Nested keys use a double underscore: `Database__Provider`.
 | `Jwt:AccessTokenLifetimeDays` | Token lifetime, 14 by default |
 | `SystemSecret` | Shared secret the inbound SMS webhook must present. See [Security](security.html) |
 | `ActiveDirectory:Enabled` | Enable directory fallback for sign-in |
-| `Epplus:LicenseKey` | Commercial EPPlus key, if applicable |
 
 Never reuse the development signing key. Set a real one per environment:
 
 ```bash
 dotnet user-secrets --project TalonAdmin set "Jwt:SigningKey" "$(openssl rand -base64 48)"
 ```
-
-{: .note }
-> Spreadsheet export uses EPPlus 8, licensed under Polyform Noncommercial. The application declares a
-> non-commercial organisation licence by default. If that is not accurate for your deployment, set
-> `Epplus:LicenseKey` to a commercial key.
 
 Reports render through headless Chromium. Outside Docker the first report request downloads a Chromium
 build of about 150 MB and caches it; the container image installs Chromium instead.

@@ -172,22 +172,17 @@ run several countries on different gateways. See [Messaging](MESSAGING.html).
 PDF rendering is the memory-hungry part of Talon. On a 512 MB instance a report can be killed by the
 out-of-memory killer while everything else works — see [Sizing](deploy.html#sizing).
 
-### Spreadsheet licensing
+### Spreadsheets
 
-Talon reads and writes `.xlsx` with EPPlus, which since version 5 requires an explicit licence
-declaration before it will open a package.
+Talon reads and writes `.xlsx` with [ClosedXML](https://github.com/ClosedXML/ClosedXML), which is
+MIT licensed. There is nothing to configure and nothing to declare.
 
-| Setting | Default | Effect |
-| --- | --- | --- |
-| `Epplus:LicenseKey` | unset | A commercial EPPlus licence key. Setting it declares commercial use. |
-| `Epplus:Organization` | `International Rescue Committee` | The organisation declared under EPPlus's non-commercial terms when no key is set. |
-
-{: .caution }
-> **This is a licensing decision, not a setting to skip.** Out of the box Talon declares
-> non-commercial use by a named organisation. If that is not true of your deployment — you are a
-> commercial entity, or the named organisation is not yours — set `Epplus:Organization` to your own
-> non-commercial organisation, or buy a key and set `Epplus:LicenseKey`. Nothing in Talon checks
-> this on your behalf.
+{: .note }
+> This was EPPlus, which since version 5 is licensed under Polyform Noncommercial and refuses to
+> open a package until you declare how you are using it. Talon shipped a non-commercial declaration
+> naming one particular organisation, which every deployment inherited whether or not it was true of
+> them — a licensing position taken on your behalf by a default. If you are upgrading, the
+> `Epplus:LicenseKey` and `Epplus:Organization` settings no longer do anything and can be removed.
 
 ---
 

@@ -30,20 +30,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 var configuration = builder.Configuration;
 
-// EPPlus 5+ refuses to open a package until a licence has been declared. The upgrade from the
-// LGPL-era 4.0.3 therefore requires an explicit choice here.
-// ACTION REQUIRED: confirm this matches how the organisation is licensed. If EPPlus is used
-// commercially, set Epplus:LicenseKey instead of relying on the non-commercial declaration.
-var epplusLicenseKey = configuration["Epplus:LicenseKey"];
-if (!string.IsNullOrWhiteSpace(epplusLicenseKey))
-{
-    OfficeOpenXml.ExcelPackage.License.SetCommercial(epplusLicenseKey);
-}
-else
-{
-    OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization(
-        configuration["Epplus:Organization"] ?? "International Rescue Committee");
-}
+// NOTE: spreadsheets were EPPlus, which since v5 refuses to open a package until a licence has been
+// declared — so this is where a non-commercial declaration naming one particular organisation used
+// to sit, inherited by every deployment whether or not it was true of them. ClosedXML is MIT and
+// declares nothing, which is why there is no longer anything here to get wrong.
 // Managed Postgres providers (Neon, Supabase, and the platforms' own add-ons) hand out a single
 // connection URL and conventionally expose it as DATABASE_URL. Honouring that variable directly is
 // what lets a cloud deploy configure storage with one setting instead of three: its presence

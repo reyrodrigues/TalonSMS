@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using OfficeOpenXml;
+using ClosedXML.Excel;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,6 +7,15 @@ using System.Linq;
 
 namespace TalonAdmin.Extensions
 {
+    /// <summary>
+    /// Spreadsheet import and export.
+    /// </summary>
+    /// <remarks>
+    /// Built on ClosedXML. It was EPPlus, which since version 5 requires a licence declaration
+    /// before it will open a package — so every deployment inherited a non-commercial declaration
+    /// naming an organisation that was almost certainly not theirs. ClosedXML is MIT, which removes
+    /// the obligation rather than passing it on.
+    /// </remarks>
     public static class ExcelPackageExtensions
     {
         /// <summary>
@@ -29,7 +38,11 @@ namespace TalonAdmin.Extensions
                 if (otherPropertyQuery.Any())
                 {
                     var otherProperty = otherPropertyQuery.First();
-                    // If there is a mismatch like this it means that Excel didn't return the right date time
+
+                    // A date arriving as a number. ClosedXML hands back a typed DateTime for a
+                    // date-formatted cell, so this is no longer the normal path the way it was
+                    // under EPPlus — but a column formatted as plain number still carries a serial
+                    // date, and that is what this catches.
                     if ((otherProperty.PropertyType == typeof(DateTime) || otherProperty.PropertyType == typeof(DateTime?))
                         && (prop.Value.Type == JTokenType.Float || prop.Value.Type == JTokenType.Integer))
                     {
@@ -43,6 +56,18 @@ namespace TalonAdmin.Extensions
                         }
 
                         otherProperty.SetValue(other, date);
+
+                        continue;
+                    }
+
+                    // A date that arrived as one. Kind is unspecified coming out of a spreadsheet,
+                    // and the rest of the model treats its dates as UTC.
+                    if ((otherProperty.PropertyType == typeof(DateTime) || otherProperty.PropertyType == typeof(DateTime?))
+                        && prop.Value.Type == JTokenType.Date)
+                    {
+                        var value = prop.Value.ToObject<DateTime>();
+
+                        otherProperty.SetValue(other, DateTime.SpecifyKind(value, DateTimeKind.Utc));
 
                         continue;
                     }
@@ -75,29 +100,22 @@ namespace TalonAdmin.Extensions
         /// <returns>Byte array containing an xlsx file</returns>
         public static byte[] ToExcelSpreadsheet(this DataSet self)
         {
-            using (var package = new ExcelPackage())
+            using (var workbook = new XLWorkbook())
             {
-                var outputStream = new System.IO.MemoryStream();
-
-
                 foreach (var table in self.Tables.Cast<DataTable>())
                 {
-                    var sheet = package.Workbook.Worksheets.Add(table.TableName);
-                    sheet.LoadFromDataTable(table);
-
-                    // Dimension is null when nothing was written, i.e. for an empty table.
-                    if (sheet.Dimension == null)
-                    {
-                        continue;
-                    }
-
-                    sheet.Cells[sheet.Dimension.Address].AutoFilter = true;
-                    sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
+                    workbook.Worksheets.Add(SheetName(table.TableName)).LoadFromDataTable(table);
                 }
 
-                package.SaveAs(outputStream);
+                // A workbook with no sheets is not a valid xlsx and ClosedXML refuses to save one.
+                // An empty DataSet is an ordinary outcome here — a deployment whose metadata
+                // collections are all empty — so it gets an empty sheet rather than an exception.
+                if (!workbook.Worksheets.Any())
+                {
+                    workbook.Worksheets.Add("Export");
+                }
 
-                return outputStream.ToArray();
+                return Save(workbook);
             }
         }
 
@@ -108,68 +126,88 @@ namespace TalonAdmin.Extensions
         /// <returns>Byte array containing an xlsx file</returns>
         public static byte[] ToExcelSpreadsheet(this DataTable self)
         {
-            using (var package = new ExcelPackage())
+            using (var workbook = new XLWorkbook())
             {
-                var outputStream = new System.IO.MemoryStream();
-
                 if (String.IsNullOrEmpty(self.TableName)) {
                     self.TableName = "Export";
                 }
 
-                var sheet = package.Workbook.Worksheets.Add(self.TableName);
+                workbook.Worksheets.Add(SheetName(self.TableName)).LoadFromDataTable(self);
 
-                sheet.LoadFromDataTable(self);
-
-                if (sheet.Dimension != null)
-                {
-                    sheet.Cells[sheet.Dimension.Address].AutoFilter = true;
-                    sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
-                }
-
-                package.SaveAs(outputStream);
-
-                return outputStream.ToArray();
+                return Save(workbook);
             }
         }
 
         /// <summary>
-        /// Wrapper for the native LoadFromDataTable but with formating for DateTime columns
+        /// Writes a data table as a header row plus its rows, with dates formatted and columns sized
+        /// to their contents.
         /// </summary>
         /// <param name="self">Sheet that will receive the data</param>
         /// <param name="dataTable">DataTable with the information to be exported</param>
         /// <param name="printColumns">Whether the first row will have columnNames</param>
         /// <param name="address">Location of the data points</param>
-        public static void LoadFromDataTable(this ExcelWorksheet self, DataTable dataTable, bool printColumns = true, string address = "A1")
+        public static void LoadFromDataTable(this IXLWorksheet self, DataTable dataTable, bool printColumns = true, string address = "A1")
         {
-            // EPPlus 4 quietly ignored a DataTable with no columns; EPPlus 8 throws
-            // "Column out of range". A table is column-less whenever it came from an empty JSON
-            // array, which happens for any metadata collection that has no rows yet, so the whole
-            // export used to fail on an otherwise ordinary empty table.
+            // A table is column-less whenever it came from an empty JSON array, which happens for
+            // any metadata collection that has no rows yet. Nothing to write, and asking for a
+            // range on an empty sheet below would throw.
             if (dataTable.Columns.Count == 0)
             {
                 return;
             }
 
-            self.Cells[address].LoadFromDataTable(dataTable, printColumns);
+            var origin = self.Cell(address);
+            var firstRow = origin.Address.RowNumber;
+            var firstColumn = origin.Address.ColumnNumber;
+
+            if (printColumns)
+            {
+                for (var i = 0; i < dataTable.Columns.Count; i++)
+                {
+                    self.Cell(firstRow, firstColumn + i).Value = dataTable.Columns[i].ColumnName;
+                }
+            }
+
+            var firstDataRow = printColumns ? firstRow + 1 : firstRow;
+
+            for (var r = 0; r < dataTable.Rows.Count; r++)
+            {
+                for (var c = 0; c < dataTable.Columns.Count; c++)
+                {
+                    self.Cell(firstDataRow + r, firstColumn + c).Value = ToCellValue(dataTable.Rows[r][c]);
+                }
+            }
 
             var dateColumns = from DataColumn d in dataTable.Columns
                               where d.DataType == typeof(DateTime) || d.ColumnName.EndsWith("Date")
-                              select d.Ordinal + 1;
+                              select firstColumn + d.Ordinal;
 
             if (dataTable.Rows.Count > 0)
-                dateColumns.ToList().ForEach(dc => self.Cells[2, dc, self.Dimension.End.Row, dc].Style.Numberformat.Format = "yyyy-dd-mm");
-        }
+            {
+                var lastRow = firstDataRow + dataTable.Rows.Count - 1;
 
+                // NOTE: this was "yyyy-dd-mm", which renders the 31st of July as 2026-31-07. The
+                // stored value was always correct — only the display was — so nothing that reads
+                // these files needs to change.
+                dateColumns.ToList().ForEach(dc =>
+                    self.Range(firstDataRow, dc, lastRow, dc).Style.DateFormat.Format = "yyyy-mm-dd");
+            }
+
+            var used = self.RangeUsed();
+            if (used != null)
+            {
+                used.SetAutoFilter();
+                self.Columns().AdjustToContents();
+            }
+        }
 
         /// <summary>
         /// Function that takes in an excel file with sheets formatted like and csv file and returns a dictionary of sheet names and sheet data
         /// </summary>
-        /// <param name="self"></param>
-        /// <returns></returns>
-        public static Dictionary<string, IEnumerable<JObject>> ExtractData(this ExcelPackage self)
+        public static Dictionary<string, IEnumerable<JObject>> ExtractData(this XLWorkbook self)
         {
             var returnDictionary = new Dictionary<string, IEnumerable<JObject>>();
-            foreach (var sheet in self.Workbook.Worksheets)
+            foreach (var sheet in self.Worksheets)
             {
                 returnDictionary[sheet.Name] = sheet.SheetToJson();
             }
@@ -182,14 +220,26 @@ namespace TalonAdmin.Extensions
         /// </summary>
         /// <param name="self">Worksheet</param>
         /// <returns>JArray of JObjects</returns>
-        public static IEnumerable<JObject> SheetToJson(this ExcelWorksheet self)
+        public static IEnumerable<JObject> SheetToJson(this IXLWorksheet self)
         {
             var returnArray = new List<JObject>();
-            var columns = Enumerable.Range(1, self.Dimension.End.Column)
-                .Select(i => (self.Cells[1, i].Value ?? "").ToString())
+
+            // An untouched sheet has no used range at all; the old code would have thrown
+            // dereferencing its dimension.
+            var used = self.RangeUsed();
+            if (used == null)
+            {
+                return returnArray;
+            }
+
+            var lastRow = used.LastRow().RowNumber();
+            var lastColumn = used.LastColumn().ColumnNumber();
+
+            var columns = Enumerable.Range(1, lastColumn)
+                .Select(i => self.Cell(1, i).GetString() ?? "")
                 .ToArray();
 
-            for (int i = 2; i <= self.Dimension.End.Row; i++)
+            for (int i = 2; i <= lastRow; i++)
             {
                 var jObject = new JObject();
 
@@ -197,7 +247,7 @@ namespace TalonAdmin.Extensions
                     .ToList()
                     .Where(o => !String.IsNullOrEmpty(o.ColumnName))
                     .ToList()
-                    .ForEach(o => jObject.Add(o.ColumnName, self.Cells[i, o.Index + 1].ToJToken()));
+                    .ForEach(o => jObject.Add(o.ColumnName, self.Cell(i, o.Index + 1).ToJToken()));
 
                 jObject["__RowNumber"] = i;
 
@@ -207,20 +257,69 @@ namespace TalonAdmin.Extensions
             return returnArray;
         }
 
-        // NOTE: EPPlus 8 keeps the v4 semantics of ExcelRange.Value - a date formatted cell still comes back as
-        // the raw OADate double rather than a DateTime (only GetValue<DateTime>() converts). That is what the
-        // FromOADate branch in MergeChangesInto above relies on, so neither side needed changing for the upgrade.
-        public static JToken ToJToken(this ExcelRange excelRange)
+        /// <summary>
+        /// A cell as the closest JSON type. Unlike EPPlus, ClosedXML hands back a typed value, so a
+        /// date-formatted cell arrives as a DateTime rather than as the serial number underneath it
+        /// — which <see cref="MergeChangesInto"/> handles either way.
+        /// </summary>
+        public static JToken ToJToken(this IXLCell cell)
         {
-            object returnValue = "";
+            var value = cell.Value;
 
-            if (excelRange.Value != null)
+            object returnValue = value.Type switch
             {
-                returnValue = excelRange.Value;
+                XLDataType.Blank => "",
+                XLDataType.Boolean => value.GetBoolean(),
+                XLDataType.Number => value.GetNumber(),
+                XLDataType.DateTime => value.GetDateTime(),
+                XLDataType.TimeSpan => value.GetTimeSpan().ToString(),
+                XLDataType.Text => value.GetText(),
+                // A formula that evaluated to #REF! or similar. The text of the error is more use
+                // downstream than an exception in the middle of an import.
+                XLDataType.Error => value.GetError().ToString(),
+                _ => cell.GetString()
+            };
+
+            return JToken.FromObject(returnValue ?? "");
+        }
+
+        /// <summary>
+        /// Excel allows 31 characters and forbids <c>[]:*?/\</c> in a sheet name; ClosedXML enforces
+        /// both. Table names here are ours rather than a user's, but a rejected name would fail the
+        /// whole export rather than one sheet.
+        /// </summary>
+        private static string SheetName(string name)
+        {
+            var cleaned = new string((name ?? "").Where(c => !"[]:*?/\\".Contains(c)).ToArray()).Trim();
+
+            if (String.IsNullOrEmpty(cleaned))
+            {
+                cleaned = "Export";
             }
 
+            return cleaned.Length > 31 ? cleaned.Substring(0, 31) : cleaned;
+        }
 
-            return JToken.FromObject(returnValue);
+        private static XLCellValue ToCellValue(object value) => value switch
+        {
+            null or DBNull => Blank.Value,
+            string s => s,
+            bool b => b,
+            DateTime d => d,
+            TimeSpan t => t,
+            sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal
+                => Convert.ToDouble(value),
+            _ => value.ToString()
+        };
+
+        private static byte[] Save(XLWorkbook workbook)
+        {
+            using (var outputStream = new System.IO.MemoryStream())
+            {
+                workbook.SaveAs(outputStream);
+
+                return outputStream.ToArray();
+            }
         }
     }
 }

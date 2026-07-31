@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OfficeOpenXml;
+using ClosedXML.Excel;
 using TalonAdmin.Extensions;
 using TalonAdmin.Models.Vouchers;
 
@@ -115,7 +115,14 @@ namespace TalonAdmin.Controllers
                     jsonBeneficiary["Cycle"] = groups.Where(g => g.Id == groupId).First().Name;
                 }
                 jsonBeneficiary["Location"] = jsonBeneficiary["Location"].Type != JTokenType.Null ? jsonBeneficiary["Location"]["Name"] : "";
-                jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].Type != JTokenType.Null ? (jsonBeneficiary["Sex"].ToString() == "0" ? "Male" : "Female") : "";
+                // 1 and 2 are what the interface stores. This read `== "0" ? "Male" : "Female"`,
+                // against a value that is never 0, so every household exported as Female.
+                jsonBeneficiary["Sex"] = jsonBeneficiary["Sex"].ToString() switch
+                {
+                    "1" => "Male",
+                    "2" => "Female",
+                    _ => ""
+                };
             }
 
             jsonBeneficiaries.Flatten("AdditionalDataObject", "Additional Data/");
@@ -194,7 +201,7 @@ namespace TalonAdmin.Controllers
                 var locationQuery = ctx.Locations.Where(l => l.CountryId == countryId);
                 var groupQuery = ctx.BeneficiaryGroups.Where(g => g.CountryId == countryId && g.OrganizationId == organizationId);
 
-                var package = new ExcelPackage(new MemoryStream(fileBytes));
+                var package = new XLWorkbook(new MemoryStream(fileBytes));
                 var excelData = package.ExtractData();
                 package.Dispose();
 
@@ -212,7 +219,26 @@ namespace TalonAdmin.Controllers
                             var hasLocationColumn = jsonBeneficiary.HasProperty("Location");
 
                             if (jsonBeneficiary.HasProperty("Sex"))
-                                jsonBeneficiary["Sex"] = (jsonBeneficiary.ValueIfExists<string>("Sex") ?? "").ToString().Trim().ToLower() == "male" ? 0 : 1;
+                            {
+                                // This mapped anything that was not "male" onto 1, so re-importing
+                                // an untouched export turned every woman into a man. Anything
+                                // unrecognised now leaves the record's existing value alone rather
+                                // than guessing at it.
+                                switch ((jsonBeneficiary.ValueIfExists<string>("Sex") ?? "").Trim().ToLower())
+                                {
+                                    case "male" or "m" or "1":
+                                        jsonBeneficiary["Sex"] = 1;
+                                        break;
+
+                                    case "female" or "f" or "2":
+                                        jsonBeneficiary["Sex"] = 2;
+                                        break;
+
+                                    default:
+                                        jsonBeneficiary.Remove("Sex");
+                                        break;
+                                }
+                            }
 
                             if (jsonBeneficiary.HasProperty("Disabled"))
                             {
@@ -476,7 +502,7 @@ namespace TalonAdmin.Controllers
                 var locationQuery = ctx.Locations.Where(l => l.CountryId == countryId);
                 var vendorTypeQuery = ctx.VendorTypes.Where(l => l.CountryId == countryId);
 
-                var package = new ExcelPackage(new MemoryStream(fileBytes));
+                var package = new XLWorkbook(new MemoryStream(fileBytes));
                 var excelData = package.ExtractData();
                 package.Dispose();
 

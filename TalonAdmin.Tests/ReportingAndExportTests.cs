@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
-using OfficeOpenXml;
+using ClosedXML.Excel;
 using TalonAdmin.Extensions;
 using TalonAdmin.Models.Vouchers;
 using TalonAdmin.Tests.Infrastructure;
@@ -13,7 +13,8 @@ namespace TalonAdmin.Tests;
 
 /// <summary>
 /// Covers the reporting and spreadsheet stacks, both of which changed wholesale in the migration:
-/// RazorEngine to the built-in view engine, wkhtmltopdf to headless Chromium, and EPPlus 4 to 8.
+/// RazorEngine to the built-in view engine, wkhtmltopdf to headless Chromium, and EPPlus to
+/// ClosedXML.
 /// </summary>
 public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
 {
@@ -203,20 +204,38 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
         }
     }
 
+    /// <summary>
+    /// Exporting and importing without touching the file has to be a no-op. It was not: the export
+    /// wrote "Female" for everyone, because it tested a value against 0 that the interface never
+    /// writes, and the import mapped anything that was not "male" onto 1 — so one round trip
+    /// through the documented bulk-edit workflow turned every woman in the register into a man.
+    /// </summary>
     [Fact]
     public async Task Beneficiaries_export_and_re_import()
     {
         await AuthenticateAsync();
+
+        async Task<Dictionary<int, int>> SexByBeneficiaryAsync()
+        {
+            using var scope = _factory.Services.CreateScope();
+            return await scope.ServiceProvider.GetRequiredService<Context>()
+                .Beneficiaries.AsNoTracking()
+                .ToDictionaryAsync(b => b.Id, b => b.Sex);
+        }
+
+        var before = await SexByBeneficiaryAsync();
+        Assert.NotEmpty(before);
 
         var exported = await _api.PostForBytesAsync(
             "/api/Excel/ExportBeneficiaries?organizationId=1&countryId=1", new { });
 
         AssertIsWorkbook(exported);
 
-        using var package = new ExcelPackage(new MemoryStream(exported));
-        var sheet = package.Workbook.Worksheets.First();
-        Assert.NotNull(sheet.Dimension);
-        Assert.True(sheet.Dimension!.End.Row > 1, "The export should contain at least one data row.");
+        using var workbook = new XLWorkbook(new MemoryStream(exported));
+        var sheet = workbook.Worksheets.First();
+        var used = sheet.RangeUsed();
+        Assert.NotNull(used);
+        Assert.True(used!.LastRow().RowNumber() > 1, "The export should contain at least one data row.");
 
         var upload = new MultipartFormDataContent();
         var file = new ByteArrayContent(exported);
@@ -234,6 +253,8 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
 
         Assert.True(response.IsSuccessStatusCode, $"Import failed ({(int)response.StatusCode}): {body}");
         Assert.Empty(JObject.Parse(body)["Errors"]!);
+
+        Assert.Equal(before, await SexByBeneficiaryAsync());
     }
 
     [Fact]
@@ -272,17 +293,13 @@ public class ReportingAndExportTests : IClassFixture<SeededTalonAppFactory>
 }
 
 /// <summary>
-/// EPPlus 4 quietly ignored a DataTable with no columns; EPPlus 8 throws "Column out of range".
-/// A table is column-less whenever it came from an empty JSON array, so a single empty collection
-/// used to fail the whole metadata export.
+/// A DataTable with no columns is what an empty JSON collection turns into, so a deployment whose
+/// metadata is not fully populated exports one. It has broken the whole export before — EPPlus 8
+/// threw "Column out of range" where EPPlus 4 had quietly ignored it — so it stays covered across
+/// the move to ClosedXML.
 /// </summary>
 public class ExcelExtensionsTests
 {
-    static ExcelExtensionsTests()
-    {
-        ExcelPackage.License.SetNonCommercialOrganization("Talon integration tests");
-    }
-
     [Fact]
     public void A_dataset_containing_an_empty_table_still_produces_a_workbook()
     {
@@ -298,10 +315,10 @@ public class ExcelExtensionsTests
 
         Assert.NotEmpty(bytes);
 
-        using var package = new ExcelPackage(new MemoryStream(bytes));
-        Assert.Equal(2, package.Workbook.Worksheets.Count);
-        Assert.Equal("first", package.Workbook.Worksheets["Populated"].Cells[2, 1].Value);
-        Assert.Null(package.Workbook.Worksheets["NoColumnsAtAll"].Dimension);
+        using var workbook = new XLWorkbook(new MemoryStream(bytes));
+        Assert.Equal(2, workbook.Worksheets.Count);
+        Assert.Equal("first", workbook.Worksheet("Populated").Cell(2, 1).GetString());
+        Assert.Null(workbook.Worksheet("NoColumnsAtAll").RangeUsed());
     }
 
     [Fact]
@@ -310,5 +327,69 @@ public class ExcelExtensionsTests
         var bytes = new DataTable("Empty").ToExcelSpreadsheet();
 
         Assert.NotEmpty(bytes);
+    }
+
+    /// <summary>
+    /// What a cell comes back as is the one thing the move from EPPlus actually changed. EPPlus
+    /// handed back the raw value — a date-formatted cell arrived as the serial number underneath
+    /// it — where ClosedXML hands back a typed value. Import reads these, so the types matter.
+    /// </summary>
+    [Fact]
+    public void A_written_row_reads_back_with_its_types_intact()
+    {
+        var table = new DataTable("Sheet1");
+        table.Columns.Add("Name", typeof(string));
+        table.Columns.Add("Count", typeof(int));
+        table.Columns.Add("Disabled", typeof(bool));
+        table.Columns.Add("CreatedDate", typeof(DateTime));
+        table.Columns.Add("Missing", typeof(string));
+
+        table.Rows.Add("Household", 3, true, new DateTime(2026, 7, 31), DBNull.Value);
+
+        using var workbook = new XLWorkbook(new MemoryStream(table.ToExcelSpreadsheet()));
+        var row = workbook.Worksheets.First().SheetToJson().Single();
+
+        Assert.Equal("Household", row.Value<string>("Name"));
+        Assert.Equal(3, row.Value<int>("Count"));
+        Assert.True(row.Value<bool>("Disabled"));
+        Assert.Equal(new DateTime(2026, 7, 31), row.Value<DateTime>("CreatedDate"));
+
+        // A blank cell reads as the empty string rather than null, which is what the import's
+        // "leave this property alone" checks are written against.
+        Assert.Equal("", row.Value<string>("Missing"));
+
+        // The row number is what an import reports a bad row by.
+        Assert.Equal(2, row.Value<int>("__RowNumber"));
+    }
+
+    /// <summary>
+    /// A date can arrive typed or as the serial number a plain-number column carries. Both have to
+    /// land on the same instant, because which one you get depends on how whoever edited the sheet
+    /// formatted the column.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_date_merges_whether_it_arrives_typed_or_as_a_serial_number(bool asSerialNumber)
+    {
+        var expected = new DateTime(2026, 7, 31, 0, 0, 0, DateTimeKind.Utc);
+
+        var source = new JObject
+        {
+            ["When"] = asSerialNumber
+                ? new JValue(expected.ToOADate())
+                : new JValue(expected)
+        };
+
+        var target = new HasADate();
+        source.MergeChangesInto(target);
+
+        Assert.Equal(expected, target.When);
+        Assert.Equal(DateTimeKind.Utc, target.When!.Value.Kind);
+    }
+
+    private class HasADate
+    {
+        public DateTime? When { get; set; }
     }
 }

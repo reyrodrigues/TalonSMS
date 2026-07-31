@@ -196,7 +196,7 @@ rather than on opaque PDF bytes.
 | `VoucherDistributionScenarioTests` | The end-to-end business workflow: stand up a country, register a vendor and beneficiaries, define a programme, distribute vouchers to a cycle, redeem one by SMS, then check the dashboard and the distribution report agree |
 | `BreezeContractTests` | The Breeze 7 wire contract the client speaks: property casing, `$type` discriminators, `take`/`skip`, `inlineCount`, `where`, `expand`, and save round-trips |
 | `AuthenticationTests` | `/Token`'s OAuth shape, the `Token`/`Bearer`/`Basic` schemes, 401-not-302, vendor sign-in, and the deserialization type binder |
-| `ReportingAndExportTests` | Every report type, Excel export/import, and the EPPlus empty-table case |
+| `ReportingAndExportTests` | Every report type, Excel export/import, cell typing, and the empty-table case |
 | `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links), the action grants the UI gates buttons on, and the four-row bundle that creating a country writes |
 | `OutboundMessagingTests` | The messaging queue: a message is persisted before it is attempted, transient failures retry with backoff, rejections do not, and an unconfigured country fails visibly |
 | `MessageChannelTests` | The Clickatell, Android-gateway and Telegram adapters: the wire format each produces, which failures are worth retrying, that a Telegram enrolment payload cannot be forged, and how a country's channel chain resolves |
@@ -228,7 +228,6 @@ variables (`__` separates nested keys, e.g. `Database__Provider`).
 | `Messaging:BatchSize` | Messages dispatched per pass (default 25) |
 | `Messaging:MaxAttempts` | Attempts before a message is marked failed (default 5) |
 | `ActiveDirectory:Enabled` | Enable directory fallback for sign-in |
-| `Epplus:LicenseKey` | Commercial EPPlus key, if applicable (see below) |
 
 [docs/configuration.md](docs/configuration.md) is the complete reference — every key with its
 default and its effect, plus provider choice, backups, spreadsheet licensing and what happens behind
@@ -299,9 +298,10 @@ Reports render a Razor template to HTML and convert it with headless Chromium (P
 Outside Docker, the first PDF request downloads a Chromium build (~150 MB) and caches it; the
 container image installs Chromium instead and sets `PUPPETEER_EXECUTABLE_PATH`.
 
-Spreadsheets use EPPlus 8, which is licensed under Polyform Noncommercial. The app currently
-declares a non-commercial organisation licence in `Program.cs`. **If that is not accurate for your
-deployment, set `Epplus:LicenseKey` to a commercial key.**
+Spreadsheets use [ClosedXML](https://github.com/ClosedXML/ClosedXML), which is MIT licensed and
+needs no declaration. It replaced EPPlus, whose Polyform Noncommercial terms meant the application
+had to declare a licence on the deployer's behalf — a named non-commercial organisation that was
+unlikely to be theirs.
 
 ## Building the admin UI
 
