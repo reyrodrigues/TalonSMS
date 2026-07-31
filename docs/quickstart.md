@@ -103,8 +103,8 @@ captures each report's HTML so tests can assert on report content rather than op
 | `ReportingAndExportTests` | Every report type, Excel import and export |
 | `NavigationAndPermissionTests` | The seeded sidebar and the action grants the UI gates buttons on |
 
-Most of these are regression guards for specific defects the migration hit, and each was verified to
-fail when its fix is reverted.
+Most of these pin a contract that broke once and should not break silently again, and each was
+verified to fail when its fix is reverted.
 
 ---
 
@@ -135,8 +135,7 @@ offer.
 
 ### SQL Server
 
-The original production deployment ran on SQL Server, and it remains supported. The Docker stack
-brings up SQL Server together with mocked SMS gateways:
+SQL Server is supported. The Docker stack brings it up together with mocked external services:
 
 ```bash
 docker compose up -d          # SQL Server + mocked external services

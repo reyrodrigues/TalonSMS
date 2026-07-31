@@ -15,9 +15,9 @@ Render or Railway with a free Neon or Supabase database in about fifteen minutes
 [security page](https://reyrodrigues.github.io/TalonSMS/security.html) you should read before running
 it for real.
 
-> The admin client is a Vue 3 application served from `/app/`. It replaced the AngularJS 1.4
-> client, which has been removed — see [migration/VUE-PORT.md](migration/VUE-PORT.md) for how the
-> client is built and what it still lacks.
+> The admin client is a Vue 3 application served from `/app/`. See
+> [docs/development.md](docs/development.md) for how it is built and the constraints worth knowing
+> before changing it.
 >
 > [docs/TRANSLATION.md](docs/TRANSLATION.md) covers the interface languages — English, Arabic,
 > French and Spanish — right-to-left layout, and how to add or correct one. **The non-English
@@ -29,17 +29,13 @@ it for real.
 >
 > [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
 > country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
->
-> Migrating from the old .NET Framework 4.5 codebase? See [MIGRATION.md](MIGRATION.md) for what
-> changed, what was dropped, and what still needs attention before a production deploy.
+
 
 ## Security status
 
 **Talon is provided as is, with no warranty and no claim that it is secure.** It has not had an
-independent security review. The 2026 modernisation fixed defects found while reading the code — the
-voucher code generator was replaced because its output was measurably biased, and rate limiting was
-added to the sign-in and redemption endpoints because there was none — but that is not the same as
-being audited.
+independent security review. Defects have been found and fixed by reading the code, but that is not
+the same as being audited — assume weaknesses remain that nobody has looked for yet.
 
 It holds names, personal identifiers, phone numbers and locations for people who are often
 vulnerable precisely because of who and where they are. Talon can now issue those identifiers
@@ -203,9 +199,9 @@ rather than on opaque PDF bytes.
 | `InboundRedemptionTests` | Redemption through the extracted processor, which is the path a Telegram reply takes as well as an inbound SMS |
 | `PersonalIdentifierTests` | Identifier generation — length, uniqueness, and that the renamed property still maps to the column it always did |
 
-Most of these are regression guards for specific defects this migration hit — each one was verified
-to fail when its fix is reverted, so they are not just documentation. `MIGRATION.md` explains why
-each contract matters.
+Most of these pin a contract that broke once and should not break silently again — each was
+verified to fail when its fix is reverted, so they are not just documentation.
+[docs/development.md](docs/development.md) explains why the Breeze contract in particular matters.
 
 ## Configuration
 
@@ -317,7 +313,6 @@ npm run build     # typechecks, then compiles to TalonAdmin/wwwroot/app
 The Docker image builds the client itself in a Node stage, so `docker compose up` needs no
 separate step.
 
-See [migration/VUE-PORT.md](migration/VUE-PORT.md) for how the client is structured and what it
-still lacks.
-The wire format it speaks to Breeze 7 is documented in [MIGRATION.md](MIGRATION.md) — read that
-before changing `src/api/breeze.ts` or the serializer settings in `Program.cs`.
+See [docs/development.md](docs/development.md) for how the client is structured and for the wire
+format it speaks to Breeze — read that before changing `src/api/breeze.ts` or the serializer
+settings in `Program.cs`.

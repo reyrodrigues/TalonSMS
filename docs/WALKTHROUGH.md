@@ -5,113 +5,186 @@ nav_order: 7
 
 # Walkthrough: from an empty database to a redeemed voucher
 
-A complete pass through Talon on the migrated .NET 10 stack, captured against a freshly created
-database. The scenario is a winterization cash transfer in Jordan: three vendors, twelve
-households in one cycle, two voucher categories, distributed and then partly redeemed by SMS.
+A complete pass through Talon, captured against a freshly created database. The scenario is a
+winterization cash transfer in Jordan: three vendors, twelve households in one cycle, two voucher
+categories, distributed and then partly redeemed.
 
-All names, numbers and identifiers below are fabricated demo data.
+Every screenshot below is of the running application, and every figure in them was produced by the
+workflow described — nothing is mocked up. All names, numbers and identifiers are fabricated.
 
-> **The screenshots predate the Vue 3 cutover** and show the AngularJS client that used to serve
-> `/app/`. Every step, field and figure still matches — the screens were ported like for like — but
-> the chrome looks different. They have not been recaptured yet.
+If you want the reasoning behind each step rather than the sequence,
+[Operating a programme](operate.html) covers the same ground.
+
+---
 
 ## 1. Sign in
 
-The client is served from `wwwroot/app`; `/` redirects to it.
+The client is served from `/app/`, and `/` redirects to it.
 
-![Login](screenshots/01-login.png)
+![Sign in](screenshots/01-login.png)
+
+---
 
 ## 2. Create the country
 
-System Administration → Reference Data → Countries → New. The ISO code drives the SMS webhook
-route, and the calling code and currency symbol flow through into every form and report that
-follows.
+System Administration → Reference Data → Countries. Almost everything in Talon is scoped to a
+country, so this comes first.
 
-![Creating Jordan](screenshots/02-create-country.png)
+![Countries](screenshots/02-countries.png)
 
-![Countries list](screenshots/03-countries-list.png)
+The ISO code earns its keep later: it is what the inbound redemption webhook is keyed on, so `JO`
+means a gateway posts to `/api/VoucherWorkflow/ValidateTransactionSMS/JO`. The calling code and
+currency symbol flow into every form and report that follows.
 
-Once the organisation is linked to the country and the user is granted access to it, Jordan
-appears in the country switcher in the header — the flag and the active tenant come from the row
-just created.
+![Jordan](screenshots/03-country-edit.png)
 
-![Jordan active, dashboard still empty](screenshots/04-country-active.png)
+Then link your organisation to the country and grant your user access to it. Until you do, it will
+not appear in the country switcher in the header, and none of the screens below will show it.
+
+{: .note }
+> A fresh install seeds a "Local Development" country so there is something to look at. Leave it or
+> delete it; it is not load-bearing.
+
+---
 
 ## 3. Country reference data
 
-Locations, vendor types and voucher types are all country-scoped. Everything created from here on
-is filtered by the active tenant.
+Locations, vendor types and voucher types are all country-scoped.
 
-![Creating a location](screenshots/05-create-location.png)
+![Locations](screenshots/04-locations.png)
+
+Vendor types are worth a moment's thought rather than being filled in by rote. A voucher category can
+be restricted to one, and that restriction — checked at redemption — is the mechanism that stops a
+food voucher being spent at a pharmacy.
+
+![Vendor types](screenshots/05-vendor-types.png)
+
+---
 
 ## 4. Register vendors
 
-The vendor form picks up the country's `+962` calling code and offers the vendor types and
-locations defined in the previous step.
+Three vendors: two groceries and a pharmacy.
 
-![Creating a vendor](screenshots/06-create-vendor.png)
+![Vendors](screenshots/06-vendors.png)
 
-![Vendors](screenshots/07-vendors-list.png)
+The vendor form picks up the country's `+962` calling code and offers the types and locations defined
+in the previous step. **The mobile number matters more than anything else on this form** — it is the
+vendor's identity at redemption, whichever channel the redemption arrives on.
 
-## 5. Register beneficiary households
+![A vendor](screenshots/07-vendor-edit.png)
 
-Twelve households in a single cycle ("Winterization 2026 — Cohort A"). In real use these arrive
-through the Excel import on this screen rather than one at a time.
+---
 
-![Beneficiaries](screenshots/08-beneficiaries.png)
+## 5. Register households
+
+First the cycle — the cohort you will distribute to as a unit.
+
+![Cycles](screenshots/08-cycles.png)
+
+Then the households in it. Twelve here; in real use these arrive through the Excel import on this
+screen rather than one at a time.
+
+![Households](screenshots/09-beneficiaries.png)
+
+Each household carries a **personal identifier**, which is the number a vendor quotes back to confirm
+the right person is being served. **Generate** issues a random 8–10 digit number, unique within the
+country, rather than recording a government document number — many of the people a cash programme
+reaches have no such document, and putting a real one into a database that a vendor reads aloud
+creates a protection problem for no benefit.
+
+![A household](screenshots/10-beneficiary-edit.png)
+
+---
 
 ## 6. Define the programme
 
 A programme carries the fund code, the distribution mechanism and the voucher code length.
 
-![Creating the programme](screenshots/09-create-program.png)
+![Programmes](screenshots/11-programs.png)
 
-Its voucher categories decide what each household receives and where it can be spent — here
-75 JOD of food and 25 JOD of hygiene, both redeemable at grocery vendors. Values are shown in the
-country's currency.
+Its voucher categories decide what each household receives and where it can be spent — here 75 JOD of
+food and 25 JOD of hygiene, both restricted to grocery vendors. Two categories means each household
+receives two vouchers.
 
-![Voucher categories](screenshots/10-program-voucher-categories.png)
+![The programme and its categories](screenshots/12-program-edit.png)
+
+{: .note }
+> Six digits is the default code length and a million possible codes. That is short enough to read out
+> over a bad line, and short enough that guessing is worth thinking about before you issue at scale —
+> see [Security](security.html#voucher-code-entropy).
+
+---
 
 ## 7. Distribute
 
-"Distribute Vouchers" asks only for the cycle and the location.
+Distributing asks only for the cycle and the location. Behind that one action Talon creates the
+distribution, copies the programme's categories onto it, generates a unique code for every voucher,
+and issues one voucher per category per household — 24 vouchers, 12 at 75 JOD and 12 at 25 JOD.
 
-![Distribute vouchers](screenshots/11-distribute-vouchers-dialog.png)
+![Distributions](screenshots/13-distributions.png)
 
-Behind that one click the server creates the distribution, copies the programme's categories onto
-it, generates a unique code for every voucher, and issues one voucher per category per household —
-24 vouchers, 12 at 75 JOD and 12 at 25 JOD.
+The distribution's own screen splits unused from used and lists the households, with the actual codes.
+Vouchers can be re-sent or cancelled from here.
 
-![Distributions](screenshots/12-distributions-list.png)
+![The distribution](screenshots/14-distribution-detail.png)
 
-## 8. Redeem by SMS
+---
 
-A vendor texts the voucher code and the beneficiary's ID number from their registered number. The
-gateway posts it to `/api/VoucherWorkflow/ValidateTransactionSMS/JO`, which resolves the country
-from the ISO code, matches the vendor by mobile number, and settles the voucher.
+## 8. Redeem
 
-Five households redeemed their food voucher at Al Salam Supermarket.
+A vendor sends the voucher code and the household's personal identifier from their registered number:
+
+```
+535635 6569004891
+```
+
+Talon reads the last two whitespace-separated tokens, so a human prefix is tolerated. It resolves the
+country, matches the sender to a vendor, finds the voucher, checks the vendor's type against the
+category's restriction, compares the identifier against the household's record, records the
+redemption, and sends back a six-digit confirmation code.
+
+**It does not matter which channel this arrives on.** A text posted by an SMS gateway and a reply to
+the Telegram bot go through the same rules. How messages travel is a per-country setting, and a
+country holds an ordered chain rather than a single channel, so it can reach enrolled recipients on a
+free channel and text everyone else.
+
+![Delivery channels](screenshots/16-country-settings.png)
+
+Five households redeemed their food voucher at Al Salam Supermarket. Every message in and out is
+logged, which is what makes a disputed redemption possible to investigate.
+
+![Message log](screenshots/17-message-log.png)
+
+---
 
 ## 9. Watch it land on the dashboard
 
-12 households, 24 vouchers issued worth JD 1,200, five redeemed for JD 375 — with the
-distribution broken out by location and vendor count.
+12 households, 24 vouchers issued worth JD 1,200, five redeemed for JD 375, broken out by location and
+vendor count. It updates live over SignalR.
 
-![Dashboard](screenshots/13-dashboard.png)
+![Dashboard](screenshots/15-dashboard.png)
 
-## 10. Reports
+---
 
-![Report screen](screenshots/14-report-screen.png)
+## 10. Reconcile
 
-The distribution report renders through Razor and headless Chromium. Every household appears with
-both vouchers, the five redemptions carry their claim codes, and the totals are in JOD.
+![Reports](screenshots/18-report-screen.png)
 
-![Distribution report](screenshots/15-distribution-report-pdf.png)
+The distribution report is the document that reconciles a distribution. Every household appears with
+both vouchers; the five redemptions carry their claim codes; totals are in the country's currency.
+
+![Distribution report](screenshots/19-distribution-report.png)
+
+Reports render a Razor template to HTML and convert it with headless Chromium, which is the one part
+of Talon that wants real memory — see [Sizing](deploy.html#sizing).
+
+---
 
 ## Reproducing this
 
-The walkthrough was driven through the UI, with bulk records (the extra vendors, the twelve
-households, the voucher categories) created through the same Breeze API the client uses. The
-equivalent flow runs headlessly in `TalonAdmin.Tests/VoucherDistributionScenarioTests` — it builds
-a country, a programme and a cycle, distributes, redeems by SMS and asserts the dashboard and the
-report, in about two seconds.
+The screens above were driven through the browser; the bulk records — the extra vendors, the twelve
+households, the redemptions — were created through the same API the client uses.
+
+The equivalent flow runs headlessly in `TalonAdmin.Tests/VoucherDistributionScenarioTests`: it builds
+a country, a programme and a cycle, distributes, redeems by SMS, and asserts that the dashboard and
+the report agree, in about two seconds.

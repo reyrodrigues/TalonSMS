@@ -10,10 +10,9 @@ the people holding them are, by definition, people with little margin for being 
 is an honest account of what the system protects, what it does not, and what you have to do yourself.
 
 {: .warning }
-> **Talon has not had an independent security review, and I make no claim that it is secure.** The
-> 2026 modernisation fixed defects found by reading the code — including a measurably biased voucher
-> code generator and a total absence of rate limiting — but finding and fixing some bugs is not the
-> same as being audited. Treat everything below as a description of the current design, not as an
+> **Talon has not had an independent security review, and I make no claim that it is secure.**
+> Defects have been found and fixed by reading the code, but finding and fixing some bugs tells you
+> only that some existed. Treat everything below as a description of the current design, not as an
 > assurance about it. If you have the means to commission a review before running this at scale, do.
 >
 > See [Disclaimer and responsible use](disclaimer.html) for the terms this is published under and what
@@ -57,7 +56,8 @@ Talon's design assumes the network is hostile and the handsets are ordinary. Wha
 | Attack | Defence |
 | --- | --- |
 | Redeeming a voucher twice | Voucher status is checked and moved to Claimed on redemption; a repeat within 30 minutes re-sends the confirmation rather than redeeming again |
-| A stranger redeeming a voucher | Redemption requires the sender's number to match a registered vendor |
+| A stranger redeeming a voucher | Redemption requires the sender to resolve to a registered vendor's number, on any channel |
+| Redeeming against the wrong household | The personal identifier quoted at redemption must match the household's record |
 | Spending a voucher on the wrong goods | Categories can be restricted to a vendor type, checked at redemption |
 | Guessing a user's password | Rate limited to 10 attempts per 5 minutes per address |
 | Reading another country's data | Every tenant-scoped query is filtered by the active country and organisation |
@@ -69,7 +69,7 @@ What it does not defend, and you should know about:
 | --- | --- |
 | Voucher codes are short by default | A six-digit code space is a million candidates. See below |
 | SMS is unencrypted and unauthenticated by design | Anyone who can read a recipient's messages, including their network operator, can read their code |
-| Vendor identity is a phone number | A spoofed sender number, where an operator permits it, impersonates a vendor |
+| Vendor identity is a phone number | A spoofed sender number, where an operator permits it, impersonates a vendor. This holds on every channel, since each resolves back to a number |
 | No per-voucher redemption attempt limit | Rate limiting is per address, not per code |
 | No independent audit | Unknown unknowns |
 
@@ -99,14 +99,11 @@ Mitigations, roughly in order of effectiveness:
 - **Keep distributions small relative to the code space**, since the ratio is what determines the odds.
 
 {: .note }
-> **What was fixed in 2026.** The original generator drew eight cryptographic bytes, rendered them as a
-> decimal string, and cut a substring from a randomly chosen offset. That was biased: over 500,000
-> draws of a six-digit code, codes beginning with `1` appeared 13.3% of the time against the 10% a
-> uniform draw gives, while `0`, `8` and `9` were each under-represented. The offset was also chosen
-> with a non-cryptographic PRNG, and its arithmetic went out of range at longer code lengths — at 18
-> digits it threw on about 5% of calls. It was replaced with rejection sampling over a cryptographic
-> source. Leading digits now land within 0.1 points of uniform, and the properties are pinned by
-> `VoucherCodeGenerationTests`.
+> **How codes are drawn.** Rejection sampling over a cryptographic random source: draws falling in the
+> final, partial block of the random range are discarded rather than folded back in with a modulo,
+> which is what keeps every code in the space equally likely. Measured over 500,000 draws, leading
+> digits land within 0.1 points of the 10% a uniform draw gives. `VoucherCodeGenerationTests` pins
+> that, along with the whole space being reachable and no supported code length throwing.
 
 ---
 
@@ -118,16 +115,16 @@ account so a platform's proxy does not collapse every caller into one bucket.
 | Policy | Applies to | Limit |
 | --- | --- | --- |
 | `credentials` | `/Token`, vendor sign-in | 10 per 5 minutes |
-| `sms-redemption` | The inbound SMS webhook | 120 per minute |
+| `sms-redemption` | The inbound redemption webhooks | 120 per minute |
 
 The credential limit is tight because no legitimate client tries many passwords quickly. ASP.NET
 Identity lockout is not configured, so this limit is what stands in for it.
 
 The redemption limit is deliberately generous, and it is important to understand why it is not the
-primary control. A real distribution produces a burst of redemptions that all arrive from the
-gateway's single address, so a tight limit there would reject genuine redemptions. It is a flood guard.
-**`SystemSecret` is the actual gate on that endpoint** — the limit only bounds how fast someone who has
-already got past it can work.
+primary control. A real distribution produces a burst of redemptions that all arrive from one address —
+the gateway's, or Telegram's — so a tight limit there would reject genuine redemptions. It is a flood
+guard. **`SystemSecret` is the actual gate on those endpoints** — the limit only bounds how fast
+someone who has already got past it can work.
 
 {: .note }
 > Limits are in-process, so each instance counts separately. Running multiple replicas multiplies the
@@ -146,9 +143,8 @@ Three schemes, chosen per request from the `Authorization` header:
 
 Two things worth knowing. Access tokens are valid for **14 days** and there is **no revocation list**,
 so signing a user out does not invalidate their token — rotating `Jwt:SigningKey` invalidates every
-token at once, which is the blunt instrument available. And password rules are relaxed (six characters,
-no complexity requirement) because they were inherited; tighten them in `Program.cs` if your context
-calls for it.
+token at once, which is the blunt instrument available. And password rules are relaxed — six
+characters, no complexity requirement — so tighten them in `Program.cs` if your context calls for it.
 
 Optionally, sign-in can fall back to a directory service for staff accounts. It is off by default.
 
@@ -156,9 +152,15 @@ Optionally, sign-in can fall back to a directory service for staff accounts. It 
 
 ## Data protection
 
-Talon holds names, ID numbers, phone numbers and locations for people who are often vulnerable
-precisely because of where they are and who they are. That is the most sensitive thing in the database,
-more so than the vouchers.
+Talon holds names, personal identifiers, phone numbers and locations for people who are often
+vulnerable precisely because of where they are and who they are. That is the most sensitive thing in
+the database, more so than the vouchers.
+
+The identifier a vendor quotes at redemption is generated by Talon rather than being a government
+document number, which is deliberate: many of the people a cash programme reaches have no such
+document, and putting a real one into a database a vendor reads aloud creates a protection problem for
+no benefit. Recording a real document number still works if a programme requires it, but treat that as
+a decision with consequences rather than the default.
 
 - **In transit** — whatever your host provides. Use HTTPS.
 - **At rest** — whatever your database provider provides. Neon and Supabase both encrypt at rest on

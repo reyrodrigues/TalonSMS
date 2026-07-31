@@ -140,23 +140,19 @@ which is what keeps every single-channel country working untouched. The chain it
 
 ### Clickatell (`sms.clickatell`)
 
-The only gateway carried forward. RescueSMS and TurboSMS were removed; their clients, the SOAP
-service reference and the WireMock stubs went with them.
-
-It is driven by a URL template in `CountrySettings.ServiceUrl`, where `{0}` is the recipient and
+Driven by a URL template in `CountrySettings.ServiceUrl`, where `{0}` is the recipient and
 `{1}` the message:
 
 ```
 https://platform.clickatell.com/messages/http/send?apiKey=…&to={0}&content={1}
 ```
 
-That shape is inherited — it is what deployed countries already have — so it was kept rather than
-migrated. Non-GSM-7 text is sent as UCS-2 hex with `unicode=1` appended, without which Arabic
-voucher messages arrive as mojibake.
+The template shape is what deployed countries already have, so it is kept as is. Non-GSM-7 text is
+sent as UCS-2 hex with `unicode=1` appended, without which Arabic voucher messages arrive as
+mojibake.
 
-Clickatell keeps the value `2` it had in the old dispatch, so a country already pointed at it keeps
-working. A country left on a removed gateway resolves to no channel and every message fails with a
-message naming the problem — deliberately visible rather than silently rerouted.
+A country pointed at a backend with no channel behind it resolves to nothing, and every message
+fails with a message naming the problem — deliberately visible rather than silently rerouted.
 
 ### Android gateway (`sms.android`)
 

@@ -58,9 +58,10 @@ the switcher.
 
 ### 3. Vendors
 
-Register each vendor with **the mobile number they will text from**. That number is what authenticates
-a redemption — Talon matches the incoming SMS to a vendor by its sender number, so a wrong number
-means every redemption from that vendor is rejected as an unauthorised phone.
+Register each vendor with **the mobile number they will redeem from**. That number is the vendor's
+identity: whichever channel a redemption arrives on, Talon resolves it back to a number and matches
+that against the vendor list, so a wrong number means every redemption from that vendor is rejected as
+an unauthorised phone.
 
 Assign each vendor a type. That is what the voucher category's restriction is checked against.
 
@@ -130,24 +131,29 @@ messages show up.
 
 ---
 
-## Redemption over SMS
+## Redemption
 
-A vendor texts, from their registered number:
+A vendor sends two things — the voucher code and the household's personal identifier:
 
 ```
 <voucher code> <personal identifier>
 ```
 
-Talon reads the **last two whitespace-separated tokens** of the message, so a human prefix like
-"TALON 482913 9876543210" is tolerated. The gateway posts it to
-`/api/VoucherWorkflow/ValidateTransactionSMS/{countryCode}`, and Talon then:
+Talon reads the **last two whitespace-separated tokens**, so a human prefix like
+"TALON 482913 9876543210" is tolerated.
 
-1. Resolves the country from the ISO code in the URL.
-2. Matches the sender's number to a registered vendor.
+**It does not matter which channel it arrives on.** A text message posted by an SMS gateway and a
+reply to the Telegram bot go through the same rules; a Telegram message is resolved back to the
+vendor's phone number first, because that number is the vendor's identity, which also means only an
+enrolled chat can redeem. Whatever the route, Talon then:
+
+1. Resolves the country.
+2. Matches the sender to a registered vendor by number.
 3. Finds the voucher by code within that country.
 4. Checks the vendor's type against the category's restriction.
 5. Compares the identifier against the one on the household's record, ignoring any punctuation.
-6. Records the redemption and texts back a six-digit confirmation code.
+6. Records the redemption and sends back a six-digit confirmation code, out through the country's
+   channel chain — which for an enrolled vendor means the same chat they redeemed from.
 
 What comes back when it does not work:
 
@@ -165,8 +171,9 @@ go missing, and a vendor's natural response is to text again. Re-sending the cod
 to a retry, and it does not redeem the voucher twice.
 
 {: .note }
-> All of these come back as HTTP 200 with the reason in the body, because SMS gateways treat a non-200
-> as a delivery failure and retry it. A 200 with `Invalid Voucher Code` is Talon working correctly.
+> All of these come back as HTTP 200 with the reason in the body, because an SMS gateway treats a
+> non-200 as a delivery failure and redelivers it — which would replay the redemption. A 200 carrying
+> `Invalid Voucher Code` is Talon working correctly.
 
 Every inbound message is written to a message log before it is interpreted, so an unparseable message
 is still visible to whoever is investigating.
@@ -184,12 +191,12 @@ is still visible to whoever is investigating.
 
 ## Offline redemption
 
-Vendors with a smartphone can use the point-of-sale client instead of SMS. It downloads the vouchers
-for its distribution, records transactions locally, and syncs when it next has
-a connection. Transactions it cannot reconcile are quarantined for a human to resolve rather than being
-silently dropped.
+Vendors with a smartphone can use the point-of-sale client instead of messaging. It downloads the
+vouchers for its distribution, records redemptions locally, and syncs when it next has a connection.
+Transactions it cannot reconcile are quarantined for a human to resolve rather than being silently
+dropped.
 
-This path needs a smartphone and an occasional connection. SMS is the one that works on any handset, so
+This path needs a smartphone and an occasional connection. Messaging is what works on any handset, so
 treat the offline client as an optimisation for well-equipped vendors, not the primary mechanism.
 
 ---

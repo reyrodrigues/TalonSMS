@@ -20,9 +20,8 @@ No blockchain, no tokens, no wallet — just codes and a ledger.
 
 {: .note }
 > Talon ran until the programme it was built for was shut down, then sat in a repository for eleven
-> years. It has since been moved from .NET Framework 4.5 to .NET 10, given a new front end, and
-> released publicly. [What changed in that migration](https://github.com/reyrodrigues/TalonSMS/blob/master/MIGRATION.md)
-> is written up separately.
+> years. It has since been brought up to date and released publicly, and it is free for anyone who
+> wants it.
 
 ---
 
@@ -57,10 +56,10 @@ vendor and only after a particular date.
 per voucher, one voucher per category per household, all issued against the distribution so the
 arithmetic stays closed.
 
-**Redemption over SMS.** A vendor texts the voucher code and the recipient's ID number. The gateway
-posts it to Talon, which resolves the country, matches the vendor by mobile number, verifies the code
-has not already been spent, records the transaction, and texts back a confirmation code. A voucher
-redeems once.
+**Redemption.** A vendor sends back the voucher code and the household's personal identifier — by
+text, or as a reply to a Telegram bot, whichever the country is set up for. Talon matches the vendor by
+mobile number, checks the identifier against the household's record, verifies the code has not already
+been spent, records the transaction, and sends back a confirmation code. A voucher redeems once.
 
 **Reconciliation.** Every redemption is a ledger entry against a vendor, a household, a category and
 a distribution — which is what makes the reports at the end of a programme add up.
@@ -90,10 +89,8 @@ has aged better than the code did.
 
 {: .caution }
 > Talon is provided as is, with no warranty and **no claim that it is secure.** It has not had an
-> independent security review. The 2026 modernisation fixed defects that were found while reading the
-> code — the voucher code generator was replaced because its output was measurably biased, and rate
-> limiting was added because there was none — but "some bugs were found and fixed" is not the same as
-> "audited".
+> independent security review. Defects have been found and fixed by reading the code, but that is not
+> the same as being audited — assume weaknesses remain that nobody has looked for yet.
 >
 > Read [Security](security.html) for what is protected and what is not, and
 > [Disclaimer and responsible use](disclaimer.html) for what you take on by deploying it with real

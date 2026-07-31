@@ -144,30 +144,38 @@ That is the path both blueprints use as their health check.
 
 ---
 
-## 5. Connect an SMS gateway
+## 5. Connect a messaging channel
 
-Redemption needs a gateway that can receive an inbound SMS and post it to Talon as a webhook. Point it
-at:
+Two directions to wire up: getting codes out to people, and getting redemptions back in.
+
+**Outbound** is configured **per country** in the admin interface rather than through environment
+variables, because different countries need different channels and different credentials. A country
+holds an ordered chain, so it can send free messages to whoever has enrolled on a chat channel and text
+everyone else. [Messaging](MESSAGING.html) covers the channels, what each needs, and where failed
+messages surface.
+
+Sending is queued rather than done inline, so a gateway being down delays messages instead of failing
+the redemption that triggered them.
+
+**Inbound** is a webhook, and there is one per transport. Point your SMS gateway at:
 
 ```
 POST https://your-service/api/VoucherWorkflow/ValidateTransactionSMS/{countryCode}?secret=<SystemSecret>
 ```
 
-`{countryCode}` is the ISO alpha-2 code of the country you created — `JO` for Jordan. The body carries
-the sender's number and the message text.
+and, if you are using the Telegram bot, register this with `setWebhook`:
+
+```
+POST https://your-service/api/Telegram/{countryCode}?secret=<SystemSecret>
+```
+
+`{countryCode}` is the ISO alpha-2 code of the country you created — `JO` for Jordan. Both accept a
+redemption, so both matter.
 
 {: .warning }
-> Append `?secret=` with your `SystemSecret`. That query parameter is the only thing distinguishing your
-> gateway from anyone else who finds the URL, and when `SystemSecret` is unset the check is skipped
-> entirely. The application logs a warning at startup if you have not set it.
-
-Outbound messages — the code delivered to a household, the confirmation sent to a vendor — go through a
-gateway configured **per country** rather than through environment variables. Set it under country
-settings in the admin interface. For which gateways are supported and how to add one, see
-[Messaging](MESSAGING.html).
-
-Outbound sending is queued rather than done inline, so a gateway being down delays messages instead of
-failing the redemption that triggered them.
+> Append `?secret=` with your `SystemSecret` to **both**. That query parameter is the only thing
+> distinguishing your gateway from anyone else who finds the URL, and when `SystemSecret` is unset the
+> check is skipped entirely. The application logs a warning at startup if you have not set it.
 
 ---
 
@@ -193,10 +201,9 @@ Both platforms redeploy when you push to the tracked branch. The schema is creat
 otherwise left alone, so a redeploy against an existing database is a no-op as far as data is
 concerned.
 
-There are no EF Core migrations in this repository — the original EF6 migrations could not be carried
-forward. That means **the schema is created once and never altered afterwards.** If a future change
-alters a table you will have to apply that change yourself. Take a backup before upgrading; both Neon
-and Supabase can do point-in-time restores.
+There is no migration framework in this project, which means **the schema is created once and never
+altered afterwards.** If a future change alters a table, you will have to apply that change yourself.
+Take a backup before upgrading; both Neon and Supabase can do point-in-time restores.
 
 ---
 
