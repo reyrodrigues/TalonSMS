@@ -1,3 +1,8 @@
+---
+title: Messaging
+nav_order: 8
+---
+
 # Messaging
 
 Talon sends voucher codes, redemption confirmations and cancellations to beneficiaries and vendors.

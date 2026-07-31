@@ -37,4 +37,10 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 COPY --from=build /app ./
 
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "TalonAdmin.dll"]
+
+# Render and Railway both assign a port at run time and pass it as PORT, while Kestrel reads
+# ASPNETCORE_URLS. Bridging the two here rather than in Program.cs keeps the platform's convention out
+# of the application, and means a container needs no configuration beyond the database URL to serve
+# traffic. Binding 0.0.0.0 is required because the platform's proxy connects from outside the
+# container. `exec` keeps dotnet as PID 1 so it still receives SIGTERM on shutdown.
+ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=\"http://0.0.0.0:${PORT:-8080}\" exec dotnet TalonAdmin.dll"]

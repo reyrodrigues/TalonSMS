@@ -1,3 +1,8 @@
+---
+title: Walkthrough
+nav_order: 6
+---
+
 # Walkthrough: from an empty database to a redeemed voucher
 
 A complete pass through Talon on the migrated .NET 10 stack, captured against a freshly created

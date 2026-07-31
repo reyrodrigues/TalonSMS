@@ -9,6 +9,12 @@ The server is an ASP.NET Core application on .NET 10 backed by Entity Framework 
 [Breeze](https://breeze.github.io/) data API for the admin client, a REST API for the mobile
 vendor client, and generates spreadsheet and PDF reports.
 
+**📖 Full documentation: [reyrodrigues.github.io/TalonSMS](https://reyrodrigues.github.io/TalonSMS)** —
+including a [deployment guide](https://reyrodrigues.github.io/TalonSMS/deploy.html) that puts Talon on
+Render or Railway with a free Neon or Supabase database in about fifteen minutes, and a
+[security page](https://reyrodrigues.github.io/TalonSMS/security.html) you should read before running
+it for real.
+
 > The admin client is a Vue 3 application served from `/app/`. It replaced the AngularJS 1.4
 > client, which has been removed — see [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the client is
 > built and what it still lacks.
@@ -22,18 +28,43 @@ vendor client, and generates spreadsheet and PDF reports.
 > Migrating from the old .NET Framework 4.5 codebase? See [MIGRATION.md](MIGRATION.md) for what
 > changed, what was dropped, and what still needs attention before a production deploy.
 
+## Security status
+
+**Talon has not had an independent security review.** The 2026 modernisation fixed defects found while
+reading the code — the voucher code generator was replaced because its output was measurably biased,
+and rate limiting was added to the sign-in and redemption endpoints because there was none — but that
+is not the same as being audited.
+
+Before running this with real beneficiary data, at minimum: set `Jwt:SigningKey`, set `SystemSecret`,
+change the seeded `admin` password, disable demo data, and serve it over HTTPS only. Voucher codes
+default to six digits, which is a million-candidate space — decide whether that is enough for the value
+you are moving.
+
+The reasoning behind each of those, and what is still unprotected, is on the
+[security page](https://reyrodrigues.github.io/TalonSMS/security.html). Critique of the security model
+and the redemption logic is actively welcome.
+
 ## Prerequisites
 
 - [.NET SDK 10.0](https://dotnet.microsoft.com/download) or later
+- [Node.js](https://nodejs.org/) 20 or later, to build the client
 - Docker (optional — only for the SQL Server and mocked-gateway stack)
 
 ## Quick start
+
+The client's build output is not committed, so build it once:
+
+```bash
+cd TalonAdmin/ClientApp && npm ci && npm run build && cd ../..
+```
+
+Then run the app:
 
 ```bash
 dotnet run --project TalonAdmin
 ```
 
-That's it. In the `Development` environment the app creates two SQLite databases under
+In the `Development` environment the app creates two SQLite databases under
 `TalonAdmin/App_Data/`, seeds reference data plus a small demo programme, and listens on
 <http://localhost:5080>.
 
@@ -57,6 +88,44 @@ curl -s http://localhost:5080/breeze/EVM/Vouchers \
 
 Every tenant-scoped endpoint needs the `X-Tenant-Country` and `X-Tenant-Organization` headers; the
 seeded country and organisation are both id `1`.
+
+## Running against PostgreSQL
+
+Postgres is what the managed free tiers offer, so it is the provider the deployment guide targets.
+One variable configures everything — it selects the provider and points both halves of the model at
+the same database:
+
+```bash
+DATABASE_URL="postgresql://user:password@host:5432/talon" dotnet run --project TalonAdmin
+```
+
+The `postgresql://` URL is accepted exactly as Neon, Supabase, Render and Railway print it; a standard
+Npgsql keyword connection string works too. To reproduce a cloud deployment locally:
+
+```bash
+docker run -d --name talon-pg -e POSTGRES_PASSWORD=talon -e POSTGRES_DB=talon -p 5432:5432 postgres:17-alpine
+DATABASE_URL="postgresql://postgres:talon@localhost:5432/talon" dotnet run --project TalonAdmin
+```
+
+## Deploying to a cloud host
+
+[`render.yaml`](render.yaml) and [`railway.json`](railway.json) deploy the Docker image on Render and
+Railway respectively. Render's blueprint generates the signing key, the SMS gateway secret and the
+first admin password itself, so `DATABASE_URL` is the only value you supply.
+
+The full walkthrough — creating a free Neon or Supabase database, the variables to set, and the
+memory that PDF reports need — is at
+**[reyrodrigues.github.io/TalonSMS/deploy.html](https://reyrodrigues.github.io/TalonSMS/deploy.html)**.
+
+The image needs no configuration beyond the database: it binds whatever port `PORT` names, defaulting
+to 8080.
+
+```bash
+docker build -t talon .
+docker run -p 8080:8080 -e DATABASE_URL="postgresql://..." \
+  -e Jwt__SigningKey="$(openssl rand -base64 48)" \
+  -e Database__CreateAndSeedOnStartup=true talon
+```
 
 ## Running against SQL Server
 
@@ -131,9 +200,11 @@ variables (`__` separates nested keys, e.g. `Database__Provider`).
 
 | Key | Meaning |
 | --- | --- |
-| `Database:Provider` | `Sqlite` or `SqlServer` |
+| `DATABASE_URL` | A Postgres URL. When set it selects Postgres and points both contexts at it, overriding the two connection strings below — this is the one setting a cloud deploy needs |
+| `Database:Provider` | `Sqlite`, `Postgres` or `SqlServer` |
 | `ConnectionStrings:AdminContext` | Identity, organisations, countries, menus |
 | `ConnectionStrings:VoucherContext` | Programmes, distributions, vouchers, transactions |
+| `SystemSecret` | Shared secret the inbound SMS webhook must present. **Unset, that endpoint accepts redemptions from anyone** |
 | `Database:CreateAndSeedOnStartup` | Create the schema and seed reference data at startup |
 | `Database:SeedDemoData` | Also seed a demo programme with vouchers |
 | `Database:SeedAdminPassword` | Password for the seeded `admin` account |

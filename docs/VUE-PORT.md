@@ -1,3 +1,8 @@
+---
+title: The web client
+nav_order: 7
+---
+
 # The Vue 3 client
 
 The AngularJS 1.4 client has been replaced by a Vue 3 client under `TalonAdmin/ClientApp`, served

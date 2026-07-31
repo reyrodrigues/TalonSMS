@@ -1,0 +1,58 @@
+# Render blueprint — https://render.com/docs/infrastructure-as-code
+#
+# Deploying from this file:
+#   1. Fork or push this repository to your own GitHub or GitLab account.
+#   2. In Render, choose New > Blueprint and point it at the repository.
+#   3. Paste your Postgres connection string into the DATABASE_URL prompt.
+#   4. Deploy, then sign in at https://<your-service>.onrender.com/app/ as `admin`.
+#
+# The admin password is generated for you and shown under the service's Environment tab as
+# Database__SeedAdminPassword. Change it after the first sign-in.
+#
+# This provisions the application only; it deliberately does not provision a database, because the
+# free Postgres offerings that outlive a trial are elsewhere — Neon and Supabase both have a free
+# tier that does not expire, and either one's connection URL goes straight into DATABASE_URL. See
+# docs/deploy.md for the walkthrough.
+
+services:
+  - type: web
+    name: talon
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # Reports render through headless Chromium, which needs more memory than the free instance
+    # allows. On `free` the application runs and every other feature works, but generating a PDF
+    # report is liable to be killed; `starter` is the first tier that renders them reliably.
+    plan: starter
+    healthCheckPath: /api/App/MobileClient/IsAlive
+    envVars:
+      # The single setting that has to be supplied by hand. Both Neon and Supabase present this
+      # value as a postgresql:// URL, which is the form the application expects.
+      - key: DATABASE_URL
+        sync: false
+
+      # Signs access tokens. Generated once per service and then held; regenerating it invalidates
+      # every issued token, which signs all users out.
+      - key: Jwt__SigningKey
+        generateValue: true
+
+      # The shared secret an SMS gateway has to present to post a redemption. Copy the generated
+      # value into the gateway's callback URL as ?secret=<value> — without it, that endpoint accepts
+      # redemptions from anyone who finds the address.
+      - key: SystemSecret
+        generateValue: true
+
+      # Creates the schema and the reference data on first boot, then leaves an existing database
+      # untouched on subsequent restarts.
+      - key: Database__CreateAndSeedOnStartup
+        value: "true"
+
+      # The sample programme is useful for a demo and wrong for a real deployment, because its
+      # beneficiaries and vouchers would sit alongside actual ones.
+      - key: Database__SeedDemoData
+        value: "false"
+
+      - key: Database__SeedAdminPassword
+        generateValue: true
+
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
