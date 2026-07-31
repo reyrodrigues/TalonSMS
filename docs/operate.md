@@ -106,8 +106,14 @@ household receives two vouchers.
 Twelve households and two categories produces twenty-four vouchers. The arithmetic is closed from this
 point: every voucher belongs to a distribution, and every redemption is a ledger entry against one.
 
-Codes reach recipients either by SMS, or printed as a QR sheet — one code per voucher, labelled with
-the household, value and valid-from date — for vendors using the point-of-sale client.
+Codes reach recipients either by message, or printed as a QR sheet — one code per voucher, labelled
+with the household, value and valid-from date — for vendors using the point-of-sale client.
+
+How a message is delivered is a per-country setting: a Clickatell account, an Android handset with a
+local SIM acting as the gateway, or a Telegram bot. Which one is right depends on what the caseload
+actually carries — a feature phone with no data rules out everything but SMS — and on what messaging
+costs where you are. [Messaging](MESSAGING.html) covers the three, what each needs, and where failed
+messages show up.
 
 {: .note }
 > Generating codes reads every existing voucher code into memory to guarantee uniqueness. That is fine

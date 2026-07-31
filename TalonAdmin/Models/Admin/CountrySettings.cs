@@ -145,6 +145,13 @@ namespace TalonAdmin.Models.Admin
     /// </remarks>
     public enum SmsBackendType
     {
-        Clickatell = 2
+        Clickatell = 2,
+
+        /// <summary>An Android handset with a local SIM, acting as the modem.</summary>
+        AndroidGateway = 4,
+
+        /// <summary>A Telegram bot. Recipients must enrol first — a bot cannot message anyone
+        /// who has not written to it.</summary>
+        Telegram = 5
     }
 }

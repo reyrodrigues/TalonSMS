@@ -217,6 +217,17 @@ builder.Services.AddScoped<DatabaseInitializer>();
 builder.Services.AddHttpClient<ClickatellChannel>()
     .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddScoped<IMessageChannel>(sp => sp.GetRequiredService<ClickatellChannel>());
+
+// A handset on a field-office LAN or behind a relay is slower and flakier than a hosted gateway,
+// so it gets a longer timeout before the attempt is called a failure and retried.
+builder.Services.AddHttpClient<AndroidGatewayChannel>()
+    .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(60));
+builder.Services.AddScoped<IMessageChannel>(sp => sp.GetRequiredService<AndroidGatewayChannel>());
+
+builder.Services.AddHttpClient<TelegramChannel>()
+    .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<IMessageChannel>(sp => sp.GetRequiredService<TelegramChannel>());
+builder.Services.AddSingleton<TelegramEnrolment>();
 builder.Services.AddScoped<MessageChannelRegistry>();
 builder.Services.AddScoped<IOutboundMessageQueue, OutboundMessageQueue>();
 builder.Services.AddHostedService<OutboundMessageDispatcher>();

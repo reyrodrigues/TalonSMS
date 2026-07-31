@@ -33,6 +33,7 @@ namespace TalonAdmin.Models.Vouchers
         public DbSet<VoucherTransactionRecord> VoucherTransactionRecords { get; set; }
         public DbSet<MessageLog> MessageLogs { get; set; }
         public DbSet<OutboundMessage> OutboundMessages { get; set; }
+        public DbSet<TelegramContact> TelegramContacts { get; set; }
         public DbSet<TransactionLogItem> TransactionLogItems { get; set; }
         public DbSet<CardLoad> CardLoads { get; set; }
 

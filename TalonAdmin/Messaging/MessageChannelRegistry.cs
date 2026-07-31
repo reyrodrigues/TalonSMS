@@ -32,6 +32,8 @@ namespace TalonAdmin.Messaging
                 : (SmsBackendType)settings.SmsBackendType switch
                 {
                     SmsBackendType.Clickatell => Channels.ClickatellChannel.ChannelKey,
+                    SmsBackendType.AndroidGateway => Channels.AndroidGatewayChannel.ChannelKey,
+                    SmsBackendType.Telegram => Channels.TelegramChannel.ChannelKey,
                     _ => null
                 };
 

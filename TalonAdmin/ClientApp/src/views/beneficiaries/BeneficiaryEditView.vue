@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import TelegramEnrolment from '@/components/TelegramEnrolment.vue'
 import { useRouter } from 'vue-router'
 import * as api from '@/api/talon'
 import type { Beneficiary, BeneficiaryGroup, Location } from '@/api/types'
@@ -151,6 +152,8 @@ async function save() {
             <input id="mobile" v-model="model.MobileNumber" class="field__control" :disabled="readOnly" />
           </div>
         </div>
+
+        <TelegramEnrolment :mobile-number="model.MobileNumber" />
 
         <div class="field">
           <label class="field__label" for="birthYear">Birth Year</label>

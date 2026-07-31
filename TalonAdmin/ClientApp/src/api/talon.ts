@@ -181,6 +181,22 @@ export const distributionTransactions = (distributionId: number, used: boolean) 
     orderBy: ['Id']
   })
 
+// ---- telegram -------------------------------------------------------------------------
+
+/**
+ * The enrolment link for one recipient, or null when the country does not deliver over Telegram —
+ * the endpoint answers 404 in that case, and the UI simply hides the control.
+ */
+export async function telegramEnrolmentLink(mobileNumber: string) {
+  try {
+    return await getJson<{ Link: string; Enrolled: boolean }>(
+      `/api/Telegram/EnrolmentLink?mobileNumber=${encodeURIComponent(mobileNumber)}`
+    )
+  } catch {
+    return null
+  }
+}
+
 // ---- reports --------------------------------------------------------------------------
 
 export interface ReportRequest {

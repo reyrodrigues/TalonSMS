@@ -19,8 +19,9 @@ it for real.
 > client, which has been removed — see [docs/VUE-PORT.md](docs/VUE-PORT.md) for how the client is
 > built and what it still lacks.
 >
-> [docs/MESSAGING.md](docs/MESSAGING.md) covers how voucher codes reach beneficiaries: the outbound
-> queue, retries, the delivery log, and how to add a channel.
+> [docs/MESSAGING.md](docs/MESSAGING.md) covers how voucher codes reach beneficiaries — the outbound
+> queue, retries and the delivery log — and the three delivery channels: Clickatell, a phone acting
+> as an SMS gateway, and a Telegram bot.
 >
 > [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
 > country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
@@ -188,6 +189,7 @@ rather than on opaque PDF bytes.
 | `ReportingAndExportTests` | Every report type, the QR test sheet, Excel export/import, and the EPPlus empty-table case |
 | `NavigationAndPermissionTests` | The seeded sidebar (categories → groups → links), the action grants the UI gates buttons on, and the four-row bundle that creating a country writes |
 | `OutboundMessagingTests` | The messaging queue: a message is persisted before it is attempted, transient failures retry with backoff, rejections do not, and an unconfigured country fails visibly |
+| `MessageChannelTests` | The Clickatell, Android-gateway and Telegram adapters: the wire format each produces, which failures are worth retrying, and that a Telegram enrolment payload cannot be forged |
 
 Most of these are regression guards for specific defects this migration hit — each one was verified
 to fail when its fix is reverted, so they are not just documentation. `MIGRATION.md` explains why
@@ -234,6 +236,7 @@ dotnet user-secrets --project TalonAdmin set "Jwt:SigningKey" "$(openssl rand -b
 | `GET /api/ApplicationUser/Me` | Current user, roles and permitted actions |
 | `GET /api/Dashboard/DashboardSummary` | Cached programme dashboard |
 | `POST /api/VoucherWorkflow/*` | Voucher generation, assignment, redemption, SMS |
+| `POST /api/Telegram/{countryIso}` | Telegram bot webhook (enrolment) |
 | `POST /api/App/VendorProfile/Login` | Mobile vendor sign-in |
 | `POST /api/App/MobileClient/*` | Offline payload sync for the vendor client |
 | `POST /api/Excel/*` | Beneficiary and vendor import/export |

@@ -13,10 +13,28 @@ import { notifyError, notifySaved } from '@/composables/useToast'
  * with the dispatch, so picking "RescueSMS" actually configured TurboSMS. RescueSMS and TurboSMS
  * have since been removed; Clickatell keeps the value it already had.
  */
-const SMS_BACKENDS = [{ value: 2, label: 'Clickatell' }]
+const SMS_BACKENDS = [
+  { value: 2, label: 'Clickatell', hint: 'A URL template: {0} is the recipient, {1} the message.' },
+  {
+    value: 4,
+    label: 'Android SMS Gateway',
+    hint: 'The gateway app\u2019s API root — the phone on the office LAN, or the relay it connects out to.'
+  },
+  {
+    value: 5,
+    label: 'Telegram bot',
+    hint: 'Leave blank for api.telegram.org. Put the bot token in the password field below.'
+  }
+]
 const DEFAULT_BACKEND = SMS_BACKENDS[0].value
 
 /** The template names the server looks up when it builds an outbound message. */
+/**
+ * Stored as country setting properties alongside the message templates. The bot username is not a
+ * template, but it lives in the same collection and so saves through the same path.
+ */
+const TELEGRAM_PROPERTIES = ['Telegram Bot Username']
+
 const TEMPLATES = [
   'Beneficiary Voucher Message',
   'Beneficiary Confirmed Message',
@@ -41,6 +59,13 @@ const loading = ref(true)
 const saving = ref(false)
 
 const selected = computed(() => rows.value.find(r => r.Id === selectedId.value) ?? null)
+
+const backend = computed(() =>
+  SMS_BACKENDS.find(b => b.value === gateway.value.SmsBackendType) ?? SMS_BACKENDS[0]
+)
+
+/** Telegram needs a bot username so staff can hand out enrolment links. */
+const isTelegram = computed(() => gateway.value.SmsBackendType === 5)
 
 onMounted(async () => {
   try {
@@ -67,7 +92,10 @@ function select(id: number | null) {
   const stored = settings?.PropertyCollection ?? []
   present.value = new Set(stored.map(p => p.Name))
   templates.value = Object.fromEntries(
-    TEMPLATES.map(name => [name, stored.find(p => p.Name === name)?.Value ?? ''])
+    [...TEMPLATES, ...TELEGRAM_PROPERTIES].map(name => [
+      name,
+      stored.find(p => p.Name === name)?.Value ?? ''
+    ])
   )
 }
 
@@ -81,11 +109,13 @@ async function save() {
   saving.value = true
   try {
     // Only templates that were given a value are written; blank ones are left as they were.
-    const changed = TEMPLATES.filter(name => templates.value[name].trim()).map(name => ({
-      Name: name,
-      Value: templates.value[name],
-      existed: present.value.has(name)
-    }))
+    const changed = [...TEMPLATES, ...TELEGRAM_PROPERTIES]
+      .filter(name => templates.value[name].trim())
+      .map(name => ({
+        Name: name,
+        Value: templates.value[name],
+        existed: present.value.has(name)
+      }))
 
     await api.saveCountrySettings(settings, { ...gateway.value }, changed)
 
@@ -143,9 +173,19 @@ async function save() {
         <div class="field">
           <label class="field__label" for="url">SMS Service URL</label>
           <input id="url" v-model="gateway.ServiceUrl" class="field__control" />
+          <p class="muted" style="font-size: 12px; margin: 4px 0 0">{{ backend.hint }}</p>
+        </div>
+
+        <div v-if="isTelegram" class="field">
+          <label class="field__label" for="botUserName">Telegram Bot Username</label>
+          <input
+            id="botUserName"
+            v-model="templates['Telegram Bot Username']"
+            class="field__control"
+            placeholder="TalonJordanBot"
+          />
           <p class="muted" style="font-size: 12px; margin: 4px 0 0">
-            A URL template: <code>{0}</code> is the recipient, <code>{1}</code> the message.
-            Nothing is sent until this is set.
+            Used to build the enrolment links staff send to beneficiaries.
           </p>
         </div>
 
