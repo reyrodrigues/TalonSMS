@@ -120,6 +120,10 @@ deployment.
 
 Nested keys use a double underscore: `Jwt__SigningKey` sets `Jwt:SigningKey`.
 
+That is the short list. [Configuration](configuration.html) is the whole surface — the other
+database providers, messaging tuning, the PDF engine, spreadsheet licensing, backups, and what
+Talon does behind a proxy.
+
 {: .warning }
 > Set `Database__SeedAdminPassword`, and sign in and change it once the service is up. Leaving the
 > default means anyone who knows this project can sign into your instance.

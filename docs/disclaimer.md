@@ -1,6 +1,6 @@
 ---
 title: Disclaimer and responsible use
-nav_order: 6
+nav_order: 9
 ---
 
 # Disclaimer and responsible use

@@ -1,13 +1,15 @@
 ---
 title: Operating a programme
-nav_order: 4
+nav_order: 5
 ---
 
 # Operating a programme
 
 This page is about running Talon rather than installing it: the order things have to be set up in,
 what each concept means, and what happens during a distribution. The
-[Walkthrough](WALKTHROUGH.html) is the same ground with a screenshot at every step.
+[Walkthrough](WALKTHROUGH.html) is the same ground with a screenshot at every step, and
+[Every screen](screens.html) is the inventory — what each part of the interface is for, including
+the screens a normal week never touches.
 
 ---
 

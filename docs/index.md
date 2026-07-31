@@ -31,10 +31,12 @@ No blockchain, no tokens, no wallet — just codes and a ledger.
 | --- | --- |
 | See it running on your own machine in one command | [Quickstart](quickstart.html) |
 | Put it on the internet on a free or cheap host | [Deploy](deploy.html) |
+| Know every setting, and what it does | [Configuration](configuration.html) |
 | Understand how a real programme is run through it | [Operating a programme](operate.html) |
+| Find out what a particular screen is for | [Every screen](screens.html) |
 | Know what it does and does not protect against | [Security](security.html) |
 | Understand what you take on by deploying it | [Disclaimer and responsible use](disclaimer.html) |
-| See every screen, with screenshots | [Walkthrough](WALKTHROUGH.html) |
+| See it end to end, with screenshots | [Walkthrough](WALKTHROUGH.html) |
 
 ---
 

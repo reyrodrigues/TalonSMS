@@ -28,7 +28,11 @@ it for real.
 > the three channels: Clickatell, a phone acting as an SMS gateway, and a Telegram bot.
 >
 > [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) is an illustrated pass through the whole product —
-> country setup, vendors, beneficiaries, a programme, distribution, SMS redemption and reports.
+> country setup, vendors, beneficiaries, a programme, distribution, SMS redemption, vendor
+> settlement and reports.
+>
+> [docs/screens.md](docs/screens.md) is the inventory: what every screen is for, including the ones
+> a normal week never touches.
 
 
 ## Security status
@@ -225,6 +229,10 @@ variables (`__` separates nested keys, e.g. `Database__Provider`).
 | `Messaging:MaxAttempts` | Attempts before a message is marked failed (default 5) |
 | `ActiveDirectory:Enabled` | Enable directory fallback for sign-in |
 | `Epplus:LicenseKey` | Commercial EPPlus key, if applicable (see below) |
+
+[docs/configuration.md](docs/configuration.md) is the complete reference — every key with its
+default and its effect, plus provider choice, backups, spreadsheet licensing and what happens behind
+a proxy.
 
 Never reuse the development signing key. Set a real one per environment:
 
